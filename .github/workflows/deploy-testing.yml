@@ -25,14 +25,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
 
       - name: NPM Build
         run: |
           rm -rf public/build
-          npm clean-install
+          npm ci
           npm run build
-          ls -la public/build/assets/ApplicationLogo*
 
       - name: Setup SSH Key
         run: |
