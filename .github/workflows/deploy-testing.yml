@@ -72,7 +72,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          disable_checks: true
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             php artisan storage:link --force
