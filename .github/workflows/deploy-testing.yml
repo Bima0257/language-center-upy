@@ -46,7 +46,6 @@ jobs:
             --exclude='.github/' \
             --exclude='node_modules/' \
             --exclude='.env' \
-            --exclude='.env.example' \
             --exclude='storage/app/public/' \
             --exclude='storage/logs/' \
             --exclude='storage/debugbar/' \
