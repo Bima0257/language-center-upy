@@ -43,6 +43,10 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('admin.exams.index', absolute: false));
         }
 
+        if ($user->hasRole('student') && !$user->isVerified()) {
+            return redirect()->route('onboarding.verify-identity');
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

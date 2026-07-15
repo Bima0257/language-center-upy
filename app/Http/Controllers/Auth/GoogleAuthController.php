@@ -76,6 +76,10 @@ class GoogleAuthController extends Controller
             return redirect()->route('google.set-password');
         }
 
+        if ($user->hasRole('student') && !$user->isVerified()) {
+            return redirect()->route('onboarding.verify-identity');
+        }
+
         return redirect()->intended(route('dashboard'));
     }
 
@@ -95,6 +99,12 @@ class GoogleAuthController extends Controller
         $user->save();
 
         Auth::logoutOtherDevices($request->password);
+
+        $user = auth()->user();
+
+        if ($user->hasRole('student') && !$user->isVerified()) {
+            return redirect()->route('onboarding.verify-identity');
+        }
 
         return redirect()->intended(route('dashboard'))
             ->with('success', 'Password berhasil dibuat. Sekarang Anda bisa login dengan email dan password.');

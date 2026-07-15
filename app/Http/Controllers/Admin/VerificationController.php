@@ -41,6 +41,23 @@ class VerificationController extends Controller
         return back()->with('success', "{$user->name} berhasil diverifikasi.");
     }
 
+    public function revert(User $user): RedirectResponse
+    {
+        $profile = $user->studentProfile;
+
+        if (! $profile) {
+            return back()->with('error', 'Profile mahasiswa tidak ditemukan.');
+        }
+
+        $profile->update([
+            'is_verified' => false,
+            'verified_at' => null,
+            'verified_by' => null,
+        ]);
+
+        return back()->with('success', "Verifikasi {$user->name} dibatalkan.");
+    }
+
     public function reject(Request $request, User $user): RedirectResponse
     {
         $request->validate(['reason' => 'nullable|string|max:500']);

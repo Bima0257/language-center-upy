@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { IconMail, IconLock, IconEye, IconEyeOff } from '@tabler/icons-vue';
 import AuthCard from '@/Components/Landing/AuthCard.vue';
 import { ref, onMounted } from 'vue';
@@ -16,15 +16,16 @@ const form = useForm({
     remember: false,
 });
 
+const page = usePage();
 const showPassword = ref(false);
 const errorDismissed = ref(false);
 const statusDismissed = ref(false);
 
 onMounted(() => {
-    if ($page.props.flash?.error) {
+    if (page.props.flash?.error) {
         setTimeout(() => { errorDismissed.value = true; }, 6000);
     }
-    if ($page.props.status) {
+    if (page.props.status) {
         setTimeout(() => { statusDismissed.value = true; }, 6000);
     }
 });
