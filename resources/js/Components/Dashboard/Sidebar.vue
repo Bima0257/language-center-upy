@@ -1,7 +1,6 @@
 <script setup>
 import { Link, usePage } from "@inertiajs/vue3";
 import {
-    IconSparkles,
     IconChartPie,
     IconBooks,
     IconSettings,
@@ -107,17 +106,12 @@ function isActive(routeName) {
             class="mb-10 flex items-center relative"
             :class="collapsed ? 'px-1' : 'px-4 gap-3'"
         >
-            <div
-                class="bg-primary-container rounded-xl flex items-center justify-center shrink-0"
+            <img
+                src="/assets/image/logo.png"
+                alt="Logo"
+                class="shrink-0 object-contain rounded-xl"
                 :class="collapsed ? 'w-8 h-8' : 'w-10 h-10'"
-            >
-                <IconSparkles
-                    class="text-white"
-                    :size="collapsed ? 16 : 20"
-                    stroke="1.5"
-                    fill="currentColor"
-                />
-            </div>
+            />
             <h1
                 v-show="!collapsed"
                 class="text-headline-md font-bold text-primary whitespace-nowrap"
