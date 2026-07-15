@@ -30,8 +30,9 @@ jobs:
       - name: NPM Build
         run: |
           rm -rf public/build
-          npm ci --ignore-scripts
+          npm clean-install
           npm run build
+          ls -la public/build/assets/ApplicationLogo*
 
       - name: Setup SSH Key
         run: |
