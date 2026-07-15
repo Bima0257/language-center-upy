@@ -42,7 +42,7 @@ jobs:
 
       - name: Deploy via Rsync
         run: |
-          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${PORT:-22}" \
+          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }}" \
             --exclude='.git' \
             --exclude='.github/' \
             --exclude='node_modules/' \
@@ -63,8 +63,6 @@ jobs:
             --exclude='vite.config.js' \
             --exclude='jsconfig.json' \
             ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}"
-        env:
-          PORT: ${{ secrets.SSH_PORT }}
 
       - name: Post-deploy Commands
         uses: appleboy/ssh-action@v1.2.1
