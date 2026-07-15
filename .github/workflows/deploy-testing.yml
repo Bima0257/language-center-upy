@@ -28,7 +28,8 @@ jobs:
 
       - name: NPM Build
         run: |
-          rm -rf public/build
+          npm cache clean --force
+          rm -rf public/build node_modules
           npm ci
           npm run build
 
