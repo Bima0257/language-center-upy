@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
-import { IconSparkles, IconSearch, IconMenu2, IconX } from '@tabler/icons-vue';
+import { IconSearch, IconMenu2, IconX } from '@tabler/icons-vue';
 import { ref } from 'vue';
 
 defineProps({
@@ -15,9 +15,7 @@ const mobileMenuOpen = ref(false);
     <nav v-bind="$attrs" class="bg-surface-white w-full px-4 md:px-app-margin py-4 shadow-sm sticky top-0 z-50">
         <div class="flex justify-between items-center max-w-7xl mx-auto w-full">
             <div class="flex items-center gap-2">
-                <div class="bg-primary p-2 rounded-xl flex items-center justify-center">
-                    <IconSparkles class="text-white" :size="20" :stroke="1.5" fill="currentColor" />
-                </div>
+                <img src="/assets/image/logo.png" alt="UPY Language Test" class="h-10 w-auto object-contain" />
                 <span class="text-headline-md font-bold text-primary">UPY Language Test</span>
             </div>
 

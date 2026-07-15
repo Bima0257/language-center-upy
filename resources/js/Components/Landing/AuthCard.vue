@@ -1,5 +1,5 @@
 <script setup>
-import { IconSparkles, IconTrophy } from '@tabler/icons-vue';
+import { IconTrophy } from '@tabler/icons-vue';
 defineProps({
     title: String,
     subtitle: String,
@@ -15,9 +15,7 @@ defineProps({
             <div class="w-full md:w-5/12 bg-surface-container-low px-6 py-6 md:p-10 flex flex-col justify-between relative overflow-hidden">
                 <div>
                     <div class="flex items-center gap-3 mb-4 md:mb-10">
-                        <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center">
-                            <IconSparkles class="text-white" :size="20" stroke="1.5" fill="currentColor" />
-                        </div>
+                        <img src="/assets/image/logo.png" alt="UPY Language Test" class="h-10 w-10 object-contain rounded-xl" />
                         <span class="text-primary text-headline-md font-bold tracking-tight">UPY Language Test</span>
                     </div>
                     <h2 class="text-text-heading text-headline-md font-bold mb-4 leading-tight">{{ title }}</h2>
