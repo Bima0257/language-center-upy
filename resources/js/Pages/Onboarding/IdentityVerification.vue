@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onUnmounted, nextTick } from 'vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { IconCheck, IconRefresh, IconCamera } from '@tabler/icons-vue';
+import { IconCheck, IconRefresh, IconCamera, IconUpload } from '@tabler/icons-vue';
 import OnboardingLayout from '@/Components/Onboarding/OnboardingLayout.vue';
 
 const props = defineProps({
@@ -30,23 +30,33 @@ const videoRef = ref(null);
 const canvasRef = ref(null);
 const stream = ref(null);
 const cameraActive = ref(false);
+const cameraLoading = ref(false);
+const cameraError = ref(null);
 
 async function startCamera() {
+    cameraLoading.value = true;
+    cameraError.value = null;
     try {
         stream.value = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+            video: { facingMode: 'user' },
             audio: false,
         });
         cameraActive.value = true;
         await nextTick();
         if (videoRef.value) {
             videoRef.value.srcObject = stream.value;
+            try {
+                await videoRef.value.play();
+            } catch {
+                // play() can fail silently on some mobile browsers — playsinline covers it
+            }
         }
     } catch {
+        cameraError.value = 'Tidak dapat mengakses kamera. Silakan gunakan tombol "Upload dari Galeri" atau pastikan koneksi menggunakan HTTPS.';
         selfiePreview.value = null;
         form.photo = null;
-        const el = document.getElementById('selfieFallbackInput');
-        if (el) el.click();
+    } finally {
+        cameraLoading.value = false;
     }
 }
 
@@ -85,6 +95,7 @@ function stopCamera() {
 function openSelfie() {
     selfiePreview.value = null;
     form.photo = null;
+    cameraError.value = null;
     startCamera();
 }
 
@@ -100,6 +111,7 @@ function onFileSelect(e, field) {
         else selfiePreview.value = ev.target.result;
     };
     reader.readAsDataURL(file);
+    e.target.value = '';
 }
 
 function submit() {
@@ -174,19 +186,21 @@ function submit() {
                         </div>
                     </div>
 
+                    <!-- FOTO KTM -->
                     <div class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
                         <label class="text-label-md font-medium text-primary block mb-4">Foto KTM/Kartu Identitas Mahasiswa</label>
-                        <div class="border-2 border-dashed border-outline-variant rounded-2xl p-8 text-center hover:border-primary transition-colors cursor-pointer"
-                             @click="$refs.identityInput.click()">
-                            <img v-if="identityPreview" :src="identityPreview" class="max-h-40 mx-auto rounded-lg mb-2" />
+                        <div class="border-2 border-dashed border-outline-variant rounded-2xl p-8 text-center relative hover:border-primary transition-colors cursor-pointer">
+                            <img v-if="identityPreview" :src="identityPreview" class="max-h-40 mx-auto rounded-lg mb-2 pointer-events-none" />
                             <p v-else class="text-text-muted text-body-md">Klik untuk foto KTM/Kartu Identitas Mahasiswa pakai kamera</p>
                             <p class="text-text-muted text-label-md mt-1">Maks 5MB, format JPG/PNG</p>
-                            <input ref="identityInput" type="file" accept="image/*" capture="environment"
-                                   class="hidden" @change="(e) => onFileSelect(e, 'identity_photo')" />
+                            <input type="file" accept="image/*" capture="environment"
+                                   class="absolute inset-0 opacity-0 cursor-pointer"
+                                   @change="(e) => onFileSelect(e, 'identity_photo')" />
                         </div>
                         <p v-if="form.errors.identity_photo" class="text-error-red text-xs mt-1">{{ form.errors.identity_photo }}</p>
                     </div>
 
+                    <!-- SWAFOTO -->
                     <div class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
                         <label class="text-label-md font-medium text-primary block mb-4">Swafoto (Selfie)</label>
                         <div class="border-2 border-dashed border-outline-variant rounded-2xl p-8 text-center">
@@ -195,15 +209,37 @@ function submit() {
                                    class="max-h-60 mx-auto rounded-lg mb-4 bg-black" />
                             <canvas ref="canvasRef" class="hidden" />
 
-                            <template v-if="!cameraActive && !selfiePreview">
-                                <button type="button" @click="openSelfie"
-                                        class="inline-flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
-                                    <IconCamera :size="20" stroke="1.5" />
-                                    Buka Kamera
-                                </button>
-                                <p class="text-text-muted text-label-md mt-2">Klik tombol untuk langsung buka kamera depan</p>
+                            <!-- Loading kamera -->
+                            <template v-if="cameraLoading">
+                                <div class="flex flex-col items-center gap-3 py-4">
+                                    <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                    </svg>
+                                    <p class="text-text-muted text-body-sm">Mengakses kamera...</p>
+                                </div>
                             </template>
 
+                            <!-- Idle: dua tombol -->
+                            <template v-if="!cameraActive && !cameraLoading && !selfiePreview">
+                                <div class="flex items-center justify-center gap-3 flex-wrap">
+                                    <button type="button" @click="openSelfie"
+                                            class="inline-flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
+                                        <IconCamera :size="20" stroke="1.5" />
+                                        Buka Kamera
+                                    </button>
+                                    <label class="inline-flex items-center gap-2 border border-outline-variant text-primary px-6 py-3 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all active:scale-95 cursor-pointer">
+                                        <IconUpload :size="20" stroke="1.5" />
+                                        Upload dari Galeri
+                                        <input type="file" accept="image/*" class="sr-only"
+                                               @change="(e) => onFileSelect(e, 'photo')" />
+                                    </label>
+                                </div>
+                                <p v-if="cameraError" class="text-error-red text-body-sm mt-3">{{ cameraError }}</p>
+                                <p v-else class="text-text-muted text-label-md mt-2">Pilih Buka Kamera untuk foto langsung, atau Upload dari Galeri</p>
+                            </template>
+
+                            <!-- Kamera aktif -->
                             <template v-if="cameraActive">
                                 <div class="flex items-center justify-center gap-4">
                                     <button type="button" @click="capturePhoto"
@@ -218,21 +254,28 @@ function submit() {
                                 </div>
                             </template>
 
-                            <template v-if="selfiePreview && !cameraActive">
-                                <button type="button" @click="openSelfie"
-                                        class="inline-flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
-                                    <IconCamera :size="20" stroke="1.5" />
-                                    Ambil Ulang
-                                </button>
+                            <!-- Ada preview: ambil ulang / upload ulang -->
+                            <template v-if="selfiePreview && !cameraActive && !cameraLoading">
+                                <div class="flex items-center justify-center gap-3 flex-wrap">
+                                    <button type="button" @click="openSelfie"
+                                            class="inline-flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
+                                        <IconCamera :size="20" stroke="1.5" />
+                                        Ambil Ulang
+                                    </button>
+                                    <label class="inline-flex items-center gap-2 border border-outline-variant text-primary px-6 py-3 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all active:scale-95 cursor-pointer">
+                                        <IconUpload :size="20" stroke="1.5" />
+                                        Upload Ulang
+                                        <input type="file" accept="image/*" class="sr-only"
+                                               @change="(e) => onFileSelect(e, 'photo')" />
+                                    </label>
+                                </div>
                             </template>
-
-                            <input id="selfieFallbackInput" type="file" accept="image/*" capture="user"
-                                   class="hidden" @change="(e) => onFileSelect(e, 'photo')" />
                         </div>
                         <p v-if="form.errors.photo" class="text-error-red text-xs mt-1">{{ form.errors.photo }}</p>
                     </div>
 
-                    <button type="submit" :disabled="form.processing || !form.nim || !form.faculty || !form.department || !form.batch_year || (!form.identity_photo && !form.photo)"
+                    <button type="submit"
+                            :disabled="form.processing || !form.nim || !form.faculty || !form.department || !form.batch_year || !form.identity_photo || !form.photo"
                             class="w-full bg-primary-container text-white font-semibold text-title-lg py-3.5 rounded-full hover:bg-primary transition-all active:scale-95 shadow-lg shadow-primary-container/10 disabled:opacity-50">
                         {{ form.processing ? 'Mengunggah...' : 'Kirim Verifikasi' }}
                     </button>
