@@ -56,26 +56,7 @@ jobs:
           SOURCE: "./"
           TARGET: ${{ env.DEPLOY_PATH }}
           ARGS: "-avz --delete"
-          EXCLUDE: |
-            .git
-            .github/
-            node_modules/
-            .env
-            storage/app/public/
-            storage/logs/
-            storage/debugbar/
-            tests/
-            phpunit.xml
-            README.md
-            .editorconfig
-            .gitattributes
-            .gitignore
-            .npmrc
-            package-lock.json
-            postcss.config.js
-            tailwind.config.js
-            vite.config.js
-            jsconfig.json
+          EXCLUDE: .git, .github/, node_modules/, .env, storage/app/public/, storage/logs/, storage/debugbar/, tests/, phpunit.xml, README.md, .editorconfig, .gitattributes, .gitignore, .npmrc, package-lock.json, postcss.config.js, tailwind.config.js, vite.config.js, jsconfig.json
           SCRIPT_AFTER: |
             cd ${{ env.DEPLOY_PATH }}
             php artisan optimize:clear
