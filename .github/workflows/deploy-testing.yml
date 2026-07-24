@@ -7,6 +7,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      SSH_PORT: ${{ secrets.SSH_PORT || '65002' }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
 
     steps:
       - name: Checkout
@@ -36,13 +41,30 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           chmod 700 ~/.ssh
+          ssh-keyscan -p $SSH_PORT -H $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Connectivity Check (fail-fast)
+        run: |
+          echo "::group::TCP port check ($SSH_HOST:$SSH_PORT)"
+          timeout 10 bash -c "cat < /dev/null > /dev/tcp/$SSH_HOST/$SSH_PORT" \
+            && echo "Port $SSH_PORT OPEN" \
+            || { echo "Port $SSH_PORT CLOSED/TIMEOUT — kemungkinan firewall block GitHub Actions"; exit 1; }
+          echo "::endgroup::"
+          echo "::group::SSH handshake test"
+          ssh -vvv \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            -o BatchMode=yes \
+            -p $SSH_PORT \
+            $SSH_USER@$SSH_HOST "echo SSH_OK" 2>&1 | tail -50
+          echo "::endgroup::"
 
       - name: Deploy via Rsync
         run: |
-          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }}" \
+          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -p $SSH_PORT" \
             --exclude='.git' \
             --exclude='.github/' \
             --exclude='node_modules/' \
@@ -62,17 +84,17 @@ jobs:
             --exclude='tailwind.config.js' \
             --exclude='vite.config.js' \
             --exclude='jsconfig.json' \
-            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}"
+            ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH"
 
       - name: Post-deploy Commands
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          port: ${{ env.SSH_PORT }}
           script: |
-            cd ${{ secrets.DEPLOY_PATH }}
+            cd ${{ env.DEPLOY_PATH }}
             php artisan optimize:clear
             php artisan storage:link --force
             php artisan config:cache

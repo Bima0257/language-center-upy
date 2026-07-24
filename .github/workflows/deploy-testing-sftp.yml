@@ -1,0 +1,85 @@
+name: Deploy Testing (SFTP fallback)
+
+on:
+  push:
+    branches: [testing]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SSH_PORT: ${{ secrets.SSH_PORT || '65002' }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, intl, gd, zip, bcmath, imagick
+
+      - name: Composer Install
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: NPM Build
+        run: |
+          npm cache clean --force
+          rm -rf public/build node_modules
+          npm ci
+          npm run build
+
+      - name: Connectivity Check (fail-fast)
+        run: |
+          echo "::group::TCP port check ($SSH_HOST:$SSH_PORT)"
+          timeout 10 bash -c "cat < /dev/null > /dev/tcp/$SSH_HOST/$SSH_PORT" \
+            && echo "Port $SSH_PORT OPEN" \
+            || { echo "Port $SSH_PORT CLOSED/TIMEOUT — kemungkinan firewall block GitHub Actions"; exit 1; }
+          echo "::endgroup::"
+
+      - name: Deploy via SFTP/SSH
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ env.SSH_HOST }}
+          REMOTE_USER: ${{ env.SSH_USER }}
+          REMOTE_PORT: ${{ env.SSH_PORT }}
+          SOURCE: "./"
+          TARGET: ${{ env.DEPLOY_PATH }}
+          ARGS: "-avz --delete"
+          EXCLUDE: |
+            .git
+            .github/
+            node_modules/
+            .env
+            storage/app/public/
+            storage/logs/
+            storage/debugbar/
+            tests/
+            phpunit.xml
+            README.md
+            .editorconfig
+            .gitattributes
+            .gitignore
+            .npmrc
+            package-lock.json
+            postcss.config.js
+            tailwind.config.js
+            vite.config.js
+            jsconfig.json
+          SCRIPT_AFTER: |
+            cd ${{ env.DEPLOY_PATH }}
+            php artisan optimize:clear
+            php artisan storage:link --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
