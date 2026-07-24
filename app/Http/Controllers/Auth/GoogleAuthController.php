@@ -8,6 +8,7 @@ use App\Models\StudentProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
@@ -56,18 +57,22 @@ class GoogleAuthController extends Controller
             }
             $user->save();
         } else {
-            $user = User::create([
-                'name' => $googleUser->name,
-                'email' => $googleUser->email,
-                'google_id' => $googleUser->id,
-                'google_avatar' => $googleUser->avatar,
-                'password' => bcrypt(Str::random(32)),
-            ]);
-            $user->email_verified_at = now();
-            $user->save();
-            $user->assignRole('student');
+            $user = DB::transaction(function () use ($googleUser) {
+                $user = User::create([
+                    'name' => $googleUser->name,
+                    'email' => $googleUser->email,
+                    'google_id' => $googleUser->id,
+                    'google_avatar' => $googleUser->avatar,
+                    'password' => bcrypt(Str::random(32)),
+                ]);
+                $user->email_verified_at = now();
+                $user->save();
+                $user->assignRole('student');
 
-            StudentProfile::create(['user_id' => $user->id]);
+                StudentProfile::create(['user_id' => $user->id]);
+
+                return $user;
+            });
         }
 
         Auth::login($user);
@@ -99,8 +104,6 @@ class GoogleAuthController extends Controller
         $user->save();
 
         Auth::logoutOtherDevices($request->password);
-
-        $user = auth()->user();
 
         if ($user->hasRole('student') && !$user->isVerified()) {
             return redirect()->route('onboarding.verify-identity');

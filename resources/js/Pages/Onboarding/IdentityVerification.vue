@@ -191,9 +191,9 @@ function submit() {
                         <label class="text-label-md font-medium text-primary block mb-4">Foto KTM/Kartu Identitas Mahasiswa</label>
                         <div class="border-2 border-dashed border-outline-variant rounded-2xl p-8 text-center relative hover:border-primary transition-colors cursor-pointer">
                             <img v-if="identityPreview" :src="identityPreview" class="max-h-40 mx-auto rounded-lg mb-2 pointer-events-none" />
-                            <p v-else class="text-text-muted text-body-md">Klik untuk foto KTM/Kartu Identitas Mahasiswa pakai kamera</p>
+                            <p v-else class="text-text-muted text-body-md">Klik untuk upload foto KTM/Kartu Identitas Mahasiswa</p>
                             <p class="text-text-muted text-label-md mt-1">Maks 5MB, format JPG/PNG</p>
-                            <input type="file" accept="image/*" capture="environment"
+                            <input type="file" accept="image/*"
                                    class="absolute inset-0 opacity-0 cursor-pointer"
                                    @change="(e) => onFileSelect(e, 'identity_photo')" />
                         </div>

@@ -1,5 +1,5 @@
 <script setup>
-import GuestLayout from '@/Layouts/GuestLayout.vue';
+import AuthCard from '@/Components/Landing/AuthCard.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -18,16 +18,19 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Confirm Password" />
+    <AuthCard
+        title="Verifikasi keamanan."
+        subtitle="Konfirmasi identitas Anda sebelum melanjutkan ke area sensitif."
+    >
+        <Head title="Konfirmasi Password" />
 
-        <div class="mb-4 text-sm text-gray-600">
-            This is a secure area of the application. Please confirm your
-            password before continuing.
-        </div>
+        <header class="mb-8">
+            <h1 class="text-primary text-headline-md font-bold mb-2">Konfirmasi Password</h1>
+            <p class="text-text-body text-body-md">Ini adalah area aman. Silakan konfirmasi password Anda sebelum melanjutkan.</p>
+        </header>
 
-        <form @submit.prevent="submit">
-            <div>
+        <form @submit.prevent="submit" class="space-y-5">
+            <div class="space-y-2">
                 <InputLabel for="password" value="Password" />
                 <TextInput
                     id="password"
@@ -41,15 +44,15 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="mt-4 flex justify-end">
+            <div class="flex justify-end">
                 <PrimaryButton
                     class="ms-4"
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Confirm
+                    Konfirmasi
                 </PrimaryButton>
             </div>
         </form>
-    </GuestLayout>
+    </AuthCard>
 </template>

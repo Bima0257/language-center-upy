@@ -1,5 +1,5 @@
 <script setup>
-import GuestLayout from '@/Layouts/GuestLayout.vue';
+import AuthCard from '@/Components/Landing/AuthCard.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -22,24 +22,26 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
+    <AuthCard
+        title="Lupa password?"
+        subtitle="Jangan khawatir, kami akan bantu mengamankan akun Anda."
+    >
         <Head title="Lupa Password" />
 
-        <div class="mb-4 text-sm text-gray-600">
-            Lupa password? Tidak masalah. Beri tahu kami alamat email Anda
-            dan kami akan kirimkan tautan reset password yang memungkinkan
-            Anda memilih password baru.
-        </div>
+        <header class="mb-8">
+            <h1 class="text-primary text-headline-md font-bold mb-2">Lupa Password</h1>
+            <p class="text-text-body text-body-md">Masukkan email Anda dan kami akan kirimkan tautan reset password.</p>
+        </header>
 
         <div
             v-if="status"
-            class="mb-4 text-sm font-medium text-green-600"
+            class="mb-4 text-sm font-medium text-green-600 bg-green-50 border border-green-200 rounded-2xl px-5 py-4"
         >
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit">
-            <div>
+        <form @submit.prevent="submit" class="space-y-5">
+            <div class="space-y-2">
                 <InputLabel for="email" value="Email" />
 
                 <TextInput
@@ -55,7 +57,7 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
+            <div class="flex items-center justify-end">
                 <PrimaryButton
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
@@ -64,5 +66,5 @@ const submit = () => {
                 </PrimaryButton>
             </div>
         </form>
-    </GuestLayout>
+    </AuthCard>
 </template>

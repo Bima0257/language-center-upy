@@ -1,5 +1,5 @@
 <script setup>
-import GuestLayout from '@/Layouts/GuestLayout.vue';
+import AuthCard from '@/Components/Landing/AuthCard.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -33,11 +33,19 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
+    <AuthCard
+        title="Buat password baru."
+        subtitle="Pilih password yang kuat dan mudah diingat untuk akun Anda."
+    >
         <Head title="Reset Password" />
 
-        <form @submit.prevent="submit">
-            <div>
+        <header class="mb-8">
+            <h1 class="text-primary text-headline-md font-bold mb-2">Reset Password</h1>
+            <p class="text-text-body text-body-md">Masukkan password baru untuk akun Anda.</p>
+        </header>
+
+        <form @submit.prevent="submit" class="space-y-5">
+            <div class="space-y-2">
                 <InputLabel for="email" value="Email" />
 
                 <TextInput
@@ -53,7 +61,7 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="mt-4">
+            <div class="space-y-2">
                 <InputLabel for="password" value="Password Baru" />
 
                 <TextInput
@@ -69,7 +77,7 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="mt-4">
+            <div class="space-y-2">
                 <InputLabel
                     for="password_confirmation"
                     value="Konfirmasi Password"
@@ -90,7 +98,7 @@ const submit = () => {
                 />
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
+            <div class="flex items-center justify-end">
                 <PrimaryButton
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
@@ -99,5 +107,5 @@ const submit = () => {
                 </PrimaryButton>
             </div>
         </form>
-    </GuestLayout>
+    </AuthCard>
 </template>
