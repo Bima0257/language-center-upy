@@ -18,18 +18,28 @@ const showConfirmPassword = ref(false);
 const googleLoading = ref(false);
 const turnstileWidgetId = ref(null);
 
+const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+
+const renderTurnstile = () => {
+    if (!siteKey) return;
+    if (!window.turnstile) return;
+    turnstileWidgetId.value = window.turnstile.render('#turnstile-register', {
+        sitekey: siteKey,
+        callback: (token) => {
+            form['cf-turnstile-response'] = token;
+        },
+        'expired-callback': () => {
+            form['cf-turnstile-response'] = '';
+            window.turnstile?.reset(turnstileWidgetId.value);
+        },
+    });
+};
+
+window.onTurnstileLoad = renderTurnstile;
+
 onMounted(() => {
     if (window.turnstile) {
-        turnstileWidgetId.value = window.turnstile.render('#turnstile-register', {
-            sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY || '',
-            callback: (token) => {
-                form['cf-turnstile-response'] = token;
-            },
-            'expired-callback': () => {
-                form['cf-turnstile-response'] = '';
-                window.turnstile?.reset(turnstileWidgetId.value);
-            },
-        });
+        renderTurnstile();
     }
 });
 

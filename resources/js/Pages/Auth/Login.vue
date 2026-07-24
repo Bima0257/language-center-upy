@@ -7,7 +7,6 @@ import { ref, onMounted } from 'vue';
 defineProps({
     canResetPassword: Boolean,
     status: String,
-    turnstileSiteKey: String,
 });
 
 const form = useForm({
@@ -24,6 +23,25 @@ const statusDismissed = ref(false);
 const googleLoading = ref(false);
 const turnstileWidgetId = ref(null);
 
+const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+
+const renderTurnstile = () => {
+    if (!siteKey) return;
+    if (!window.turnstile) return;
+    turnstileWidgetId.value = window.turnstile.render('#turnstile-login', {
+        sitekey: siteKey,
+        callback: (token) => {
+            form['cf-turnstile-response'] = token;
+        },
+        'expired-callback': () => {
+            form['cf-turnstile-response'] = '';
+            window.turnstile?.reset(turnstileWidgetId.value);
+        },
+    });
+};
+
+window.onTurnstileLoad = renderTurnstile;
+
 onMounted(() => {
     if (page.props.flash?.error) {
         setTimeout(() => { errorDismissed.value = true; }, 6000);
@@ -32,16 +50,7 @@ onMounted(() => {
         setTimeout(() => { statusDismissed.value = true; }, 6000);
     }
     if (window.turnstile) {
-        turnstileWidgetId.value = window.turnstile.render('#turnstile-login', {
-            sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY || '',
-            callback: (token) => {
-                form['cf-turnstile-response'] = token;
-            },
-            'expired-callback': () => {
-                form['cf-turnstile-response'] = '';
-                window.turnstile?.reset(turnstileWidgetId.value);
-            },
-        });
+        renderTurnstile();
     }
 });
 
