@@ -37,6 +37,8 @@ jobs:
           rm -rf public/build node_modules
           npm ci
           npm run build
+        env:
+          VITE_TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
 
       - name: Setup SSH Key
         run: |
@@ -95,6 +97,9 @@ jobs:
           port: ${{ env.SSH_PORT }}
           script: |
             cd ${{ env.DEPLOY_PATH }}
+            grep -q '^TURNSTILE_SITE_KEY=' .env || echo "TURNSTILE_SITE_KEY=${{ secrets.TURNSTILE_SITE_KEY }}" >> .env
+            grep -q '^TURNSTILE_SECRET_KEY=' .env || echo "TURNSTILE_SECRET_KEY=${{ secrets.TURNSTILE_SECRET_KEY }}" >> .env
+            grep -q '^VITE_TURNSTILE_SITE_KEY=' .env || echo 'VITE_TURNSTILE_SITE_KEY="${TURNSTILE_SITE_KEY}"' >> .env
             php artisan optimize:clear
             php artisan storage:link --force
             php artisan config:cache
