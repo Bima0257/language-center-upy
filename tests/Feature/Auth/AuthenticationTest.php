@@ -51,4 +51,60 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
         $response->assertRedirect('/');
     }
+
+    public function test_users_can_authenticate_with_remember_me(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'remember' => true,
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
+
+        $this->assertNotNull($user->fresh()->remember_token);
+        $response->assertCookie(auth()->guard()->getRecallerName());
+    }
+
+    public function test_users_can_authenticate_without_remember_me(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'remember' => false,
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
+
+        $this->assertNull($user->fresh()->remember_token);
+        $response->assertCookieMissing(auth()->guard()->getRecallerName());
+    }
+
+    public function test_recaller_cookie_restores_session(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'remember' => true,
+        ]);
+
+        $recallerName = auth()->guard()->getRecallerName();
+        $recallerValue = collect($response->headers->getCookies())
+            ->first(fn ($cookie) => $cookie->getName() === $recallerName)
+            ->getValue();
+
+        $this->app['session']->flush();
+
+        $this->call('GET', '/dashboard', [], [$recallerName => $recallerValue]);
+
+        $this->assertAuthenticated();
+    }
 }

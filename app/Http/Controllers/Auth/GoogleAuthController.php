@@ -20,7 +20,14 @@ class GoogleAuthController extends Controller
 {
     public function redirect(Request $request): RedirectResponse
     {
-        session(['google_auth_action' => $request->query('action', 'login')]);
+        $action = $request->query('action', 'login');
+
+        if (! in_array($action, ['login', 'register'])) {
+            $action = 'login';
+        }
+
+        session(['google_auth_action' => $action]);
+        session(['google_auth_remember' => $request->boolean('remember')]);
 
         return Socialite::driver('google')->redirect();
     }
@@ -33,7 +40,8 @@ class GoogleAuthController extends Controller
         }
 
         $action = session('google_auth_action', 'login');
-        session()->forget('google_auth_action');
+        $remember = session('google_auth_remember', false);
+        session()->forget(['google_auth_action', 'google_auth_remember']);
 
         $googleUser = Socialite::driver('google')->user();
 
@@ -75,7 +83,13 @@ class GoogleAuthController extends Controller
             });
         }
 
-        Auth::login($user);
+        Auth::login($user, $remember);
+
+        $request->session()->regenerate();
+
+        $user->invalidateOtherSessions();
+
+        cookie()->queue(cookie('_logged', '1', config('session.lifetime')));
 
         if ($user->wasRecentlyCreated) {
             return redirect()->route('google.set-password');
@@ -103,7 +117,9 @@ class GoogleAuthController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
 
-        Auth::logoutOtherDevices($request->password);
+        $user->invalidateOtherSessions();
+
+        cookie()->queue(cookie('_logged', '1', config('session.lifetime')));
 
         if ($user->hasRole('student') && !$user->isVerified()) {
             return redirect()->route('onboarding.verify-identity');

@@ -87,26 +87,23 @@ const handleGoogleClick = () => {
     <AuthCard
         title="Tingkatkan skor TOEFL iBT-mu."
         subtitle="Bergabunglah dengan ribuan kandidat yang meraih impian mereka melalui lingkungan belajar profesional kami."
-        bottom-text="Belum punya akun?"
-        bottom-route="register"
-        bottom-link-label="Daftar sekarang"
     >
-        <header class="mb-8">
+        <header class="mb-5">
             <h1 class="text-primary text-headline-md font-bold mb-2">Masuk ke Akun Anda</h1>
             <p class="text-text-body text-body-md">Senang melihat Anda kembali. Silakan masukkan data Anda.</p>
         </header>
 
-        <div v-if="$page.props.flash?.error && !errorDismissed" class="bg-red-50 border border-red-200 text-error-red text-body-md rounded-2xl px-5 py-4 mb-6 relative">
+        <div v-if="$page.props.flash?.error && !errorDismissed" class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 text-error-red text-body-md rounded-2xl px-5 py-4 mb-6 relative">
             {{ $page.props.flash.error }}
             <button @click="dismiss('error')" class="absolute top-3 right-4 text-error-red/50 hover:text-error-red transition-colors">&times;</button>
         </div>
 
-        <div v-if="status && !statusDismissed" class="bg-green-50 border border-green-200 text-green-700 text-body-md rounded-2xl px-5 py-4 mb-6 relative">
+        <div v-if="status && !statusDismissed" class="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 text-green-700 dark:text-green-300 text-body-md rounded-2xl px-5 py-4 mb-6 relative">
             {{ status }}
-            <button @click="dismiss('status')" class="absolute top-3 right-4 text-green-600/50 hover:text-green-600 transition-colors">&times;</button>
+            <button @click="dismiss('status')" class="absolute top-3 right-4 text-green-600/50 dark:text-green-400/50 hover:text-green-600 dark:hover:text-green-400 transition-colors">&times;</button>
         </div>
 
-        <form @submit.prevent="submit" class="space-y-5">
+        <form @submit.prevent="submit" class="space-y-4">
             <div class="space-y-2">
                 <label class="text-primary text-label-md font-medium block ml-1" for="email">Email</label>
                 <div class="relative">
@@ -166,16 +163,16 @@ const handleGoogleClick = () => {
             </button>
         </form>
 
-        <div class="relative my-7 text-center">
+        <div class="relative my-5 text-center">
             <div class="absolute inset-0 flex items-center">
                 <div class="w-full border-t border-outline-variant"></div>
             </div>
             <span class="relative px-4 bg-surface-white text-text-muted text-label-md font-medium">atau</span>
         </div>
 
-        <a href="/auth/google/redirect?action=login" @click="handleGoogleClick"
+        <a :href="'/auth/google/redirect?action=login&remember=' + (form.remember ? '1' : '0')" @click="handleGoogleClick"
            :class="{'pointer-events-none opacity-50': googleLoading}"
-           class="w-full border border-outline-variant bg-surface-white text-primary text-label-md font-medium py-3.5 rounded-full flex items-center justify-center gap-3 hover:bg-surface-container-low transition-colors mb-6">
+            class="w-full border border-outline-variant bg-surface-white text-primary text-label-md font-medium py-3.5 rounded-full flex items-center justify-center gap-3 hover:bg-surface-container-low transition-colors mb-4">
             <svg class="w-5 h-5 animate-spin" v-if="googleLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>

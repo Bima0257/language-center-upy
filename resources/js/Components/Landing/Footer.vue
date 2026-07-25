@@ -1,6 +1,22 @@
 <script setup>
-import { IconSparkles, IconWorld, IconBrandGithub } from '@tabler/icons-vue';
+import { IconWorld, IconBrandGithub } from '@tabler/icons-vue';
 import { Link } from '@inertiajs/vue3';
+import { ref, onMounted, onUnmounted } from 'vue';
+
+const isDark = ref(false);
+
+function syncTheme() {
+    isDark.value = document.documentElement.classList.contains('dark');
+}
+
+onMounted(() => {
+    syncTheme();
+    document.addEventListener('theme-changed', syncTheme);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('theme-changed', syncTheme);
+});
 </script>
 
 <template>
@@ -8,19 +24,17 @@ import { Link } from '@inertiajs/vue3';
         <div class="w-full py-12 px-4 md:px-app-margin max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-8">
             <div class="max-w-xs">
                 <div class="flex items-center gap-2 mb-4">
-                    <div class="bg-primary p-1.5 rounded-lg">
-                        <IconSparkles class="text-white" :size="16" stroke="1.5" fill="currentColor" />
-                    </div>
+                    <img :src="isDark ? '/assets/image/logo-white.png' : '/assets/image/logo-dark.png'" alt="UPY Language Test" class="h-7 w-auto object-contain" />
                     <span class="text-title-lg font-bold text-primary">UPY Language Test</span>
                 </div>
                 <p class="text-text-body text-body-md mb-6">
                     Memberdayakan mahasiswa di seluruh Indonesia dengan persiapan TOEFL iBT dan bimbingan ahli.
                 </p>
                 <div class="flex gap-4">
-                    <a href="#" class="w-8 h-8 rounded-full bg-surface-white flex items-center justify-center text-primary-container hover:bg-primary-container hover:text-white transition-colors">
+                    <a href="#" class="w-8 h-8 rounded-full bg-surface-white flex items-center justify-center text-primary hover:bg-primary-container hover:text-white transition-colors">
                         <IconWorld :size="16" />
                     </a>
-                    <a href="#" class="w-8 h-8 rounded-full bg-surface-white flex items-center justify-center text-primary-container hover:bg-primary-container hover:text-white transition-colors">
+                    <a href="#" class="w-8 h-8 rounded-full bg-surface-white flex items-center justify-center text-primary hover:bg-primary-container hover:text-white transition-colors">
                         <IconBrandGithub :size="16" />
                     </a>
                 </div>

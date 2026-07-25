@@ -17,22 +17,20 @@ defineProps({
 <template>
     <Head title="UPY Language Test" />
 
-    <div class="min-h-screen md:h-screen md:overflow-hidden bg-deep-space p-0 md:p-10" style="font-family: 'Plus Jakarta Sans', sans-serif;">
-        <div class="flex flex-col h-full max-w-[1440px] mx-auto overflow-hidden md:rounded-3xl shadow-standard">
-            <Navbar :can-login="canLogin" :can-register="canRegister" class="shrink-0" />
+    <div class="flex flex-col min-h-screen md:h-screen md:overflow-hidden bg-surface-white">
+        <Navbar :can-login="canLogin" :can-register="canRegister" class="shrink-0" />
 
-            <main class="flex-1 bg-[#f4f4f7] overflow-hidden relative">
-                <div class="h-full overflow-y-auto landing-scroll-area pt-6 md:pt-8">
-                    <Hero />
-                    <Features />
-                    <div id="pricing">
-                        <CTA />
-                    </div>
-                    <Footer />
+        <main class="flex-1 overflow-hidden relative">
+            <div class="h-full overflow-y-auto landing-scroll-area pt-6 md:pt-8">
+                <Hero />
+                <Features />
+                <div id="pricing">
+                    <CTA />
                 </div>
-                <ScrollToTop inline />
-            </main>
-        </div>
+                <Footer />
+            </div>
+            <ScrollToTop inline />
+        </main>
 
         <MobileBottomNav />
     </div>

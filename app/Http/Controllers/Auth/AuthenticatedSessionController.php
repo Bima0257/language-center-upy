@@ -35,6 +35,10 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
+        $user->invalidateOtherSessions();
+
+        cookie()->queue(cookie('_logged', '1', config('session.lifetime')));
+
         if ($user->hasRole('proctor') && !$user->hasRole('admin') && !$user->hasRole('superadmin')) {
             return redirect()->intended(route('proctor.dashboard', absolute: false));
         }
@@ -60,6 +64,8 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
+
+        cookie()->queue(cookie()->forget('_logged'));
 
         return redirect('/');
     }

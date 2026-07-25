@@ -1,5 +1,6 @@
 <script setup>
-import { IconTrophy } from '@tabler/icons-vue';
+import { IconUsers, IconBooks, IconTrendingUp } from '@tabler/icons-vue';
+
 defineProps({
     title: String,
     subtitle: String,
@@ -7,42 +8,59 @@ defineProps({
 </script>
 
 <template>
-    <div class="min-h-screen bg-deep-space flex items-center justify-center p-4 md:p-10 relative overflow-hidden">
-        <div class="absolute top-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-secondary-container opacity-10 rounded-full blur-[120px] pointer-events-none"></div>
-        <div class="absolute bottom-[-10%] left-[-10%] w-[30vw] h-[30vw] bg-pastel-purple opacity-5 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="h-dvh flex flex-col md:flex-row overflow-hidden">
+        <div class="hidden md:flex md:w-5/12 bg-primary-container px-6 py-6 md:p-10 flex-col justify-between shrink-0 md:border-r border-white/5">
 
-        <div class="w-full max-w-[1000px] bg-surface-white rounded-[32px] overflow-hidden flex flex-col md:flex-row min-h-[640px] shadow-lg z-10">
-            <div class="w-full md:w-5/12 bg-surface-container-low px-6 py-6 md:p-10 flex flex-col justify-between relative overflow-hidden">
-                <div>
-                    <div class="flex items-center gap-3 mb-4 md:mb-10">
-                        <img src="/assets/image/logo.png" alt="UPY Language Test" class="h-10 w-10 object-contain rounded-xl" />
-                        <span class="text-primary text-headline-md font-bold tracking-tight">UPY Language Test</span>
-                    </div>
-                    <h2 class="text-text-heading text-headline-md font-bold mb-4 leading-tight">{{ title }}</h2>
-                    <p class="text-text-body text-body-md max-w-xs">{{ subtitle }}</p>
+            <div>
+                <div class="flex items-center gap-3 mb-4 md:mb-8">
+                    <img src="/assets/image/logo-white.png" alt="UPY Language Test" class="h-10 w-10 object-contain rounded-xl" />
+                    <span class="text-white/90 text-headline-md font-bold tracking-tight">UPY Language Test</span>
                 </div>
+                <h2 class="text-white/90 text-headline-md font-bold mb-3 leading-tight">{{ title }}</h2>
+                <p class="text-white/50 text-body-md max-w-xs">{{ subtitle }}</p>
 
-                <div class="relative mt-8 hidden md:block">
-                    <div class="bg-surface-white p-4 rounded-2xl shadow-sm border border-outline-variant -rotate-2 relative z-10">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="w-8 h-8 rounded-full bg-pastel-peach flex items-center justify-center">
-                                <IconTrophy class="text-tertiary-container" :size="18" />
+                <div class="hidden md:flex flex-col gap-3 mt-8">
+                    <div class="bg-white/5 rounded-xl p-4">
+                        <div class="flex items-center gap-2.5 mb-1.5">
+                            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                <IconUsers class="text-white/80" :size="16" />
                             </div>
-                            <span class="text-label-md font-medium text-primary">Skor Target Tercapai</span>
+                            <span class="text-white text-title-lg font-bold">10,000+</span>
                         </div>
-                        <div class="w-full h-1 bg-track-neutral rounded-full overflow-hidden">
-                            <div class="w-[85%] h-full bg-primary-container"></div>
+                        <p class="text-white/80 text-label-md font-medium mb-0.5">Peserta Aktif</p>
+                        <p class="text-white/40 text-body-md">Bergabung dan raih skor impian bersama ribuan peserta lainnya.</p>
+                    </div>
+
+                    <div class="bg-white/5 rounded-xl p-4">
+                        <div class="flex items-center gap-2.5 mb-1.5">
+                            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                <IconBooks class="text-white/80" :size="16" />
+                            </div>
+                            <span class="text-white text-title-lg font-bold">5,000+</span>
                         </div>
+                        <p class="text-white/80 text-label-md font-medium mb-0.5">Soal Latihan</p>
+                        <p class="text-white/40 text-body-md">Materi komprehensif mencakup Reading, Listening, Speaking, dan Writing.</p>
+                    </div>
+
+                    <div class="bg-white/5 rounded-xl p-4">
+                        <div class="flex items-center gap-2.5 mb-1.5">
+                            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                <IconTrendingUp class="text-white/80" :size="16" />
+                            </div>
+                            <span class="text-white text-title-lg font-bold">85+</span>
+                        </div>
+                        <p class="text-white/80 text-label-md font-medium mb-0.5">Rata-rata Skor</p>
+                        <p class="text-white/40 text-body-md">Peningkatan skor signifikan yang dicapai oleh para peserta kami.</p>
                     </div>
                 </div>
-
-                <div class="text-text-muted text-label-md mt-auto hidden md:block">&copy; 2026 UPY Language Test.</div>
             </div>
 
-            <div class="w-full md:w-7/12 p-8 md:p-14 flex flex-col justify-center">
-                <div class="max-w-[360px] mx-auto w-full">
-                    <slot />
-                </div>
+            <div class="text-white/30 text-label-md mt-auto hidden md:block">&copy; 2026 UPY Language Test.</div>
+        </div>
+
+        <div class="flex-1 min-h-0 bg-surface-white p-6 md:p-10 flex flex-col justify-start overflow-y-auto">
+            <div class="max-w-[520px] mx-auto w-full ring-1 ring-outline-variant/10 rounded-3xl px-6 py-12 md:px-8 md:py-16">
+                <slot />
             </div>
         </div>
     </div>

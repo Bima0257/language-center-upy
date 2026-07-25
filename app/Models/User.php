@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'password', 'phone', 'photo', 'is_active', 'google_id', 'google_avatar'])]
@@ -58,5 +59,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isStudent(): bool
     {
         return $this->hasRole('student');
+    }
+
+    public function invalidateOtherSessions(): void
+    {
+        DB::table('sessions')
+            ->where('user_id', $this->id)
+            ->where('id', '!=', session()->getId())
+            ->delete();
     }
 }

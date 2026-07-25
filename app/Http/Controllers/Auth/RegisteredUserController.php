@@ -9,6 +9,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use App\Rules\Turnstile;
@@ -31,15 +32,19 @@ class RegisteredUserController extends Controller
             'cf-turnstile-response' => ['required', new Turnstile],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        $user = DB::transaction(function () use ($request) {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
 
-        $user->assignRole('student');
+            $user->assignRole('student');
 
-        StudentProfile::create(['user_id' => $user->id]);
+            StudentProfile::create(['user_id' => $user->id]);
+
+            return $user;
+        });
 
         event(new Registered($user));
 

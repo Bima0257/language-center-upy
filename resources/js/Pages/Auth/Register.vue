@@ -72,12 +72,12 @@ const handleGoogleClick = (e) => {
         title="Mulai Perjalanan TOEFL-mu."
         subtitle="Bergabunglah dengan ribuan peserta yang berhasil meraih skor impian mereka bersama UPY Language Test."
     >
-        <header class="mb-8">
+        <header class="mb-5">
             <h1 class="text-primary text-headline-md font-bold mb-2">Buat Akun Baru</h1>
             <p class="text-text-body text-body-md">Mulai persiapan TOEFL Anda bersama kami.</p>
         </header>
 
-        <form @submit.prevent="submit" class="space-y-4">
+        <form @submit.prevent="submit" class="space-y-3">
             <div class="space-y-2">
                 <label class="text-primary text-label-md font-medium block ml-1" for="name">Nama Lengkap</label>
                 <div class="relative">
@@ -166,7 +166,7 @@ const handleGoogleClick = (e) => {
             </button>
         </form>
 
-        <div class="relative my-7 text-center">
+        <div class="relative my-5 text-center">
             <div class="absolute inset-0 flex items-center">
                 <div class="w-full border-t border-outline-variant"></div>
             </div>
@@ -175,7 +175,7 @@ const handleGoogleClick = (e) => {
 
         <a href="/auth/google/redirect?action=register" @click="handleGoogleClick"
            :class="{'pointer-events-none opacity-50': googleLoading}"
-           class="w-full border border-outline-variant bg-surface-white text-primary text-label-md font-medium py-3.5 rounded-full flex items-center justify-center gap-3 hover:bg-surface-container-low transition-colors mb-6">
+            class="w-full border border-outline-variant bg-surface-white text-primary text-label-md font-medium py-3.5 rounded-full flex items-center justify-center gap-3 hover:bg-surface-container-low transition-colors mb-4">
             <svg class="w-5 h-5 animate-spin" v-if="googleLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>

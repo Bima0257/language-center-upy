@@ -8,36 +8,42 @@ const features = [
         description: 'Simulasi ujian realistis yang mereplikasi lingkungan tes TOEFL iBT sesungguhnya.',
         icon: h(IconListCheck),
         bgClass: 'bg-pastel-blue',
+        iconClass: 'text-icon-pastel',
     },
     {
         title: 'Penilaian AI untuk Speaking',
         description: 'Umpan balik instan dan objektif pada pengucapan dan kefasihan bertenaga AI.',
         icon: h(IconBrain),
         bgClass: 'bg-pastel-purple',
+        iconClass: 'text-icon-pastel',
     },
     {
         title: 'Pelajaran Skill',
         description: 'Modul kurasi yang berfokus pada tata bahasa, kosakata, dan teknik membaca akademik.',
         icon: h(IconSchool),
         bgClass: 'bg-pastel-peach',
+        iconClass: 'text-icon-pastel',
     },
     {
         title: 'Pelacakan Kemajuan',
         description: 'Dasbor visual yang menyoroti kekuatan dan area yang perlu perbaikan.',
         icon: h(IconChartBar),
         bgClass: 'bg-surface-container-low',
+        iconClass: 'text-primary',
     },
     {
         title: 'Umpan Balik Ahli',
         description: 'Wawasan personal dari instruktur bersertifikat untuk tulisan dan respons kompleks.',
         icon: h(IconMessages),
         bgClass: 'bg-pastel-blue',
+        iconClass: 'text-icon-pastel',
     },
     {
         title: 'Sesi Langsung',
         description: 'Lokakarya kelompok interaktif harian untuk membahas bagian tes tersulit bersama.',
         icon: h(IconBroadcast),
         bgClass: 'bg-pastel-purple',
+        iconClass: 'text-icon-pastel',
     },
 ];
 </script>
@@ -63,7 +69,7 @@ const features = [
             <div v-for="feature in features" :key="feature.title"
                  class="bg-surface-white p-inner-padding rounded-2xl shadow-standard hover:-translate-y-1 transition-all cursor-pointer group">
                 <div class="rounded-xl flex items-center justify-center mb-6 w-12 h-12" :class="feature.bgClass">
-                    <component :is="feature.icon" class="text-primary group-hover:scale-110 transition-transform" :size="24" stroke="1.5" />
+                    <component :is="feature.icon" :class="feature.iconClass" class="group-hover:scale-110 transition-transform" :size="24" stroke="1.5" />
                 </div>
                 <h3 class="text-text-heading text-title-lg font-semibold mb-2">{{ feature.title }}</h3>
                 <p class="text-text-body text-body-md">{{ feature.description }}</p>

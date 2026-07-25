@@ -21,7 +21,7 @@ Route::middleware('auth')->prefix('onboarding')->name('onboarding.')->group(func
     Route::post('/upload-identity', [OnboardingController::class, 'uploadIdentity'])->name('upload-identity');
 });
 
-Route::middleware(['auth', 'verified.user'])->group(function () {
+Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
         $data = [];
@@ -51,7 +51,7 @@ Route::middleware(['auth', 'verified.user'])->group(function () {
         }
 
         return Inertia::render('Dashboard', $data);
-    })->middleware('verified')->name('dashboard');
+    })->name('dashboard');
 
     Route::middleware('role:admin,superadmin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/verify-users', [VerificationController::class, 'index'])->name('verify-users');
