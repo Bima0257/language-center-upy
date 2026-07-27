@@ -39,7 +39,15 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $user ? $user->getPermissionNames() : [],
             ],
             'flash' => [
-                'error' => session('error'),
+                'error' => session('error') ?: (function () use ($request) {
+                    $errors = $request->session()->get('errors');
+                    if (! $errors) {
+                        return null;
+                    }
+                    $bag = $errors->getBag('default');
+
+                    return $bag->isNotEmpty() ? $bag->first() : null;
+                })(),
                 'success' => session('success'),
             ],
         ];

@@ -62,7 +62,7 @@ function submitFile() {
             <textarea v-model="jsonForm.questions" rows="6"
                       placeholder='[{"type":"multiple_choice","question_text":"...","options":[{"key":"A","text":"..."}],"correct_answer":"A"}]'
                       @input="parsePreview"
-                      class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md font-mono text-sm"></textarea>
+                      class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md font-mono text-sm"></textarea>
             <p v-if="preview.length" class="text-text-muted text-label-md">{{ preview.length }} soal akan diimpor.</p>
             <button @click="submitJson" :disabled="jsonForm.processing || !jsonForm.questions"
                     class="bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
@@ -73,8 +73,8 @@ function submitFile() {
         <div v-else class="space-y-3">
             <div class="border-2 border-dashed border-outline-variant rounded-2xl p-6 text-center hover:border-primary transition-colors cursor-pointer"
                  @click="$refs.fileInput.click()">
-                <p v-if="!fileForm.file" class="text-text-muted text-body-md">Klik untuk upload file CSV atau Excel</p>
-                <p v-else class="text-primary text-body-md font-medium">{{ fileForm.file.name }}</p>
+                <p v-if="!fileForm.file" class="text-text-muted text-text-body text-body-md">Klik untuk upload file CSV atau Excel</p>
+                <p v-else class="text-primary text-text-body text-body-md font-medium">{{ fileForm.file.name }}</p>
                 <p class="text-text-muted text-label-md mt-1">Format: .xlsx, .xls, .csv — Maks 10MB</p>
                 <input ref="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" @change="onFileSelect" />
             </div>

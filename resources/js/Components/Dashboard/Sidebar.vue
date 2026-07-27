@@ -1,5 +1,6 @@
 <script setup>
 import { Link, usePage } from "@inertiajs/vue3";
+import { ref, onMounted, onUnmounted } from "vue";
 import {
     IconChartPie,
     IconBooks,
@@ -19,6 +20,21 @@ defineProps({
 });
 
 defineEmits(["toggle"]);
+
+const isDark = ref(false);
+
+function syncTheme() {
+    isDark.value = document.documentElement.classList.contains('dark');
+}
+
+onMounted(() => {
+    syncTheme();
+    document.addEventListener('dashboard-theme-changed', syncTheme);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('dashboard-theme-changed', syncTheme);
+});
 
 const page = usePage();
 const roles = page.props.auth?.roles || [];
@@ -40,12 +56,8 @@ if (isStudent) {
 if (isInstructor) {
     nav.push(
         { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
-        {
-            label: "Manajemen Ujian",
-            icon: IconFileDescription,
-            route: "admin.exams.index",
-        },
         { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },
+        { label: "Passage", icon: IconFileDescription, route: "content-library.passages.index" },
         { label: "Tag", icon: IconTags, route: "content-library.tags.index" },
     );
 }
@@ -64,6 +76,7 @@ if (isProctorOnly) {
 if (isAdmin) {
     nav.push(
         { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
+        { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },
         {
             label: "Manajemen Ujian",
             icon: IconFileDescription,
@@ -107,7 +120,7 @@ function isActive(routeName) {
             :class="collapsed ? 'px-1' : 'px-4 gap-3'"
         >
             <img
-                src="/assets/image/logo.png"
+                :src="isDark ? '/assets/image/logo-white.png' : '/assets/image/logo-dark.png'"
                 alt="Logo"
                 class="shrink-0 object-contain rounded-xl"
                 :class="collapsed ? 'w-8 h-8' : 'w-10 h-10'"
@@ -121,7 +134,7 @@ function isActive(routeName) {
             <button
                 v-if="!collapsed"
                 @click="$emit('toggle')"
-                class="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-outline-variant shadow-sm flex items-center justify-center text-text-muted hover:text-primary hover:border-primary transition-colors z-10"
+                class="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-surface-white border border-outline-variant shadow-sm flex items-center justify-center text-text-muted hover:text-primary hover:border-primary transition-colors z-10"
                 title="Ciutkan sidebar"
             >
                 <IconMenu2 :size="18" stroke="1.5" />

@@ -57,20 +57,20 @@ function submit() {
             <div>
                 <label class="text-label-md font-medium text-primary block mb-1">Tipe Soal</label>
                 <select v-model="form.type"
-                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
+                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                     <option v-for="(label, key) in typeLabels" :key="key" :value="key">{{ label }}</option>
                 </select>
             </div>
             <div>
                 <label class="text-label-md font-medium text-primary block mb-1">Poin</label>
                 <input type="number" v-model="form.points" min="1"
-                       class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                       class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
             </div>
         </div>
         <div>
             <label class="text-label-md font-medium text-primary block mb-1">Teks Soal</label>
             <textarea v-model="form.question_text" rows="2" required
-                      class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary"
+                      class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"
                       :placeholder="form.type === 'dictation' ? 'Teks yang harus ditranskripsi peserta' : form.type === 'error_id' ? 'Kalimat lengkap dengan error, tulis bagian yang salah di Opsi' : ''"></textarea>
         </div>
 
@@ -80,7 +80,7 @@ function submit() {
             <label class="text-label-md font-medium text-primary block mb-1">{{ correctLabel }}</label>
             <template v-if="form.type === 'true_false'">
                 <select v-model="form.correct_answer"
-                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
+                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                     <option value="" disabled>Pilih jawaban</option>
                     <option value="A">True</option>
                     <option value="B">False</option>
@@ -89,7 +89,7 @@ function submit() {
             </template>
             <template v-else-if="form.type === 'multiple_choice' && form.options">
                 <select v-model="form.correct_answer"
-                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
+                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                     <option value="" disabled>Pilih jawaban</option>
                     <option v-for="o in (() => { try { const p=JSON.parse(form.options); return p; } catch{ return []; } })()" :key="o.key" :value="o.key">
                         {{ o.key }}. {{ o.text?.substring(0, 30) }}
@@ -98,7 +98,7 @@ function submit() {
             </template>
             <template v-else>
                 <input type="text" v-model="form.correct_answer" :placeholder="correctLabel"
-                       class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                       class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
             </template>
         </div>
 

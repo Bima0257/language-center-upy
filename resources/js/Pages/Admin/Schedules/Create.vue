@@ -23,7 +23,7 @@ function submit() {
     <Head title="Buat Jadwal" />
     <DashboardLayout title="Buat Jadwal">
         <div class="max-w-2xl mx-auto">
-            <div class="bg-white rounded-2xl p-8 shadow-soft border border-outline-variant/30">
+            <div class="bg-surface-white rounded-2xl p-8 shadow-soft border border-outline-variant/30">
                 <p class="text-text-body text-body-md mb-6">Ujian: <strong>{{ exam.title }}</strong></p>
                 <form @submit.prevent="submit" class="space-y-5">
                     <div>

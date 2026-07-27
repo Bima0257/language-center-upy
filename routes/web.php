@@ -43,11 +43,12 @@ Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
             $data['totalExams'] = \App\Models\Exam::count();
             $data['activeSessionsCount'] = \App\Models\ExamSession::where('status', 'in_progress')->count();
             $data['flaggedSessionsCount'] = \App\Models\ExamSession::where('is_flagged', true)->whereNull('reviewed_at')->count();
+            $data['pendingReviewCount'] = \App\Models\Question::where('status', 'submitted')->count();
         }
 
         if ($user->hasRole('instructor')) {
             $data['totalQuestions'] = \App\Models\Question::count();
-            $data['totalExams'] = \App\Models\Exam::count();
+            $data['totalPassages'] = \App\Models\Passage::count();
         }
 
         return Inertia::render('Dashboard', $data);

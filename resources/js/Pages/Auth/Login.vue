@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { IconMail, IconLock, IconEye, IconEyeOff } from '@tabler/icons-vue';
 import AuthCard from '@/Components/Landing/AuthCard.vue';
 import { ref, onMounted } from 'vue';
@@ -16,10 +16,7 @@ const form = useForm({
     'cf-turnstile-response': '',
 });
 
-const page = usePage();
 const showPassword = ref(false);
-const errorDismissed = ref(false);
-const statusDismissed = ref(false);
 const googleLoading = ref(false);
 const turnstileWidgetId = ref(null);
 
@@ -43,21 +40,10 @@ const renderTurnstile = () => {
 window.onTurnstileLoad = renderTurnstile;
 
 onMounted(() => {
-    if (page.props.flash?.error) {
-        setTimeout(() => { errorDismissed.value = true; }, 6000);
-    }
-    if (page.props.status) {
-        setTimeout(() => { statusDismissed.value = true; }, 6000);
-    }
     if (window.turnstile) {
         renderTurnstile();
     }
 });
-
-const dismiss = (type) => {
-    if (type === 'error') errorDismissed.value = true;
-    if (type === 'status') statusDismissed.value = true;
-};
 
 const submit = () => {
     if (window.turnstile) {
@@ -93,16 +79,6 @@ const handleGoogleClick = () => {
             <p class="text-text-body text-body-md">Senang melihat Anda kembali. Silakan masukkan data Anda.</p>
         </header>
 
-        <div v-if="$page.props.flash?.error && !errorDismissed" class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 text-error-red text-body-md rounded-2xl px-5 py-4 mb-6 relative">
-            {{ $page.props.flash.error }}
-            <button @click="dismiss('error')" class="absolute top-3 right-4 text-error-red/50 hover:text-error-red transition-colors">&times;</button>
-        </div>
-
-        <div v-if="status && !statusDismissed" class="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 text-green-700 dark:text-green-300 text-body-md rounded-2xl px-5 py-4 mb-6 relative">
-            {{ status }}
-            <button @click="dismiss('status')" class="absolute top-3 right-4 text-green-600/50 dark:text-green-400/50 hover:text-green-600 dark:hover:text-green-400 transition-colors">&times;</button>
-        </div>
-
         <form @submit.prevent="submit" class="space-y-4">
             <div class="space-y-2">
                 <label class="text-primary text-label-md font-medium block ml-1" for="email">Email</label>
@@ -116,7 +92,7 @@ const handleGoogleClick = () => {
                         autofocus
                         autocomplete="username"
                         placeholder="nama@email.com"
-                        class="w-full pl-11 pr-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md transition-all placeholder:text-text-muted focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]"
+                        class="w-full pl-11 pr-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-primary text-body-md transition-all placeholder:text-text-muted focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]"
                     />
                 </div>
                 <p v-if="form.errors.email" class="text-error-red text-xs mt-1 ml-1">{{ form.errors.email }}</p>
@@ -138,7 +114,7 @@ const handleGoogleClick = () => {
                         required
                         autocomplete="current-password"
                         placeholder="••••••••"
-                        class="w-full pl-11 pr-12 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md transition-all placeholder:text-text-muted focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]"
+                        class="w-full pl-11 pr-12 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-primary text-body-md transition-all placeholder:text-text-muted focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]"
                     />
                     <button type="button" @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors">
                         <IconEye v-if="!showPassword" :size="20" />

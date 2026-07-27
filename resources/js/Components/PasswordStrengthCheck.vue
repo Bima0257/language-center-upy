@@ -41,16 +41,16 @@ const rules = [
         >
             <IconCheck
                 v-if="rule.test(password)"
-                class="text-green-500 shrink-0"
+                class="text-green-500 dark:text-green-400 shrink-0"
                 :size="16"
             />
             <IconX
                 v-else
-                class="text-zinc-300 shrink-0"
+                class="text-zinc-300 dark:text-zinc-500 shrink-0"
                 :size="16"
             />
             <span
-                :class="rule.test(password) ? 'text-green-600' : 'text-zinc-400'"
+                :class="rule.test(password) ? 'text-green-600 dark:text-green-400' : 'text-zinc-400 dark:text-zinc-500'"
             >
                 {{ rule.label }}
             </span>

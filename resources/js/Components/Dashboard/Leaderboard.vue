@@ -29,12 +29,12 @@ const players = [
                 </div>
                 <div class="flex gap-3">
                     <div class="flex items-center gap-1.5 bg-pastel-peach px-3 py-1.5 rounded-full">
-                        <IconCoin :size="16" class="text-orange-500" />
-                        <span class="text-label-md font-medium text-orange-800">288 points</span>
+                        <IconCoin :size="16" class="text-orange-500 dark:text-orange-400" />
+                        <span class="text-label-md font-medium text-orange-800 dark:text-orange-200">288 points</span>
                     </div>
                     <div class="flex items-center gap-1.5 bg-pastel-purple px-3 py-1.5 rounded-full">
-                        <IconAward :size="16" class="text-purple-600" />
-                        <span class="text-label-md font-medium text-purple-800">7 badges</span>
+                        <IconAward :size="16" class="text-purple-600 dark:text-purple-400" />
+                        <span class="text-label-md font-medium text-purple-800 dark:text-purple-200">7 badges</span>
                     </div>
                 </div>
             </div>
@@ -51,7 +51,7 @@ const players = [
                         <p class="text-[11px] text-text-muted truncate">{{ player.role }}</p>
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
-                        <IconCoin :size="16" class="text-orange-500" />
+                        <IconCoin :size="16" class="text-orange-500 dark:text-orange-400" />
                         <span class="text-label-md font-medium text-primary">{{ player.points }} poin</span>
                     </div>
                 </div>

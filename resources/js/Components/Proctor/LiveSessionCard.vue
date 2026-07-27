@@ -20,7 +20,7 @@ function formatDuration(startedAt) {
                 <p class="text-title-lg font-semibold text-primary truncate">{{ session.user?.name }}</p>
                 <p class="text-label-md text-text-muted truncate">{{ session.user?.nim || 'NIM: -' }}</p>
             </div>
-            <span class="flex items-center gap-1.5 text-label-md font-medium text-green-600 shrink-0">
+            <span class="flex items-center gap-1.5 text-label-md font-medium text-green-600 dark:text-green-400 shrink-0">
                 LIVE → <span class="w-2 h-2 rounded-full bg-green-500 inline-block animate-pulse"></span>
                 AKTIF
             </span>
@@ -29,7 +29,7 @@ function formatDuration(startedAt) {
         <div class="flex items-center gap-3 text-label-md text-text-muted">
             <span>⏱ {{ formatDuration(session.started_at) }}</span>
             <span class="w-px h-3 bg-outline-variant"></span>
-            <span :class="(session.violation_strikes || 0) > 0 ? 'text-amber-600 font-medium' : ''">
+            <span :class="(session.violation_strikes || 0) > 0 ? 'text-amber-600 dark:text-amber-400 font-medium' : ''">
                 ⚠ {{ session.violation_strikes || 0 }} pelanggaran
             </span>
             <span class="w-px h-3 bg-outline-variant"></span>

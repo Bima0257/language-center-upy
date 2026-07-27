@@ -1,9 +1,33 @@
 <script setup>
-import { IconSearch, IconMail, IconBell } from "@tabler/icons-vue";
+import { IconSearch, IconMail, IconBell, IconSun, IconMoon } from "@tabler/icons-vue";
 import { Link } from "@inertiajs/vue3";
+import { ref, onMounted } from "vue";
 
 defineProps({
     title: { type: String, default: "Dashboard" },
+});
+
+const isDark = ref(false);
+
+function syncTheme() {
+    isDark.value = document.documentElement.classList.contains('dark');
+}
+
+function toggleTheme() {
+    isDark.value = !isDark.value;
+    if (isDark.value) {
+        document.documentElement.classList.add('dark');
+        localStorage.dashboardTheme = 'dark';
+    } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.dashboardTheme = 'light';
+    }
+    document.dispatchEvent(new CustomEvent('dashboard-theme-changed'));
+}
+
+onMounted(() => {
+    syncTheme();
+    document.addEventListener('dashboard-theme-changed', syncTheme);
 });
 </script>
 
@@ -37,6 +61,12 @@ defineProps({
                     <span
                         class="absolute top-2.5 right-2.5 w-2 h-2 bg-error-red rounded-full border-2 border-surface-white"
                     ></span>
+                </button>
+                <button @click="toggleTheme"
+                        class="w-10 h-10 flex items-center justify-center text-text-body hover:bg-surface-container-low rounded-full transition-colors"
+                        :title="isDark ? 'Mode Terang' : 'Mode Gelap'">
+                    <IconSun v-if="isDark" :size="20" class="transition-transform hover:rotate-90" />
+                    <IconMoon v-else :size="20" class="transition-transform hover:rotate-12" />
                 </button>
                 <div
                     class="w-10 h-10 rounded-full overflow-hidden border-2 border-outline-variant bg-surface-container flex items-center justify-center text-primary font-bold text-sm"

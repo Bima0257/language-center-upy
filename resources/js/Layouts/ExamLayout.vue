@@ -1,6 +1,7 @@
 <script setup>
 import TimerDisplay from '@/Components/Exam/TimerDisplay.vue';
 import { IconUser } from '@tabler/icons-vue';
+import ConfirmDialog from '@/Components/ConfirmDialog.vue';
 
 defineProps({
     session: { type: Object, required: true },
@@ -39,5 +40,6 @@ defineProps({
             </div>
             <slot name="footer" />
         </main>
+        <ConfirmDialog />
     </div>
 </template>

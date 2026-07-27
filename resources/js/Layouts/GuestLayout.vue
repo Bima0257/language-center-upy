@@ -1,5 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import ConfirmDialog from '@/Components/ConfirmDialog.vue';
 </script>
 
 <template>
@@ -17,5 +18,6 @@ import { Link } from '@inertiajs/vue3';
         >
             <slot />
         </div>
+        <ConfirmDialog />
     </div>
 </template>

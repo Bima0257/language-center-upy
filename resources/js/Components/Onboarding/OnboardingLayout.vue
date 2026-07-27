@@ -16,14 +16,14 @@ const steps = [
 <template>
     <div class="min-h-screen md:h-screen md:overflow-hidden bg-deep-space p-0 md:p-10">
         <div class="flex flex-col h-full max-w-[1440px] mx-auto overflow-hidden md:rounded-3xl shadow-standard">
-            <div class="bg-white px-6 md:px-10 py-5 flex items-center justify-between shrink-0 border-b border-outline-variant/30">
+            <div class="bg-surface-white px-6 md:px-10 py-5 flex items-center justify-between shrink-0 border-b border-outline-variant/30">
                 <div class="flex items-center gap-2">
                     <template v-for="(step, i) in steps" :key="i">
                         <div class="flex items-center gap-2">
                             <component :is="step.icon" :size="22" stroke="1.5"
-                                       :class="i < currentStep ? 'text-green-500' : i === currentStep ? 'text-primary-container' : 'text-text-muted'" />
+                                       :class="i < currentStep ? 'text-green-500 dark:text-green-400' : i === currentStep ? 'text-primary-container' : 'text-text-muted'" />
                             <span class="text-sm md:text-label-md font-medium"
-                                  :class="i < currentStep ? 'text-green-600' : i === currentStep ? 'text-primary font-bold' : 'text-text-muted'">
+                                  :class="i < currentStep ? 'text-green-600 dark:text-green-400' : i === currentStep ? 'text-primary font-bold' : 'text-text-muted'">
                                 {{ step.label }}
                             </span>
                         </div>

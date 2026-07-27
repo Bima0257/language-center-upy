@@ -16,10 +16,10 @@ const countdown = ref(5);
 <template>
     <Teleport to="body">
         <div v-if="show" class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-6">
-            <div class="bg-white rounded-3xl p-8 shadow-app-frame max-w-md w-full">
+            <div class="bg-surface-white rounded-3xl p-8 shadow-app-frame max-w-md w-full">
                 <div class="flex items-start gap-4">
                     <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center shrink-0">
-                        <IconAlertTriangle class="text-amber-600" :size="24" />
+                        <IconAlertTriangle class="text-amber-600 dark:text-amber-400" :size="24" />
                     </div>
                     <div class="flex-1">
                         <h3 class="text-title-lg font-semibold text-primary mb-1">Peringatan Ke-{{ strike }}</h3>

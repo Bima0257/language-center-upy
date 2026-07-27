@@ -3,6 +3,9 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import { IconPlus, IconTrash, IconEdit, IconX, IconCheck } from '@tabler/icons-vue';
 import { ref } from 'vue';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const confirm = useConfirm();
 
 defineProps({
     tags: { type: Array, default: () => [] },
@@ -34,8 +37,8 @@ function saveEdit(id) {
     });
 }
 
-function deleteTag(id) {
-    if (!confirm('Hapus tag ini?')) return;
+async function deleteTag(id) {
+    if (!await confirm.confirm('Hapus tag ini?')) return;
     router.delete(route('content-library.tags.destroy', id), { preserveScroll: true });
 }
 
@@ -57,7 +60,7 @@ const groupedTags = (tags) => ({
             </button>
         </div>
 
-        <div v-if="showCreate" class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 mb-6">
+        <div v-if="showCreate" class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 mb-6">
             <form @submit.prevent="submitCreate" class="flex gap-3 items-end">
                 <div class="flex-1">
                     <label class="text-label-md font-medium text-primary block mb-1.5">Nama Tag</label>
@@ -85,7 +88,7 @@ const groupedTags = (tags) => ({
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div v-for="(group, type) in groupedTags(tags)" :key="type" class="bg-white rounded-2xl p-5 shadow-soft border border-outline-variant/30">
+            <div v-for="(group, type) in groupedTags(tags)" :key="type" class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30">
                 <h3 class="text-title-lg font-semibold text-primary capitalize mb-4">{{ type }}</h3>
                 <div v-if="group.length === 0" class="text-text-muted text-body-md text-center py-4">Belum ada tag.</div>
                 <div v-for="tag in group" :key="tag.id" class="flex items-center justify-between py-2 border-b border-outline-variant/20 last:border-0">
@@ -98,7 +101,7 @@ const groupedTags = (tags) => ({
                     <div v-else class="flex gap-2 flex-1">
                         <input type="text" v-model="editForm.name"
                                class="flex-1 px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl text-body-md" />
-                        <button @click="saveEdit(tag.id)" class="text-green-600"><IconCheck :size="18" /></button>
+                        <button @click="saveEdit(tag.id)" class="text-green-600 dark:text-green-400"><IconCheck :size="18" /></button>
                         <button @click="editingId = null" class="text-text-muted"><IconX :size="18" /></button>
                     </div>
                     <div v-if="editingId !== tag.id" class="flex gap-1 ml-2">

@@ -22,19 +22,19 @@ const violationTypeLabel = (type) => {
 </script>
 
 <template>
-    <div class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+    <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
         <h3 class="text-title-lg font-semibold text-primary mb-4">Log Pelanggaran</h3>
         <div v-if="violations.length === 0" class="text-text-muted text-body-md">Tidak ada pelanggaran.</div>
         <div v-else class="space-y-3">
             <div v-for="v in violations" :key="v.id"
                  class="flex items-start gap-3 p-3 bg-surface-container-low rounded-2xl">
-                <IconAlertTriangle class="text-amber-500 shrink-0 mt-0.5" :size="18" stroke="1.5" />
+                <IconAlertTriangle class="text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" :size="18" stroke="1.5" />
                 <div>
                     <p class="text-label-md font-medium text-primary">{{ violationTypeLabel(v.type) }}</p>
                     <p class="text-label-md text-text-muted">{{ v.created_at }}</p>
                 </div>
                 <span class="ml-auto text-label-md font-medium"
-                      :class="v.strike_count >= 3 ? 'text-error-red' : 'text-amber-500'">
+                      :class="v.strike_count >= 3 ? 'text-error-red' : 'text-amber-500 dark:text-amber-400'">
                     Pelanggaran #{{ v.strike_count }}
                 </span>
             </div>

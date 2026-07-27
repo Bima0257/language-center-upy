@@ -47,7 +47,7 @@ onMounted(() => {
             <div class="flex items-center gap-4">
                 <div class="hidden sm:flex items-center bg-surface-container-low px-4 py-2 rounded-full gap-2 border border-outline-variant/30">
                     <IconSearch class="text-text-muted" :size="16" />
-                    <input class="bg-transparent border-none text-body-md focus:ring-0 p-0 w-32 placeholder:text-text-muted text-sm" placeholder="Cari..." type="text" />
+                    <input class="bg-transparent border-none text-text-body text-body-md focus:ring-0 p-0 w-32 placeholder:text-text-muted text-sm" placeholder="Cari..." type="text" />
                 </div>
                 <button @click="toggleTheme"
                         class="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-surface-container-low"
@@ -72,10 +72,10 @@ onMounted(() => {
     </nav>
 
     <div v-if="mobileMenuOpen" class="md:hidden bg-surface-white border-t border-outline-variant/30 px-4 py-4 space-y-3">
-        <Link href="#features" class="block text-text-body text-body-md py-2" @click="mobileMenuOpen = false">Fitur</Link>
-        <Link href="#pricing" class="block text-text-body text-body-md py-2" @click="mobileMenuOpen = false">Harga</Link>
-        <Link href="#methodology" class="block text-text-body text-body-md py-2" @click="mobileMenuOpen = false">Metode</Link>
-        <Link href="#about" class="block text-text-body text-body-md py-2" @click="mobileMenuOpen = false">Tentang</Link>
+        <Link href="#features" class="block text-text-body text-text-body text-body-md py-2" @click="mobileMenuOpen = false">Fitur</Link>
+        <Link href="#pricing" class="block text-text-body text-text-body text-body-md py-2" @click="mobileMenuOpen = false">Harga</Link>
+        <Link href="#methodology" class="block text-text-body text-text-body text-body-md py-2" @click="mobileMenuOpen = false">Metode</Link>
+        <Link href="#about" class="block text-text-body text-text-body text-body-md py-2" @click="mobileMenuOpen = false">Tentang</Link>
         <hr class="border-outline-variant/30">
         <Link :href="route('login')" class="block text-primary font-bold text-label-md py-2">Masuk</Link>
         <Link :href="route('register')" class="block bg-primary-container text-white px-6 py-2.5 rounded-full font-bold text-label-md text-center">

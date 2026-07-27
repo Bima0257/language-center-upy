@@ -41,7 +41,7 @@ function refreshNow() {
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-title-lg font-semibold text-primary">Sesi Aktif ({{ activeSessions.length }})</h2>
                 </div>
-                <div v-if="activeSessions.length === 0" class="bg-white rounded-2xl p-10 text-center shadow-soft border border-outline-variant/30">
+                <div v-if="activeSessions.length === 0" class="bg-surface-white rounded-2xl p-10 text-center shadow-soft border border-outline-variant/30">
                     <p class="text-text-muted text-body-md">Tidak ada sesi ujian aktif.</p>
                 </div>
                 <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -50,15 +50,15 @@ function refreshNow() {
             </div>
             <div>
                 <h2 class="text-title-lg font-semibold text-primary mb-4 flex items-center gap-2">
-                    <IconAlertTriangle class="text-amber-500" :size="22" />
+                    <IconAlertTriangle class="text-amber-500 dark:text-amber-400" :size="22" />
                     Sesi Perlu Review ({{ flaggedSessions.length }})
                 </h2>
-                <div v-if="flaggedSessions.length === 0" class="bg-white rounded-2xl p-10 text-center shadow-soft border border-outline-variant/30">
+                <div v-if="flaggedSessions.length === 0" class="bg-surface-white rounded-2xl p-10 text-center shadow-soft border border-outline-variant/30">
                     <p class="text-text-muted text-body-md">Semua sesi dalam keadaan baik.</p>
                 </div>
                 <div v-else class="space-y-3">
                     <div v-for="session in flaggedSessions" :key="session.id"
-                         class="bg-white rounded-2xl p-6 shadow-soft border border-error-red/30 hover:border-error-red transition-colors">
+                         class="bg-surface-white rounded-2xl p-6 shadow-soft border border-error-red/30 hover:border-error-red transition-colors">
                         <div class="flex justify-between items-center">
                             <div>
                                 <p class="font-semibold text-primary">{{ session.user?.name }}</p>
@@ -66,7 +66,7 @@ function refreshNow() {
                                 <p class="text-text-muted text-label-md">{{ session.flag_reason }}</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-label-md font-medium" :class="session.violation_strikes >= 3 ? 'text-error-red' : 'text-amber-600'">
+                                <p class="text-label-md font-medium" :class="session.violation_strikes >= 3 ? 'text-error-red' : 'text-amber-600 dark:text-amber-400'">
                                     {{ session.violation_strikes }} pelanggaran
                                 </p>
                                 <Link :href="route('proctor.session.show', session.id)"

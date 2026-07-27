@@ -4,6 +4,11 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        @php
+            $landingComponents = ['Welcome', 'Auth/Login', 'Auth/Register', 'Auth/ConfirmPassword', 'Auth/ForgotPassword', 'Auth/ResetPassword', 'Auth/VerifyEmail'];
+            $isLanding = in_array($page['component'], $landingComponents);
+        @endphp
+        @if($isLanding)
         <script>
             if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
@@ -11,6 +16,15 @@
                 document.documentElement.classList.remove('dark');
             }
         </script>
+        @else
+        <script>
+            if (localStorage.dashboardTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        </script>
+        @endif
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 

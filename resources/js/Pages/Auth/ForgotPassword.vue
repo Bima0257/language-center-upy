@@ -6,12 +6,6 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
-defineProps({
-    status: {
-        type: String,
-    },
-});
-
 const form = useForm({
     email: '',
 });
@@ -32,13 +26,6 @@ const submit = () => {
             <h1 class="text-primary text-headline-md font-bold mb-2">Lupa Password</h1>
             <p class="text-text-body text-body-md">Masukkan email Anda dan kami akan kirimkan tautan reset password.</p>
         </header>
-
-        <div
-            v-if="status"
-            class="mb-4 text-sm font-medium text-green-600 bg-green-50 border border-green-200 rounded-2xl px-5 py-4"
-        >
-            {{ status }}
-        </div>
 
         <form @submit.prevent="submit" class="space-y-5">
             <div class="space-y-2">

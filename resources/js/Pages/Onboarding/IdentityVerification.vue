@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onUnmounted, nextTick } from 'vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import { IconCheck, IconRefresh, IconCamera, IconUpload } from '@tabler/icons-vue';
 import OnboardingLayout from '@/Components/Onboarding/OnboardingLayout.vue';
 
@@ -8,9 +8,6 @@ const props = defineProps({
     hasUploaded: { type: Boolean, default: false },
     profile: { type: Object, default: null },
 });
-
-const page = usePage();
-const flash = page.props.flash;
 
 const form = useForm({
     nim: props.profile?.nim || '',
@@ -126,19 +123,10 @@ function submit() {
     <OnboardingLayout :current-step="2">
         <div class="max-w-xl mx-auto px-4 py-10">
 
-            <!-- SUCCESS FLASH -->
-            <div v-if="flash.success"
-                 class="mb-6 bg-green-50 border border-green-200 rounded-2xl p-5 flex items-start gap-4">
-                <IconCheck class="text-green-500 shrink-0 mt-0.5" :size="22" stroke="1.5" />
-                <div>
-                    <p class="font-semibold text-green-800 text-title-lg">{{ flash.success }}</p>
-                </div>
-            </div>
-
             <!-- STATE: sudah upload, menunggu verifikasi -->
             <template v-if="hasUploaded && !showForm">
                 <div class="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center">
-                    <IconCheck class="mx-auto text-green-500 mb-4" :size="48" stroke="1.5" />
+                    <IconCheck class="mx-auto text-green-500 dark:text-green-400 mb-4" :size="48" stroke="1.5" />
                     <h1 class="text-headline-md font-bold text-primary mb-2">Identitas Terkirim</h1>
                     <p class="text-text-body text-body-md mb-6">
                         Foto identitas Anda sudah diunggah dan menunggu verifikasi oleh admin.
@@ -158,7 +146,7 @@ function submit() {
                 <p class="text-text-body text-body-md mb-8">Unggah foto identitas dan swafoto untuk verifikasi akun Anda.</p>
 
                 <form @submit.prevent="submit" class="space-y-6">
-                    <div class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 space-y-5">
+                    <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 space-y-5">
                         <div>
                             <label class="text-label-md font-medium text-primary block mb-1.5">NIM</label>
                             <input type="text" v-model="form.nim" placeholder="Masukkan NIM"
@@ -187,7 +175,7 @@ function submit() {
                     </div>
 
                     <!-- FOTO KTM -->
-                    <div class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                    <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
                         <label class="text-label-md font-medium text-primary block mb-4">Foto KTM/Kartu Identitas Mahasiswa</label>
                         <div class="border-2 border-dashed border-outline-variant rounded-2xl p-8 text-center relative hover:border-primary transition-colors cursor-pointer">
                             <img v-if="identityPreview" :src="identityPreview" class="max-h-40 mx-auto rounded-lg mb-2 pointer-events-none" />
@@ -201,7 +189,7 @@ function submit() {
                     </div>
 
                     <!-- SWAFOTO -->
-                    <div class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                    <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
                         <label class="text-label-md font-medium text-primary block mb-4">Swafoto (Selfie)</label>
                         <div class="border-2 border-dashed border-outline-variant rounded-2xl p-8 text-center">
                             <img v-if="selfiePreview && !cameraActive" :src="selfiePreview" class="max-h-40 mx-auto rounded-lg mb-4" />

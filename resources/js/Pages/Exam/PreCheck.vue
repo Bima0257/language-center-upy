@@ -37,7 +37,7 @@ function checkMic() {
     <Head title="Persiapan Ujian" />
     <DashboardLayout title="Persiapan Ujian">
         <div class="max-w-2xl mx-auto">
-            <div class="bg-white rounded-2xl p-8 shadow-soft border border-outline-variant/30 space-y-6">
+            <div class="bg-surface-white rounded-2xl p-8 shadow-soft border border-outline-variant/30 space-y-6">
                 <div>
                     <h2 class="text-headline-md font-bold text-primary mb-2">{{ schedule.exam?.title }}</h2>
                     <p class="text-text-body text-body-md">{{ schedule.title }}</p>
@@ -55,7 +55,7 @@ function checkMic() {
                                 class="bg-primary-container text-white px-4 py-2 rounded-full text-label-md hover:bg-primary transition-all active:scale-95">
                             Cek Kamera
                         </button>
-                        <IconCheck v-else class="text-green-500" :size="22" />
+                        <IconCheck v-else class="text-green-500 dark:text-green-400" :size="22" />
                     </div>
                     <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-2xl">
                         <div class="flex items-center gap-3">
@@ -69,7 +69,7 @@ function checkMic() {
                                 class="bg-primary-container text-white px-4 py-2 rounded-full text-label-md hover:bg-primary transition-all active:scale-95">
                             Cek Mikrofon
                         </button>
-                        <IconCheck v-else class="text-green-500" :size="22" />
+                        <IconCheck v-else class="text-green-500 dark:text-green-400" :size="22" />
                     </div>
                     <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-2xl">
                         <div class="flex items-center gap-3">
@@ -79,7 +79,7 @@ function checkMic() {
                                 <p class="text-text-muted text-xs">{{ connectionOk ? 'Stabil' : 'Bermasalah' }}</p>
                             </div>
                         </div>
-                        <IconCheck v-if="connectionOk" class="text-green-500" :size="22" />
+                        <IconCheck v-if="connectionOk" class="text-green-500 dark:text-green-400" :size="22" />
                         <IconX v-else class="text-error-red" :size="22" />
                     </div>
                 </div>

@@ -5,7 +5,7 @@ defineProps({
 </script>
 
 <template>
-    <div class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+    <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
         <h3 class="text-title-lg font-semibold text-primary mb-2">{{ section.title }}</h3>
         <p class="text-text-muted text-body-md">Reading — {{ section.total_questions }} soal</p>
         <div v-if="section.question_groups?.length" class="mt-4 space-y-3">

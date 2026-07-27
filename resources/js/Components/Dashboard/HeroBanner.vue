@@ -16,14 +16,14 @@ const lessons = [
                 <h3 class="text-3xl md:text-4xl font-bold max-w-md leading-tight mb-6">
                     Kamu sudah menyelesaikan 8 sesi latihan minggu ini
                 </h3>
-                <button class="bg-white text-primary px-8 py-3 rounded-full font-semibold text-title-lg hover:bg-surface-container transition-all active:scale-95">
+                <button class="bg-surface-white text-primary px-8 py-3 rounded-full font-semibold text-title-lg hover:bg-surface-container transition-all active:scale-95">
                     Lihat Semua
                 </button>
             </div>
 
             <div class="flex gap-4 overflow-x-auto w-full md:w-auto pb-2 z-10 scrollbar-hide">
                 <div v-for="lesson in lessons" :key="lesson.label"
-                     class="min-w-[200px] bg-white rounded-2xl p-4 flex flex-col shadow-lg flex-shrink-0">
+                     class="min-w-[200px] bg-surface-white rounded-2xl p-4 flex flex-col shadow-lg flex-shrink-0">
                     <div class="w-full h-24 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden"
                          :class="lesson.bg">
                         <component :is="lesson.icon" class="text-primary" :size="36" stroke="1.5" />

@@ -63,6 +63,36 @@
         --shadow-standard: 0 4px 30px rgba(0, 0, 0, 0.2);
     }
 
+    .dark-dashboard {
+        --color-primary: #c3c3ed;
+        --color-primary-container: #2c2b4e;
+        --color-secondary: #c6bfff;
+        --color-secondary-container: #3f33ab;
+        --color-deep-space: #1E1B3B;
+        --color-pastel-blue: #d8e9fb;
+        --color-pastel-purple: #e7defb;
+        --color-pastel-peach: #fbe1c6;
+        --color-text-heading: #ffffff;
+        --color-text-body: #9b9ab0;
+        --color-text-muted: #77767f;
+        --color-surface: #13121a;
+        --color-surface-white: #13121a;
+        --color-surface-container: #1e1d27;
+        --color-surface-container-low: #1b1a23;
+        --color-surface-container-highest: #33323e;
+        --color-surface-container-lowest: #0b0a10;
+        --color-outline-variant: #47464e;
+        --color-on-primary: #191a3b;
+        --color-on-primary-container: #e1e0ff;
+        --color-background: #1E1B3B;
+        --color-canvas: #13121a;
+        --color-track-neutral: #47464e;
+        --color-error-red: #ff5a5f;
+        --color-text-pastel: #161328;
+        --color-icon-pastel: #5647c8;
+        --shadow-standard: 0 4px 30px rgba(0, 0, 0, 0.2);
+    }
+
     body {
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
@@ -77,3 +107,4 @@
         background-color: #f4f4f7;
     }
 }
+

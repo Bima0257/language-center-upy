@@ -162,10 +162,10 @@ watch(() => props.modelValue, (val) => {
             <div v-for="(opt, i) in options" :key="i"
                  class="flex items-center gap-2 mb-2">
                 <input type="text" v-model="opt.left" @input="emitChange"
-                       placeholder="Kiri" class="flex-1 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                       placeholder="Kiri" class="flex-1 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                 <span class="text-text-muted">→</span>
                 <input type="text" v-model="opt.right" @input="emitChange"
-                       placeholder="Kanan" class="flex-1 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                       placeholder="Kanan" class="flex-1 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                 <button v-if="options.length > 2" @click="removeOption(i)"
                         class="p-2 text-text-muted hover:text-error-red transition-colors shrink-0">
                     <IconX :size="18" />
@@ -195,7 +195,7 @@ watch(() => props.modelValue, (val) => {
                 <span class="w-6 text-center text-label-md font-bold text-primary shrink-0">{{ i + 1 }}</span>
                 <input type="text" v-model="opt.text" @input="emitChange"
                        :placeholder="'Item ' + (i + 1)"
-                       class="flex-1 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                       class="flex-1 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                 <button v-if="options.length > 2" @click="removeOption(i)"
                         class="p-2 text-text-muted hover:text-error-red transition-colors shrink-0">
                     <IconX :size="18" />
@@ -216,7 +216,7 @@ watch(() => props.modelValue, (val) => {
                 <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-container text-white font-bold text-label-md shrink-0">{{ opt.key }}</span>
                 <input type="text" v-model="opt.text" @input="emitChange"
                        :placeholder="'Bagian ' + opt.key"
-                       class="flex-1 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                       class="flex-1 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
             </div>
         </template>
 
@@ -232,7 +232,7 @@ watch(() => props.modelValue, (val) => {
                 </span>
                 <input type="text" v-model="opt.text" @input="emitChange"
                        :placeholder="'Pilihan ' + opt.key"
-                       class="flex-1 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary placeholder:text-text-muted" />
+                       class="flex-1 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary placeholder:text-text-muted" />
                 <button v-if="options.length > 2" @click="removeOption(i)"
                         class="p-2 text-text-muted hover:text-error-red transition-colors shrink-0">
                     <IconX :size="18" />
@@ -249,9 +249,9 @@ watch(() => props.modelValue, (val) => {
     <div v-else-if="isReadonly" class="bg-surface-container-low rounded-2xl p-4">
         <label class="text-label-md font-medium text-primary block mb-1.5">Pilihan Jawaban</label>
         <div class="flex flex-wrap gap-3">
-            <span class="inline-flex items-center px-4 py-2 bg-surface-white rounded-xl border border-outline-variant text-label-md font-medium">True</span>
-            <span class="inline-flex items-center px-4 py-2 bg-surface-white rounded-xl border border-outline-variant text-label-md font-medium">False</span>
-            <span class="inline-flex items-center px-4 py-2 bg-surface-white rounded-xl border border-outline-variant text-label-md font-medium">Not Given</span>
+            <span class="inline-flex items-center px-4 py-2 bg-surface-white rounded-xl border border-outline-variant text-text-body text-label-md font-medium">True</span>
+            <span class="inline-flex items-center px-4 py-2 bg-surface-white rounded-xl border border-outline-variant text-text-body text-label-md font-medium">False</span>
+            <span class="inline-flex items-center px-4 py-2 bg-surface-white rounded-xl border border-outline-variant text-text-body text-label-md font-medium">Not Given</span>
         </div>
     </div>
 </template>

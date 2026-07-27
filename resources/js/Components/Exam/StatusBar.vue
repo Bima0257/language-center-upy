@@ -14,7 +14,7 @@ defineProps({
     <div class="flex items-center gap-4 text-label-md">
         <span class="text-text-muted">{{ answeredCount }}/{{ total }} terjawab</span>
         <span class="w-px h-4 bg-outline-variant"></span>
-        <span class="font-mono font-bold" :class="isDanger ? 'text-error-red' : isWarning ? 'text-amber-500' : 'text-primary'">
+        <span class="font-mono font-bold" :class="isDanger ? 'text-error-red' : isWarning ? 'text-amber-500 dark:text-amber-400' : 'text-primary'">
             {{ String(minutes).padStart(2, '0') }}:{{ String(seconds).padStart(2, '0') }}
         </span>
     </div>

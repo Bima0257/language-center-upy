@@ -8,6 +8,7 @@ import {
     IconUsers,
     IconEyeCheck,
     IconAlertTriangle as IconFlag,
+    IconBooks,
 } from "@tabler/icons-vue";
 import DashboardLayout from "@/Components/Dashboard/DashboardLayout.vue";
 import HeroBanner from "@/Components/Dashboard/HeroBanner.vue";
@@ -23,6 +24,7 @@ defineProps({
     activeSessionsCount: { type: Number, default: 0 },
     flaggedSessionsCount: { type: Number, default: 0 },
     totalQuestions: { type: Number, default: 0 },
+    totalPassages: { type: Number, default: 0 },
 });
 
 const roles = usePage().props.auth?.roles || [];
@@ -41,24 +43,24 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
         <!-- VERIFICATION BANNER (all roles) -->
         <div
             v-if="isStudent && !$page.props.auth.user.is_verified"
-            class="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4"
+            class="mb-6 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-2xl p-5 flex items-start gap-4"
         >
             <IconAlertTriangle
-                class="text-amber-500 shrink-0 mt-0.5"
+                class="text-amber-500 dark:text-amber-400 shrink-0 mt-0.5"
                 :size="22"
                 stroke="1.5"
             />
             <div class="flex-1">
-                <p class="font-semibold text-amber-800 text-title-lg">
+                <p class="font-semibold text-amber-800 dark:text-amber-200 text-title-lg">
                     Identitas Belum Diverifikasi
                 </p>
-                <p class="text-amber-700 text-body-md mt-1">
+                <p class="text-amber-700 dark:text-amber-300 text-body-md mt-1">
                     Akun Anda masih menunggu verifikasi admin. Upload foto
                     identitas untuk melanjutkan.
                 </p>
                 <Link
                     :href="route('onboarding.verify-identity')"
-                    class="inline-block mt-3 bg-amber-600 text-white px-5 py-2 rounded-full text-label-md font-medium hover:bg-amber-700 transition-colors active:scale-95"
+                    class="inline-block mt-3 bg-amber-600 dark:bg-amber-500 text-white px-5 py-2 rounded-full text-label-md font-medium hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors active:scale-95"
                 >
                     Verifikasi Sekarang
                 </Link>
@@ -94,7 +96,7 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
 
             <div
                 v-if="recentSessions?.length"
-                class="mt-6 bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30"
+                class="mt-6 bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30"
             >
                 <h2 class="text-title-lg font-semibold text-primary mb-4">
                     Tryout Terbaru
@@ -121,8 +123,8 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
                             class="text-title-lg font-bold"
                             :class="
                                 (s.score_total ?? 0) >= 80
-                                    ? 'text-green-600'
-                                    : 'text-amber-600'
+                                    ? 'text-green-600 dark:text-green-400'
+                                    : 'text-amber-600 dark:text-amber-400'
                             "
                         >
                             {{ s.score_total ?? "-" }}/120
@@ -136,20 +138,7 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
         <template v-else-if="isInstructor">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div
-                    class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 text-center"
-                >
-                    <IconFileDescription
-                        class="mx-auto text-secondary mb-2"
-                        :size="32"
-                        stroke="1.5"
-                    />
-                    <p class="text-headline-md font-bold text-primary">
-                        {{ totalExams }}
-                    </p>
-                    <p class="text-text-muted text-label-md">Total Ujian</p>
-                </div>
-                <div
-                    class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 text-center"
+                    class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 text-center"
                 >
                     <IconClipboardCheck
                         class="mx-auto text-secondary mb-2"
@@ -162,19 +151,32 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
                     <p class="text-text-muted text-label-md">Total Soal</p>
                 </div>
                 <div
-                    class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 flex flex-col items-center justify-center gap-3"
+                    class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 text-center"
+                >
+                    <IconBooks
+                        class="mx-auto text-secondary mb-2"
+                        :size="32"
+                        stroke="1.5"
+                    />
+                    <p class="text-headline-md font-bold text-primary">
+                        {{ totalPassages }}
+                    </p>
+                    <p class="text-text-muted text-label-md">Total Passage</p>
+                </div>
+                <div
+                    class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 flex flex-col items-center justify-center gap-3"
                 >
                     <Link
-                        :href="route('admin.exams.index')"
+                        :href="route('content-library.index')"
                         class="w-full text-center bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all"
                     >
-                        Kelola Exam →
+                        Kelola Bank Soal →
                     </Link>
                     <Link
-                        :href="route('content-library.index')"
+                        :href="route('content-library.passages.index')"
                         class="w-full text-center border border-outline-variant text-primary px-6 py-3 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all"
                     >
-                        Content Library →
+                        Kelola Passage →
                     </Link>
                 </div>
             </div>
@@ -193,7 +195,7 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
         <template v-else-if="isAdmin && !isProctor">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 text-center"
+                    class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 text-center"
                 >
                     <IconUsers
                         class="mx-auto text-secondary mb-1"
@@ -206,7 +208,7 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
                     <p class="text-text-muted text-label-md">User Terdaftar</p>
                 </div>
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 text-center"
+                    class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 text-center"
                 >
                     <IconFileDescription
                         class="mx-auto text-secondary mb-1"
@@ -219,7 +221,7 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
                     <p class="text-text-muted text-label-md">Total Ujian</p>
                 </div>
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 text-center"
+                    class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 text-center"
                 >
                     <IconEyeCheck
                         class="mx-auto text-secondary mb-1"
@@ -232,7 +234,7 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
                     <p class="text-text-muted text-label-md">Sesi Aktif</p>
                 </div>
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-soft border border-error-red/20 text-center"
+                    class="bg-surface-white rounded-2xl p-5 shadow-soft border border-error-red/20 text-center"
                 >
                     <IconFlag
                         class="mx-auto text-error-red mb-1"
@@ -248,7 +250,7 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <Link
                     :href="route('admin.verify-users')"
-                    class="bg-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 flex items-center justify-between hover:border-secondary transition-all"
+                    class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 flex items-center justify-between hover:border-secondary transition-all"
                 >
                     <div>
                         <p class="text-title-lg font-semibold text-primary">
@@ -266,7 +268,7 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
                 </Link>
                 <Link
                     :href="route('admin.reports.integrity')"
-                    class="bg-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 flex items-center justify-between hover:border-secondary transition-all"
+                    class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 flex items-center justify-between hover:border-secondary transition-all"
                 >
                     <div>
                         <p class="text-title-lg font-semibold text-primary">
@@ -284,7 +286,7 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
                 </Link>
             </div>
             <div
-                class="bg-white rounded-2xl p-5 shadow-soft border border-outline-variant/30"
+                class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30"
             >
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-title-lg font-semibold text-primary">

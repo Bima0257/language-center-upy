@@ -2,6 +2,9 @@
 import { Head, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import ViolationTimeline from '@/Components/Proctor/ViolationTimeline.vue';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const confirm = useConfirm();
 
 const props = defineProps({
     session: { type: Object, required: true },
@@ -20,8 +23,8 @@ const terminateForm = useForm({
     reason: 'Dihentikan oleh proctor.',
 });
 
-function terminateSession() {
-    if (!confirm('Yakin ingin menghentikan sesi ujian ini?')) return;
+async function terminateSession() {
+    if (!await confirm.confirm('Yakin ingin menghentikan sesi ujian ini?')) return;
     terminateForm.post(route('proctor.session.terminate', props.session.id));
 }
 
@@ -30,16 +33,16 @@ function refresh() {
 }
 
 const statusColors = {
-    pending: 'bg-amber-100 text-amber-700',
-    in_progress: 'bg-blue-100 text-blue-700',
-    submitted: 'bg-green-100 text-green-700',
+    pending: 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300',
+    in_progress: 'bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300',
+    submitted: 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300',
     terminated: 'bg-error-red/10 text-error-red',
-    reviewed: 'bg-purple-100 text-purple-700',
+    reviewed: 'bg-purple-100 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300',
 };
 
 const reviewStatusColors = {
-    sah: 'bg-green-100 text-green-700',
-    ujian_ulang: 'bg-amber-100 text-amber-700',
+    sah: 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300',
+    ujian_ulang: 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300',
     dibatalkan: 'bg-error-red/10 text-error-red',
 };
 </script>
@@ -55,9 +58,9 @@ const reviewStatusColors = {
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
                     <h2 class="text-title-lg font-semibold text-primary mb-4">Informasi Peserta</h2>
-                    <div class="grid grid-cols-2 gap-4 text-body-md">
+                    <div class="grid grid-cols-2 gap-4 text-text-body text-body-md">
                         <div>
                             <p class="text-text-muted text-label-md">Nama</p>
                             <p class="text-primary font-medium">{{ session.user?.name }}</p>
@@ -77,13 +80,13 @@ const reviewStatusColors = {
                         <div>
                             <p class="text-text-muted text-label-md">Status</p>
                             <span class="inline-block px-3 py-1 rounded-full text-label-md font-medium"
-                                  :class="statusColors[session.status] || 'bg-gray-100 text-gray-700'">
+                                  :class="statusColors[session.status] || 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'">
                                 {{ session.status?.replace('_', ' ') }}
                             </span>
                         </div>
                         <div>
                             <p class="text-text-muted text-label-md">Pelanggaran</p>
-                            <p class="text-title-lg font-bold" :class="session.violation_strikes >= 3 ? 'text-error-red' : 'text-amber-600'">
+                            <p class="text-title-lg font-bold" :class="session.violation_strikes >= 3 ? 'text-error-red' : 'text-amber-600 dark:text-amber-400'">
                                 {{ session.violation_strikes }}/3
                             </p>
                         </div>
@@ -98,7 +101,7 @@ const reviewStatusColors = {
                     </div>
                 </div>
 
-                <div v-if="session.score_total !== null" class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                <div v-if="session.score_total !== null" class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
                     <h2 class="text-title-lg font-semibold text-primary mb-4">Skor</h2>
                     <div class="grid grid-cols-4 gap-4 text-center">
                         <div class="bg-surface-container-low rounded-2xl p-4">
@@ -127,13 +130,13 @@ const reviewStatusColors = {
                 <ViolationTimeline :violations="session.violation_logs" />
 
                 <div v-if="session.status === 'in_progress' || session.status === 'terminated'"
-                     class="bg-white rounded-2xl p-6 shadow-soft border border-error-red/30">
+                     class="bg-surface-white rounded-2xl p-6 shadow-soft border border-error-red/30">
                     <h2 class="text-title-lg font-semibold text-error-red mb-4">Hentikan Sesi</h2>
                     <form @submit.prevent="terminateSession" class="space-y-4">
                         <div>
                             <label class="text-label-md font-medium text-primary block mb-2">Alasan</label>
                             <textarea v-model="terminateForm.reason" rows="2" required
-                                      class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-error-red"
+                                      class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-error-red"
                                       placeholder="Alasan penghentian..."></textarea>
                         </div>
                         <button type="submit" :disabled="terminateForm.processing"
@@ -144,13 +147,13 @@ const reviewStatusColors = {
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 h-fit sticky top-24">
+            <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 h-fit sticky top-24">
                 <h2 class="text-title-lg font-semibold text-primary mb-4">Keputusan Review</h2>
                 <form @submit.prevent="submitReview" class="space-y-4">
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-2">Status</label>
                         <select v-model="reviewForm.review_status" required
-                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
+                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                             <option value="" disabled>Pilih keputusan</option>
                             <option value="sah">✅ Sah</option>
                             <option value="ujian_ulang">🔄 Ujian Ulang</option>
@@ -160,7 +163,7 @@ const reviewStatusColors = {
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-2">Catatan</label>
                         <textarea v-model="reviewForm.review_note" rows="5"
-                                  class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary"
+                                  class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"
                                   placeholder="Alasan dan detail keputusan..."></textarea>
                     </div>
                     <button type="submit" :disabled="reviewForm.processing"
@@ -172,10 +175,10 @@ const reviewStatusColors = {
                 <div v-if="session.review_status" class="mt-6 pt-6 border-t border-outline-variant/30">
                     <h3 class="text-label-md font-medium text-primary mb-2">Hasil Review</h3>
                     <span class="inline-block px-3 py-1 rounded-full text-label-md font-medium"
-                          :class="reviewStatusColors[session.review_status] || 'bg-gray-100 text-gray-700'">
+                          :class="reviewStatusColors[session.review_status] || 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'">
                         {{ session.review_status }}
                     </span>
-                    <p v-if="session.review_note" class="text-text-body text-body-md mt-2">{{ session.review_note }}</p>
+                    <p v-if="session.review_note" class="text-text-body text-text-body text-body-md mt-2">{{ session.review_note }}</p>
                     <p v-if="session.reviewed_by" class="text-text-muted text-label-md mt-2">
                         Oleh: {{ session.reviewer?.name }} — {{ session.reviewed_at ? new Date(session.reviewed_at).toLocaleString('id-ID') : '' }}
                     </p>

@@ -52,8 +52,8 @@ function badgeClass(val) {
     const m = {
         'Try Out': 'bg-pastel-blue/50 text-primary font-medium',
         'Ujian Resmi': 'bg-pastel-purple/50 text-primary font-medium',
-        'Aktif': 'bg-green-100 text-green-700 font-medium',
-        'Nonaktif': 'bg-gray-100 text-gray-600',
+        'Aktif': 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300 font-medium',
+        'Nonaktif': 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
         'Laki-laki': 'bg-pastel-blue/50 text-primary',
         'Perempuan': 'bg-pastel-peach/50 text-primary',
     }
@@ -67,11 +67,11 @@ function badgeClass(val) {
             <IconSearch class="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" :size="18" />
             <input type="text" v-model="searchInput" @input="onSearchInput"
                    :placeholder="searchPlaceholder"
-                   class="w-full pl-11 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]" />
+                   class="w-full pl-11 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]" />
         </div>
 
-        <div class="bg-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden relative">
-            <div v-if="loading" class="absolute inset-0 bg-white/60 z-10 flex items-center justify-center">
+        <div class="bg-surface-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden relative">
+            <div v-if="loading" class="absolute inset-0 bg-surface-white/60 z-10 flex items-center justify-center">
                 <IconLoader2 class="text-primary animate-spin" :size="32" stroke="1.5" />
             </div>
 

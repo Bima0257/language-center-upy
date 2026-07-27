@@ -20,7 +20,7 @@ function togglePlay() {
 </script>
 
 <template>
-    <div class="bg-white rounded-2xl p-6 border border-outline-variant/30">
+    <div class="bg-surface-white rounded-2xl p-6 border border-outline-variant/30">
         <audio ref="audioRef" :src="src" @ended="isPlaying = false" class="hidden"></audio>
         <div class="flex items-center gap-4">
             <button @click="togglePlay"

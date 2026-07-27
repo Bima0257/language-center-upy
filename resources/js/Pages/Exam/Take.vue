@@ -200,7 +200,7 @@ onUnmounted(() => {
                             → {{ currentQuestion.passage_reference }}
                         </p>
                     </div>
-                    <div v-if="currentQuestion" class="bg-white rounded-2xl p-6 border border-outline-variant/30">
+                    <div v-if="currentQuestion" class="bg-surface-white rounded-2xl p-6 border border-outline-variant/30">
                         <p class="text-body-md font-medium text-primary mb-4">{{ currentQuestion.question_text }}</p>
                         <div v-if="allOptions[currentQuestion.id]?.length" class="space-y-3">
                             <button v-for="opt in allOptions[currentQuestion.id]" :key="opt.key"
@@ -217,23 +217,23 @@ onUnmounted(() => {
                     <div class="flex items-center justify-between mt-6 gap-3">
                         <div class="flex gap-2">
                             <button @click="goToQuestion(currentQuestionIndex - 1)" :disabled="currentQuestionIndex === 0"
-                                    class="px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-30">
+                                    class="px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-30">
                                 ← Sebelumnya
                             </button>
                             <button @click="goToQuestion(currentQuestionIndex + 1)" :disabled="currentQuestionIndex >= totalQuestions - 1"
-                                    class="px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-30">
+                                    class="px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-30">
                                 Selanjutnya →
                             </button>
                         </div>
                         <button @click="toggleFlag"
                                 class="px-5 py-2.5 rounded-full text-label-md font-medium transition-all"
-                                :class="isFlagged(currentQuestion?.id) ? 'bg-amber-100 text-amber-700 border border-amber-300' : 'border border-outline-variant text-text-body hover:bg-surface-container-low'">
+                                :class="isFlagged(currentQuestion?.id) ? 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700' : 'border border-outline-variant text-text-body hover:bg-surface-container-low'">
                             {{ isFlagged(currentQuestion?.id) ? '⛳ Ditandai' : 'Tandai' }}
                         </button>
                     </div>
                     <div class="mt-4 flex items-center gap-2 text-label-md">
                         <span v-if="isSaving" class="text-text-muted">Menyimpan...</span>
-                        <span v-else-if="lastSaved" class="text-green-600">✓ Tersimpan {{ lastSaved }}</span>
+                        <span v-else-if="lastSaved" class="text-green-600 dark:text-green-400">✓ Tersimpan {{ lastSaved }}</span>
                         <span v-else class="text-text-muted">Belum terjawab</span>
                     </div>
                 </div>
@@ -247,7 +247,7 @@ onUnmounted(() => {
                         <p class="text-text-muted text-body-md">Audio akan tersedia di sini</p>
                     </div>
                 </div>
-                <div v-if="currentQuestion" class="bg-white rounded-2xl p-6 border border-outline-variant/30">
+                <div v-if="currentQuestion" class="bg-surface-white rounded-2xl p-6 border border-outline-variant/30">
                     <p class="text-body-md font-medium text-primary mb-2">Soal {{ currentQuestionIndex + 1 }}</p>
                     <p class="text-body-md text-primary mb-4">{{ currentQuestion.question_text }}</p>
                     <div v-if="allOptions[currentQuestion.id]?.length" class="space-y-3">
@@ -261,11 +261,11 @@ onUnmounted(() => {
                 </div>
                 <div class="flex items-center justify-between mt-6 gap-3">
                     <button @click="goToQuestion(currentQuestionIndex - 1)" :disabled="currentQuestionIndex === 0"
-                            class="px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-30">
+                            class="px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-30">
                         ← Sebelumnya
                     </button>
                     <button @click="goToQuestion(currentQuestionIndex + 1)" :disabled="currentQuestionIndex >= totalQuestions - 1"
-                            class="px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-30">
+                            class="px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-30">
                         Selanjutnya →
                     </button>
                 </div>
@@ -288,13 +288,13 @@ onUnmounted(() => {
         </template>
 
         <template #footer>
-            <div class="fixed bottom-0 inset-x-0 h-16 bg-white border-t border-outline-variant flex items-center px-6 gap-4">
+            <div class="fixed bottom-0 inset-x-0 h-16 bg-surface-white border-t border-outline-variant flex items-center px-6 gap-4">
                 <div class="flex-1 flex items-center gap-4">
                     <span class="text-label-md text-text-muted">
                         Terjawab {{ answeredIds.length }}/{{ totalQuestions }}
                     </span>
                     <span v-if="strikeCount > 0" class="text-label-md"
-                          :class="strikeCount >= 3 ? 'text-error-red font-bold' : 'text-amber-600'">
+                          :class="strikeCount >= 3 ? 'text-error-red font-bold' : 'text-amber-600 dark:text-amber-400'">
                         ⚠ {{ strikeCount }}/3 pelanggaran
                     </span>
                 </div>
@@ -308,7 +308,7 @@ onUnmounted(() => {
 
     <div v-if="showSubmitConfirm" class="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-6"
          @click.self="showSubmitConfirm = false">
-        <div class="bg-white rounded-3xl p-8 shadow-app-frame max-w-md w-full text-center">
+        <div class="bg-surface-white rounded-3xl p-8 shadow-app-frame max-w-md w-full text-center">
             <h2 class="text-headline-md font-bold text-primary mb-2">Yakin ingin mengumpulkan?</h2>
             <p class="text-text-body text-body-md mb-2">
                 Soal terjawab: {{ answeredIds.length }} dari {{ totalQuestions }}

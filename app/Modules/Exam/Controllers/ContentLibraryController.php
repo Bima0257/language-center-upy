@@ -3,12 +3,11 @@
 namespace App\Modules\Exam\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Exam;
-use App\Models\ExamSection;
-use App\Models\Question;
-use App\Models\QuestionGroup;
-use App\Models\Tag;
+use App\Http\Requests\Exam\ReviewQuestionRequest;
 use App\Http\Requests\Exam\StoreLibraryQuestionRequest;
+use App\Models\Passage;
+use App\Models\Question;
+use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,56 +15,73 @@ use Inertia\Response;
 
 class ContentLibraryController extends Controller
 {
-    public function create(): Response
+    private const STATUSES = ['draft', 'submitted', 'approved', 'rejected', 'archived'];
+
+    public function create(Request $request): Response
     {
+        $passageId = $request->input('passage_id');
+        $preselectedPassage = null;
+
+        if ($passageId) {
+            $preselectedPassage = Passage::find($passageId);
+        }
+
         return Inertia::render('Instructor/CreateQuestion', [
-            'exams' => Exam::with('sections')->get(),
+            'passages' => Passage::orderBy('title')->get(),
             'tags' => Tag::orderBy('type')->orderBy('name')->get(),
+            'preselectedPassage' => $preselectedPassage,
         ]);
     }
 
     public function edit(Question $question): Response
     {
         return Inertia::render('Instructor/EditQuestion', [
-            'question' => $question->load(['questionGroup.section.exam', 'tags', 'creator', 'updater']),
-            'exams' => Exam::with('sections')->get(),
+            'question' => $question->load(['passage', 'tags', 'creator', 'updater', 'reviewer']),
+            'passages' => Passage::orderBy('title')->get(),
             'tags' => Tag::orderBy('type')->orderBy('name')->get(),
         ]);
     }
 
     public function index(Request $request): Response
     {
-        $examId = $request->input('exam_id');
-        $sectionType = $request->input('section_type');
+        $skill = $request->input('skill');
         $questionType = $request->input('question_type');
         $difficulty = $request->input('difficulty');
         $status = $request->input('status');
         $search = $request->input('search');
         $tagId = $request->input('tag_id');
+        $passageId = $request->input('passage_id');
 
-        $questions = Question::with(['questionGroup.section.exam', 'tags', 'creator'])
-            ->when($examId, fn ($q) => $q->whereHas('questionGroup.section.exam', fn ($sq) => $sq->where('id', $examId)))
-            ->when($sectionType, fn ($q) => $q->whereHas('questionGroup.section', fn ($sq) => $sq->where('skill', $sectionType)))
+        $questions = Question::with(['passage', 'tags', 'creator', 'reviewer'])
+            ->when($skill, fn ($q) => $q->where('skill', $skill))
             ->when($questionType, fn ($q) => $q->where('type', $questionType))
             ->when($difficulty, fn ($q) => $q->where('difficulty', $difficulty))
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($tagId, fn ($q) => $q->whereHas('tags', fn ($sq) => $sq->where('id', $tagId)))
+            ->when($passageId, fn ($q) => $q->where('passage_id', $passageId))
             ->when($search, fn ($q) => $q->where('question_text', 'like', "%{$search}%"))
             ->orderBy('created_at', 'desc')
             ->paginate(20)
             ->withQueryString();
 
+        $selectedPassage = null;
+        if ($passageId) {
+            $selectedPassage = Passage::find($passageId);
+        }
+
         return Inertia::render('Instructor/ContentLibrary', [
             'questions' => $questions,
-            'exams' => Exam::with('sections')->get(),
+            'passages' => Passage::orderBy('title')->get(),
             'tags' => Tag::orderBy('type')->orderBy('name')->get(),
+            'statuses' => self::STATUSES,
+            'selectedPassage' => $selectedPassage,
             'filters' => [
-                'exam_id' => $examId,
-                'section_type' => $sectionType,
+                'skill' => $skill,
                 'question_type' => $questionType,
                 'difficulty' => $difficulty,
                 'status' => $status,
                 'tag_id' => $tagId,
+                'passage_id' => $passageId,
                 'search' => $search,
             ],
         ]);
@@ -73,40 +89,16 @@ class ContentLibraryController extends Controller
 
     public function store(StoreLibraryQuestionRequest $request): RedirectResponse
     {
-        $section = ExamSection::where('exam_id', $request->exam_id)
-            ->where('skill', $request->section_type)
-            ->first();
-
-        if (! $section) {
-            $section = ExamSection::create([
-                'exam_id' => $request->exam_id,
-                'skill' => $request->section_type,
-                'type' => $request->section_type,
-                'title' => $request->section_type === 'reading' ? 'Reading Section' : ucfirst($request->section_type) . ' Section',
-                'order' => ExamSection::where('exam_id', $request->exam_id)->count() + 1,
-            ]);
-        }
-
-        $groupTitle = $request->group_title ?: ($request->section_type === 'reading' ? 'Passage' : 'Group') . ' ' . ($section->questionGroups()->count() + 1);
-
-        $group = $section->questionGroups()
-            ->where('title', $groupTitle)
-            ->first();
-
-        if (! $group) {
-            $group = $section->questionGroups()->create([
-                'title' => $groupTitle,
-                'order' => $section->questionGroups()->count() + 1,
-            ]);
-        }
-
-        $question = $group->questions()->create([
+        $question = Question::create([
+            'skill' => $request->skill,
+            'passage_id' => $request->passage_id,
+            'audio_file' => $request->audio_file,
             'type' => $request->type,
             'question_text' => $request->question_text,
             'options' => $request->options,
             'correct_answer' => $request->correct_answer,
             'points' => $request->points ?? 1,
-            'order' => $group->questions()->count() + 1,
+            'order' => 0,
             'passage_reference' => $request->passage_reference,
             'difficulty' => $request->difficulty ?? 'medium',
             'status' => $request->status ?? 'draft',
@@ -125,13 +117,16 @@ class ContentLibraryController extends Controller
     public function update(Request $request, Question $question): RedirectResponse
     {
         $validated = $request->validate([
+            'skill' => ['required', 'string', 'in:reading,listening,speaking,writing,grammar,vocabulary'],
+            'passage_id' => ['nullable', 'exists:passages,id'],
+            'audio_file' => ['nullable', 'string', 'max:255'],
             'type' => ['required', 'in:multiple_choice,multi_select,order,matching,fill_blank,essay,speaking,true_false,dictation,error_id'],
             'question_text' => ['required', 'string'],
             'options' => ['nullable', 'json'],
             'correct_answer' => ['nullable', 'string'],
             'points' => ['integer', 'min:1'],
             'difficulty' => ['in:easy,medium,hard'],
-            'status' => ['in:draft,active,archived'],
+            'status' => ['in:draft,submitted,approved,rejected,archived'],
             'explanation' => ['nullable', 'string'],
             'time_estimate' => ['nullable', 'integer'],
             'tags' => ['nullable', 'array'],
@@ -154,5 +149,40 @@ class ContentLibraryController extends Controller
         $question->delete();
 
         return back()->with('success', 'Soal berhasil dihapus.');
+    }
+
+    public function review(ReviewQuestionRequest $request, Question $question): RedirectResponse
+    {
+        $question->update([
+            'status' => $request->status,
+            'reviewed_by' => auth()->id(),
+            'reviewed_at' => now(),
+            'review_note' => $request->review_note,
+        ]);
+
+        $label = $request->status === 'approved' ? 'disetujui' : 'ditolak';
+
+        return back()->with('success', "Soal berhasil {$label}.");
+    }
+
+    public function bulkReview(ReviewQuestionRequest $request): RedirectResponse
+    {
+        $ids = $request->input('ids', []);
+
+        if (empty($ids) || ! is_array($ids)) {
+            return back()->with('error', 'Tidak ada soal yang dipilih.');
+        }
+
+        Question::whereIn('id', $ids)->update([
+            'status' => $request->status,
+            'reviewed_by' => auth()->id(),
+            'reviewed_at' => now(),
+            'review_note' => $request->review_note,
+        ]);
+
+        $label = $request->status === 'approved' ? 'disetujui' : 'ditolak';
+        $count = count($ids);
+
+        return back()->with('success', "{$count} soal berhasil {$label}.");
     }
 }

@@ -18,7 +18,7 @@ function submit() {
     <Head title="Buat Ujian Baru" />
     <DashboardLayout title="Buat Ujian Baru">
         <div class="max-w-2xl mx-auto">
-            <div class="bg-white rounded-2xl p-8 shadow-soft border border-outline-variant/30">
+            <div class="bg-surface-white rounded-2xl p-8 shadow-soft border border-outline-variant/30">
                 <form @submit.prevent="submit" class="space-y-6">
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-2">Judul Ujian</label>

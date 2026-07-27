@@ -3,6 +3,7 @@
 use App\Modules\Exam\Controllers\ContentLibraryController;
 use App\Modules\Exam\Controllers\ExamController;
 use App\Modules\Exam\Controllers\ExamSectionController;
+use App\Modules\Exam\Controllers\PassageController;
 use App\Modules\Exam\Controllers\QuestionGroupController;
 use App\Modules\Exam\Controllers\QuestionController;
 use App\Modules\Exam\Controllers\TagController;
@@ -18,13 +19,27 @@ Route::middleware(['auth', 'role:instructor,admin,superadmin'])
         Route::get('/{question}/edit', [ContentLibraryController::class, 'edit'])->name('edit');
         Route::put('/questions/{question}', [ContentLibraryController::class, 'update'])->name('update');
         Route::delete('/questions/{question}', [ContentLibraryController::class, 'destroy'])->name('destroy');
+
+        Route::get('/passages', [PassageController::class, 'index'])->name('passages.index');
+        Route::post('/passages', [PassageController::class, 'store'])->name('passages.store');
+        Route::put('/passages/{passage}', [PassageController::class, 'update'])->name('passages.update');
+        Route::delete('/passages/{passage}', [PassageController::class, 'destroy'])->name('passages.destroy');
+
         Route::get('/tags', [TagController::class, 'index'])->name('tags.index');
         Route::post('/tags', [TagController::class, 'store'])->name('tags.store');
         Route::put('/tags/{tag}', [TagController::class, 'update'])->name('tags.update');
         Route::delete('/tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
     });
 
-Route::middleware(['auth', 'role:instructor,admin,superadmin'])
+Route::middleware(['auth', 'role:admin,superadmin'])
+    ->prefix('content-library')
+    ->name('content-library.')
+    ->group(function () {
+        Route::put('/questions/{question}/review', [ContentLibraryController::class, 'review'])->name('review');
+        Route::put('/questions/bulk-review', [ContentLibraryController::class, 'bulkReview'])->name('bulk-review');
+    });
+
+Route::middleware(['auth', 'role:admin,superadmin'])
     ->prefix('admin/exams')
     ->name('admin.exams.')
     ->group(function () {

@@ -3,6 +3,9 @@ import { Head, Link, router } from '@inertiajs/vue3'
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue'
 import DataTable from '@/Components/Shared/DataTable.vue'
 import { IconPlus, IconTrash } from '@tabler/icons-vue'
+import { useConfirm } from '@/Composables/useConfirm'
+
+const confirm = useConfirm()
 
 const props = defineProps({
     exam: { type: Object, required: true },
@@ -21,8 +24,8 @@ const columns = [
       render: (val) => val ? 'Aktif' : 'Nonaktif' },
 ]
 
-function deleteSchedule(id) {
-    if (confirm('Hapus jadwal ini?')) {
+async function deleteSchedule(id) {
+    if (await confirm.confirm('Hapus jadwal ini?')) {
         router.delete(route('admin.schedules.destroy', [props.exam.id, id]))
     }
 }
@@ -43,7 +46,7 @@ function deleteSchedule(id) {
 
         <div class="space-y-3">
             <div v-for="schedule in schedules.data" :key="schedule.id"
-                 class="bg-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 flex items-center justify-between hover:border-secondary/50 transition-colors">
+                 class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 flex items-center justify-between hover:border-secondary/50 transition-colors">
                 <div>
                     <h3 class="text-title-lg font-semibold text-primary">{{ schedule.title }}</h3>
                     <p class="text-text-muted text-label-md">

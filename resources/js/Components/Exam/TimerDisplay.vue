@@ -10,7 +10,7 @@ defineProps({
 
 <template>
     <div class="flex items-center gap-2 font-mono text-title-lg font-bold"
-         :class="isDanger ? 'text-error-red' : isWarning ? 'text-amber-500' : 'text-primary'">
+         :class="isDanger ? 'text-error-red' : isWarning ? 'text-amber-500 dark:text-amber-400' : 'text-primary'">
         <span class="tabular-nums">{{ String(minutes).padStart(2, '0') }}:{{ String(seconds).padStart(2, '0') }}</span>
     </div>
 </template>

@@ -10,7 +10,7 @@ defineProps({
 </script>
 
 <template>
-    <div class="bg-white p-5 rounded-2xl shadow-soft border border-surface-container-low flex items-center group hover:border-primary/20 transition-colors">
+    <div class="bg-surface-white p-5 rounded-2xl shadow-soft border border-surface-container-low flex items-center group hover:border-primary/20 transition-colors">
         <div class="w-12 h-12 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform"
              :class="iconBg">
             <component :is="icon" :size="24" stroke="1.5" />

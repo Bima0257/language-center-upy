@@ -23,7 +23,7 @@ function revert(user) {
 <template>
     <Head title="Verifikasi Pengguna" />
     <DashboardLayout title="Verifikasi Pengguna">
-        <div class="bg-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden">
+        <div class="bg-surface-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead>
@@ -69,11 +69,11 @@ function revert(user) {
                             </td>
                             <td class="px-5 py-4">
                                 <span v-if="user.is_verified"
-                                      class="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-label-md font-medium">
+                                      class="inline-block bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300 px-3 py-1 rounded-full text-label-md font-medium">
                                     Terverifikasi
                                 </span>
                                 <span v-else
-                                      class="inline-block bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-label-md font-medium">
+                                      class="inline-block bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 px-3 py-1 rounded-full text-label-md font-medium">
                                     Menunggu
                                 </span>
                             </td>

@@ -4,6 +4,7 @@ import Sidebar from "@/Components/Dashboard/Sidebar.vue";
 import TopBar from "@/Components/Dashboard/TopBar.vue";
 import MobileNav from "@/Components/Dashboard/MobileNav.vue";
 import ScrollToTop from "@/Components/Dashboard/ScrollToTop.vue";
+import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 
 defineProps({
     title: { type: String, default: "Dashboard" },
@@ -21,13 +22,14 @@ const sidebarCollapsed = ref(false);
         <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
             <TopBar :title="title" />
             <div
-                class="flex-1 overflow-y-auto p-8 scrollbar-hide dashboard-scroll-area"
+                class="flex-1 overflow-y-auto p-8 scrollbar-hide dashboard-scroll-area bg-surface-white"
             >
                 <slot />
             </div>
             <ScrollToTop />
         </main>
         <MobileNav />
+        <ConfirmDialog />
     </div>
 </template>
 

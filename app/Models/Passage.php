@@ -9,12 +9,12 @@ class Passage extends Model
 {
     protected $fillable = [
         'title',
+        'type',
         'content_text',
         'audio_url',
         'image_url',
         'language',
         'word_count',
-        'source',
     ];
 
     protected function casts(): array
@@ -27,5 +27,10 @@ class Passage extends Model
     public function questionGroups(): HasMany
     {
         return $this->hasMany(QuestionGroup::class);
+    }
+
+    public function questions(): HasMany
+    {
+        return $this->hasMany(Question::class);
     }
 }
