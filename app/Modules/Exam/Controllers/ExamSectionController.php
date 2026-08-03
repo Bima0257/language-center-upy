@@ -18,7 +18,7 @@ class ExamSectionController extends Controller
     public function store(Request $request, Exam $exam): RedirectResponse
     {
         $validated = $request->validate([
-            'skill' => ['required', 'string', 'max:50'],
+            'skill_id' => ['required', 'exists:skills,id'],
             'title' => ['required', 'string', 'max:255'],
             'order' => ['required', 'integer'],
             'duration_minutes' => ['nullable', 'integer'],
@@ -34,13 +34,12 @@ class ExamSectionController extends Controller
     public function update(Request $request, Exam $exam, ExamSection $section): RedirectResponse
     {
         $validated = $request->validate([
-            'skill' => ['string', 'max:50'],
+            'skill_id' => ['exists:skills,id'],
             'title' => ['string', 'max:255'],
             'order' => ['integer'],
             'duration_minutes' => ['nullable', 'integer'],
             'instructions' => ['nullable', 'string'],
             'total_questions' => ['nullable', 'integer'],
-            'navigation_enabled' => ['boolean'],
         ]);
 
         $this->sectionService->update($section, $validated);

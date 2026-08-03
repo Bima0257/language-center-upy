@@ -13,21 +13,7 @@ class Passage extends Model
         'content_text',
         'audio_url',
         'image_url',
-        'language',
-        'word_count',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'word_count' => 'integer',
-        ];
-    }
-
-    public function questionGroups(): HasMany
-    {
-        return $this->hasMany(QuestionGroup::class);
-    }
 
     public function questions(): HasMany
     {

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\StudentProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -76,8 +75,6 @@ class GoogleAuthController extends Controller
                 $user->email_verified_at = now();
                 $user->save();
                 $user->assignRole('student');
-
-                StudentProfile::create(['user_id' => $user->id]);
 
                 return $user;
             });

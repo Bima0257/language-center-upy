@@ -10,11 +10,15 @@ class BulkImportQuestionsRequest extends FormRequest
     {
         return [
             'questions' => ['required', 'array', 'min:1', 'max:500'],
-            'questions.*.type' => ['required', 'in:multiple_choice,multi_select,order,matching,fill_blank,essay,speaking,true_false,dictation,error_id'],
+            'questions.*.question_bank_id' => ['required', 'exists:question_banks,id'],
+            'questions.*.skill_id' => ['required', 'exists:skills,id'],
+            'questions.*.passage_id' => ['nullable', 'exists:passages,id'],
             'questions.*.question_text' => ['required', 'string'],
-            'questions.*.options' => ['nullable', 'array'],
-            'questions.*.correct_answer' => ['nullable', 'string'],
-            'questions.*.points' => ['integer', 'min:1'],
+            'questions.*.option_a' => ['required', 'string'],
+            'questions.*.option_b' => ['required', 'string'],
+            'questions.*.option_c' => ['required', 'string'],
+            'questions.*.option_d' => ['required', 'string'],
+            'questions.*.correct_answer' => ['required', 'string', 'max:1', 'in:A,B,C,D'],
         ];
     }
 

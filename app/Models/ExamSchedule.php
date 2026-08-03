@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['exam_id', 'title', 'scheduled_start', 'scheduled_end', 'late_tolerance_minutes', 'max_participants', 'is_active'])]
+#[Fillable(['exam_id', 'title', 'scheduled_start', 'scheduled_end', 'max_participants', 'is_active'])]
 class ExamSchedule extends Model
 {
     protected function casts(): array

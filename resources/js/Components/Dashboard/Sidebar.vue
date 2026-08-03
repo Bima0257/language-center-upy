@@ -12,7 +12,9 @@ import {
     IconEyeCheck,
     IconUsers,
     IconReport,
-    IconTags,
+    IconDatabase,
+    IconCertificate,
+    IconFolders,
 } from "@tabler/icons-vue";
 
 defineProps({
@@ -57,8 +59,7 @@ if (isInstructor) {
     nav.push(
         { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
         { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },
-        { label: "Passage", icon: IconFileDescription, route: "content-library.passages.index" },
-        { label: "Tag", icon: IconTags, route: "content-library.tags.index" },
+        { label: "Materi Soal", icon: IconFileDescription, route: "content-library.passages.index" },
     );
 }
 
@@ -83,6 +84,21 @@ if (isAdmin) {
             route: "admin.exams.index",
         },
         { label: "Verifikasi", icon: IconUsers, route: "admin.verify-users" },
+        {
+            label: "Bank Soal Manager",
+            icon: IconFolders,
+            route: "content-library.question-banks.index",
+        },
+        {
+            label: "Master Data",
+            icon: IconDatabase,
+            route: "admin.master-data.skills.index",
+        },
+        {
+            label: "Sertifikat",
+            icon: IconCertificate,
+            route: "admin.certificates.index",
+        },
         {
             label: "Dashboard Pengawas",
             icon: IconEyeCheck,

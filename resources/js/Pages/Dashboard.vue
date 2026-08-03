@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link, usePage } from "@inertiajs/vue3";
+import { computed } from "vue";
 import {
     IconAlertTriangle,
     IconCheck,
@@ -15,8 +16,10 @@ import HeroBanner from "@/Components/Dashboard/HeroBanner.vue";
 import StatsGrid from "@/Components/Dashboard/StatsGrid.vue";
 import AssignmentsList from "@/Components/Dashboard/AssignmentsList.vue";
 import Leaderboard from "@/Components/Dashboard/Leaderboard.vue";
+import BarChart from "@/Components/Charts/BarChart.vue";
+import DoughnutChart from "@/Components/Charts/DoughnutChart.vue";
 
-defineProps({
+const props = defineProps({
     recentSessions: { type: Array, default: () => [] },
     availableExamsCount: { type: Number, default: 0 },
     totalUsers: { type: Number, default: 0 },
@@ -25,6 +28,9 @@ defineProps({
     flaggedSessionsCount: { type: Number, default: 0 },
     totalQuestions: { type: Number, default: 0 },
     totalPassages: { type: Number, default: 0 },
+    questionsBySkill: { type: Array, default: () => [] },
+    questionsByStatus: { type: Array, default: () => [] },
+    questionsByBank: { type: Array, default: () => [] },
 });
 
 const roles = usePage().props.auth?.roles || [];
@@ -35,6 +41,25 @@ const isProctor =
     roles.includes("admin") ||
     roles.includes("superadmin");
 const isAdmin = roles.includes("admin") || roles.includes("superadmin");
+
+const statusLabels = {
+    draft: "Draf",
+    submitted: "Diajukan",
+    approved: "Disetujui",
+    rejected: "Ditolak",
+    archived: "Arsip",
+};
+
+const skillChartLabels = computed(() => props.questionsBySkill.map((i) => i.label));
+const skillChartData = computed(() => props.questionsBySkill.map((i) => i.count));
+
+const statusChartLabels = computed(() =>
+    props.questionsByStatus.map((i) => statusLabels[i.status] || i.status),
+);
+const statusChartData = computed(() => props.questionsByStatus.map((i) => i.count));
+
+const bankChartLabels = computed(() => props.questionsByBank.map((i) => i.label));
+const bankChartData = computed(() => props.questionsByBank.map((i) => i.count));
 </script>
 
 <template>
@@ -161,7 +186,7 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
                     <p class="text-headline-md font-bold text-primary">
                         {{ totalPassages }}
                     </p>
-                    <p class="text-text-muted text-label-md">Total Passage</p>
+                    <p class="text-text-muted text-label-md">Total Materi Soal</p>
                 </div>
                 <div
                     class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 flex flex-col items-center justify-center gap-3"
@@ -176,18 +201,32 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
                         :href="route('content-library.passages.index')"
                         class="w-full text-center border border-outline-variant text-primary px-6 py-3 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all"
                     >
-                        Kelola Passage →
+                        Kelola Materi Soal →
                     </Link>
                 </div>
             </div>
-            <HeroBanner />
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 space-y-8">
-                    <StatsGrid />
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                    <BarChart
+                        :labels="skillChartLabels"
+                        :data="skillChartData"
+                        title="Jumlah Soal per Skill"
+                    />
                 </div>
-                <div class="space-y-8">
-                    <Leaderboard />
+                <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                    <DoughnutChart
+                        :labels="statusChartLabels"
+                        :data="statusChartData"
+                        title="Status Review Soal"
+                    />
                 </div>
+            </div>
+            <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 mb-6">
+                <BarChart
+                    :labels="bankChartLabels"
+                    :data="bankChartData"
+                    title="Jumlah Soal per Bank Soal"
+                />
             </div>
         </template>
 

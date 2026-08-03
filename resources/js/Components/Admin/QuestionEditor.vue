@@ -1,50 +1,29 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
-import OptionsEditor from '@/Components/Shared/OptionsEditor.vue';
-import { computed } from 'vue';
 
 const props = defineProps({
-    groupId: { type: Number, required: true },
+    questionBanks: { type: Array, default: () => [] },
+    skills: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(['saved']);
 
+const optionKeys = ['A', 'B', 'C', 'D'];
+
 const form = useForm({
-    type: 'multiple_choice',
+    question_bank_id: '',
+    skill_id: '',
     question_text: '',
-    options: '',
+    option_a: '',
+    option_b: '',
+    option_c: '',
+    option_d: '',
     correct_answer: '',
-    points: 1,
     order: 1,
 });
 
-const typeLabels = {
-    multiple_choice: 'Pilihan Ganda',
-    multi_select: 'Pilih >1 Jawaban',
-    order: 'Urutkan',
-    matching: 'Menjodohkan',
-    fill_blank: 'Isian Singkat',
-    essay: 'Essay',
-    speaking: 'Speaking',
-    true_false: 'True / False / Not Given',
-    dictation: 'Dikte',
-    error_id: 'Identifikasi Error',
-};
-
-const hasOptions = computed(() => ['multiple_choice', 'multi_select', 'order', 'matching', 'error_id'].includes(form.type));
-const hasCorrectAnswer = computed(() => !['essay', 'speaking', 'dictation'].includes(form.type));
-const correctLabel = computed(() => {
-    if (form.type === 'true_false') return 'Jawaban Benar (True/False/Not Given)';
-    if (form.type === 'fill_blank') return 'Jawaban Benar (pisah koma jika banyak alternatif)';
-    if (form.type === 'error_id') return 'Bagian yang Salah (A/B/C/D)';
-    if (form.type === 'order') return 'Urutan Benar (contoh: [1,3,2,4])';
-    if (form.type === 'matching') return 'Pasangan Benar (JSON: [{"left":"A","right":"2"}])';
-    if (form.type === 'multi_select') return 'Jawaban Benar (pisah koma: A,B)';
-    return 'Kunci Jawaban';
-});
-
 function submit() {
-    form.post(route('admin.exams.questions.store', props.groupId), {
+    form.post(route('admin.exams.questions.store'), {
         preserveScroll: true,
         onSuccess: () => { form.reset(); emit('saved'); },
     });
@@ -55,51 +34,46 @@ function submit() {
     <form @submit.prevent="submit" class="space-y-4 p-4 bg-surface-container-low rounded-2xl">
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="text-label-md font-medium text-primary block mb-1">Tipe Soal</label>
-                <select v-model="form.type"
+                <label class="text-label-md font-medium text-primary block mb-1">Bank Soal</label>
+                <select v-model="form.question_bank_id" required
                         class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                    <option v-for="(label, key) in typeLabels" :key="key" :value="key">{{ label }}</option>
+                    <option value="" disabled>Pilih Bank Soal</option>
+                    <option v-for="b in questionBanks" :key="b.id" :value="b.id">{{ b.name }}</option>
                 </select>
             </div>
             <div>
-                <label class="text-label-md font-medium text-primary block mb-1">Poin</label>
-                <input type="number" v-model="form.points" min="1"
-                       class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                <label class="text-label-md font-medium text-primary block mb-1">Skill <span class="text-error-red">*</span></label>
+                <select v-model="form.skill_id" required
+                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
+                    <option value="" disabled>Pilih Skill</option>
+                    <option v-for="s in skills" :key="s.id" :value="s.id">{{ s.name }}</option>
+                </select>
             </div>
         </div>
         <div>
             <label class="text-label-md font-medium text-primary block mb-1">Teks Soal</label>
             <textarea v-model="form.question_text" rows="2" required
-                      class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"
-                      :placeholder="form.type === 'dictation' ? 'Teks yang harus ditranskripsi peserta' : form.type === 'error_id' ? 'Kalimat lengkap dengan error, tulis bagian yang salah di Opsi' : ''"></textarea>
+                      class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea>
         </div>
 
-        <OptionsEditor v-if="hasOptions" v-model="form.options" :type="form.type" />
+        <div>
+            <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban</p>
+            <div class="space-y-2">
+                <div v-for="key in optionKeys" :key="key" class="flex items-center gap-2">
+                    <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-full bg-surface-white border border-outline-variant font-semibold text-primary text-sm">{{ key }}</span>
+                    <input type="text" v-model="form['option_' + key.toLowerCase()]" required :placeholder="'Teks pilihan ' + key"
+                           class="flex-1 px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                </div>
+            </div>
+        </div>
 
-        <div v-if="hasCorrectAnswer">
-            <label class="text-label-md font-medium text-primary block mb-1">{{ correctLabel }}</label>
-            <template v-if="form.type === 'true_false'">
-                <select v-model="form.correct_answer"
-                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                    <option value="" disabled>Pilih jawaban</option>
-                    <option value="A">True</option>
-                    <option value="B">False</option>
-                    <option value="C">Not Given</option>
-                </select>
-            </template>
-            <template v-else-if="form.type === 'multiple_choice' && form.options">
-                <select v-model="form.correct_answer"
-                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                    <option value="" disabled>Pilih jawaban</option>
-                    <option v-for="o in (() => { try { const p=JSON.parse(form.options); return p; } catch{ return []; } })()" :key="o.key" :value="o.key">
-                        {{ o.key }}. {{ o.text?.substring(0, 30) }}
-                    </option>
-                </select>
-            </template>
-            <template v-else>
-                <input type="text" v-model="form.correct_answer" :placeholder="correctLabel"
-                       class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
-            </template>
+        <div>
+            <label class="text-label-md font-medium text-primary block mb-1">Kunci Jawaban</label>
+            <select v-model="form.correct_answer" required
+                    class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
+                <option value="" disabled>Pilih jawaban benar (A/B/C/D)</option>
+                <option v-for="key in optionKeys" :key="key" :value="key">{{ key }}</option>
+            </select>
         </div>
 
         <button type="submit" :disabled="form.processing"

@@ -46,8 +46,8 @@ function revert(user) {
                             </td>
                             <td class="px-5 py-4 text-body-md text-text-body">{{ user.student_profile?.nim || '-' }}</td>
                             <td class="px-5 py-4">
-                                <p class="text-body-md text-text-body">{{ user.student_profile?.faculty || '-' }}</p>
-                                <p class="text-text-muted text-label-md">{{ user.student_profile?.department || '-' }}</p>
+                                <p class="text-body-md text-text-body">{{ user.student_profile?.faculty?.name || '-' }}</p>
+                                <p class="text-text-muted text-label-md">{{ user.student_profile?.department?.name || '-' }}</p>
                             </td>
                             <td class="px-5 py-4">
                                 <a v-if="user.student_profile?.identity_photo"

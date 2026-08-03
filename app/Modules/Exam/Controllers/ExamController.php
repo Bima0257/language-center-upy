@@ -4,6 +4,7 @@ namespace App\Modules\Exam\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Models\Skill;
 use App\Modules\Exam\Services\ExamService;
 use App\Http\Requests\Exam\StoreExamRequest;
 use App\Http\Requests\Exam\UpdateExamRequest;
@@ -41,6 +42,7 @@ class ExamController extends Controller
     {
         return Inertia::render('Admin/Exams/Show', [
             'exam' => $this->examService->findWithRelations($exam->id),
+            'skills' => Skill::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 

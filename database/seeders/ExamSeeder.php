@@ -3,31 +3,28 @@
 namespace Database\Seeders;
 
 use App\Models\Exam;
-use App\Models\ExamSection;
-use App\Models\ExamType;
-use App\Models\Question;
-use App\Models\QuestionGroup;
 use App\Models\ExamSchedule;
+use App\Models\ExamSection;
 use App\Models\ExamSession;
-use App\Models\ViolationLog;
-use App\Models\StudentProfile;
+use App\Models\ExamType;
+use App\Models\Passage;
+use App\Models\Question;
+use App\Models\QuestionBank;
+use App\Models\Skill;
 use App\Models\User;
+use App\Models\ViolationLog;
 use Illuminate\Database\Seeder;
 
 class ExamSeeder extends Seeder
 {
     public function run(): void
     {
-        $toefl = ExamType::create([
+        $toefl = ExamType::firstOrCreate([
             'name' => 'TOEFL iBT',
-            'target_language' => 'English',
-            'section_config' => json_encode([
-                ['skill' => 'reading',    'name' => 'Reading Section',    'default_duration' => 35, 'default_questions' => 20],
-                ['skill' => 'listening',  'name' => 'Listening Section',  'default_duration' => 36, 'default_questions' => 28],
-                ['skill' => 'speaking',   'name' => 'Speaking Section',   'default_duration' => 16, 'default_questions' => 4],
-                ['skill' => 'writing',    'name' => 'Writing Section',    'default_duration' => 29, 'default_questions' => 2],
-            ]),
+        ], [
             'max_strikes' => 3,
+            'description' => 'Test of English as a Foreign Language',
+            'is_active' => true,
         ]);
 
         $exam = Exam::create([
@@ -39,163 +36,146 @@ class ExamSeeder extends Seeder
             'is_active' => true,
         ]);
 
+        $readingSkill = Skill::where('code', 'reading')->firstOrFail();
+        $listeningSkill = Skill::where('code', 'listening')->firstOrFail();
+
         $reading = ExamSection::create([
             'exam_id' => $exam->id,
-            'skill' => 'reading',
-            'type' => 'reading',
+            'skill_id' => $readingSkill->id,
             'title' => 'Reading Section',
             'order' => 1,
             'duration_minutes' => 35,
             'instructions' => 'Baca setiap passage dengan saksama. Jawab soal berdasarkan informasi yang diberikan dalam passage.',
             'total_questions' => 4,
-            'navigation_enabled' => true,
         ]);
 
         $listening = ExamSection::create([
             'exam_id' => $exam->id,
-            'skill' => 'listening',
-            'type' => 'listening',
+            'skill_id' => $listeningSkill->id,
             'title' => 'Listening Section',
             'order' => 2,
             'duration_minutes' => 36,
             'instructions' => 'Dengarkan setiap audio. Jawab soal berdasarkan informasi dari audio.',
             'total_questions' => 4,
-            'navigation_enabled' => true,
         ]);
 
-        $group = QuestionGroup::create([
-            'exam_section_id' => $reading->id,
-            'title' => 'Passage 1 — The History of Solar Energy',
-            'passage_text' => 'Solar energy has been used by humans for thousands of years...',
-            'order' => 1,
+        $bank = QuestionBank::firstOrCreate(['name' => 'Bank Soal Demo'], ['is_active' => true]);
+
+        $readingPassage = Passage::create([
+            'title' => 'The History of Solar Energy',
+            'type' => 'text',
+            'content_text' => 'Solar energy has been used by humans for thousands of years...',
         ]);
 
-        Question::create([
-            'question_group_id' => $group->id,
-            'type' => 'multiple_choice',
-            'question_text' => 'What is the main topic of the passage?',
-            'options' => json_encode([
-                ['key' => 'A', 'text' => 'The invention of solar panels in the 20th century'],
-                ['key' => 'B', 'text' => 'The history and development of solar energy'],
-                ['key' => 'C', 'text' => 'How ancient Greeks designed their buildings'],
-                ['key' => 'D', 'text' => 'The efficiency of modern solar cells'],
-            ]),
-            'correct_answer' => 'B',
-            'points' => 1,
-            'order' => 1,
+        $listeningPassage = Passage::create([
+            'title' => 'Marine Biology',
+            'type' => 'audio',
+            'content_text' => 'Lecture on the relationship between coral reefs and their environment...',
         ]);
 
-        Question::create([
-            'question_group_id' => $group->id,
-            'type' => 'multiple_choice',
-            'question_text' => 'When was the photovoltaic effect first discovered?',
-            'options' => json_encode([
-                ['key' => 'A', 'text' => '7th century BC'],
-                ['key' => 'B', 'text' => '1839'],
-                ['key' => 'C', 'text' => '1954'],
-                ['key' => 'D', 'text' => '2020'],
-            ]),
-            'correct_answer' => 'B',
-            'points' => 1,
-            'order' => 2,
-        ]);
+        $readingQuestions = [
+            [
+                'question_text' => 'What is the main topic of the passage?',
+                'a' => 'The invention of solar panels in the 20th century',
+                'b' => 'The history and development of solar energy',
+                'c' => 'How ancient Greeks designed their buildings',
+                'd' => 'The efficiency of modern solar cells',
+                'answer' => 'B',
+            ],
+            [
+                'question_text' => 'When was the photovoltaic effect first discovered?',
+                'a' => '7th century BC',
+                'b' => '1839',
+                'c' => '1954',
+                'd' => '2020',
+                'answer' => 'B',
+            ],
+            [
+                'question_text' => 'According to the passage, what efficiency did the first silicon solar cell achieve?',
+                'a' => 'About 2%',
+                'b' => 'About 6%',
+                'c' => 'About 15%',
+                'd' => 'About 22%',
+                'answer' => 'B',
+            ],
+            [
+                'question_text' => 'What does the passage imply about modern solar panels?',
+                'a' => 'They are less efficient than early models',
+                'b' => 'They were invented by the ancient Greeks',
+                'c' => 'They are significantly more efficient than the first solar cell',
+                'd' => 'They are no longer growing as an energy source',
+                'answer' => 'C',
+            ],
+        ];
 
-        Question::create([
-            'question_group_id' => $group->id,
-            'type' => 'multiple_choice',
-            'question_text' => 'According to the passage, what efficiency did the first silicon solar cell achieve?',
-            'options' => json_encode([
-                ['key' => 'A', 'text' => 'About 2%'],
-                ['key' => 'B', 'text' => 'About 6%'],
-                ['key' => 'C', 'text' => 'About 15%'],
-                ['key' => 'D', 'text' => 'About 22%'],
-            ]),
-            'correct_answer' => 'B',
-            'points' => 1,
-            'order' => 3,
-        ]);
+        $listeningQuestions = [
+            [
+                'question_text' => 'What is the lecture mainly about?',
+                'a' => 'The differences between coral and algae',
+                'b' => 'The relationship between coral reefs and their environment',
+                'c' => 'How climate change affects ocean temperatures',
+                'd' => 'Methods for preserving marine ecosystems',
+                'answer' => 'B',
+            ],
+            [
+                'question_text' => 'According to the professor, what causes coral bleaching?',
+                'a' => 'An increase in marine predators',
+                'b' => 'The loss of symbiotic algae due to warm water',
+                'c' => 'Pollution from coastal development',
+                'd' => 'Overfishing in reef areas',
+                'answer' => 'B',
+            ],
+            [
+                'question_text' => 'What does the professor say about the relationship between corals and algae?',
+                'a' => 'Corals provide shelter, and algae provide food through photosynthesis',
+                'b' => 'Algae compete with corals for space',
+                'c' => 'Corals eat the algae for nutrition',
+                'd' => 'Algae block sunlight from reaching the corals',
+                'answer' => 'A',
+            ],
+            [
+                'question_text' => 'What can be inferred about the professor view on coral reef preservation?',
+                'a' => 'She believes it is too late to save most reefs',
+                'b' => 'She thinks local efforts are more effective than global ones',
+                'c' => 'She believes addressing climate change is essential',
+                'd' => 'She thinks coral reefs can adapt to warmer temperatures',
+                'answer' => 'C',
+            ],
+        ];
 
-        Question::create([
-            'question_group_id' => $group->id,
-            'type' => 'multiple_choice',
-            'question_text' => 'What does the passage imply about modern solar panels?',
-            'options' => json_encode([
-                ['key' => 'A', 'text' => 'They are less efficient than early models'],
-                ['key' => 'B', 'text' => 'They were invented by the ancient Greeks'],
-                ['key' => 'C', 'text' => 'They are significantly more efficient than the first solar cell'],
-                ['key' => 'D', 'text' => 'They are no longer growing as an energy source'],
-            ]),
-            'correct_answer' => 'C',
-            'points' => 1,
-            'order' => 4,
-        ]);
+        foreach ($readingQuestions as $i => $q) {
+            Question::create([
+                'question_bank_id' => $bank->id,
+                'passage_id' => $readingPassage->id,
+                'skill_id' => $readingSkill->id,
+                'type' => 'multiple_choice',
+                'question_text' => $q['question_text'],
+                'option_a' => $q['a'],
+                'option_b' => $q['b'],
+                'option_c' => $q['c'],
+                'option_d' => $q['d'],
+                'correct_answer' => $q['answer'],
+                'order' => $i + 1,
+                'status' => 'approved',
+            ]);
+        }
 
-        $listeningGroup = QuestionGroup::create([
-            'exam_section_id' => $listening->id,
-            'title' => 'Lecture — Marine Biology',
-            'audio_file' => null,
-            'order' => 1,
-        ]);
-
-        Question::create([
-            'question_group_id' => $listeningGroup->id,
-            'type' => 'multiple_choice',
-            'question_text' => 'What is the lecture mainly about?',
-            'options' => json_encode([
-                ['key' => 'A', 'text' => 'The differences between coral and algae'],
-                ['key' => 'B', 'text' => 'The relationship between coral reefs and their environment'],
-                ['key' => 'C', 'text' => 'How climate change affects ocean temperatures'],
-                ['key' => 'D', 'text' => 'Methods for preserving marine ecosystems'],
-            ]),
-            'correct_answer' => 'B',
-            'points' => 1,
-            'order' => 1,
-        ]);
-
-        Question::create([
-            'question_group_id' => $listeningGroup->id,
-            'type' => 'multiple_choice',
-            'question_text' => 'According to the professor, what causes coral bleaching?',
-            'options' => json_encode([
-                ['key' => 'A', 'text' => 'An increase in marine predators'],
-                ['key' => 'B', 'text' => 'The loss of symbiotic algae due to warm water'],
-                ['key' => 'C', 'text' => 'Pollution from coastal development'],
-                ['key' => 'D', 'text' => 'Overfishing in reef areas'],
-            ]),
-            'correct_answer' => 'B',
-            'points' => 1,
-            'order' => 2,
-        ]);
-
-        Question::create([
-            'question_group_id' => $listeningGroup->id,
-            'type' => 'multiple_choice',
-            'question_text' => 'What does the professor say about the relationship between corals and algae?',
-            'options' => json_encode([
-                ['key' => 'A', 'text' => 'Corals provide shelter, and algae provide food through photosynthesis'],
-                ['key' => 'B', 'text' => 'Algae compete with corals for space'],
-                ['key' => 'C', 'text' => 'Corals eat the algae for nutrition'],
-                ['key' => 'D', 'text' => 'Algae block sunlight from reaching the corals'],
-            ]),
-            'correct_answer' => 'A',
-            'points' => 1,
-            'order' => 3,
-        ]);
-
-        Question::create([
-            'question_group_id' => $listeningGroup->id,
-            'type' => 'multiple_choice',
-            'question_text' => 'What can be inferred about the professor\'s view on coral reef preservation?',
-            'options' => json_encode([
-                ['key' => 'A', 'text' => 'She believes it is too late to save most reefs'],
-                ['key' => 'B', 'text' => 'She thinks local efforts are more effective than global ones'],
-                ['key' => 'C', 'text' => 'She believes addressing climate change is essential'],
-                ['key' => 'D', 'text' => 'She thinks coral reefs can adapt to warmer temperatures'],
-            ]),
-            'correct_answer' => 'C',
-            'points' => 1,
-            'order' => 4,
-        ]);
+        foreach ($listeningQuestions as $i => $q) {
+            Question::create([
+                'question_bank_id' => $bank->id,
+                'passage_id' => $listeningPassage->id,
+                'skill_id' => $listeningSkill->id,
+                'type' => 'multiple_choice',
+                'question_text' => $q['question_text'],
+                'option_a' => $q['a'],
+                'option_b' => $q['b'],
+                'option_c' => $q['c'],
+                'option_d' => $q['d'],
+                'correct_answer' => $q['answer'],
+                'order' => $i + 1,
+                'status' => 'approved',
+            ]);
+        }
 
         $student = User::role('student')->first();
 
@@ -223,7 +203,6 @@ class ExamSeeder extends Seeder
                 'type' => 'tab_switch',
                 'severity' => 'minor',
                 'description' => 'Peserta pindah tab ke aplikasi lain.',
-                'metadata' => json_encode(['url_detected' => 'https://www.google.com']),
                 'strike_count' => 1,
             ]);
 

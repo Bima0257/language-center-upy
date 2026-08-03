@@ -1,14 +1,18 @@
 <script setup>
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
-import { IconPlus, IconEdit, IconTrash, IconFileDescription, IconHeadphones, IconPhoto, IconBook, IconX, IconBooks, IconUpload } from '@tabler/icons-vue';
-import { ref, watch } from 'vue';
+import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
+import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
+import { IconPlus, IconEdit, IconTrash, IconFileDescription, IconHeadphones, IconPhoto, IconBook, IconX, IconBooks, IconUpload, IconCheck } from '@tabler/icons-vue';
+import { computed, ref, watch } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
 const confirm = useConfirm();
 
 const props = defineProps({
     passages: { type: Object, default: () => ({ data: [] }) },
+    questionBanks: { type: Array, default: () => [] },
+    skills: { type: Array, default: () => [] },
 });
 
 const showForm = ref(false);
@@ -17,6 +21,21 @@ const audioPreviewUrl = ref(null);
 const imagePreviewUrl = ref(null);
 const audioFileInput = ref(null);
 const imageFileInput = ref(null);
+const addingPassageId = ref(null);
+
+const optionKeys = ['A', 'B', 'C', 'D'];
+
+const quickQuestionForm = useForm({
+    passage_id: null,
+    question_bank_id: '',
+    skill_id: '',
+    question_text: '',
+    option_a: '',
+    option_b: '',
+    option_c: '',
+    option_d: '',
+    correct_answer: '',
+});
 
 const form = useForm({
     title: '',
@@ -24,7 +43,6 @@ const form = useForm({
     content_text: '',
     audio_file: null,
     image_file: null,
-    language: 'en',
 });
 
 const typeLabels = {
@@ -47,7 +65,6 @@ function openEdit(passage) {
     form.content_text = passage.content_text || '';
     form.audio_file = null;
     form.image_file = null;
-    form.language = passage.language || 'en';
     audioPreviewUrl.value = passage.audio_url ? '/storage/' + passage.audio_url : null;
     imagePreviewUrl.value = passage.image_url ? '/storage/' + passage.image_url : null;
     showForm.value = true;
@@ -111,8 +128,51 @@ function submit() {
     }
 }
 
+const showUploadProgress = computed(() => form.processing && (form.audio_file !== null || form.image_file !== null));
+const uploadLabel = computed(() => form.audio_file !== null ? 'Mengunggah & mengompres audio...' : 'Mengunggah & mengompres gambar...');
+
+function openQuickAdd(passage) {
+    addingPassageId.value = passage.id;
+    quickQuestionForm.clearErrors();
+    quickQuestionForm.reset();
+    quickQuestionForm.passage_id = passage.id;
+    if (props.questionBanks.length === 1) {
+        quickQuestionForm.question_bank_id = props.questionBanks[0].id;
+    }
+}
+
+function closeQuickAdd() {
+    addingPassageId.value = null;
+    quickQuestionForm.reset();
+}
+
+function saveQuickQuestion() {
+    quickQuestionForm
+        .transform((data) => ({
+            passage_id: data.passage_id,
+            question_bank_id: data.question_bank_id,
+            questions: [{
+                skill_id: data.skill_id,
+                question_text: data.question_text,
+                option_a: data.option_a,
+                option_b: data.option_b,
+                option_c: data.option_c,
+                option_d: data.option_d,
+                correct_answer: data.correct_answer,
+            }],
+        }))
+        .post(route('content-library.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                addingPassageId.value = null;
+                quickQuestionForm.reset();
+                router.reload({ only: ['passages'], preserveState: true, preserveScroll: true });
+            },
+        });
+}
+
 async function deletePassage(id, title) {
-    if (!await confirm.confirm(`Hapus passage: "${title}"?`)) return;
+    if (!await confirm.confirm(`Hapus materi soal: "${title}"?`)) return;
     router.delete(route('content-library.passages.destroy', id), { preserveScroll: true });
 }
 
@@ -123,31 +183,38 @@ function getMediaIcon(passage) {
     return 'text';
 }
 
+function stripHtml(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html || '';
+    return div.textContent || '';
+}
+
 function previewText(text, max) {
     if (!text) return '';
-    return text.length > max ? text.substring(0, max) + '...' : text;
+    const plain = stripHtml(text);
+    return plain.length > max ? plain.substring(0, max) + '...' : plain;
 }
 </script>
 
 <template>
-    <Head title="Passage" />
-    <DashboardLayout title="Kelola Passage">
+    <Head title="Materi Soal" />
+    <DashboardLayout title="Kelola Materi Soal">
         <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-4">
                 <Link :href="route('content-library.index')" class="text-secondary text-label-md font-medium hover:underline">← Kembali ke Bank Soal</Link>
-                <p class="text-text-body text-body-md">{{ passages.total || 0 }} passage</p>
+                <p class="text-text-body text-body-md">{{ passages.total || 0 }} materi soal</p>
             </div>
             <button @click="openCreate"
                     class="flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
-                <IconPlus :size="18" /> Passage Baru
+                <IconPlus :size="18" /> Materi Soal Baru
             </button>
         </div>
 
         <div v-if="passages.data?.length === 0" class="bg-white rounded-2xl p-10 text-center shadow-soft border border-outline-variant/30">
             <IconBook class="mx-auto text-text-muted mb-3" :size="48" stroke="1.5" />
-            <p class="text-text-body text-body-md">Belum ada passage.</p>
+            <p class="text-text-body text-body-md">Belum ada materi soal.</p>
             <button @click="openCreate" class="mt-4 inline-flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all">
-                <IconPlus :size="16" /> Buat Passage Pertama
+                <IconPlus :size="16" /> Buat Materi Soal Pertama
             </button>
         </div>
 
@@ -183,7 +250,6 @@ function previewText(text, max) {
                             </template>
                             <p class="text-label-md text-text-muted mt-1">
                                 {{ p.questions_count || 0 }} soal
-                                <span v-if="p.language"> | {{ p.language.toUpperCase() }}</span>
                             </p>
                         </div>
                     </div>
@@ -193,18 +259,82 @@ function previewText(text, max) {
                               title="Lihat Soal">
                             <IconBooks :size="16" /> {{ p.questions_count || 0 }} Soal
                         </Link>
-                        <Link :href="route('content-library.create', { passage_id: p.id })"
-                              class="flex items-center gap-1.5 px-3 py-2 bg-primary-container text-white rounded-full text-label-md font-medium hover:bg-primary transition-all"
-                              title="Tambah Soal">
+                        <button @click="addingPassageId === p.id ? closeQuickAdd() : openQuickAdd(p)"
+                                class="flex items-center gap-1.5 px-3 py-2 bg-primary-container text-white rounded-full text-label-md font-medium hover:bg-primary transition-all"
+                                title="Tambah soal ke materi soal ini">
                             <IconPlus :size="16" /> Tambah Soal
-                        </Link>
+                        </button>
                         <button @click="openEdit(p)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit">
                             <IconEdit :size="18" />
                         </button>
-                        <button @click="deletePassage(p.id, p.title)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus">
+                        <button @click="deletePassage(p.id, p.title)"
+                                :disabled="(p.questions_count || 0) > 0"
+                                :title="(p.questions_count || 0) > 0 ? `Tidak bisa dihapus — materi soal dipakai ${p.questions_count} soal` : 'Hapus'"
+                                class="p-2 text-text-muted hover:text-error-red transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-text-muted">
                             <IconTrash :size="18" />
                         </button>
                     </div>
+                </div>
+
+                <!-- QUICK ADD SOAL KE PASSAGE -->
+                <div v-if="addingPassageId === p.id"
+                     class="mt-4 pt-4 border-t border-outline-variant/30 bg-pastel-blue/10 rounded-xl p-4">
+                    <p class="text-label-md font-semibold text-primary mb-3">Tambah Soal ke "{{ p.title }}"</p>
+                    <form @submit.prevent="saveQuickQuestion" class="space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="text-label-md font-medium text-primary block mb-1">Bank Soal <span class="text-error-red">*</span></label>
+                                <select v-model="quickQuestionForm.question_bank_id" required
+                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
+                                    <option value="" disabled>Pilih Bank</option>
+                                    <option v-for="b in questionBanks" :key="b.id" :value="b.id">{{ b.name }}</option>
+                                </select>
+                                <p v-if="quickQuestionForm.errors.question_bank_id" class="text-error-red text-xs mt-1">{{ quickQuestionForm.errors.question_bank_id }}</p>
+                            </div>
+                            <div>
+                                <label class="text-label-md font-medium text-primary block mb-1">Skill <span class="text-error-red">*</span></label>
+                                <select v-model="quickQuestionForm.skill_id" required
+                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
+                                    <option value="" disabled>Pilih Skill</option>
+                                    <option v-for="s in skills" :key="s.id" :value="s.id">{{ s.name }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-label-md font-medium text-primary block mb-1">Kunci Jawaban <span class="text-error-red">*</span></label>
+                                <select v-model="quickQuestionForm.correct_answer" required
+                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
+                                    <option value="" disabled>Pilih kunci</option>
+                                    <option v-for="key in optionKeys" :key="key" :value="key">{{ key }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-label-md font-medium text-primary block mb-1">Teks Soal <span class="text-error-red">*</span></label>
+                            <textarea v-model="quickQuestionForm.question_text" rows="2" required
+                                      class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea>
+                            <p v-if="quickQuestionForm.errors.question_text" class="text-error-red text-xs mt-1">{{ quickQuestionForm.errors.question_text }}</p>
+                        </div>
+                        <div>
+                            <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban <span class="text-error-red">*</span></p>
+                            <div class="space-y-2">
+                                <div v-for="key in optionKeys" :key="key" class="flex items-center gap-2">
+                                    <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-full bg-surface-white border border-outline-variant font-semibold text-primary text-sm">{{ key }}</span>
+                                    <input type="text" v-model="quickQuestionForm['option_' + key.toLowerCase()]" required :placeholder="'Teks pilihan ' + key"
+                                           class="flex-1 px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="submit" :disabled="quickQuestionForm.processing"
+                                    class="flex items-center gap-1.5 bg-primary-container text-white px-5 py-2.5 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                                <IconCheck :size="16" /> {{ quickQuestionForm.processing ? 'Menyimpan...' : 'Simpan Soal' }}
+                            </button>
+                            <button type="button" @click="closeQuickAdd"
+                                    class="flex items-center gap-1.5 px-5 py-2.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">
+                                Batal
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -221,7 +351,7 @@ function previewText(text, max) {
         <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div class="bg-white rounded-3xl p-8 shadow-soft w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-headline-md font-bold text-primary">{{ editingPassage ? 'Edit Passage' : 'Passage Baru' }}</h2>
+                    <h2 class="text-headline-md font-bold text-primary">{{ editingPassage ? 'Edit Materi Soal' : 'Materi Soal Baru' }}</h2>
                     <button @click="closeForm" class="p-2 text-text-muted hover:text-primary transition-colors">
                         <IconX :size="20" />
                     </button>
@@ -236,22 +366,10 @@ function previewText(text, max) {
                     </div>
 
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-1.5">Tipe Passage *</label>
+                        <label class="text-label-md font-medium text-primary block mb-1.5">Tipe Materi Soal *</label>
                         <select v-model="form.type" required
                                 class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
                             <option v-for="(label, key) in typeLabels" :key="key" :value="key">{{ label }}</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="text-label-md font-medium text-primary block mb-1.5">Bahasa *</label>
-                        <select v-model="form.language" required
-                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
-                            <option value="en">English</option>
-                            <option value="ja">Japanese</option>
-                            <option value="zh">Chinese</option>
-                            <option value="ko">Korean</option>
-                            <option value="id">Indonesian</option>
                         </select>
                     </div>
 
@@ -261,9 +379,8 @@ function previewText(text, max) {
                             {{ form.type === 'prompt' ? 'Teks Prompt' : 'Teks Bacaan' }}
                             <span class="text-text-muted">{{ form.type === 'prompt' ? '(Speaking/Writing)' : '(Reading)' }}</span>
                         </label>
-                        <textarea v-model="form.content_text" rows="6"
-                                  :placeholder="form.type === 'prompt' ? 'Tulis instruksi atau prompt...' : 'Tulis isi bacaan lengkap di sini...'"
-                                  class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary"></textarea>
+                        <RichTextEditor v-model="form.content_text"
+                                        :placeholder="form.type === 'prompt' ? 'Tulis instruksi atau prompt...' : 'Tulis isi bacaan lengkap di sini...'" />
                         <p v-if="form.errors.content_text" class="text-error-red text-xs mt-1">{{ form.errors.content_text }}</p>
                     </div>
 
@@ -277,7 +394,7 @@ function previewText(text, max) {
                             <p class="text-label-md text-text-body font-medium">
                                 {{ form.audio_file ? form.audio_file.name : 'Klik untuk upload file audio' }}
                             </p>
-                            <p class="text-xs text-text-muted mt-1">MP3, WAV, OGG, M4A (max 20MB)</p>
+                            <p class="text-xs text-text-muted mt-1">MP3, WAV, OGG, M4A (max 50MB)</p>
                         </div>
                         <p v-if="form.errors.audio_file" class="text-error-red text-xs mt-1">{{ form.errors.audio_file }}</p>
                         <input ref="audioFileInput" type="file" accept="audio/*" @change="onAudioFileChange" class="hidden" />
@@ -302,7 +419,7 @@ function previewText(text, max) {
                             <p class="text-label-md text-text-body font-medium">
                                 {{ form.image_file ? form.image_file.name : 'Klik untuk upload gambar' }}
                             </p>
-                            <p class="text-xs text-text-muted mt-1">JPG, PNG, WebP (max 5MB)</p>
+                            <p class="text-xs text-text-muted mt-1">JPG, PNG, WebP (max 20MB, otomatis dikompres)</p>
                         </div>
                         <p v-if="form.errors.image_file" class="text-error-red text-xs mt-1">{{ form.errors.image_file }}</p>
                         <input ref="imageFileInput" type="file" accept="image/*" @change="onImageFileChange" class="hidden" />
@@ -321,7 +438,7 @@ function previewText(text, max) {
                     <div class="flex gap-4">
                         <button type="submit" :disabled="form.processing"
                                 class="flex-1 bg-primary-container text-white py-3.5 rounded-full text-title-lg font-semibold hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
-                            {{ form.processing ? 'Menyimpan...' : (editingPassage ? 'Simpan Perubahan' : 'Buat Passage') }}
+                            {{ form.processing ? 'Menyimpan...' : (editingPassage ? 'Simpan Perubahan' : 'Buat Materi Soal') }}
                         </button>
                         <button type="button" @click="closeForm"
                                 class="px-8 py-3.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">
@@ -331,5 +448,6 @@ function previewText(text, max) {
                 </form>
             </div>
         </div>
+        <UploadProgressBar :show="showUploadProgress" :label="uploadLabel" />
     </DashboardLayout>
 </template>

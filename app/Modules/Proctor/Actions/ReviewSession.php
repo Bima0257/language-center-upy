@@ -2,7 +2,6 @@
 
 namespace App\Modules\Proctor\Actions;
 
-use App\Enums\SessionStatus;
 use App\Modules\Proctor\DTOs\ReviewDecisionData;
 use App\Modules\Session\Repositories\Contracts\ExamSessionRepositoryInterface;
 
@@ -15,7 +14,6 @@ class ReviewSession
     public function execute(int $sessionId, ReviewDecisionData $decision): void
     {
         $this->sessionRepo->update($sessionId, [
-            'status' => SessionStatus::REVIEWED,
             'review_status' => $decision->status,
             'review_note' => $decision->note,
             'reviewed_by' => $decision->reviewerId,

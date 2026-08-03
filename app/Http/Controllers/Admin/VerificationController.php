@@ -15,7 +15,7 @@ class VerificationController extends Controller
     {
         $users = User::role('student')
             ->whereHas('studentProfile', fn($q) => $q->whereNotNull('identity_photo'))
-            ->with('studentProfile')
+            ->with(['studentProfile.faculty', 'studentProfile.department'])
             ->select(['id', 'name', 'email', 'photo', 'created_at'])
             ->get();
 

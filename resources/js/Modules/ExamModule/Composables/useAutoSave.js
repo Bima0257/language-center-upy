@@ -6,7 +6,7 @@ export function useAutoSave({ sessionId, debounceMs = 500 } = {}) {
     const isSaving = ref(false);
     let pendingTimer = null;
 
-    function save(questionId, answerText = null, answerJson = null) {
+    function save(questionId, answerText = null) {
         if (pendingTimer) clearTimeout(pendingTimer);
 
         pendingTimer = setTimeout(() => {
@@ -14,7 +14,6 @@ export function useAutoSave({ sessionId, debounceMs = 500 } = {}) {
             axios.post(`/exam/session/${sessionId}/answer`, {
                 question_id: questionId,
                 answer_text: answerText,
-                answer_json: answerJson,
             }).then(() => {
                 lastSaved.value = new Date().toLocaleTimeString('id-ID');
                 isSaving.value = false;
@@ -24,13 +23,12 @@ export function useAutoSave({ sessionId, debounceMs = 500 } = {}) {
         }, debounceMs);
     }
 
-    function saveImmediate(questionId, answerText = null, answerJson = null) {
+    function saveImmediate(questionId, answerText = null) {
         if (pendingTimer) clearTimeout(pendingTimer);
         isSaving.value = true;
         axios.post(`/exam/session/${sessionId}/answer`, {
             question_id: questionId,
             answer_text: answerText,
-            answer_json: answerJson,
         }).then(() => {
             lastSaved.value = new Date().toLocaleTimeString('id-ID');
             isSaving.value = false;

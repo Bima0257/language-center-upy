@@ -8,5 +8,4 @@ enum SessionStatus: string
     case IN_PROGRESS = 'in_progress';
     case SUBMITTED = 'submitted';
     case TERMINATED = 'terminated';
-    case REVIEWED = 'reviewed';
 }

@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Department;
 use App\Models\StudentProfile;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -14,7 +15,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(RoleSeeder::class);
-        $this->call(TagSeeder::class);
+        $this->call(MasterDataSeeder::class);
 
         $this->createUsers();
 
@@ -68,16 +69,21 @@ class DatabaseSeeder extends Seeder
         ]);
         $student->assignRole('student');
 
-        StudentProfile::create([
-            'user_id' => $student->id,
-            'nim' => '2200010001',
-            'faculty' => 'Fakultas Keguruan dan Ilmu Pendidikan',
-            'department' => 'Pendidikan Bahasa Inggris',
-            'batch_year' => 2022,
-            'identity_photo' => null,
-            'is_verified' => true,
-            'verified_at' => now(),
-            'verified_by' => $admin->id,
-        ]);
+        $fkip = \App\Models\Faculty::where('code', 'FKIP')->first();
+        $pbi = Department::where('code', 'PBI')->first();
+
+        if ($fkip && $pbi) {
+            StudentProfile::create([
+                'user_id' => $student->id,
+                'nim' => '2200010001',
+                'faculty_id' => $fkip->id,
+                'department_id' => $pbi->id,
+                'batch_year' => 2022,
+                'identity_photo' => null,
+                'is_verified' => true,
+                'verified_at' => now(),
+                'verified_by' => $admin->id,
+            ]);
+        }
     }
 }

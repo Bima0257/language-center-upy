@@ -6,15 +6,21 @@
 
         @php
             $landingComponents = ['Welcome', 'Auth/Login', 'Auth/Register', 'Auth/ConfirmPassword', 'Auth/ForgotPassword', 'Auth/ResetPassword', 'Auth/VerifyEmail'];
+            $authComponents = ['Auth/Login', 'Auth/Register', 'Auth/ConfirmPassword', 'Auth/ForgotPassword', 'Auth/ResetPassword', 'Auth/VerifyEmail'];
             $isLanding = in_array($page['component'], $landingComponents);
+            $isAuth = in_array($page['component'], $authComponents);
         @endphp
-        @if($isLanding)
+        @if($isLanding && !$isAuth)
         <script>
-            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            if (sessionStorage.theme === 'dark') {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
             }
+        </script>
+        @elseif($isAuth)
+        <script>
+            document.documentElement.classList.remove('dark');
         </script>
         @else
         <script>

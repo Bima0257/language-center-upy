@@ -10,8 +10,8 @@ class StudentProfile extends Model
     protected $fillable = [
         'user_id',
         'nim',
-        'faculty',
-        'department',
+        'faculty_id',
+        'department_id',
         'batch_year',
         'identity_photo',
         'is_verified',
@@ -32,6 +32,16 @@ class StudentProfile extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function faculty(): BelongsTo
+    {
+        return $this->belongsTo(Faculty::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function verifier(): BelongsTo

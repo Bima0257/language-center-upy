@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
+use App\Models\Faculty;
+use App\Models\StudentProfile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,11 +22,13 @@ class OnboardingController extends Controller
 
         return Inertia::render('Onboarding/IdentityVerification', [
             'user' => $user,
+            'faculties' => Faculty::where('is_active', true)->orderBy('name')->get(),
+            'departments' => Department::where('is_active', true)->orderBy('name')->get(),
             'hasUploaded' => $hasUploaded,
             'profile' => $profile ? [
                 'nim' => $profile->nim,
-                'faculty' => $profile->faculty,
-                'department' => $profile->department,
+                'faculty_id' => $profile->faculty_id,
+                'department_id' => $profile->department_id,
                 'batch_year' => $profile->batch_year,
             ] : null,
         ]);
@@ -33,19 +38,23 @@ class OnboardingController extends Controller
     {
         $request->validate([
             'nim' => 'required|string|max:20',
-            'faculty' => 'required|string|max:100',
-            'department' => 'required|string|max:100',
+            'faculty_id' => 'required|exists:faculties,id',
+            'department_id' => 'required|exists:departments,id',
             'batch_year' => 'required|integer|min:2000|max:' . (date('Y') + 1),
             'identity_photo' => 'required|image|mimes:jpg,jpeg,png|max:5120',
             'photo' => 'required|image|mimes:jpg,jpeg,png|max:5120',
         ]);
 
         $user = auth()->user();
-        $profile = $user->studentProfile ?? $user->studentProfile()->create([]);
+        $profile = $user->studentProfile;
+
+        if (! $profile) {
+            $profile = new StudentProfile(['user_id' => $user->id]);
+        }
 
         $profile->nim = $request->nim;
-        $profile->faculty = $request->faculty;
-        $profile->department = $request->department;
+        $profile->faculty_id = $request->faculty_id;
+        $profile->department_id = $request->department_id;
         $profile->batch_year = $request->batch_year;
 
         if ($request->hasFile('identity_photo')) {

@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\CertificateController;
+use App\Http\Controllers\Admin\MasterDataController;
+use App\Http\Controllers\Admin\ScoreInterpretationController;
 use App\Http\Controllers\Admin\VerificationController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
@@ -49,6 +52,24 @@ Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
         if ($user->hasRole('instructor')) {
             $data['totalQuestions'] = \App\Models\Question::count();
             $data['totalPassages'] = \App\Models\Passage::count();
+
+            $data['questionsBySkill'] = \App\Models\Question::selectRaw('skills.name as label, COUNT(*) as count')
+                ->leftJoin('skills', 'skills.id', '=', 'questions.skill_id')
+                ->whereNotNull('questions.skill_id')
+                ->groupBy('skills.name')
+                ->orderByDesc('count')
+                ->get();
+
+            $data['questionsByStatus'] = \App\Models\Question::selectRaw('status, COUNT(*) as count')
+                ->groupBy('status')
+                ->orderByDesc('count')
+                ->get();
+
+            $data['questionsByBank'] = \App\Models\Question::selectRaw('question_banks.name as label, COUNT(*) as count')
+                ->leftJoin('question_banks', 'question_banks.id', '=', 'questions.question_bank_id')
+                ->groupBy('question_banks.name')
+                ->orderByDesc('count')
+                ->get();
         }
 
         return Inertia::render('Dashboard', $data);
@@ -59,6 +80,30 @@ Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
         Route::post('/verify-users/{user}/approve', [VerificationController::class, 'approve'])->name('verify-users.approve');
         Route::post('/verify-users/{user}/reject', [VerificationController::class, 'reject'])->name('verify-users.reject');
         Route::post('/verify-users/{user}/revert', [VerificationController::class, 'revert'])->name('verify-users.revert');
+
+        Route::get('/master-data/skills', [MasterDataController::class, 'skillsIndex'])->name('master-data.skills.index');
+        Route::post('/master-data/skills', [MasterDataController::class, 'skillStore'])->name('master-data.skills.store');
+        Route::put('/master-data/skills/{skill}', [MasterDataController::class, 'skillUpdate'])->name('master-data.skills.update');
+        Route::delete('/master-data/skills/{skill}', [MasterDataController::class, 'skillDestroy'])->name('master-data.skills.destroy');
+
+        Route::get('/master-data/faculties', [MasterDataController::class, 'facultiesIndex'])->name('master-data.faculties.index');
+        Route::post('/master-data/faculties', [MasterDataController::class, 'facultyStore'])->name('master-data.faculties.store');
+        Route::put('/master-data/faculties/{faculty}', [MasterDataController::class, 'facultyUpdate'])->name('master-data.faculties.update');
+        Route::delete('/master-data/faculties/{faculty}', [MasterDataController::class, 'facultyDestroy'])->name('master-data.faculties.destroy');
+
+        Route::get('/master-data/departments', [MasterDataController::class, 'departmentsIndex'])->name('master-data.departments.index');
+        Route::post('/master-data/departments', [MasterDataController::class, 'departmentStore'])->name('master-data.departments.store');
+        Route::put('/master-data/departments/{department}', [MasterDataController::class, 'departmentUpdate'])->name('master-data.departments.update');
+        Route::delete('/master-data/departments/{department}', [MasterDataController::class, 'departmentDestroy'])->name('master-data.departments.destroy');
+
+        Route::get('/master-data/score-interpretations', [ScoreInterpretationController::class, 'index'])->name('master-data.score-interpretations.index');
+        Route::post('/master-data/score-interpretations', [ScoreInterpretationController::class, 'store'])->name('master-data.score-interpretations.store');
+        Route::put('/master-data/score-interpretations/{scoreInterpretation}', [ScoreInterpretationController::class, 'update'])->name('master-data.score-interpretations.update');
+        Route::delete('/master-data/score-interpretations/{scoreInterpretation}', [ScoreInterpretationController::class, 'destroy'])->name('master-data.score-interpretations.destroy');
+
+        Route::get('/certificates', [CertificateController::class, 'index'])->name('certificates.index');
+        Route::post('/certificates', [CertificateController::class, 'store'])->name('certificates.store');
+        Route::delete('/certificates/{certificate}', [CertificateController::class, 'destroy'])->name('certificates.destroy');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -16,10 +16,10 @@ function toggleTheme() {
     isDark.value = !isDark.value;
     if (isDark.value) {
         document.documentElement.classList.add('dark');
-        localStorage.theme = 'dark';
+        sessionStorage.theme = 'dark';
     } else {
         document.documentElement.classList.remove('dark');
-        localStorage.theme = 'light';
+        sessionStorage.theme = 'light';
     }
     document.dispatchEvent(new CustomEvent('theme-changed'));
 }

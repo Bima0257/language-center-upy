@@ -16,7 +16,7 @@ class LogViolation
         private ExamSessionRepositoryInterface $sessionRepo,
     ) {}
 
-    public function execute(int $sessionId, string $type, array $metadata = []): StrikeResult
+    public function execute(int $sessionId, string $type): StrikeResult
     {
         $session = $this->sessionRepo->findOrFail($sessionId);
 
@@ -43,7 +43,6 @@ class LogViolation
             'exam_session_id' => $sessionId,
             'type' => $type,
             'severity' => $severity?->value ?? 'minor',
-            'metadata' => $metadata,
             'strike_count' => $newStrikeCount,
         ]);
 

@@ -16,7 +16,7 @@ class ExamSessionRepository implements ExamSessionRepositoryInterface
 
     public function findWithAnswers(int $id): ?ExamSession
     {
-        return ExamSession::with(['answers.question', 'schedule.exam.sections.questionGroups.questions'])->find($id);
+        return ExamSession::with(['answers', 'schedule.exam.sections'])->find($id);
     }
 
     public function create(array $data): ExamSession

@@ -13,61 +13,43 @@ import axios from 'axios';
 
 const props = defineProps({
     session: { type: Object, required: true },
+    bankQuestions: { type: Array, default: () => [] },
+    skills: { type: Object, default: () => ({}) },
 });
 
 const user = usePage().props.auth.user;
 const currentSection = computed(() => props.session.current_section);
 
-const currentGroups = computed(() => {
-    const sections = props.session.schedule?.exam?.sections || [];
-    const section = sections.find(s => s.id === currentSection.value?.id);
-    return section?.question_groups || [];
+const currentQuestions = computed(() => {
+    const skillId = currentSection.value?.skill_id;
+    if (!skillId) return [];
+    return props.bankQuestions
+        .filter(q => q.skill_id === skillId)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
 });
 
-const currentGroupIndex = ref(0);
-const currentGroup = computed(() => currentGroups.value[currentGroupIndex.value] || null);
+const totalQuestions = computed(() => currentQuestions.value.length);
 
-const groupQuestions = computed(() => currentGroup.value?.questions || []);
-const totalQuestions = computed(() => groupQuestions.value.length);
+const optionKeys = ['A', 'B', 'C', 'D'];
 
-const allOptions = computed(() => {
-    const opts = {};
-    for (const g of currentGroups.value) {
-        for (const q of (g.questions || [])) {
-            if (q.options) {
-                try {
-                    opts[q.id] = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-                } catch { opts[q.id] = []; }
-            } else {
-                opts[q.id] = [];
-            }
-        }
-    }
-    return opts;
-});
+function qOptions(q) {
+    return optionKeys
+        .map(k => ({ key: k, text: q['option_' + k.toLowerCase()] }))
+        .filter(o => o.text);
+}
 
 const answers = ref({});
-const flaggedQuestionIds = ref([]);
 
 const sessionAnswers = props.session.answers || [];
-const sessionFlagged = props.session.flagged_questions || [];
 
 for (const a of sessionAnswers) {
     answers.value[a.question_id] = a.answer_text;
 }
-for (const f of sessionFlagged) {
-    flaggedQuestionIds.value.push(f.question_id);
-}
 
 const answeredIds = computed(() => Object.keys(answers.value).map(Number));
 const answeredIndices = computed(() => {
-    return groupQuestions.value
+    return currentQuestions.value
         .map((q, i) => answers.value[q.id] !== undefined ? i : -1)
-        .filter(i => i >= 0);
-});
-const flaggedIndices = computed(() => {
-    return groupQuestions.value
-        .map((q, i) => flaggedQuestionIds.value.includes(q.id) ? i : -1)
         .filter(i => i >= 0);
 });
 
@@ -99,7 +81,7 @@ const { lastSaved, isSaving, save: autoSave } = useAutoSave({
 });
 
 const currentQuestionIndex = ref(0);
-const currentQuestion = computed(() => groupQuestions.value[currentQuestionIndex.value] || null);
+const currentQuestion = computed(() => currentQuestions.value[currentQuestionIndex.value] || null);
 const showViolationModal = ref(false);
 const currentViolation = ref(null);
 const showSubmitConfirm = ref(false);
@@ -107,13 +89,6 @@ const showSubmitConfirm = ref(false);
 function goToQuestion(index) {
     if (index >= 0 && index < totalQuestions.value) {
         currentQuestionIndex.value = index;
-    }
-}
-
-function goToGroup(index) {
-    if (index >= 0 && index < currentGroups.value.length) {
-        currentGroupIndex.value = index;
-        currentQuestionIndex.value = 0;
     }
 }
 
@@ -126,22 +101,6 @@ function selectAnswer(key) {
 
 function isAnswered(qId) {
     return answers.value[qId] !== undefined;
-}
-
-function isFlagged(qId) {
-    return flaggedQuestionIds.value.includes(qId);
-}
-
-function toggleFlag() {
-    const q = currentQuestion.value;
-    if (!q) return;
-    const idx = flaggedQuestionIds.value.indexOf(q.id);
-    if (idx > -1) {
-        flaggedQuestionIds.value.splice(idx, 1);
-    } else {
-        flaggedQuestionIds.value.push(q.id);
-    }
-    axios.post(`/exam/session/${props.session.id}/flag`, { question_id: q.id });
 }
 
 function handleTimeUp() {
@@ -187,23 +146,20 @@ onUnmounted(() => {
     <ExamLayout :session="session" :remaining-seconds="remaining" :minutes="minutes" :seconds="seconds"
                 :is-warning="isWarning" :is-danger="isDanger">
         <div class="flex h-full">
-            <div v-if="currentSection?.type === 'reading'" class="flex-1 flex">
+            <div v-if="currentSection?.skill?.code === 'reading'" class="flex-1 flex">
                 <div class="w-1/2 p-6 overflow-y-auto border-r border-outline-variant/30">
-                    <PassageViewer v-if="currentGroup" :group="currentGroup" />
+                    <PassageViewer v-if="currentQuestion?.passage" :passage="currentQuestion.passage" />
                 </div>
                 <div class="w-1/2 p-6 overflow-y-auto">
                     <div v-if="currentQuestion" class="mb-4">
                         <p class="text-body-md font-medium text-primary mb-1">
                             Soal {{ currentQuestionIndex + 1 }} dari {{ totalQuestions }}
                         </p>
-                        <p v-if="currentQuestion.passage_reference" class="text-label-md text-secondary mb-2">
-                            → {{ currentQuestion.passage_reference }}
-                        </p>
                     </div>
                     <div v-if="currentQuestion" class="bg-surface-white rounded-2xl p-6 border border-outline-variant/30">
                         <p class="text-body-md font-medium text-primary mb-4">{{ currentQuestion.question_text }}</p>
-                        <div v-if="allOptions[currentQuestion.id]?.length" class="space-y-3">
-                            <button v-for="opt in allOptions[currentQuestion.id]" :key="opt.key"
+                        <div v-if="qOptions(currentQuestion).length" class="space-y-3">
+                            <button v-for="opt in qOptions(currentQuestion)" :key="opt.key"
                                     @click="selectAnswer(opt.key)"
                                     class="w-full text-left p-4 rounded-2xl border transition-all"
                                     :class="answers[currentQuestion.id] === opt.key ? 'border-secondary bg-pastel-purple/20 text-primary' : 'border-outline-variant bg-surface-container-lowest hover:border-secondary hover:bg-pastel-purple/10'">
@@ -225,11 +181,6 @@ onUnmounted(() => {
                                 Selanjutnya →
                             </button>
                         </div>
-                        <button @click="toggleFlag"
-                                class="px-5 py-2.5 rounded-full text-label-md font-medium transition-all"
-                                :class="isFlagged(currentQuestion?.id) ? 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700' : 'border border-outline-variant text-text-body hover:bg-surface-container-low'">
-                            {{ isFlagged(currentQuestion?.id) ? '⛳ Ditandai' : 'Tandai' }}
-                        </button>
                     </div>
                     <div class="mt-4 flex items-center gap-2 text-label-md">
                         <span v-if="isSaving" class="text-text-muted">Menyimpan...</span>
@@ -239,10 +190,10 @@ onUnmounted(() => {
                 </div>
             </div>
 
-            <div v-else-if="currentSection?.type === 'listening'" class="flex-1 p-6 overflow-y-auto">
+            <div v-else-if="currentSection?.skill?.code === 'listening'" class="flex-1 p-6 overflow-y-auto">
                 <div class="mb-6">
                     <p class="text-label-md text-text-muted mb-2">Putar audio sebelum menjawab soal</p>
-                    <AudioPlayer v-if="currentGroup?.audio_file" :src="currentGroup.audio_file" />
+                    <AudioPlayer v-if="currentQuestion?.passage?.audio_url" :src="currentQuestion.passage.audio_url" />
                     <div class="bg-pastel-blue/20 rounded-2xl p-6 text-center border border-dashed border-outline-variant">
                         <p class="text-text-muted text-body-md">Audio akan tersedia di sini</p>
                     </div>
@@ -250,8 +201,8 @@ onUnmounted(() => {
                 <div v-if="currentQuestion" class="bg-surface-white rounded-2xl p-6 border border-outline-variant/30">
                     <p class="text-body-md font-medium text-primary mb-2">Soal {{ currentQuestionIndex + 1 }}</p>
                     <p class="text-body-md text-primary mb-4">{{ currentQuestion.question_text }}</p>
-                    <div v-if="allOptions[currentQuestion.id]?.length" class="space-y-3">
-                        <button v-for="opt in allOptions[currentQuestion.id]" :key="opt.key"
+                    <div v-if="qOptions(currentQuestion).length" class="space-y-3">
+                        <button v-for="opt in qOptions(currentQuestion)" :key="opt.key"
                                 @click="selectAnswer(opt.key)"
                                 class="w-full text-left p-4 rounded-2xl border transition-all"
                                 :class="answers[currentQuestion.id] === opt.key ? 'border-secondary bg-pastel-purple/20 text-primary' : 'border-outline-variant bg-surface-container-lowest hover:border-secondary'">
@@ -282,7 +233,6 @@ onUnmounted(() => {
                     :total="totalQuestions"
                     :current-index="currentQuestionIndex"
                     :answers="answeredIndices"
-                    :flagged="flaggedIndices"
                     @navigate="goToQuestion" />
             </div>
         </template>

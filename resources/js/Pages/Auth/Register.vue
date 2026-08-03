@@ -13,12 +13,13 @@ const form = useForm({
     'cf-turnstile-response': '',
 });
 
+const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 const googleLoading = ref(false);
 const turnstileWidgetId = ref(null);
-
-const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+const turnstileVerified = ref(!siteKey);
 
 const renderTurnstile = () => {
     if (!siteKey) return;
@@ -27,10 +28,15 @@ const renderTurnstile = () => {
         sitekey: siteKey,
         callback: (token) => {
             form['cf-turnstile-response'] = token;
+            turnstileVerified.value = true;
         },
         'expired-callback': () => {
             form['cf-turnstile-response'] = '';
+            turnstileVerified.value = false;
             window.turnstile?.reset(turnstileWidgetId.value);
+        },
+        'error-callback': () => {
+            turnstileVerified.value = false;
         },
     });
 };
@@ -44,6 +50,7 @@ onMounted(() => {
 });
 
 const submit = () => {
+    if (!turnstileVerified.value) return;
     if (window.turnstile) {
         const token = window.turnstile.getResponse(turnstileWidgetId.value);
         if (!token) {
@@ -77,6 +84,7 @@ const handleGoogleClick = (e) => {
             <p class="text-text-body text-body-md">Mulai persiapan TOEFL Anda bersama kami.</p>
         </header>
 
+        <div class="bg-surface-container-lowest rounded-2xl p-5 md:p-6">
         <form @submit.prevent="submit" class="space-y-3">
             <div class="space-y-2">
                 <label class="text-primary text-label-md font-medium block ml-1" for="name">Nama Lengkap</label>
@@ -159,12 +167,13 @@ const handleGoogleClick = (e) => {
             <div id="turnstile-register" class="flex justify-center"></div>
             <p v-if="form.errors['cf-turnstile-response']" class="text-error-red text-xs mt-1">{{ form.errors['cf-turnstile-response'] }}</p>
 
-            <button type="submit" :disabled="form.processing"
+            <button type="submit" :disabled="form.processing || !turnstileVerified"
                 class="w-full bg-primary-container text-white font-semibold text-title-lg py-3.5 rounded-full mt-2 hover:bg-primary transition-all transform active:scale-95 shadow-lg shadow-primary-container/10 disabled:opacity-50"
             >
                 {{ form.processing ? 'Memproses...' : 'Daftar' }}
             </button>
         </form>
+        </div>
 
         <div class="relative my-5 text-center">
             <div class="absolute inset-0 flex items-center">

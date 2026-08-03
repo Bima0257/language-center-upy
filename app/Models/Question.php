@@ -6,32 +6,37 @@ use App\Enums\QuestionType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['question_group_id', 'type', 'skill', 'passage_id', 'audio_file', 'question_text', 'options', 'correct_answer', 'correct_answers', 'points', 'order', 'passage_reference', 'difficulty', 'status', 'created_by', 'updated_by', 'time_estimate', 'explanation', 'reviewed_by', 'reviewed_at', 'review_note'])]
+#[Fillable([
+    'question_bank_id', 'passage_id', 'type', 'skill_id',
+    'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
+    'correct_answer', 'order', 'status',
+    'created_by', 'updated_by', 'reviewed_by', 'reviewed_at', 'review_note',
+])]
 class Question extends Model
 {
     protected function casts(): array
     {
         return [
             'type' => QuestionType::class,
-            'options' => 'array',
-            'correct_answers' => 'array',
-            'points' => 'integer',
             'order' => 'integer',
-            'time_estimate' => 'integer',
             'reviewed_at' => 'datetime',
         ];
     }
 
-    public function questionGroup(): BelongsTo
+    public function questionBank(): BelongsTo
     {
-        return $this->belongsTo(QuestionGroup::class);
+        return $this->belongsTo(QuestionBank::class);
     }
 
     public function passage(): BelongsTo
     {
         return $this->belongsTo(Passage::class);
+    }
+
+    public function skill(): BelongsTo
+    {
+        return $this->belongsTo(Skill::class);
     }
 
     public function creator(): BelongsTo
@@ -47,16 +52,5 @@ class Question extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
-    }
-
-    public function tags(): BelongsToMany
-    {
-        return $this->belongsToMany(Tag::class, 'question_tag');
-    }
-
-    public function sections(): BelongsToMany
-    {
-        return $this->belongsToMany(ExamSection::class, 'exam_section_question')
-            ->withPivot('order');
     }
 }

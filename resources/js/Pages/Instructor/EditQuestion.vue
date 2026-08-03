@@ -1,45 +1,37 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
-import OptionsEditor from '@/Components/Shared/OptionsEditor.vue';
 
 const props = defineProps({
     question: { type: Object, required: true },
+    questionBanks: { type: Array, default: () => [] },
+    skills: { type: Array, default: () => [] },
     passages: { type: Array, default: () => [] },
-    tags: { type: Array, default: () => [] },
 });
+
+const optionKeys = ['A', 'B', 'C', 'D'];
 
 const form = useForm({
-    skill: props.question.skill || '',
+    question_bank_id: props.question.question_bank_id || '',
+    skill_id: props.question.skill_id || '',
     passage_id: props.question.passage_id || null,
-    audio_file: props.question.audio_file || '',
-    type: props.question.type,
     question_text: props.question.question_text,
-    options: props.question.options || '',
+    option_a: props.question.option_a || '',
+    option_b: props.question.option_b || '',
+    option_c: props.question.option_c || '',
+    option_d: props.question.option_d || '',
     correct_answer: props.question.correct_answer || '',
-    points: props.question.points || 1,
-    difficulty: props.question.difficulty || 'medium',
-    status: props.question.status || 'draft',
-    explanation: props.question.explanation || '',
-    time_estimate: props.question.time_estimate || null,
-    tags: (props.question.tags || []).map(t => t.id),
 });
 
-const typeLabels = {
-    multiple_choice: 'Pilihan Ganda', multi_select: 'Pilih >1 Jawaban',
-    order: 'Urutkan', matching: 'Menjodohkan', fill_blank: 'Isian Singkat',
-    essay: 'Essay', speaking: 'Speaking', true_false: 'True / False / Not Given',
-    dictation: 'Dikte', error_id: 'Identifikasi Error',
-};
-const skillLabels = { reading: 'Reading', listening: 'Listening', speaking: 'Speaking', writing: 'Writing', grammar: 'Grammar', vocabulary: 'Vocabulary' };
+function skillName(id) {
+    return props.skills.find(s => s.id === id)?.name || '';
+}
+
+function bankName(id) {
+    return props.questionBanks.find(b => b.id === id)?.name || '';
+}
 
 function submit() { form.put(route('content-library.update', props.question.id)); }
-
-function toggleTag(id) {
-    const idx = form.tags.indexOf(id);
-    if (idx > -1) form.tags.splice(idx, 1);
-    else form.tags.push(id);
-}
 </script>
 
 <template>
@@ -50,69 +42,47 @@ function toggleTag(id) {
             <div class="bg-surface-white rounded-3xl p-8 shadow-soft border border-outline-variant/30">
                 <div class="mb-6">
                     <h2 class="text-headline-md font-bold text-primary">Edit Soal</h2>
-                    <p class="text-text-muted text-text-body text-body-md mt-1">{{ typeLabels[question.type] }} — {{ skillLabels[question.skill] || question.skill }}</p>
+                    <p class="text-text-muted text-text-body text-body-md mt-1">Pilihan Ganda — {{ skillName(question.skill_id) }}</p>
                 </div>
                 <form @submit.prevent="submit" class="space-y-6">
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Skill</label>
-                            <select v-model="form.skill" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="" disabled>Pilih Skill</option><option v-for="(l,k) in skillLabels" :key="k" :value="k">{{ l }}</option></select></div>
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Passage <span class="text-text-muted">(opsional)</span></label>
-                            <select v-model="form.passage_id" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option :value="null">Tanpa Passage</option><option v-for="p in passages" :key="p.id" :value="p.id">{{ p.title }}</option></select></div>
+                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Bank Soal <span class="text-error-red">*</span></label>
+                            <select v-model="form.question_bank_id" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="" disabled>Pilih Bank Soal</option><option v-for="b in questionBanks" :key="b.id" :value="b.id">{{ b.name }}</option></select></div>
+                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Skill <span class="text-error-red">*</span></label>
+                            <select v-model="form.skill_id" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="" disabled>Pilih Skill</option><option v-for="s in skills" :key="s.id" :value="s.id">{{ s.name }}</option></select></div>
                     </div>
-
-                    <div v-if="form.skill === 'listening' || form.skill === 'speaking'">
-                        <label class="text-label-md font-medium text-primary block mb-1.5">Audio URL <span class="text-text-muted">(opsional)</span></label>
-                        <input type="text" v-model="form.audio_file" placeholder="/storage/audio/question-1.mp3" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Materi Soal <span class="text-text-muted">(opsional)</span></label>
+                            <select v-model="form.passage_id" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option :value="null">Tanpa Materi Soal</option><option v-for="p in passages" :key="p.id" :value="p.id">{{ p.title }}</option></select></div>
+                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Status</label>
+                            <div class="px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md flex items-center gap-2">
+                                <span class="inline-block bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 px-3 py-1 rounded-full text-label-md font-medium">Akan kembali ke Draf</span>
+                            </div>
+                            <p class="text-text-muted text-label-md mt-1">Soal akan dikembalikan ke Draf setelah disimpan untuk direview ulang.</p></div>
                     </div>
 
                     <hr class="border-outline-variant/50" />
 
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Tipe Soal</label>
-                            <select v-model="form.type" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option v-for="(l,k) in typeLabels" :key="k" :value="k">{{ l }}</option></select></div>
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Difficulty</label>
-                            <select v-model="form.difficulty" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="easy">Mudah</option><option value="medium">Sedang</option><option value="hard">Sulit</option></select></div>
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Status</label>
-                            <select v-model="form.status" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="draft">Draft</option><option value="submitted">Ajukan Review</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="archived">Arsip</option></select></div>
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Poin</label>
-                            <input type="number" v-model="form.points" min="1" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" /></div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Waktu (detik) <span class="text-text-muted">opsional</span></label>
-                            <input type="number" v-model="form.time_estimate" min="1" max="600" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" /></div>
-                    </div>
-                    <div><label class="text-label-md font-medium text-primary block mb-1.5">Teks Soal</label>
+                    <div><label class="text-label-md font-medium text-primary block mb-1.5">Teks Soal <span class="text-error-red">*</span></label>
                         <textarea v-model="form.question_text" rows="3" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea></div>
 
-                    <OptionsEditor v-model="form.options" :type="form.type" />
-
-                    <div v-if="['multiple_choice','multi_select','true_false','fill_blank','order','matching','error_id'].includes(form.type)">
-                        <label class="text-label-md font-medium text-primary block mb-1.5">
-                            <template v-if="form.type === 'true_false'">Jawaban Benar</template>
-                            <template v-else-if="form.type === 'fill_blank'">Jawaban Benar <span class="text-text-muted">(pisah koma)</span></template>
-                            <template v-else>Kunci Jawaban</template>
-                        </label>
-                        <template v-if="form.type === 'true_false'">
-                            <select v-model="form.correct_answer" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="" disabled>Pilih</option><option value="A">True</option><option value="B">False</option><option value="C">Not Given</option></select>
-                        </template>
-                        <template v-else-if="form.type === 'multiple_choice' && form.options">
-                            <select v-model="form.correct_answer" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="" disabled>Pilih</option>
-                                <option v-for="o in (() => { try { const p=JSON.parse(form.options); return p || []; } catch{ return []; } })()" :key="o.key" :value="o.key">{{ o.key }}. {{ o.text?.substring(0, 50) }}</option></select>
-                        </template>
-                        <template v-else><input type="text" v-model="form.correct_answer" placeholder="Jawaban benar" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" /></template>
-                    </div>
-
-                    <div><label class="text-label-md font-medium text-primary block mb-1.5">Penjelasan Jawaban <span class="text-text-muted">opsional</span></label>
-                        <textarea v-model="form.explanation" rows="2" placeholder="Mengapa jawaban ini benar?" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea>
-                    </div>
-
-                    <div><label class="text-label-md font-medium text-primary block mb-1.5">Tags</label>
-                        <div class="flex flex-wrap gap-2">
-                            <button v-for="tag in tags" :key="tag.id" type="button" @click="toggleTag(tag.id)"
-                                    class="px-3 py-1.5 rounded-full text-label-md font-medium border transition-all"
-                                    :class="form.tags.includes(tag.id) ? 'bg-primary-container text-white border-primary-container' : 'border-outline-variant text-text-body hover:border-secondary'">
-                                {{ tag.name }}</button>
+                    <div>
+                        <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban <span class="text-error-red">*</span></p>
+                        <div class="space-y-3">
+                            <div v-for="key in optionKeys" :key="key" class="flex items-center gap-3">
+                                <span class="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-surface-container-low border border-outline-variant font-semibold text-primary">{{ key }}</span>
+                                <input type="text" v-model="form['option_' + key.toLowerCase()]" required :placeholder="'Teks pilihan ' + key"
+                                       class="flex-1 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                            </div>
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="text-label-md font-medium text-primary block mb-1.5">Kunci Jawaban <span class="text-error-red">*</span></label>
+                        <select v-model="form.correct_answer" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
+                            <option value="" disabled>Pilih jawaban benar (A/B/C/D)</option>
+                            <option v-for="key in optionKeys" :key="key" :value="key">{{ key }}</option>
+                        </select>
                     </div>
 
                     <hr class="border-outline-variant/50" />

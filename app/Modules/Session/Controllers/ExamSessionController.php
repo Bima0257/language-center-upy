@@ -5,13 +5,14 @@ namespace App\Modules\Session\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\ExamSchedule;
 use App\Models\ExamSession;
+use App\Models\Question;
+use App\Models\Skill;
 use App\Modules\Schedule\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Modules\Session\Actions\CompleteSection;
 use App\Modules\Session\Actions\Heartbeat;
 use App\Modules\Session\Actions\SaveAnswer;
 use App\Modules\Session\Actions\StartExamSession;
 use App\Modules\Session\Actions\SubmitExam;
-use App\Modules\Session\Actions\ToggleFlaggedQuestion;
 use App\Modules\Security\Actions\LogViolation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +25,6 @@ class ExamSessionController extends Controller
     public function __construct(
         private StartExamSession $startExamSession,
         private SaveAnswer $saveAnswer,
-        private ToggleFlaggedQuestion $toggleFlagged,
         private CompleteSection $completeSection,
         private SubmitExam $submitExam,
         private Heartbeat $heartbeat,
@@ -59,14 +59,22 @@ class ExamSessionController extends Controller
     public function take(ExamSession $examSession): Response
     {
         $session = $examSession->load([
-            'schedule.exam.sections.questionGroups.questions',
-            'answers',
-            'flaggedQuestions',
+            'schedule.exam.sections',
+            'answers.question',
             'currentSection',
         ]);
 
+        // Load bank questions matching exam section skills
+        $sectionSkillIds = $session->schedule?->exam?->sections?->pluck('skill_id') ?? collect();
+        $bankQuestions = Question::with('passage')
+            ->whereIn('skill_id', $sectionSkillIds)
+            ->where('status', 'approved')
+            ->get();
+
         return Inertia::render('Exam/Take', [
             'session' => $session,
+            'bankQuestions' => $bankQuestions,
+            'skills' => Skill::whereIn('id', $sectionSkillIds)->pluck('name', 'id'),
         ]);
     }
 
@@ -75,28 +83,15 @@ class ExamSessionController extends Controller
         $validated = $request->validate([
             'question_id' => ['required', 'exists:questions,id'],
             'answer_text' => ['nullable', 'string'],
-            'answer_json' => ['nullable', 'json'],
         ]);
 
         $this->saveAnswer->execute(
             sessionId: $examSession->id,
             questionId: $validated['question_id'],
             answer: $validated['answer_text'] ?? null,
-            answerJson: isset($validated['answer_json']) ? json_decode($validated['answer_json'], true) : null,
         );
 
         return response()->json(['status' => 'saved', 'timestamp' => now()->toIso8601String()]);
-    }
-
-    public function toggleFlag(Request $request, ExamSession $examSession): JsonResponse
-    {
-        $validated = $request->validate([
-            'question_id' => ['required', 'exists:questions,id'],
-        ]);
-
-        $this->toggleFlagged->execute($examSession->id, $validated['question_id']);
-
-        return response()->json(['status' => 'toggled']);
     }
 
     public function completeSection(Request $request, ExamSession $examSession): JsonResponse
@@ -125,13 +120,11 @@ class ExamSessionController extends Controller
     {
         $validated = $request->validate([
             'type' => ['required', 'string', 'max:50'],
-            'metadata' => ['nullable', 'array'],
         ]);
 
         $result = $this->logViolation->execute(
             sessionId: $examSession->id,
             type: $validated['type'],
-            metadata: $validated['metadata'] ?? [],
         );
 
         return response()->json([

@@ -9,21 +9,21 @@ class StoreLibraryQuestionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'skill' => ['required', 'string', 'in:reading,listening,speaking,writing,grammar,vocabulary'],
-            'passage_id' => ['nullable', 'exists:passages,id'],
-            'audio_file' => ['nullable', 'string', 'max:255'],
-            'type' => ['required', 'in:multiple_choice,multi_select,order,matching,fill_blank,essay,speaking,true_false,dictation,error_id'],
-            'question_text' => ['required', 'string'],
-            'options' => ['nullable', 'json'],
-            'correct_answer' => ['nullable', 'string'],
-            'points' => ['integer', 'min:1'],
-            'passage_reference' => ['nullable', 'string', 'max:255'],
-            'difficulty' => ['in:easy,medium,hard'],
-            'status' => ['in:draft,submitted,approved,rejected,archived'],
-            'explanation' => ['nullable', 'string'],
-            'time_estimate' => ['nullable', 'integer', 'min:1', 'max:600'],
-            'tags' => ['nullable', 'array'],
-            'tags.*' => ['exists:tags,id'],
+            'question_bank_id' => ['required', 'exists:question_banks,id'],
+            'passage_id' => ['nullable', 'exists:passages,id', 'prohibits:new_passage_title'],
+            'new_passage_title' => ['nullable', 'string', 'max:255', 'prohibits:passage_id'],
+            'new_passage_type' => ['required_with:new_passage_title', 'in:text,audio,image,prompt'],
+            'new_passage_content_text' => ['nullable', 'string'],
+            'new_passage_audio_file' => ['nullable', 'file', 'mimes:mp3,wav,ogg,m4a', 'max:51200'],
+            'new_passage_image_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
+            'questions' => ['required', 'array', 'min:1', 'max:50'],
+            'questions.*.skill_id' => ['required', 'exists:skills,id'],
+            'questions.*.question_text' => ['required', 'string'],
+            'questions.*.option_a' => ['required', 'string'],
+            'questions.*.option_b' => ['required', 'string'],
+            'questions.*.option_c' => ['required', 'string'],
+            'questions.*.option_d' => ['required', 'string'],
+            'questions.*.correct_answer' => ['required', 'string', 'max:1', 'in:A,B,C,D'],
         ];
     }
 

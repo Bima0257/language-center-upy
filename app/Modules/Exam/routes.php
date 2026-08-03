@@ -4,9 +4,8 @@ use App\Modules\Exam\Controllers\ContentLibraryController;
 use App\Modules\Exam\Controllers\ExamController;
 use App\Modules\Exam\Controllers\ExamSectionController;
 use App\Modules\Exam\Controllers\PassageController;
-use App\Modules\Exam\Controllers\QuestionGroupController;
+use App\Modules\Exam\Controllers\QuestionBankController;
 use App\Modules\Exam\Controllers\QuestionController;
-use App\Modules\Exam\Controllers\TagController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:instructor,admin,superadmin'])
@@ -24,11 +23,6 @@ Route::middleware(['auth', 'role:instructor,admin,superadmin'])
         Route::post('/passages', [PassageController::class, 'store'])->name('passages.store');
         Route::put('/passages/{passage}', [PassageController::class, 'update'])->name('passages.update');
         Route::delete('/passages/{passage}', [PassageController::class, 'destroy'])->name('passages.destroy');
-
-        Route::get('/tags', [TagController::class, 'index'])->name('tags.index');
-        Route::post('/tags', [TagController::class, 'store'])->name('tags.store');
-        Route::put('/tags/{tag}', [TagController::class, 'update'])->name('tags.update');
-        Route::delete('/tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
     });
 
 Route::middleware(['auth', 'role:admin,superadmin'])
@@ -37,6 +31,11 @@ Route::middleware(['auth', 'role:admin,superadmin'])
     ->group(function () {
         Route::put('/questions/{question}/review', [ContentLibraryController::class, 'review'])->name('review');
         Route::put('/questions/bulk-review', [ContentLibraryController::class, 'bulkReview'])->name('bulk-review');
+
+        Route::get('/question-banks', [QuestionBankController::class, 'index'])->name('question-banks.index');
+        Route::post('/question-banks', [QuestionBankController::class, 'store'])->name('question-banks.store');
+        Route::put('/question-banks/{questionBank}', [QuestionBankController::class, 'update'])->name('question-banks.update');
+        Route::delete('/question-banks/{questionBank}', [QuestionBankController::class, 'destroy'])->name('question-banks.destroy');
     });
 
 Route::middleware(['auth', 'role:admin,superadmin'])
@@ -55,13 +54,9 @@ Route::middleware(['auth', 'role:admin,superadmin'])
         Route::put('/{exam}/sections/{section}', [ExamSectionController::class, 'update'])->name('sections.update');
         Route::delete('/{exam}/sections/{section}', [ExamSectionController::class, 'destroy'])->name('sections.destroy');
 
-        Route::post('/sections/{section}/groups', [QuestionGroupController::class, 'store'])->name('groups.store');
-        Route::put('/groups/{group}', [QuestionGroupController::class, 'update'])->name('groups.update');
-        Route::delete('/groups/{group}', [QuestionGroupController::class, 'destroy'])->name('groups.destroy');
-
-        Route::post('/groups/{group}/questions', [QuestionController::class, 'store'])->name('questions.store');
-        Route::post('/groups/{group}/questions/bulk', [QuestionController::class, 'bulkStore'])->name('questions.bulk');
-        Route::post('/groups/{group}/questions/import', [QuestionController::class, 'importFile'])->name('questions.import');
+        Route::post('/questions', [QuestionController::class, 'store'])->name('questions.store');
+        Route::post('/questions/bulk', [QuestionController::class, 'bulkStore'])->name('questions.bulk');
+        Route::post('/questions/import', [QuestionController::class, 'importFile'])->name('questions.import');
         Route::put('/questions/{question}', [QuestionController::class, 'update'])->name('questions.update');
         Route::delete('/questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
     });

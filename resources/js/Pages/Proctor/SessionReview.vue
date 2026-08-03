@@ -37,7 +37,6 @@ const statusColors = {
     in_progress: 'bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300',
     submitted: 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300',
     terminated: 'bg-error-red/10 text-error-red',
-    reviewed: 'bg-purple-100 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300',
 };
 
 const reviewStatusColors = {

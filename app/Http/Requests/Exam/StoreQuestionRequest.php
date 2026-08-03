@@ -9,14 +9,16 @@ class StoreQuestionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => ['required', 'in:multiple_choice,multi_select,order,matching,fill_blank,essay,speaking,true_false,dictation,error_id'],
+            'question_bank_id' => ['required', 'exists:question_banks,id'],
+            'skill_id' => ['required', 'exists:skills,id'],
+            'passage_id' => ['nullable', 'exists:passages,id'],
             'question_text' => ['required', 'string'],
-            'options' => ['nullable', 'json'],
-            'correct_answer' => ['nullable', 'string'],
-            'correct_answers' => ['nullable', 'json'],
-            'points' => ['integer', 'min:1'],
+            'option_a' => ['required', 'string'],
+            'option_b' => ['required', 'string'],
+            'option_c' => ['required', 'string'],
+            'option_d' => ['required', 'string'],
+            'correct_answer' => ['required', 'string', 'max:1', 'in:A,B,C,D'],
             'order' => ['required', 'integer', 'min:1'],
-            'passage_reference' => ['nullable', 'string', 'max:255'],
         ];
     }
 

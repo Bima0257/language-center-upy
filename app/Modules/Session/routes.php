@@ -14,7 +14,6 @@ Route::middleware(['auth', 'verified', 'role:student'])
         Route::middleware('exam.session.active')->group(function () {
             Route::get('/session/{examSession}/{section?}', [ExamSessionController::class, 'take'])->name('take');
             Route::post('/session/{examSession}/answer', [ExamSessionController::class, 'saveAnswer'])->name('save-answer');
-            Route::post('/session/{examSession}/flag', [ExamSessionController::class, 'toggleFlag'])->name('toggle-flag');
             Route::post('/session/{examSession}/section-complete', [ExamSessionController::class, 'completeSection'])->name('section-complete');
             Route::post('/session/{examSession}/submit', [ExamSessionController::class, 'submit'])->name('submit');
             Route::post('/session/{examSession}/heartbeat', [ExamSessionController::class, 'heartbeat'])->name('heartbeat');

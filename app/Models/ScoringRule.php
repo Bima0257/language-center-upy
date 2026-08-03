@@ -11,8 +11,6 @@ class ScoringRule extends Model
         'exam_type_id',
         'section_skill',
         'conversion_table',
-        'scoring_method',
-        'rubric',
         'max_raw',
         'max_scaled',
     ];
@@ -21,7 +19,6 @@ class ScoringRule extends Model
     {
         return [
             'conversion_table' => 'array',
-            'rubric' => 'array',
             'max_raw' => 'integer',
             'max_scaled' => 'integer',
         ];

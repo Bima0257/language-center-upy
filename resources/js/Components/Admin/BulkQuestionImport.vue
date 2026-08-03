@@ -2,10 +2,6 @@
 import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 
-const props = defineProps({
-    groupId: { type: Number, required: true },
-});
-
 const emit = defineEmits(['saved']);
 
 const importMode = ref('json');
@@ -22,7 +18,7 @@ function parsePreview() {
 }
 
 function submitJson() {
-    jsonForm.post(route('admin.exams.questions.bulk', props.groupId), {
+    jsonForm.post(route('admin.exams.questions.bulk'), {
         preserveScroll: true,
         onSuccess: () => { jsonForm.questions = ''; preview.value = []; emit('saved'); },
     });
@@ -36,7 +32,7 @@ function onFileSelect(e) {
 }
 
 function submitFile() {
-    fileForm.post(route('admin.exams.questions.import', props.groupId), {
+    fileForm.post(route('admin.exams.questions.import'), {
         preserveScroll: true,
         onSuccess: () => { fileForm.file = null; emit('saved'); },
     });
@@ -60,9 +56,10 @@ function submitFile() {
 
         <div v-if="importMode === 'json'" class="space-y-3">
             <textarea v-model="jsonForm.questions" rows="6"
-                      placeholder='[{"type":"multiple_choice","question_text":"...","options":[{"key":"A","text":"..."}],"correct_answer":"A"}]'
+                      placeholder='[{"question_bank_id":1,"skill_id":1,"question_text":"...","option_a":"...","option_b":"...","option_c":"...","option_d":"...","correct_answer":"A"}]'
                       @input="parsePreview"
                       class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md font-mono text-sm"></textarea>
+            <p class="text-text-muted text-label-md">Tipe soal otomatis: multiple_choice</p>
             <p v-if="preview.length" class="text-text-muted text-label-md">{{ preview.length }} soal akan diimpor.</p>
             <button @click="submitJson" :disabled="jsonForm.processing || !jsonForm.questions"
                     class="bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
@@ -81,8 +78,8 @@ function submitFile() {
             <div class="bg-surface-container-low rounded-2xl p-4 text-label-md text-text-body">
                 <p class="font-medium text-primary mb-1">Format file:</p>
                 <code class="text-xs">
-type,question_text,options,correct_answer,points<br />
-multiple_choice,"What is...",'[{"key":"A","text":"..."}]',A,1
+question_bank_id,skill_id,question_text,option_a,option_b,option_c,option_d,correct_answer<br />
+1,1,"What is...","London","Paris","Berlin","Madrid","B"
                 </code>
             </div>
             <button @click="submitFile" :disabled="fileForm.processing || !fileForm.file"

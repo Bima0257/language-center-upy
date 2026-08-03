@@ -62,11 +62,6 @@ class ExamSession extends Model
         return $this->hasMany(Answer::class);
     }
 
-    public function flaggedQuestions(): HasMany
-    {
-        return $this->hasMany(FlaggedQuestion::class);
-    }
-
     public function violationLogs(): HasMany
     {
         return $this->hasMany(ViolationLog::class);

@@ -2,7 +2,6 @@
 
 namespace App\Modules\Session\Actions;
 
-use App\Enums\SectionType;
 use App\Models\ExamSession;
 use App\Modules\Session\Repositories\Contracts\ExamSessionRepositoryInterface;
 

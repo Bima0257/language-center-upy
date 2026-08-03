@@ -15,7 +15,7 @@ const columns = [
       render: (val, row) => row.schedule?.exam?.title || '-' },
     { key: 'status', label: 'Status', sortable: true, badge: true,
       render: (val) => {
-          const m = { submitted: 'Selesai', terminated: 'Dihentikan', in_progress: 'Berlangsung', reviewed: 'Direview', pending: 'Menunggu' }
+          const m = { submitted: 'Selesai', terminated: 'Dihentikan', in_progress: 'Berlangsung', pending: 'Menunggu' }
           return m[val] || val
       }},
     { key: 'score_total', label: 'Skor', sortable: true,

@@ -7,57 +7,55 @@ use App\Http\Requests\Exam\ReviewQuestionRequest;
 use App\Http\Requests\Exam\StoreLibraryQuestionRequest;
 use App\Models\Passage;
 use App\Models\Question;
-use App\Models\Tag;
+use App\Models\QuestionBank;
+use App\Models\Skill;
+use App\Services\AudioCompressionService;
+use App\Services\ImageCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Mews\Purifier\Facades\Purifier;
 
 class ContentLibraryController extends Controller
 {
     private const STATUSES = ['draft', 'submitted', 'approved', 'rejected', 'archived'];
 
-    public function create(Request $request): Response
+    public function __construct(
+        private AudioCompressionService $audioCompression,
+        private ImageCompressionService $imageCompression,
+    ) {}
+
+    public function create(): Response
     {
-        $passageId = $request->input('passage_id');
-        $preselectedPassage = null;
-
-        if ($passageId) {
-            $preselectedPassage = Passage::find($passageId);
-        }
-
         return Inertia::render('Instructor/CreateQuestion', [
-            'passages' => Passage::orderBy('title')->get(),
-            'tags' => Tag::orderBy('type')->orderBy('name')->get(),
-            'preselectedPassage' => $preselectedPassage,
+            'questionBanks' => QuestionBank::where('is_active', true)->orderBy('name')->get(),
+            'skills' => Skill::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
     public function edit(Question $question): Response
     {
         return Inertia::render('Instructor/EditQuestion', [
-            'question' => $question->load(['passage', 'tags', 'creator', 'updater', 'reviewer']),
+            'question' => $question->load(['passage', 'questionBank', 'skill', 'creator', 'updater', 'reviewer']),
+            'questionBanks' => QuestionBank::where('is_active', true)->orderBy('name')->get(),
+            'skills' => Skill::where('is_active', true)->orderBy('name')->get(),
             'passages' => Passage::orderBy('title')->get(),
-            'tags' => Tag::orderBy('type')->orderBy('name')->get(),
         ]);
     }
 
     public function index(Request $request): Response
     {
-        $skill = $request->input('skill');
-        $questionType = $request->input('question_type');
-        $difficulty = $request->input('difficulty');
+        $skillId = $request->input('skill_id');
+        $questionBankId = $request->input('question_bank_id');
         $status = $request->input('status');
         $search = $request->input('search');
-        $tagId = $request->input('tag_id');
         $passageId = $request->input('passage_id');
 
-        $questions = Question::with(['passage', 'tags', 'creator', 'reviewer'])
-            ->when($skill, fn ($q) => $q->where('skill', $skill))
-            ->when($questionType, fn ($q) => $q->where('type', $questionType))
-            ->when($difficulty, fn ($q) => $q->where('difficulty', $difficulty))
+        $questions = Question::with(['passage', 'questionBank', 'skill', 'creator', 'reviewer'])
+            ->when($skillId, fn ($q) => $q->where('skill_id', $skillId))
+            ->when($questionBankId, fn ($q) => $q->where('question_bank_id', $questionBankId))
             ->when($status, fn ($q) => $q->where('status', $status))
-            ->when($tagId, fn ($q) => $q->whereHas('tags', fn ($sq) => $sq->where('id', $tagId)))
             ->when($passageId, fn ($q) => $q->where('passage_id', $passageId))
             ->when($search, fn ($q) => $q->where('question_text', 'like', "%{$search}%"))
             ->orderBy('created_at', 'desc')
@@ -71,16 +69,15 @@ class ContentLibraryController extends Controller
 
         return Inertia::render('Instructor/ContentLibrary', [
             'questions' => $questions,
+            'questionBanks' => QuestionBank::where('is_active', true)->orderBy('name')->get(),
+            'skills' => Skill::where('is_active', true)->orderBy('name')->get(),
             'passages' => Passage::orderBy('title')->get(),
-            'tags' => Tag::orderBy('type')->orderBy('name')->get(),
             'statuses' => self::STATUSES,
             'selectedPassage' => $selectedPassage,
             'filters' => [
-                'skill' => $skill,
-                'question_type' => $questionType,
-                'difficulty' => $difficulty,
+                'skill_id' => $skillId,
+                'question_bank_id' => $questionBankId,
                 'status' => $status,
-                'tag_id' => $tagId,
                 'passage_id' => $passageId,
                 'search' => $search,
             ],
@@ -89,63 +86,91 @@ class ContentLibraryController extends Controller
 
     public function store(StoreLibraryQuestionRequest $request): RedirectResponse
     {
-        $question = Question::create([
-            'skill' => $request->skill,
-            'passage_id' => $request->passage_id,
-            'audio_file' => $request->audio_file,
-            'type' => $request->type,
-            'question_text' => $request->question_text,
-            'options' => $request->options,
-            'correct_answer' => $request->correct_answer,
-            'points' => $request->points ?? 1,
-            'order' => 0,
-            'passage_reference' => $request->passage_reference,
-            'difficulty' => $request->difficulty ?? 'medium',
-            'status' => $request->status ?? 'draft',
-            'explanation' => $request->explanation,
-            'time_estimate' => $request->time_estimate,
-            'created_by' => auth()->id(),
-        ]);
+        $passageId = $request->input('passage_id');
 
-        if ($request->filled('tags') && is_array($request->tags)) {
-            $question->tags()->sync($request->tags);
+        if (! $passageId && $request->filled('new_passage_title')) {
+            $audioUrl = null;
+            $imageUrl = null;
+
+            if ($request->hasFile('new_passage_audio_file')) {
+                $audioPath = $request->file('new_passage_audio_file')->store('passages/audio', 'public');
+                $compressedPath = $this->audioCompression->compress('public', $audioPath);
+                $audioUrl = $compressedPath ?? $audioPath;
+            }
+
+            if ($request->hasFile('new_passage_image_file')) {
+                $imagePath = $request->file('new_passage_image_file')->store('passages/images', 'public');
+                $compressedPath = $this->imageCompression->compress('public', $imagePath);
+                $imageUrl = $compressedPath ?? $imagePath;
+            }
+
+            $passage = Passage::create([
+                'title' => $request->new_passage_title,
+                'type' => $request->new_passage_type ?? 'text',
+                'content_text' => $request->filled('new_passage_content_text')
+                    ? Purifier::clean($request->new_passage_content_text)
+                    : null,
+                'audio_url' => $audioUrl,
+                'image_url' => $imageUrl,
+            ]);
+
+            $passageId = $passage->id;
         }
 
-        return to_route('content-library.index')->with('success', 'Soal berhasil ditambahkan ke bank soal.');
+        // Order starts at max(order) + 1 when attaching to an existing passage
+        $order = 1;
+        if ($passageId) {
+            $order = (Question::where('passage_id', $passageId)->max('order') ?? 0) + 1;
+        }
+
+        foreach ($request->input('questions', []) as $q) {
+            Question::create([
+                'question_bank_id' => $request->question_bank_id,
+                'skill_id' => $q['skill_id'] ?? null,
+                'passage_id' => $passageId,
+                'type' => 'multiple_choice',
+                'question_text' => $q['question_text'],
+                'option_a' => $q['option_a'],
+                'option_b' => $q['option_b'],
+                'option_c' => $q['option_c'],
+                'option_d' => $q['option_d'],
+                'correct_answer' => $q['correct_answer'],
+                'order' => $order++,
+                'status' => 'draft',
+                'created_by' => auth()->id(),
+            ]);
+        }
+
+        $count = count($request->input('questions', []));
+
+        return to_route('content-library.index')
+            ->with('success', "{$count} soal berhasil ditambahkan ke bank soal.");
     }
 
     public function update(Request $request, Question $question): RedirectResponse
     {
         $validated = $request->validate([
-            'skill' => ['required', 'string', 'in:reading,listening,speaking,writing,grammar,vocabulary'],
+            'question_bank_id' => ['required', 'exists:question_banks,id'],
+            'skill_id' => ['required', 'exists:skills,id'],
             'passage_id' => ['nullable', 'exists:passages,id'],
-            'audio_file' => ['nullable', 'string', 'max:255'],
-            'type' => ['required', 'in:multiple_choice,multi_select,order,matching,fill_blank,essay,speaking,true_false,dictation,error_id'],
             'question_text' => ['required', 'string'],
-            'options' => ['nullable', 'json'],
-            'correct_answer' => ['nullable', 'string'],
-            'points' => ['integer', 'min:1'],
-            'difficulty' => ['in:easy,medium,hard'],
-            'status' => ['in:draft,submitted,approved,rejected,archived'],
-            'explanation' => ['nullable', 'string'],
-            'time_estimate' => ['nullable', 'integer'],
-            'tags' => ['nullable', 'array'],
-            'tags.*' => ['exists:tags,id'],
+            'option_a' => ['required', 'string'],
+            'option_b' => ['required', 'string'],
+            'option_c' => ['required', 'string'],
+            'option_d' => ['required', 'string'],
+            'correct_answer' => ['required', 'string', 'max:1', 'in:A,B,C,D'],
         ]);
 
         $validated['updated_by'] = auth()->id();
+        // Setiap edit oleh instructor mengembalikan soal ke draft untuk direview ulang
+        $validated['status'] = 'draft';
         $question->update($validated);
-
-        if ($request->has('tags')) {
-            $question->tags()->sync($request->tags ?? []);
-        }
 
         return to_route('content-library.index')->with('success', 'Soal berhasil diperbarui.');
     }
 
     public function destroy(Question $question): RedirectResponse
     {
-        $question->tags()->detach();
         $question->delete();
 
         return back()->with('success', 'Soal berhasil dihapus.');
