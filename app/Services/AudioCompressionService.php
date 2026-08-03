@@ -19,25 +19,25 @@ class AudioCompressionService
 
     private function locateBinary(): ?string
     {
-        $candidates = [
-            'ffmpeg', // resolve via PATH
+        $staticPaths = [
             'C:\ffmpeg\bin\ffmpeg.exe',
             '/usr/bin/ffmpeg',
             '/usr/local/bin/ffmpeg',
         ];
 
-        foreach ($candidates as $candidate) {
-            if ($candidate === 'ffmpeg') {
-                $output = [];
-                exec('where ffmpeg 2>NUL', $output, $code);
-                if ($code === 0 && ! empty($output)) {
-                    return trim($output[0]);
-                }
-                continue;
+        // Deteksi via PATH hanya jika exec() tersedia (sering di-disable di shared hosting)
+        if (function_exists('exec')) {
+            $output = [];
+            $osCmd = PHP_OS_FAMILY === 'Windows' ? 'where ffmpeg 2>NUL' : 'which ffmpeg 2>/dev/null';
+            exec($osCmd, $output, $code);
+            if ($code === 0 && ! empty($output)) {
+                return trim($output[0]);
             }
+        }
 
-            if (file_exists($candidate)) {
-                return $candidate;
+        foreach ($staticPaths as $path) {
+            if (file_exists($path)) {
+                return $path;
             }
         }
 
@@ -46,7 +46,7 @@ class AudioCompressionService
 
     public function isAvailable(): bool
     {
-        return $this->binary !== null;
+        return $this->binary !== null && function_exists('exec');
     }
 
     /**
@@ -55,7 +55,7 @@ class AudioCompressionService
      */
     public function compress(string $disk, string $path): ?string
     {
-        if ($this->binary === null) {
+        if ($this->binary === null || ! function_exists('exec')) {
             return null;
         }
 
