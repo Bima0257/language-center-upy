@@ -24,17 +24,32 @@ return new class extends Migration
         DB::statement("UPDATE {$prefix}exam_sessions SET status = 'submitted' WHERE status = 'reviewed'");
 
         if ($driver === 'mysql') {
-            // questions.status: 3 nilai
-            DB::statement('ALTER TABLE questions DROP CONSTRAINT IF EXISTS questions_status_check');
-            DB::statement("ALTER TABLE questions ADD CONSTRAINT questions_status_check CHECK (status IN ('draft','approved','rejected'))");
+            // questions.status: 3 nilai (ENUM murni dari migration create)
+            DB::statement("ALTER TABLE questions MODIFY status ENUM('draft','approved','rejected') NOT NULL DEFAULT 'draft'");
 
             // exam_sessions.status: 4 nilai
             DB::statement("ALTER TABLE exam_sessions MODIFY status ENUM('pending','in_progress','submitted','terminated') NOT NULL DEFAULT 'pending'");
         }
 
-        // skill_id → NOT NULL (MySQL: MODIFY; SQLite: rebuild otomatis oleh Laravel)
+        // ===== 4. questions.skill_id → NOT NULL =====
+        // Langkah penting: FK lama punya ON DELETE SET NULL yang kontradiktif dengan NOT NULL (MySQL error 1830)
+        // 4a. Drop FK lama
+        if ($driver === 'mysql') {
+            DB::statement("ALTER TABLE {$prefix}questions DROP FOREIGN KEY questions_skill_id_foreign");
+        } else {
+            Schema::table('questions', function (Blueprint $table) {
+                $table->dropForeign(['skill_id']);
+            });
+        }
+
+        // 4b. Ubah kolom → NOT NULL (MySQL: MODIFY; SQLite: rebuild otomatis oleh Laravel)
         Schema::table('questions', function (Blueprint $table) {
             $table->foreignId('skill_id')->nullable(false)->change();
+        });
+
+        // 4c. Tambah FK baru → RESTRICT (skill tidak bisa dihapus selama masih dipakai soal)
+        Schema::table('questions', function (Blueprint $table) {
+            $table->foreign('skill_id')->references('id')->on('skills');
         });
 
         Schema::enableForeignKeyConstraints();
@@ -43,17 +58,33 @@ return new class extends Migration
     public function down(): void
     {
         $driver = DB::connection()->getDriverName();
+        $prefix = DB::getTablePrefix();
 
         Schema::disableForeignKeyConstraints();
 
         if ($driver === 'mysql') {
-            DB::statement('ALTER TABLE questions DROP CONSTRAINT IF EXISTS questions_status_check');
-            DB::statement("ALTER TABLE questions ADD CONSTRAINT questions_status_check CHECK (status IN ('draft','submitted','approved','rejected','archived'))");
+            DB::statement("ALTER TABLE questions MODIFY status ENUM('draft','submitted','approved','rejected','archived') NOT NULL DEFAULT 'draft'");
             DB::statement("ALTER TABLE exam_sessions MODIFY status ENUM('pending','in_progress','submitted','terminated','reviewed') NOT NULL DEFAULT 'pending'");
         }
 
+        // ===== skill_id: balikan (RESTRICT → nullable → SET NULL) =====
+        // 1. Drop FK RESTRICT
+        if ($driver === 'mysql') {
+            DB::statement("ALTER TABLE {$prefix}questions DROP FOREIGN KEY questions_skill_id_foreign");
+        } else {
+            Schema::table('questions', function (Blueprint $table) {
+                $table->dropForeign(['skill_id']);
+            });
+        }
+
+        // 2. Ubah kolom → nullable
         Schema::table('questions', function (Blueprint $table) {
             $table->foreignId('skill_id')->nullable()->change();
+        });
+
+        // 3. Tambah FK SET NULL (seperti semula)
+        Schema::table('questions', function (Blueprint $table) {
+            $table->foreign('skill_id')->references('id')->on('skills')->nullOnDelete();
         });
 
         Schema::enableForeignKeyConstraints();
