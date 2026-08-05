@@ -3,7 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
-import { IconPlus, IconTrash, IconFileDescription, IconUpload } from '@tabler/icons-vue';
+import { IconPlus, IconTrash, IconFileDescription, IconUpload, IconInfoCircle } from '@tabler/icons-vue';
 import { computed, nextTick, ref } from 'vue';
 
 const props = defineProps({
@@ -104,9 +104,11 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                         <div><label class="text-label-md font-medium text-primary block mb-1.5">Bank Soal <span class="text-error-red">*</span></label>
                             <select v-model="form.question_bank_id" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="" disabled>Pilih Bank Soal</option><option v-for="b in questionBanks" :key="b.id" :value="b.id">{{ b.name }}</option></select>
                             <p v-if="form.errors.question_bank_id" class="text-error-red text-xs mt-1">{{ form.errors.question_bank_id }}</p></div>
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Status <span class="text-text-muted">(otomatis Draf)</span></label>
-                            <div class="px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md"><span class="inline-block bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 px-3 py-1 rounded-full text-label-md font-medium">Draf</span></div></div>
                     </div>
+                    <p class="flex items-center gap-1.5 text-label-md text-text-muted">
+                        <IconInfoCircle :size="16" class="text-secondary shrink-0" />
+                        Soal baru akan direview oleh admin sebelum bisa dipakai.
+                    </p>
 
                     <hr class="border-outline-variant/50" />
 

@@ -44,7 +44,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         if ($user->hasRole('instructor')) {
-            return redirect()->intended(route('admin.exams.index', absolute: false));
+            return redirect()->intended(route('content-library.index', absolute: false));
         }
 
         if ($user->hasRole('student') && !$user->isVerified()) {

@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
+import { IconInfoCircle } from '@tabler/icons-vue';
 
 const props = defineProps({
     question: { type: Object, required: true },
@@ -54,12 +55,11 @@ function submit() { form.put(route('content-library.update', props.question.id))
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="text-label-md font-medium text-primary block mb-1.5">Materi Soal <span class="text-text-muted">(opsional)</span></label>
                             <select v-model="form.passage_id" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option :value="null">Tanpa Materi Soal</option><option v-for="p in passages" :key="p.id" :value="p.id">{{ p.title }}</option></select></div>
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Status</label>
-                            <div class="px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md flex items-center gap-2">
-                                <span class="inline-block bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 px-3 py-1 rounded-full text-label-md font-medium">Akan kembali ke Draf</span>
-                            </div>
-                            <p class="text-text-muted text-label-md mt-1">Soal akan dikembalikan ke Draf setelah disimpan untuk direview ulang.</p></div>
                     </div>
+                    <p class="flex items-center gap-1.5 text-label-md text-text-muted">
+                        <IconInfoCircle :size="16" class="text-secondary shrink-0" />
+                        Perubahan akan direview ulang oleh admin sebelum bisa dipakai.
+                    </p>
 
                     <hr class="border-outline-variant/50" />
 

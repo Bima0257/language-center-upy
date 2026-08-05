@@ -19,7 +19,7 @@ use Mews\Purifier\Facades\Purifier;
 
 class ContentLibraryController extends Controller
 {
-    private const STATUSES = ['draft', 'submitted', 'approved', 'rejected', 'archived'];
+    private const STATUSES = ['draft', 'approved', 'rejected'];
 
     public function __construct(
         private AudioCompressionService $audioCompression,
