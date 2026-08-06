@@ -1,6 +1,6 @@
 <script setup>
-import { Link, usePage } from "@inertiajs/vue3";
-import { ref, onMounted, onUnmounted } from "vue";
+import { Link, router, usePage } from "@inertiajs/vue3";
+import { ref, watch, onMounted, onUnmounted } from "vue";
 import {
     IconChartPie,
     IconBooks,
@@ -15,9 +15,10 @@ import {
     IconDatabase,
     IconCertificate,
     IconFolders,
+    IconChevronDown,
 } from "@tabler/icons-vue";
 
-defineProps({
+const props = defineProps({
     collapsed: { type: Boolean, default: false },
 });
 
@@ -77,23 +78,22 @@ if (isProctorOnly) {
 if (isAdmin) {
     nav.push(
         { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
-        { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },
+        {
+            label: "Soal",
+            icon: IconBooks,
+            children: [
+                { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },
+                { label: "Bank Soal Manager", icon: IconFolders, route: "content-library.question-banks.index" },
+                { label: "Materi Soal", icon: IconFileDescription, route: "content-library.passages.index" },
+                { label: "Master Skill", icon: IconDatabase, route: "admin.master-data.skills.index" },
+            ],
+        },
         {
             label: "Manajemen Ujian",
             icon: IconFileDescription,
             route: "admin.exams.index",
         },
         { label: "Verifikasi", icon: IconUsers, route: "admin.verify-users" },
-        {
-            label: "Bank Soal Manager",
-            icon: IconFolders,
-            route: "content-library.question-banks.index",
-        },
-        {
-            label: "Master Data",
-            icon: IconDatabase,
-            route: "admin.master-data.skills.index",
-        },
         {
             label: "Sertifikat",
             icon: IconCertificate,
@@ -116,6 +116,8 @@ const bottom = [
     { label: "Pengaturan", icon: IconSettings, route: route("profile.edit") },
 ];
 
+const openGroups = ref({});
+
 function isActive(routeName) {
     if (routeName === "#") return false;
     try {
@@ -124,6 +126,35 @@ function isActive(routeName) {
         return page.url?.includes(routeName.replace(".", "/"));
     }
 }
+
+function isGroupActive(children) {
+    return (children || []).some((child) => isActive(child.route));
+}
+
+function toggleGroup(item) {
+    if (props.collapsed && item.children) {
+        router.visit(route(item.children[0].route));
+        return;
+    }
+    openGroups.value[item.label] = !openGroups.value[item.label];
+}
+
+for (const item of nav) {
+    if (item.children && isGroupActive(item.children)) {
+        openGroups.value[item.label] = true;
+    }
+}
+
+watch(
+    () => page.url,
+    () => {
+        for (const item of nav) {
+            if (item.children && isGroupActive(item.children)) {
+                openGroups.value[item.label] = true;
+            }
+        }
+    },
+);
 </script>
 
 <template>
@@ -166,25 +197,78 @@ function isActive(routeName) {
         </div>
 
         <nav class="flex-1 space-y-2">
-            <Link
-                v-for="item in nav"
-                :key="item.label"
-                :href="item.route === '#' ? '#' : route(item.route)"
-                class="flex items-center rounded-lg transition-all"
-                :class="[
-                    collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-3',
-                    isActive(item.route)
-                        ? 'text-primary font-bold border-l-4 border-primary bg-surface-container-low'
-                        : 'text-text-body hover:bg-surface-container-low',
-                ]"
-            >
-                <component :is="item.icon" :size="22" stroke="1.5" />
-                <span
-                    v-show="!collapsed"
-                    class="text-label-md font-medium whitespace-nowrap"
-                    >{{ item.label }}</span
+            <template v-for="item in nav" :key="item.label">
+                <div v-if="item.children">
+                    <button
+                        @click="toggleGroup(item)"
+                        class="w-full flex items-center rounded-lg transition-all"
+                        :class="[
+                            collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-3',
+                            isGroupActive(item.children)
+                                ? 'text-primary font-bold border-l-4 border-primary bg-surface-container-low'
+                                : 'text-text-body hover:bg-surface-container-low',
+                        ]"
+                    >
+                        <component :is="item.icon" :size="22" stroke="1.5" />
+                        <span
+                            v-show="!collapsed"
+                            class="flex-1 text-left text-label-md font-medium whitespace-nowrap"
+                            >{{ item.label }}</span
+                        >
+                        <IconChevronDown
+                            v-show="!collapsed"
+                            :size="16"
+                            stroke="1.5"
+                            class="shrink-0 transition-transform duration-200"
+                            :class="openGroups[item.label] ? 'rotate-0' : '-rotate-90'"
+                        />
+                    </button>
+                    <Transition name="dropdown">
+                        <div
+                            v-show="openGroups[item.label]"
+                            class="mt-1 space-y-1"
+                        >
+                            <Link
+                                v-for="child in item.children"
+                                :key="child.label"
+                                :href="route(child.route)"
+                                class="flex items-center rounded-lg transition-all"
+                                :class="[
+                                    collapsed ? 'justify-center px-2 py-3' : 'gap-3 pl-9 pr-4 py-2.5',
+                                    isActive(child.route)
+                                        ? 'text-primary font-bold border-l-4 border-primary bg-surface-container-low'
+                                        : 'text-text-body hover:bg-surface-container-low',
+                                ]"
+                            >
+                                <component :is="child.icon" :size="18" stroke="1.5" class="shrink-0" />
+                                <span
+                                    v-show="!collapsed"
+                                    class="text-label-md whitespace-nowrap"
+                                    >{{ child.label }}</span
+                                >
+                            </Link>
+                        </div>
+                    </Transition>
+                </div>
+                <Link
+                    v-else
+                    :href="item.route === '#' ? '#' : route(item.route)"
+                    class="flex items-center rounded-lg transition-all"
+                    :class="[
+                        collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-3',
+                        isActive(item.route)
+                            ? 'text-primary font-bold border-l-4 border-primary bg-surface-container-low'
+                            : 'text-text-body hover:bg-surface-container-low',
+                    ]"
                 >
-            </Link>
+                    <component :is="item.icon" :size="22" stroke="1.5" />
+                    <span
+                        v-show="!collapsed"
+                        class="text-label-md font-medium whitespace-nowrap"
+                        >{{ item.label }}</span
+                    >
+                </Link>
+            </template>
         </nav>
 
         <div class="mt-auto pt-6 border-t border-outline-variant space-y-2">
@@ -223,3 +307,15 @@ function isActive(routeName) {
         </div>
     </aside>
 </template>
+
+<style scoped>
+.dropdown-enter-active,
+.dropdown-leave-active {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.dropdown-enter-from,
+.dropdown-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
+}
+</style>

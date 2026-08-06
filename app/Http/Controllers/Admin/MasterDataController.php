@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Mews\Purifier\Facades\Purifier;
 
 class MasterDataController extends Controller
 {
@@ -30,6 +31,11 @@ class MasterDataController extends Controller
             'is_active' => ['boolean'],
         ]);
 
+        $validated['description'] = $validated['description'] ?? null;
+        if ($validated['description']) {
+            $validated['description'] = Purifier::clean($validated['description']);
+        }
+
         Skill::create($validated);
 
         return back()->with('success', 'Skill berhasil ditambahkan.');
@@ -43,6 +49,11 @@ class MasterDataController extends Controller
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
         ]);
+
+        $validated['description'] = $validated['description'] ?? null;
+        if ($validated['description']) {
+            $validated['description'] = Purifier::clean($validated['description']);
+        }
 
         $skill->update($validated);
 

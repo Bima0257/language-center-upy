@@ -4,7 +4,7 @@ import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
 import { IconPlus, IconTrash, IconFileDescription, IconUpload, IconInfoCircle } from '@tabler/icons-vue';
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 
 const props = defineProps({
     questionBanks: { type: Array, default: () => [] },
@@ -17,9 +17,16 @@ const passageMode = ref('none');
 const passageType = ref('text');
 const questionRefs = ref([]);
 
+const globalSkillId = ref('');
+const perQuestionSkill = ref(false);
+
+if (props.skills.length === 1) {
+    globalSkillId.value = String(props.skills[0].id);
+}
+
 function newQuestion() {
     return {
-        skill_id: '',
+        skill_id: globalSkillId.value,
         question_text: '',
         option_a: '',
         option_b: '',
@@ -27,6 +34,26 @@ function newQuestion() {
         option_d: '',
         correct_answer: '',
     };
+}
+
+watch(globalSkillId, (value) => {
+    if (perQuestionSkill.value) return;
+    for (const q of form.questions) {
+        q.skill_id = value;
+    }
+});
+
+function setPerQuestionMode() {
+    perQuestionSkill.value = true;
+}
+
+function setGlobalMode() {
+    perQuestionSkill.value = false;
+    if (globalSkillId.value) {
+        for (const q of form.questions) {
+            q.skill_id = globalSkillId.value;
+        }
+    }
 }
 
 const form = useForm({
@@ -74,6 +101,7 @@ const canSubmit = computed(() => {
     if (!form.question_bank_id) return false;
     if (form.questions.length === 0) return false;
     if (passageMode.value === 'new' && !form.new_passage_title.trim()) return false;
+    if (!perQuestionSkill.value && !globalSkillId.value) return false;
     return form.questions.every(q =>
         q.skill_id &&
         q.question_text.trim() &&
@@ -82,6 +110,10 @@ const canSubmit = computed(() => {
         q.correct_answer
     );
 });
+
+function skillName(id) {
+    return props.skills.find(s => String(s.id) === String(id))?.name || '';
+}
 
 function submit() {
     form.post(route('content-library.store'));
@@ -186,6 +218,26 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                         </button>
                     </div>
 
+                    <!-- PENGATURAN SKILL BATCH -->
+                    <div v-if="!perQuestionSkill" class="bg-pastel-blue/10 border border-pastel-blue/40 rounded-2xl p-5 space-y-3">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1">
+                                <label class="text-label-md font-medium text-primary block mb-1.5">Skill untuk semua soal <span class="text-error-red">*</span></label>
+                                <select v-model="globalSkillId" class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
+                                    <option value="" disabled>Pilih skill</option>
+                                    <option v-for="s in skills" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
+                                </select>
+                            </div>
+                            <button type="button" @click="setPerQuestionMode"
+                                    class="shrink-0 text-secondary text-label-md font-medium hover:underline">Atur skill per soal</button>
+                        </div>
+                        <p class="text-label-md text-text-muted">Skill ini otomatis diterapkan ke semua soal di bawah.</p>
+                    </div>
+                    <div v-else class="flex justify-end">
+                        <button type="button" @click="setGlobalMode"
+                                class="text-secondary text-label-md font-medium hover:underline">Gunakan satu skill untuk semua soal</button>
+                    </div>
+
                     <div v-for="(q, qi) in form.questions" :key="qi"
                          :ref="el => questionRefs[qi] = el"
                          class="border border-outline-variant/50 rounded-2xl p-5 space-y-4 relative">
@@ -198,8 +250,17 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="text-label-md font-medium text-primary block mb-1.5">Skill <span class="text-error-red">*</span></label>
-                                <select v-model="q.skill_id" required class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="" disabled>Pilih Skill</option><option v-for="s in skills" :key="s.id" :value="s.id">{{ s.name }}</option></select></div>
+                            <div>
+                                <label class="text-label-md font-medium text-primary block mb-1.5">Skill <span v-if="perQuestionSkill" class="text-error-red">*</span></label>
+                                <select v-if="perQuestionSkill" v-model="q.skill_id" required class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
+                                    <option value="" disabled>Pilih Skill</option>
+                                    <option v-for="s in skills" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
+                                </select>
+                                <span v-else :class="q.skill_id ? 'bg-pastel-blue/50 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'"
+                                      class="inline-block px-3 py-1.5 rounded-full text-label-md font-medium">
+                                    {{ skillName(q.skill_id) || 'Skill belum dipilih' }}
+                                </span>
+                            </div>
                             <div><label class="text-label-md font-medium text-primary block mb-1.5">Kunci Jawaban <span class="text-error-red">*</span></label>
                                 <select v-model="q.correct_answer" required class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                                     <option value="" disabled>Pilih jawaban benar</option>

@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Mews\Purifier\Facades\Purifier;
 
 class QuestionBankController extends Controller
 {
@@ -26,6 +27,11 @@ class QuestionBankController extends Controller
             'is_active' => ['boolean'],
         ]);
 
+        $validated['description'] = $validated['description'] ?? null;
+        if ($validated['description']) {
+            $validated['description'] = Purifier::clean($validated['description']);
+        }
+
         QuestionBank::create($validated);
 
         return back()->with('success', 'Bank soal berhasil dibuat.');
@@ -38,6 +44,11 @@ class QuestionBankController extends Controller
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
         ]);
+
+        $validated['description'] = $validated['description'] ?? null;
+        if ($validated['description']) {
+            $validated['description'] = Purifier::clean($validated['description']);
+        }
 
         $questionBank->update($validated);
 

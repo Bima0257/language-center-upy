@@ -46,7 +46,12 @@ Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
             $data['totalExams'] = \App\Models\Exam::count();
             $data['activeSessionsCount'] = \App\Models\ExamSession::where('status', 'in_progress')->count();
             $data['flaggedSessionsCount'] = \App\Models\ExamSession::where('is_flagged', true)->whereNull('reviewed_at')->count();
-            $data['pendingReviewCount'] = \App\Models\Question::where('status', 'submitted')->count();
+            $data['pendingReviewCount'] = \App\Models\Question::where('status', 'draft')->count();
+            $data['pendingQuestions'] = \App\Models\Question::with(['passage', 'questionBank', 'skill', 'creator'])
+                ->where('status', 'draft')
+                ->latest()
+                ->take(10)
+                ->get();
         }
 
         if ($user->hasRole('instructor')) {

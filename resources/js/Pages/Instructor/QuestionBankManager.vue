@@ -1,8 +1,10 @@
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
-import { IconPlus, IconEdit, IconTrash, IconCheck } from '@tabler/icons-vue';
-import { ref } from 'vue';
+import DataTable from '@/Components/Shared/DataTable.vue';
+import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
+import { IconPlus, IconEdit, IconTrash, IconX } from '@tabler/icons-vue';
+import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
 const props = defineProps({
@@ -17,32 +19,73 @@ const form = useForm({
     is_active: true,
 });
 
-const editing = ref(null);
 const editForm = useForm({
     name: '',
     description: '',
     is_active: true,
 });
 
+const showModal = ref(false);
+const creating = ref(false);
+const editingBank = ref(null);
+
+const modalForm = computed(() => creating.value ? form : editForm);
+
+function stripHtml(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html || '';
+    return div.textContent || '';
+}
+
+const columns = [
+    { key: 'name', label: 'Nama', sortable: true, className: 'font-medium text-primary' },
+    { key: 'description', label: 'Deskripsi', render: (val) => { const text = stripHtml(val); return text ? (text.length > 60 ? text.substring(0, 60) + '…' : text) : '-'; } },
+    { key: 'questions_count', label: 'Soal', render: (val) => val ?? 0 },
+    { key: 'is_active', label: 'Status', badge: true, render: (val) => val ? 'Aktif' : 'Nonaktif' },
+    { key: 'id', label: 'Aksi', slot: 'actions' },
+];
+
+function openCreate() {
+    creating.value = true;
+    editingBank.value = null;
+    form.clearErrors();
+    form.reset();
+    showModal.value = true;
+}
+
 function submit() {
     form.post(route('content-library.question-banks.store'), {
         preserveScroll: true,
-        onSuccess: () => form.reset(),
+        onSuccess: () => {
+            closeModal();
+            form.reset();
+        },
     });
 }
 
 function startEdit(bank) {
-    editing.value = bank.id;
+    creating.value = false;
+    editingBank.value = bank;
+    editForm.clearErrors();
+    editForm.reset();
     editForm.name = bank.name;
     editForm.description = bank.description || '';
     editForm.is_active = !!bank.is_active;
+    showModal.value = true;
 }
 
-function saveEdit(bank) {
-    editForm.put(route('content-library.question-banks.update', bank.id), {
+function saveEdit() {
+    editForm.put(route('content-library.question-banks.update', editingBank.value.id), {
         preserveScroll: true,
-        onSuccess: () => { editing.value = null; },
+        onSuccess: closeModal,
     });
+}
+
+function closeModal() {
+    showModal.value = false;
+    editingBank.value = null;
+    creating.value = false;
+    editForm.reset();
 }
 
 async function destroy(bank) {
@@ -54,87 +97,59 @@ async function destroy(bank) {
 <template>
     <Head title="Kelola Bank Soal" />
     <DashboardLayout title="Kelola Bank Soal">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 h-fit">
-                <h3 class="text-title-lg font-semibold text-primary mb-4">Tambah Bank Soal</h3>
-                <form @submit.prevent="submit" class="space-y-4">
+        <div class="flex justify-end mb-6">
+            <button @click="openCreate"
+                    class="flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
+                <IconPlus :size="18" /> Tambah Bank Soal Baru
+            </button>
+        </div>
+
+        <DataTable :data="questionBanks" :columns="columns">
+            <template #actions="{ row }">
+                <div class="flex items-center gap-2">
+                    <button @click="startEdit(row)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit"><IconEdit :size="18" /></button>
+                    <button @click="destroy(row)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus"><IconTrash :size="18" /></button>
+                </div>
+            </template>
+        </DataTable>
+
+        <!-- Modal Tambah / Edit -->
+        <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl p-8 shadow-soft w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-headline-md font-bold text-primary">{{ creating ? 'Tambah Bank Soal' : 'Edit Bank Soal' }}</h2>
+                    <button @click="closeModal" class="p-2 text-text-muted hover:text-primary transition-colors">
+                        <IconX :size="20" />
+                    </button>
+                </div>
+                <form @submit.prevent="creating ? submit() : saveEdit()" class="space-y-5">
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-1">Nama Bank Soal</label>
-                        <input type="text" v-model="form.name" required placeholder="Bank Soal 2024"
-                               class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
-                        <p v-if="form.errors.name" class="text-error-red text-xs mt-1">{{ form.errors.name }}</p>
+                        <label class="text-label-md font-medium text-primary block mb-1.5">Nama Bank Soal *</label>
+                        <input type="text" v-model="modalForm.name" required placeholder="Bank Soal 2024"
+                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                        <p v-if="modalForm.errors.name" class="text-error-red text-xs mt-1">{{ modalForm.errors.name }}</p>
                     </div>
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-1">Deskripsi</label>
-                        <textarea v-model="form.description" rows="2" placeholder="Opsional"
-                                  class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea>
+                        <label class="text-label-md font-medium text-primary block mb-1.5">Deskripsi</label>
+                        <RichTextEditor v-model="modalForm.description" placeholder="Jelaskan bank soal ini..." :min-height="'120px'" />
+                        <p v-if="modalForm.errors.description" class="text-error-red text-xs mt-1">{{ modalForm.errors.description }}</p>
                     </div>
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" v-model="form.is_active" class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
+                        <input type="checkbox" v-model="modalForm.is_active" class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
                         <span class="text-label-md text-text-body">Aktif</span>
                     </label>
-                    <button type="submit" :disabled="form.processing"
-                            class="w-full flex items-center justify-center gap-2 bg-primary-container text-white py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
-                        <IconPlus :size="18" /> {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
-                    </button>
+                    <hr class="border-outline-variant/50" />
+                    <div class="flex gap-4">
+                        <button type="submit" :disabled="modalForm.processing"
+                                class="flex-1 bg-primary-container text-white py-3.5 rounded-full text-title-lg font-semibold hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                            {{ modalForm.processing ? 'Menyimpan...' : (creating ? 'Simpan Bank Soal' : 'Simpan Perubahan') }}
+                        </button>
+                        <button type="button" @click="closeModal"
+                                class="px-8 py-3.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">
+                            Batal
+                        </button>
+                    </div>
                 </form>
-            </div>
-
-            <div class="lg:col-span-2 bg-surface-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="border-b border-outline-variant/30 bg-surface-container-low">
-                                <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Nama</th>
-                                <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Soal</th>
-                                <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Status</th>
-                                <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template v-for="bank in questionBanks" :key="bank.id">
-                                <tr v-if="editing !== bank.id" class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50">
-                                    <td class="px-5 py-4">
-                                        <p class="font-medium text-primary">{{ bank.name }}</p>
-                                        <p v-if="bank.description" class="text-text-muted text-label-md">{{ bank.description }}</p>
-                                    </td>
-                                    <td class="px-5 py-4 text-body-md text-text-body">{{ bank.questions_count || 0 }}</td>
-                                    <td class="px-5 py-4">
-                                        <span :class="bank.is_active ? 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'"
-                                              class="inline-block px-3 py-1 rounded-full text-label-md font-medium">
-                                            {{ bank.is_active ? 'Aktif' : 'Nonaktif' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-5 py-4">
-                                        <div class="flex items-center gap-2">
-                                            <button @click="startEdit(bank)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit"><IconEdit :size="18" /></button>
-                                            <button @click="destroy(bank)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus"><IconTrash :size="18" /></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr v-else class="border-b border-outline-variant/20 bg-pastel-blue/10">
-                                    <td colspan="4" class="px-5 py-4">
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                            <input type="text" v-model="editForm.name" class="px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
-                                            <input type="text" v-model="editForm.description" placeholder="Deskripsi" class="px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
-                                            <div class="flex items-center gap-2">
-                                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                                    <input type="checkbox" v-model="editForm.is_active" class="w-4 h-4" />
-                                                    <span class="text-label-md text-text-body">Aktif</span>
-                                                </label>
-                                                <button @click="saveEdit(bank)" class="p-2 text-green-600 hover:text-green-800 transition-colors" title="Simpan"><IconCheck :size="18" /></button>
-                                                <button @click="editing = null" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Batal"><IconTrash :size="18" /></button>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </template>
-                            <tr v-if="questionBanks.length === 0">
-                                <td colspan="4" class="px-5 py-12 text-center text-text-muted text-body-md">Belum ada bank soal.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
             </div>
         </div>
     </DashboardLayout>

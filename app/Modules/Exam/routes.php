@@ -15,9 +15,9 @@ Route::middleware(['auth', 'role:instructor,admin,superadmin'])
         Route::get('/', [ContentLibraryController::class, 'index'])->name('index');
         Route::get('/create', [ContentLibraryController::class, 'create'])->name('create');
         Route::post('/', [ContentLibraryController::class, 'store'])->name('store');
-        Route::get('/{question}/edit', [ContentLibraryController::class, 'edit'])->name('edit');
-        Route::put('/questions/{question}', [ContentLibraryController::class, 'update'])->name('update');
-        Route::delete('/questions/{question}', [ContentLibraryController::class, 'destroy'])->name('destroy');
+        Route::get('/{question}/edit', [ContentLibraryController::class, 'edit'])->whereNumber('question')->name('edit');
+        Route::put('/questions/{question}', [ContentLibraryController::class, 'update'])->whereNumber('question')->name('update');
+        Route::delete('/questions/{question}', [ContentLibraryController::class, 'destroy'])->whereNumber('question')->name('destroy');
 
         Route::get('/passages', [PassageController::class, 'index'])->name('passages.index');
         Route::post('/passages', [PassageController::class, 'store'])->name('passages.store');
@@ -29,8 +29,8 @@ Route::middleware(['auth', 'role:admin,superadmin'])
     ->prefix('content-library')
     ->name('content-library.')
     ->group(function () {
-        Route::put('/questions/{question}/review', [ContentLibraryController::class, 'review'])->name('review');
-        Route::put('/questions/bulk-review', [ContentLibraryController::class, 'bulkReview'])->name('bulk-review');
+        Route::patch('/questions/{question}/review', [ContentLibraryController::class, 'review'])->name('review');
+        Route::patch('/questions/bulk-review', [ContentLibraryController::class, 'bulkReview'])->name('bulk-review');
 
         Route::get('/question-banks', [QuestionBankController::class, 'index'])->name('question-banks.index');
         Route::post('/question-banks', [QuestionBankController::class, 'store'])->name('question-banks.store');

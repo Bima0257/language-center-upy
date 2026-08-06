@@ -1,7 +1,6 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
-import QuestionCard from '@/Components/Instructor/QuestionCard.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import RichTextViewer from '@/Components/Shared/RichTextViewer.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
@@ -243,7 +242,7 @@ async function deleteQuestion(id, text) {
 
 async function reviewQuestion(id, status) {
     const note = status === 'rejected' ? await confirm.prompt('Catatan penolakan (opsional):') : null;
-    router.put(route('content-library.review', id), { status, review_note: note }, { preserveScroll: true });
+    router.patch(route('content-library.review', id), { status, review_note: note }, { preserveScroll: true });
 }
 
 function toggleSelectAll() {
@@ -266,7 +265,7 @@ async function bulkReview(status) {
         return;
     }
     const note = status === 'rejected' ? await confirm.prompt('Catatan penolakan (opsional):') : null;
-    router.put(route('content-library.bulk-review'), { ids: selectedIds.value, status, review_note: note }, {
+    router.patch(route('content-library.bulk-review'), { ids: selectedIds.value, status, review_note: note }, {
         preserveScroll: true,
         onSuccess: () => { selectedIds.value = []; },
     });
@@ -287,14 +286,9 @@ async function bulkReview(status) {
                 </Link>
             </div>
             <div class="flex items-center gap-3">
-                <div v-if="canReview && selectedIds.length > 0" class="flex items-center gap-2">
-                    <span class="text-label-md text-text-body">{{ selectedIds.length }} dipilih</span>
-                    <button @click="bulkReview('approved')" class="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded-full text-label-md font-medium hover:bg-green-700 transition-all"><IconCheck :size="16" />Setujui</button>
-                    <button @click="bulkReview('rejected')" class="flex items-center gap-1 px-4 py-2 bg-error-red text-white rounded-full text-label-md font-medium hover:bg-red-700 transition-all"><IconX :size="16" />Tolak</button>
-                </div>
                 <Link :href="route('content-library.create')"
                       class="flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
-                    <IconPlus :size="18" /> Tambah Soal
+                    <IconPlus :size="18" /> Tambah Soal Baru
                 </Link>
             </div>
         </div>
@@ -546,14 +540,53 @@ async function bulkReview(status) {
                     </form>
                 </div>
 
-                <div class="divide-y divide-outline-variant/20">
-                    <QuestionCard v-for="q in group.questions" :key="q.id"
-                                  :question="q" :can-review="canReview"
-                                  :bank-name="bankName" :skill-name="skillName"
-                                  :selected="selectedIds.includes(q.id)"
-                                  @toggle="toggleSelect(q.id)"
-                                  @review="reviewQuestion"
-                                  @delete="deleteQuestion" />
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-outline-variant/30 bg-surface-container-low">
+                                <th v-if="canReview" class="px-5 py-4"></th>
+                                <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Soal</th>
+                                <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Bank Soal</th>
+                                <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Skill</th>
+                                <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Status</th>
+                                <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Pembuat</th>
+                                <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="q in group.questions" :key="q.id"
+                                class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50 transition-colors">
+                                <td v-if="canReview" class="px-5 py-4">
+                                    <input type="checkbox" :checked="selectedIds.includes(q.id)" @change="toggleSelect(q.id)"
+                                           class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
+                                </td>
+                                <td class="px-5 py-4 min-w-[260px] max-w-md">
+                                    <p class="text-text-body text-body-md text-primary font-medium line-clamp-2">{{ q.question_text }}</p>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <span v-if="q.question_bank_id" class="inline-block bg-pastel-peach/50 text-amber-800 dark:text-amber-300 px-2.5 py-0.5 rounded-full text-label-md font-medium">{{ bankName(q.question_bank_id) }}</span>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <span v-if="q.skill_id" class="inline-block bg-pastel-blue/50 text-blue-700 dark:text-blue-300 px-2.5 py-0.5 rounded-full text-label-md font-medium">{{ skillName(q.skill_id) }}</span>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <span :class="statusColors[q.status] || 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'"
+                                          class="inline-block px-2.5 py-0.5 rounded-full text-label-md">{{ statusLabels[q.status] || q.status }}</span>
+                                </td>
+                                <td class="px-5 py-4 text-body-md text-text-body whitespace-nowrap">{{ q.creator?.name || '-' }}</td>
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center gap-1">
+                                        <template v-if="canReview && q.status === 'draft'">
+                                            <button @click="reviewQuestion(q.id, 'approved')" class="p-2 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-400 transition-colors" title="Setujui"><IconCheck :size="18" /></button>
+                                            <button @click="reviewQuestion(q.id, 'rejected')" class="p-2 text-error-red hover:text-red-700 dark:hover:text-red-400 transition-colors" title="Tolak"><IconX :size="18" /></button>
+                                        </template>
+                                        <Link :href="route('content-library.edit', q.id)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit"><IconEdit :size="18" /></Link>
+                                        <button @click="deleteQuestion(q.id, q.question_text)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus"><IconTrash :size="18" /></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -563,16 +596,54 @@ async function bulkReview(status) {
                             <IconBook :size="16" class="text-text-muted" />
                             <p class="text-label-md font-semibold text-text-muted uppercase tracking-wider">Soal Standalone</p>
                         </div>
-                        <div class="space-y-3">
-                            <div v-for="q in skillGroup.standalone" :key="q.id"
-                                 class="bg-surface-white rounded-2xl shadow-soft border border-outline-variant/30 hover:border-secondary/50 transition-all"
-                                 :class="{ 'border-secondary/30 bg-secondary/5': selectedIds.includes(q.id) }">
-                                <QuestionCard :question="q" :can-review="canReview"
-                                              :bank-name="bankName" :skill-name="skillName"
-                                              :selected="selectedIds.includes(q.id)"
-                                              @toggle="toggleSelect(q.id)"
-                                              @review="reviewQuestion"
-                                              @delete="deleteQuestion" />
+                        <div class="bg-surface-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead>
+                                        <tr class="border-b border-outline-variant/30 bg-surface-container-low">
+                                            <th v-if="canReview" class="px-5 py-4"></th>
+                                            <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Soal</th>
+                                            <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Bank Soal</th>
+                                            <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Skill</th>
+                                            <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Status</th>
+                                            <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Pembuat</th>
+                                            <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="q in skillGroup.standalone" :key="q.id"
+                                            class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50 transition-colors">
+                                            <td v-if="canReview" class="px-5 py-4">
+                                                <input type="checkbox" :checked="selectedIds.includes(q.id)" @change="toggleSelect(q.id)"
+                                                       class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
+                                            </td>
+                                            <td class="px-5 py-4 min-w-[260px] max-w-md">
+                                                <p class="text-text-body text-body-md text-primary font-medium line-clamp-2">{{ q.question_text }}</p>
+                                            </td>
+                                            <td class="px-5 py-4">
+                                                <span v-if="q.question_bank_id" class="inline-block bg-pastel-peach/50 text-amber-800 dark:text-amber-300 px-2.5 py-0.5 rounded-full text-label-md font-medium">{{ bankName(q.question_bank_id) }}</span>
+                                            </td>
+                                            <td class="px-5 py-4">
+                                                <span v-if="q.skill_id" class="inline-block bg-pastel-blue/50 text-blue-700 dark:text-blue-300 px-2.5 py-0.5 rounded-full text-label-md font-medium">{{ skillName(q.skill_id) }}</span>
+                                            </td>
+                                            <td class="px-5 py-4">
+                                                <span :class="statusColors[q.status] || 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'"
+                                                      class="inline-block px-2.5 py-0.5 rounded-full text-label-md">{{ statusLabels[q.status] || q.status }}</span>
+                                            </td>
+                                            <td class="px-5 py-4 text-body-md text-text-body whitespace-nowrap">{{ q.creator?.name || '-' }}</td>
+                                            <td class="px-5 py-4">
+                                                <div class="flex items-center gap-1">
+                                                    <template v-if="canReview && q.status === 'draft'">
+                                                        <button @click="reviewQuestion(q.id, 'approved')" class="p-2 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-400 transition-colors" title="Setujui"><IconCheck :size="18" /></button>
+                                                        <button @click="reviewQuestion(q.id, 'rejected')" class="p-2 text-error-red hover:text-red-700 dark:hover:text-red-400 transition-colors" title="Tolak"><IconX :size="18" /></button>
+                                                    </template>
+                                                    <Link :href="route('content-library.edit', q.id)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit"><IconEdit :size="18" /></Link>
+                                                    <button @click="deleteQuestion(q.id, q.question_text)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus"><IconTrash :size="18" /></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -588,5 +659,26 @@ async function bulkReview(status) {
                   v-html="link.label" />
         </div>
         <UploadProgressBar :show="showUploadProgress" :label="uploadLabel" />
+
+        <Transition name="fade-slide">
+            <div v-if="canReview && selectedIds.length > 0"
+                 class="fixed left-1/2 -translate-x-1/2 bottom-[76px] md:bottom-6 z-40 bg-surface-white rounded-full shadow-lg border border-outline-variant/30 px-4 py-3 flex items-center gap-3">
+                <span class="text-label-md font-semibold text-primary whitespace-nowrap">{{ selectedIds.length }} soal dipilih</span>
+                <span class="w-px h-5 bg-outline-variant/40"></span>
+                <button @click="bulkReview('approved')" class="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded-full text-label-md font-medium hover:bg-green-700 transition-all"><IconCheck :size="16" />Setujui</button>
+                <button @click="bulkReview('rejected')" class="flex items-center gap-1 px-4 py-2 bg-error-red text-white rounded-full text-label-md font-medium hover:bg-red-700 transition-all"><IconX :size="16" />Tolak</button>
+                <button @click="selectedIds = []" class="px-3 py-2 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">Batal</button>
+            </div>
+        </Transition>
     </DashboardLayout>
 </template>
+
+<style scoped>
+.fade-slide-enter-active, .fade-slide-leave-active {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.fade-slide-enter-from, .fade-slide-leave-to {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+}
+</style>

@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, usePage } from "@inertiajs/vue3";
+import { Head, Link, router, usePage } from "@inertiajs/vue3";
 import { computed } from "vue";
 import {
     IconAlertTriangle,
@@ -10,6 +10,7 @@ import {
     IconEyeCheck,
     IconAlertTriangle as IconFlag,
     IconBooks,
+    IconX,
 } from "@tabler/icons-vue";
 import DashboardLayout from "@/Components/Dashboard/DashboardLayout.vue";
 import HeroBanner from "@/Components/Dashboard/HeroBanner.vue";
@@ -18,6 +19,11 @@ import AssignmentsList from "@/Components/Dashboard/AssignmentsList.vue";
 import Leaderboard from "@/Components/Dashboard/Leaderboard.vue";
 import BarChart from "@/Components/Charts/BarChart.vue";
 import DoughnutChart from "@/Components/Charts/DoughnutChart.vue";
+import { useConfirm } from "@/Composables/useConfirm";
+import { useToast } from "@/Composables/useToast";
+
+const confirm = useConfirm();
+const toast = useToast();
 
 const props = defineProps({
     recentSessions: { type: Array, default: () => [] },
@@ -26,6 +32,8 @@ const props = defineProps({
     totalExams: { type: Number, default: 0 },
     activeSessionsCount: { type: Number, default: 0 },
     flaggedSessionsCount: { type: Number, default: 0 },
+    pendingReviewCount: { type: Number, default: 0 },
+    pendingQuestions: { type: Array, default: () => [] },
     totalQuestions: { type: Number, default: 0 },
     totalPassages: { type: Number, default: 0 },
     questionsBySkill: { type: Array, default: () => [] },
@@ -60,6 +68,36 @@ const statusChartData = computed(() => props.questionsByStatus.map((i) => i.coun
 
 const bankChartLabels = computed(() => props.questionsByBank.map((i) => i.label));
 const bankChartData = computed(() => props.questionsByBank.map((i) => i.count));
+
+function questionTextPreview(q) {
+    return (q.question_text || "").substring(0, 120);
+}
+
+async function reviewQuestion(id, status) {
+    const note =
+        status === "rejected"
+            ? await confirm.prompt("Catatan penolakan (opsional):")
+            : null;
+    router.patch(
+        route("content-library.review", id),
+        { status, review_note: note },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success(
+                    status === "approved"
+                        ? "Soal disetujui."
+                        : "Soal ditolak.",
+                );
+                router.reload({
+                    only: ["pendingQuestions", "pendingReviewCount"],
+                    preserveState: true,
+                    preserveScroll: true,
+                });
+            },
+        },
+    );
+}
 </script>
 
 <template>
@@ -231,7 +269,7 @@ const bankChartData = computed(() => props.questionsByBank.map((i) => i.count));
         </template>
 
         <!-- === ADMIN DASHBOARD === -->
-        <template v-else-if="isAdmin && !isProctor">
+        <template v-else-if="isAdmin">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div
                     class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 text-center"
@@ -353,6 +391,84 @@ const bankChartData = computed(() => props.questionsByBank.map((i) => i.count));
                         class="border border-outline-variant text-primary px-5 py-2.5 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all"
                         >Laporan</Link
                     >
+                </div>
+            </div>
+            <div
+                class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30"
+            >
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-title-lg font-semibold text-primary">
+                            Persetujuan Soal
+                        </h2>
+                        <span
+                            v-if="pendingReviewCount > 0"
+                            class="inline-flex items-center justify-center min-w-6 h-6 px-2 rounded-full bg-error-red/10 text-error-red text-label-md font-semibold"
+                            >{{ pendingReviewCount }}</span
+                        >
+                    </div>
+                    <Link
+                        :href="route('content-library.index', { status: 'draft' })"
+                        class="text-secondary text-label-md font-medium hover:underline"
+                        >Lihat Semua →</Link
+                    >
+                </div>
+                <div v-if="pendingQuestions.length === 0" class="py-6 text-center">
+                    <IconCheck
+                        class="mx-auto text-green-500 dark:text-green-400 mb-2"
+                        :size="32"
+                        stroke="1.5"
+                    />
+                    <p class="text-text-muted text-body-md">
+                        Tidak ada soal menunggu persetujuan.
+                    </p>
+                </div>
+                <div v-else class="divide-y divide-outline-variant/20">
+                    <div
+                        v-for="q in pendingQuestions"
+                        :key="q.id"
+                        class="py-3 flex items-start justify-between gap-4"
+                    >
+                        <div class="min-w-0">
+                            <p class="text-text-body text-body-md text-primary font-medium mb-1">
+                                {{ questionTextPreview(q)
+                                }}{{ (q.question_text || "").length > 120 ? "…" : "" }}
+                            </p>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span
+                                    v-if="q.skill"
+                                    class="inline-block bg-pastel-blue/50 text-blue-700 dark:text-blue-300 px-2.5 py-0.5 rounded-full text-label-md font-medium"
+                                    >{{ q.skill.name }}</span
+                                >
+                                <span
+                                    v-if="q.question_bank"
+                                    class="inline-block bg-pastel-peach/50 text-amber-800 dark:text-amber-300 px-2.5 py-0.5 rounded-full text-label-md font-medium"
+                                    >{{ q.question_bank.name }}</span
+                                >
+                                <span
+                                    v-if="q.creator"
+                                    class="text-label-md text-text-muted"
+                                    >oleh {{ q.creator.name }}</span
+                                >
+                            </div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button
+                                @click="reviewQuestion(q.id, 'approved')"
+                                class="p-2 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-400 transition-colors"
+                                title="Setujui"
+                            >
+                                <IconCheck :size="18" />
+                            </button>
+                            <button
+                                @click="reviewQuestion(q.id, 'rejected')"
+                                class="p-2 text-error-red hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                                title="Tolak"
+                            >
+                                <IconX :size="18" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>

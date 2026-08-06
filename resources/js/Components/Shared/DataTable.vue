@@ -23,6 +23,7 @@ const tableColumns = computed(() =>
         accessorKey: col.key,
         header: col.label || col.key,
         enableSorting: col.sortable ?? false,
+        slot: col.slot ?? null,
         cell: info => {
             const val = info.getValue()
             const row = info.row.original
@@ -58,6 +59,17 @@ function badgeClass(val) {
         'Perempuan': 'bg-pastel-peach/50 text-primary',
     }
     return m[val] || ''
+}
+
+function cellDisplayValue(cell) {
+    const fn = cell.column.columnDef.cell
+    if (fn) {
+        const rendered = fn(cell.getContext())
+        return rendered ?? ''
+    }
+    const val = cell.getValue()
+    if (val === null || val === undefined) return '-'
+    return String(val)
 }
 </script>
 
@@ -105,12 +117,16 @@ function badgeClass(val) {
                             <td v-for="cell in row.getVisibleCells()" :key="cell.id"
                                 class="px-5 py-4 text-body-md"
                                 :class="cell.column.columnDef.meta?.className || 'text-text-body'">
-                                <span v-if="cell.column.columnDef.meta?.badge && badgeClass(cell.renderValue())"
+                                <slot v-if="cell.column.columnDef.slot"
+                                      :name="cell.column.columnDef.slot"
+                                      :row="row.original"
+                                      :value="cellDisplayValue(cell)" />
+                                <span v-else-if="cell.column.columnDef.meta?.badge && badgeClass(cellDisplayValue(cell))"
                                       class="inline-block px-2.5 py-0.5 rounded-full text-label-md"
-                                      :class="badgeClass(cell.renderValue())">
-                                    {{ cell.renderValue() }}
+                                      :class="badgeClass(cellDisplayValue(cell))">
+                                    {{ cellDisplayValue(cell) }}
                                 </span>
-                                <span v-else>{{ cell.renderValue() }}</span>
+                                <span v-else>{{ cellDisplayValue(cell) }}</span>
                             </td>
                         </tr>
                         <tr v-if="data.length === 0 && !loading">
