@@ -1,0 +1,746 @@
+<!doctype html>
+
+<html class="light" lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>hance - TOEFL Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <!-- Integration of Design System Tokens via Tailwin Config -->
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'inverse-surface': '#2f3133',
+              'surface-dim': '#d9dadd',
+              'surface-container-lowest': '#ffffff',
+              'secondary-fixed-dim': '#c6bfff',
+              'text-body': '#6E6E85',
+              'surface-container-high': '#e8e8eb',
+              'surface-white': '#FFFFFF',
+              'on-primary-container': '#8282a9',
+              'inverse-on-surface': '#f0f0f3',
+              'pastel-purple': '#E7DEFB',
+              'on-secondary-fixed': '#160066',
+              background: '#191A3B' /* Navy background for the fluid frame */,
+              canvas: '#f9f9fc' /* Actual app canvas background */,
+              'on-primary': '#ffffff',
+              'error-red': '#FF5A5F',
+              'on-error': '#ffffff',
+              error: '#ba1a1a',
+              'tertiary-fixed-dim': '#ffb955',
+              'surface-variant': '#e2e2e5',
+              'on-primary-fixed-variant': '#434467',
+              'on-secondary': '#ffffff',
+              'surface-container': '#edeef1',
+              'on-primary-fixed': '#171839',
+              'on-error-container': '#93000a',
+              'primary-fixed': '#e1e0ff',
+              'on-tertiary-fixed': '#291800',
+              'inverse-primary': '#c3c3ed',
+              'outline-variant': '#c8c5cf',
+              'surface-container-low': '#f3f3f6',
+              secondary: '#5647c8',
+              outline: '#77767f',
+              'pastel-peach': '#FBE1C6',
+              'on-background': '#1a1c1e',
+              'on-surface-variant': '#47464e',
+              'surface-bright': '#f9f9fc',
+              'on-surface': '#1a1c1e',
+              'on-tertiary': '#ffffff',
+              'surface-container-highest': '#e2e2e5',
+              'primary-container': '#191a3b',
+              'on-secondary-container': '#fffbff',
+              'on-tertiary-fixed-variant': '#633f00',
+              'text-heading': '#161328',
+              primary: '#010020',
+              'track-neutral': '#E3E3EA',
+              'primary-fixed-dim': '#c3c3ed',
+              'on-secondary-fixed-variant': '#402eb1',
+              surface: '#f9f9fc',
+              'secondary-fixed': '#e4dfff',
+              'error-container': '#ffdad6',
+              tertiary: '#080300',
+              'secondary-container': '#6f62e2',
+              'pastel-blue': '#D8E9FB',
+              'deep-space': '#1E1B3B',
+              'surface-tint': '#5a5b80',
+              'on-tertiary-container': '#b77800',
+              'text-muted': '#9B9AB0',
+              'tertiary-fixed': '#ffddb4',
+              'tertiary-container': '#2c1a00',
+            },
+            borderRadius: {
+              DEFAULT: '0.25rem',
+              lg: '0.5rem',
+              xl: '0.75rem',
+              '2xl': '1.25rem',
+              '3xl': '1.875rem',
+              full: '9999px',
+            },
+            spacing: {
+              'inner-padding': '1.25rem',
+              'card-gap': '1.5rem',
+              'app-margin': '2.5rem',
+              gutter: '1rem',
+            },
+            fontFamily: {
+              'label-md': ['Plus Jakarta Sans'],
+              'headline-lg': ['Plus Jakarta Sans'],
+              'title-lg': ['Plus Jakarta Sans'],
+              'headline-md': ['Plus Jakarta Sans'],
+              'body-md': ['Plus Jakarta Sans'],
+            },
+            fontSize: {
+              'label-md': ['13px', { lineHeight: '1', fontWeight: '500' }],
+              'headline-lg': [
+                '32px',
+                {
+                  lineHeight: '1.2',
+                  letterSpacing: '-0.02em',
+                  fontWeight: '700',
+                },
+              ],
+              'title-lg': ['18px', { lineHeight: '1.4', fontWeight: '600' }],
+              'headline-md': ['24px', { lineHeight: '1.3', fontWeight: '700' }],
+              'body-md': ['14px', { lineHeight: '1.6', fontWeight: '400' }],
+            },
+            boxShadow: {
+              soft: '0 4px 20px rgba(0,0,0,0.04)',
+              'app-frame': '0 20px 80px rgba(0,0,0,0.2)',
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: #191a3b;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem;
+      }
+
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+
+      .fill-icon {
+        font-variation-settings: 'FILL' 1;
+      }
+
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* Responsive height fix for the app frame */
+      .app-frame {
+        height: calc(100vh - 5rem);
+        max-height: 900px;
+        width: 100%;
+        max-width: 1440px;
+      }
+    </style>
+  </head>
+  <body class="bg-background">
+    <!-- The Main Elevated App Frame -->
+    <div
+      class="app-frame bg-canvas rounded-3xl shadow-app-frame overflow-hidden flex relative"
+    >
+      <!-- SideNavBar (Shared Component Guide) -->
+      <aside
+        class="hidden md:flex flex-col py-8 px-4 w-[260px] bg-surface-white border-r border-outline-variant shrink-0 h-full"
+      >
+        <div class="px-4 mb-10 flex items-center gap-3">
+          <div
+            class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center"
+          >
+            <span
+              class="material-symbols-outlined text-white"
+              style="font-variation-settings: 'FILL' 1"
+              >auto_awesome</span
+            >
+          </div>
+          <h1 class="font-headline-md text-headline-md font-bold text-primary">
+            hance
+          </h1>
+        </div>
+        <nav class="flex-1 space-y-2">
+          <!-- Overview: ACTIVE STATE -->
+          <a
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold border-l-4 border-primary bg-surface-container-low transition-all translate-x-1"
+            href="#"
+          >
+            <span class="material-symbols-outlined fill-icon">pie_chart</span>
+            <span class="font-label-md text-label-md">Overview</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-text-body hover:bg-surface-container-low transition-all"
+            href="#"
+          >
+            <span class="material-symbols-outlined">library_books</span>
+            <span class="font-label-md text-label-md">Content Library</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-text-body hover:bg-surface-container-low transition-all"
+            href="#"
+          >
+            <span class="material-symbols-outlined">military_tech</span>
+            <span class="font-label-md text-label-md">Achievements</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-text-body hover:bg-surface-container-low transition-all"
+            href="#"
+          >
+            <span class="material-symbols-outlined">sensors</span>
+            <span class="font-label-md text-label-md">Live Sessions</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-text-body hover:bg-surface-container-low transition-all"
+            href="#"
+          >
+            <span class="material-symbols-outlined">school</span>
+            <span class="font-label-md text-label-md">Instructor</span>
+          </a>
+        </nav>
+        <div class="mt-auto pt-6 border-t border-outline-variant space-y-2">
+          <a
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-text-body hover:bg-surface-container-low transition-all"
+            href="#"
+          >
+            <span class="material-symbols-outlined">settings</span>
+            <span class="font-label-md text-label-md">Settings</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-text-body hover:bg-surface-container-low transition-all"
+            href="#"
+          >
+            <span class="material-symbols-outlined">help</span>
+            <span class="font-label-md text-label-md">Help Center</span>
+          </a>
+          <button
+            class="mt-4 w-full bg-primary-container text-white py-3 rounded-full font-label-md text-label-md hover:opacity-90 transition-all active:scale-95"
+          >
+            Upgrade Pro
+          </button>
+        </div>
+      </aside>
+      <!-- Main Workspace -->
+      <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <!-- TopAppBar -->
+        <header
+          class="flex justify-between items-center w-full px-8 py-6 bg-surface-white"
+        >
+          <h2 class="font-headline-md text-headline-md font-bold text-primary">
+            Overview
+          </h2>
+          <div class="flex items-center gap-6">
+            <!-- Search Bar -->
+            <div class="relative hidden lg:block">
+              <span
+                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"
+                >search</span
+              >
+              <input
+                class="bg-surface-container-low border-none rounded-full py-2.5 pl-12 pr-6 w-72 font-body-md text-body-md focus:ring-2 focus:ring-primary/10"
+                placeholder="Press ⌘ + F to search"
+                type="text"
+              />
+            </div>
+            <div class="flex items-center gap-4">
+              <button
+                class="w-10 h-10 flex items-center justify-center text-text-body hover:bg-surface-container-low rounded-full transition-colors"
+              >
+                <span class="material-symbols-outlined">mail</span>
+              </button>
+              <button
+                class="w-10 h-10 flex items-center justify-center text-text-body hover:bg-surface-container-low rounded-full transition-colors relative"
+              >
+                <span class="material-symbols-outlined">notifications</span>
+                <span
+                  class="absolute top-2.5 right-2.5 w-2 h-2 bg-error-red rounded-full border-2 border-surface-white"
+                ></span>
+              </button>
+              <div
+                class="w-10 h-10 rounded-full overflow-hidden border-2 border-outline-variant"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  data-alt="A professional studio portrait of a young adult woman with a warm, confident smile. She has dark hair tied back and is wearing a stylish navy blue blazer against a soft, clean white background. The lighting is crisp and modern, matching a SaaS product aesthetic."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAajOrTGgJvmeKGAI6_S1GrAnAg79WseMD1A88fPEIGU0UN2wdCdk7YZoJwmRJO05ENwqKupVdGO7m19pTmnTy8xVszoLDfgmT-iIhRAyaZH3nylNgu9k6AmGJPY2mIEGsDjwaQSXGaPrStPu92Y07zMcag4EO2ELlk5-qZ1rQfMoyxIb3fYArP7Bq4xeo_QBlkVSLRUTGQ6DzFOsknD_h0ro5YWtdnJgf5sV4oH1t-Sq_FuBX-LPs"
+                />
+              </div>
+            </div>
+          </div>
+        </header>
+        <!-- Scrollable Content Area -->
+        <div class="flex-1 overflow-y-auto p-8 scrollbar-hide">
+          <!-- Hero Section Cluster -->
+          <section class="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-10">
+            <!-- Dark Hero Banner -->
+            <div
+              class="xl:col-span-12 bg-primary-container rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 text-white relative overflow-hidden"
+            >
+              <div class="flex-1 z-10">
+                <p class="font-body-md text-body-md opacity-70 mb-2">
+                  Hello, Alexandra!
+                </p>
+                <h3
+                  class="font-headline-lg text-headline-lg max-w-md leading-tight mb-6"
+                >
+                  Kamu sudah menyelesaikan 8 sesi latihan minggu ini
+                </h3>
+                <button
+                  class="bg-white text-primary px-8 py-3 rounded-full font-title-lg text-title-lg hover:bg-surface-container transition-all active:scale-95"
+                >
+                  Lihat Semua
+                </button>
+              </div>
+              <!-- Mini Cards Row -->
+              <div
+                class="flex gap-4 overflow-x-auto w-full md:w-auto pb-2 scrollbar-hide z-10"
+              >
+                <!-- Lesson Card: Reading -->
+                <div
+                  class="min-w-[200px] bg-white rounded-2xl p-4 flex flex-col shadow-lg"
+                >
+                  <div
+                    class="w-full h-24 bg-pastel-purple rounded-xl mb-4 flex items-center justify-center relative overflow-hidden"
+                  >
+                    <span
+                      class="material-symbols-outlined text-primary text-4xl"
+                      >auto_stories</span
+                    >
+                    <div
+                      class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary to-transparent"
+                    ></div>
+                  </div>
+                  <h4
+                    class="font-title-lg text-title-lg text-primary leading-tight mb-1"
+                  >
+                    Reading Task
+                  </h4>
+                  <p class="font-label-md text-label-md text-text-muted mb-4">
+                    5 / 9 sessions
+                  </p>
+                  <div class="h-1.5 w-full bg-track-neutral rounded-full">
+                    <div
+                      class="h-full bg-primary rounded-full"
+                      style="width: 55%"
+                    ></div>
+                  </div>
+                </div>
+                <!-- Lesson Card: Listening -->
+                <div
+                  class="min-w-[200px] bg-white rounded-2xl p-4 flex flex-col shadow-lg"
+                >
+                  <div
+                    class="w-full h-24 bg-pastel-blue rounded-xl mb-4 flex items-center justify-center relative overflow-hidden"
+                  >
+                    <span
+                      class="material-symbols-outlined text-primary text-4xl"
+                      >headphones</span
+                    >
+                  </div>
+                  <h4
+                    class="font-title-lg text-title-lg text-primary leading-tight mb-1"
+                  >
+                    Listening Practice
+                  </h4>
+                  <p class="font-label-md text-label-md text-text-muted mb-4">
+                    2 / 5 sessions
+                  </p>
+                  <div class="h-1.5 w-full bg-track-neutral rounded-full">
+                    <div
+                      class="h-full bg-primary rounded-full"
+                      style="width: 40%"
+                    ></div>
+                  </div>
+                </div>
+                <!-- Lesson Card: Speaking -->
+                <div
+                  class="min-w-[200px] bg-white rounded-2xl p-4 flex flex-col shadow-lg"
+                >
+                  <div
+                    class="w-full h-24 bg-pastel-peach rounded-xl mb-4 flex items-center justify-center relative overflow-hidden"
+                  >
+                    <span
+                      class="material-symbols-outlined text-primary text-4xl"
+                      >record_voice_over</span
+                    >
+                  </div>
+                  <h4
+                    class="font-title-lg text-title-lg text-primary leading-tight mb-1"
+                  >
+                    Speaking Drill
+                  </h4>
+                  <p class="font-label-md text-label-md text-text-muted mb-4">
+                    7 / 10 sessions
+                  </p>
+                  <div class="h-1.5 w-full bg-track-neutral rounded-full">
+                    <div
+                      class="h-full bg-primary rounded-full"
+                      style="width: 70%"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <!-- Atmospheric Background Glows -->
+              <div
+                class="absolute -right-20 -top-20 w-80 h-80 bg-secondary-container/20 blur-[100px] rounded-full"
+              ></div>
+              <div
+                class="absolute -left-20 -bottom-20 w-60 h-60 bg-pastel-purple/10 blur-[80px] rounded-full"
+              ></div>
+            </div>
+          </section>
+          <!-- Statistics & Assignments Section -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-8">
+              <!-- Stats Grid -->
+              <div>
+                <h3 class="font-headline-md text-headline-md text-primary mb-6">
+                  Statistics
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div
+                    class="bg-white p-6 rounded-2xl shadow-soft border border-surface-container-low"
+                  >
+                    <p
+                      class="font-headline-md text-headline-md text-primary mb-1"
+                    >
+                      85
+                    </p>
+                    <p class="font-label-md text-label-md text-text-muted">
+                      Skor Rata-rata
+                    </p>
+                  </div>
+                  <div
+                    class="bg-white p-6 rounded-2xl shadow-soft border border-surface-container-low"
+                  >
+                    <p
+                      class="font-headline-md text-headline-md text-primary mb-1"
+                    >
+                      3
+                    </p>
+                    <p class="font-label-md text-label-md text-text-muted">
+                      Try Out Selesai
+                    </p>
+                  </div>
+                  <div
+                    class="bg-white p-6 rounded-2xl shadow-soft border border-surface-container-low"
+                  >
+                    <p
+                      class="font-headline-md text-headline-md text-primary mb-1"
+                    >
+                      24
+                    </p>
+                    <p class="font-label-md text-label-md text-text-muted">
+                      Streak Hari
+                    </p>
+                  </div>
+                  <div
+                    class="bg-white p-6 rounded-2xl shadow-soft border border-surface-container-low"
+                  >
+                    <p
+                      class="font-headline-md text-headline-md text-primary mb-1"
+                    >
+                      7
+                    </p>
+                    <p class="font-label-md text-label-md text-text-muted">
+                      Jam Belajar
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <!-- Assignments -->
+              <div>
+                <div class="flex justify-between items-center mb-6">
+                  <h3 class="font-headline-md text-headline-md text-primary">
+                    My Assignments (5)
+                  </h3>
+                  <button
+                    class="text-primary hover:underline font-label-md text-label-md"
+                  >
+                    See All
+                  </button>
+                </div>
+                <div class="space-y-3">
+                  <!-- Assignment Item -->
+                  <div
+                    class="bg-white p-5 rounded-2xl shadow-soft border border-surface-container-low flex items-center group hover:border-primary/20 transition-colors"
+                  >
+                    <div
+                      class="w-12 h-12 bg-pastel-blue rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform"
+                    >
+                      <span class="material-symbols-outlined"
+                        >auto_stories</span
+                      >
+                    </div>
+                    <div class="ml-4 flex-1">
+                      <h5 class="font-title-lg text-title-lg text-primary">
+                        Reading Task 1: Teks Astronomi
+                      </h5>
+                      <p class="font-body-md text-body-md text-text-muted">
+                        Academic Reading • Deadline: Tomorrow
+                      </p>
+                    </div>
+                    <span class="material-symbols-outlined text-text-muted"
+                      >more_horiz</span
+                    >
+                  </div>
+                  <div
+                    class="bg-white p-5 rounded-2xl shadow-soft border border-surface-container-low flex items-center group hover:border-primary/20 transition-colors"
+                  >
+                    <div
+                      class="w-12 h-12 bg-pastel-purple rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform"
+                    >
+                      <span class="material-symbols-outlined">headphones</span>
+                    </div>
+                    <div class="ml-4 flex-1">
+                      <h5 class="font-title-lg text-title-lg text-primary">
+                        Listening: Lecture on Marine Biology
+                      </h5>
+                      <p class="font-body-md text-body-md text-text-muted">
+                        Academic Listening • Completed
+                      </p>
+                    </div>
+                    <span
+                      class="material-symbols-outlined text-primary"
+                      style="font-variation-settings: 'FILL' 1"
+                      >check_circle</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Right Column: Leaderboard -->
+            <div class="space-y-8">
+              <div>
+                <div class="flex justify-between items-center mb-6">
+                  <h3 class="font-headline-md text-headline-md text-primary">
+                    Peringkat
+                  </h3>
+                  <span class="material-symbols-outlined text-text-muted"
+                    >chevron_right</span
+                  >
+                </div>
+                <!-- User Highlight Card -->
+                <div class="bg-surface-container-low rounded-2xl p-6 mb-6">
+                  <div class="flex items-center gap-4 mb-4">
+                    <div
+                      class="w-12 h-12 rounded-full border-2 border-primary overflow-hidden"
+                    >
+                      <img
+                        class="w-full h-full object-cover"
+                        data-alt="Close up of Alexandra, the user. A bright and friendly young woman with light makeup, looking into the camera. Modern professional headshot style."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuARRhO-2LzxhNWBqD-6ufEYtnuWwTJ9Cr3qIs3YayeF8TM0KHtEtWTeiZ0anAgRvwz8k5JaEja4FIRelVcX_563gEJxdUIOk65C8E5NKi0IRD6CvhPFBJA3AFZU91HtFockm5wjrwZDARP3J_FOeYDjJufQE0cMvoT1JYg5wa_vrNviI5LIdyvvRUGzouAx1uYBeScHIXC93j_N1dfZSKwigXWVdLKtXxU8W8bdEvSoG0QkigIgK5M"
+                      />
+                    </div>
+                    <div>
+                      <p class="font-headline-md text-headline-md text-primary">
+                        #14
+                      </p>
+                      <p class="font-label-md text-label-md text-text-muted">
+                        Your position on the leaderboard
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex gap-3">
+                    <div
+                      class="flex items-center gap-1.5 bg-pastel-peach px-3 py-1.5 rounded-full"
+                    >
+                      <span
+                        class="material-symbols-outlined text-orange-500 text-sm"
+                        style="font-variation-settings: 'FILL' 1"
+                        >monetization_on</span
+                      >
+                      <span class="font-label-md text-label-md text-orange-800"
+                        >288 points</span
+                      >
+                    </div>
+                    <div
+                      class="flex items-center gap-1.5 bg-pastel-purple px-3 py-1.5 rounded-full"
+                    >
+                      <span
+                        class="material-symbols-outlined text-purple-600 text-sm"
+                        style="font-variation-settings: 'FILL' 1"
+                        >military_tech</span
+                      >
+                      <span class="font-label-md text-label-md text-purple-800"
+                        >7 badges</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <!-- Top Players List -->
+                <div class="space-y-4">
+                  <div
+                    class="flex items-center gap-4 p-3 hover:bg-surface-white rounded-xl transition-colors"
+                  >
+                    <span class="font-title-lg text-title-lg text-primary w-6"
+                      >#1</span
+                    >
+                    <div
+                      class="w-10 h-10 rounded-full overflow-hidden bg-surface-container"
+                    >
+                      <img
+                        class="w-full h-full object-cover"
+                        data-alt="A smiling woman with glasses, Liz Cheng, a professional educational consultant look. Vibrant high-quality portrait for a learning app interface."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOD-a-cExp1HWqLTlb5rBu51PulKFcRtZOib917yzHOH-4bUXRKWcX3yRVJweJb_d3btXTs8qaUgadiVnEjecuf9cbnS040MkGmzQgKgD7InkFdvnimAQA5MO4cc8NUaIUbJnodMV82pliLmqJCWBsu9K8XzPuZQAsmelIciIU4mywhGfiZdkkPC2W5jbueRf3MJVzCwFio4mc974-_LFSVUTuZo8GD0-LezFA1S-S70s2OejOVkU"
+                      />
+                    </div>
+                    <div class="flex-1">
+                      <h6 class="font-label-md text-label-md text-primary">
+                        Liz Cheng
+                      </h6>
+                      <p class="text-[11px] text-text-muted">
+                        Customer Service
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span
+                        class="material-symbols-outlined text-orange-500 text-sm"
+                        style="font-variation-settings: 'FILL' 1"
+                        >monetization_on</span
+                      >
+                      <span class="font-label-md text-label-md text-primary"
+                        >476 pts</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="flex items-center gap-4 p-3 hover:bg-surface-white rounded-xl transition-colors"
+                  >
+                    <span class="font-title-lg text-title-lg text-primary w-6"
+                      >#2</span
+                    >
+                    <div
+                      class="w-10 h-10 rounded-full overflow-hidden bg-surface-container"
+                    >
+                      <img
+                        class="w-full h-full object-cover"
+                        data-alt="A cheerful young man, Jenny Wilson, with a modern haircut. He looks ambitious and friendly. Clean studio lighting."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUMsPinHi4wzWSbtQflHK2rax8sfEz481qvIaWuVgMEfYLy8BXIpb4bkd1YDznJE-BIv56avZ1gWM-vQ38ghXzS_AJyNYy4g6oxmHW0XnBCUPZipfUPfngrmWZOnbTsM8J8w8AqShma98xV9PAH_Ephy9l76yoUMeanqAVkSI7kwfnk4q3YlX59M0jbhzMV-zlxU3u_So_s0iq-Tkzb_0s0PB3p2KCHCpJKwUbFupei9UpxEVkoHE"
+                      />
+                    </div>
+                    <div class="flex-1">
+                      <h6 class="font-label-md text-label-md text-primary">
+                        Jenny Wilson
+                      </h6>
+                      <p class="text-[11px] text-text-muted">Marketing</p>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span
+                        class="material-symbols-outlined text-orange-500 text-sm"
+                        style="font-variation-settings: 'FILL' 1"
+                        >monetization_on</span
+                      >
+                      <span class="font-label-md text-label-md text-primary"
+                        >461 pts</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="flex items-center gap-4 p-3 hover:bg-surface-white rounded-xl transition-colors"
+                  >
+                    <span class="font-title-lg text-title-lg text-primary w-6"
+                      >#3</span
+                    >
+                    <div
+                      class="w-10 h-10 rounded-full overflow-hidden bg-surface-container"
+                    >
+                      <img
+                        class="w-full h-full object-cover"
+                        data-alt="A focused young professional man, Ralph Edwards, in business casual attire. High contrast professional photography."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtMJQF8Fmeo5Tai-m7404R8lWC0fXf-uXYXKro56BZJZkQggPSBVsWqSZ7oO0bQDU42er3oAC6EZPasLFa5tBPKcRtQtmK6gnjmEiUo1E3axgRJGEKlY-PtF4YJrlJ5zNn1k9HV63hiu-Yfzl7E6NloIs0yGyJH5EimTba2Lf0MZ-QwWxZuXxObsEwOPdCdczskvZ5MWQn91pQrOOmzpRekZxahFhz93JR8dqi0W57ilenwu-L4GQ"
+                      />
+                    </div>
+                    <div class="flex-1">
+                      <h6 class="font-label-md text-label-md text-primary">
+                        Ralph Edwards
+                      </h6>
+                      <p class="text-[11px] text-text-muted">Finance</p>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span
+                        class="material-symbols-outlined text-orange-500 text-sm"
+                        style="font-variation-settings: 'FILL' 1"
+                        >monetization_on</span
+                      >
+                      <span class="font-label-md text-label-md text-primary"
+                        >429 pts</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <!-- Mobile Navigation (Switching according to Shared Components Logic) -->
+    <div
+      class="fixed bottom-0 left-0 right-0 md:hidden bg-surface-white border-t border-outline-variant px-6 py-3 flex justify-between items-center z-50"
+    >
+      <button class="flex flex-col items-center gap-1 text-primary">
+        <span class="material-symbols-outlined fill-icon">pie_chart</span>
+        <span class="text-[10px] font-bold">Overview</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-text-muted">
+        <span class="material-symbols-outlined">library_books</span>
+        <span class="text-[10px]">Courses</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-text-muted">
+        <span class="material-symbols-outlined">military_tech</span>
+        <span class="text-[10px]">Badges</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-text-muted">
+        <span class="material-symbols-outlined">person</span>
+        <span class="text-[10px]">Profile</span>
+      </button>
+    </div>
+    <script>
+      // Micro-interactions and effects
+      document.querySelectorAll('.group').forEach((item) => {
+        item.addEventListener('mouseenter', () => {
+          // Potential for lightweight particle effects or subtle shadow shifts
+        });
+      });
+
+      // Command + F listener mockup
+      window.addEventListener('keydown', function (e) {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+          e.preventDefault();
+          document.querySelector('input[type="text"]').focus();
+        }
+      });
+    </script>
+  </body>
+</html>

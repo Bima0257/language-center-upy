@@ -4,7 +4,7 @@ import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import RichTextViewer from '@/Components/Shared/RichTextViewer.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
-import { IconSearch, IconBook, IconPlus, IconCheck, IconX, IconBooks, IconFileDescription, IconEdit, IconUpload, IconTrash, IconHeadphones } from '@tabler/icons-vue';
+import { IconSearch, IconBook, IconPlus, IconCheck, IconX, IconBooks, IconFileDescription, IconEdit, IconUpload, IconTrash, IconHeadphones, IconEye } from '@tabler/icons-vue';
 import { ref, computed } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 import { useToast } from '@/Composables/useToast';
@@ -463,6 +463,10 @@ async function bulkReview(status) {
                             <span class="inline-block bg-pastel-purple/50 text-primary px-2.5 py-0.5 rounded-full text-label-md font-medium">{{ passageTypeLabel(group.passage.type) }}</span>
                             <span class="text-label-md text-text-muted">{{ group.questions.length }} soal</span>
                             <div class="ml-auto flex items-center gap-1">
+                                <Link v-if="group.questions.length" :href="route('content-library.preview', group.questions[0].id)"
+                                      class="p-1.5 text-text-muted hover:text-secondary transition-colors" title="Preview soal materi ini">
+                                    <IconEye :size="16" />
+                                </Link>
                                 <button @click="addingPassageId === group.passage.id ? closeQuickAdd() : openQuickAdd(group.passage)"
                                         class="flex items-center gap-1 px-2 py-1.5 rounded-lg text-label-md font-medium text-secondary hover:bg-surface-container-highest transition-colors"
                                         title="Tambah soal ke materi soal ini">
@@ -675,6 +679,7 @@ async function bulkReview(status) {
                                             <button @click="reviewQuestion(q.id, 'approved')" class="p-2 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-400 transition-colors" title="Setujui"><IconCheck :size="18" /></button>
                                             <button @click="reviewQuestion(q.id, 'rejected')" class="p-2 text-error-red hover:text-red-700 dark:hover:text-red-400 transition-colors" title="Tolak"><IconX :size="18" /></button>
                                         </template>
+                                        <Link :href="route('content-library.preview', q.id)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Preview"><IconEye :size="18" /></Link>
                                         <Link :href="route('content-library.edit', q.id)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit"><IconEdit :size="18" /></Link>
                                         <button @click="deleteQuestion(q.id, q.question_text)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus"><IconTrash :size="18" /></button>
                                     </div>
@@ -732,7 +737,8 @@ async function bulkReview(status) {
                                                         <button @click="reviewQuestion(q.id, 'approved')" class="p-2 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-400 transition-colors" title="Setujui"><IconCheck :size="18" /></button>
                                                         <button @click="reviewQuestion(q.id, 'rejected')" class="p-2 text-error-red hover:text-red-700 dark:hover:text-red-400 transition-colors" title="Tolak"><IconX :size="18" /></button>
                                                     </template>
-                                                    <Link :href="route('content-library.edit', q.id)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit"><IconEdit :size="18" /></Link>
+                                        <Link :href="route('content-library.preview', q.id)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Preview"><IconEye :size="18" /></Link>
+                                        <Link :href="route('content-library.edit', q.id)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit"><IconEdit :size="18" /></Link>
                                                     <button @click="deleteQuestion(q.id, q.question_text)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus"><IconTrash :size="18" /></button>
                                                 </div>
                                             </td>

@@ -17,6 +17,7 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Plus Jakarta Sans', ...defaultTheme.fontFamily.sans],
+                serif: ['Lora', ...defaultTheme.fontFamily.serif],
             },
             colors: {
                 primary: 'var(--color-primary)',

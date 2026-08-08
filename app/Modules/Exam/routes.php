@@ -16,6 +16,7 @@ Route::middleware(['auth', 'role:instructor,admin,superadmin'])
         Route::get('/create', [ContentLibraryController::class, 'create'])->name('create');
         Route::post('/', [ContentLibraryController::class, 'store'])->name('store');
         Route::get('/{question}/edit', [ContentLibraryController::class, 'edit'])->whereNumber('question')->name('edit');
+        Route::get('/questions/{question}/preview', [ContentLibraryController::class, 'preview'])->whereNumber('question')->name('preview');
         Route::put('/questions/{question}', [ContentLibraryController::class, 'update'])->whereNumber('question')->name('update');
         Route::delete('/questions/{question}', [ContentLibraryController::class, 'destroy'])->whereNumber('question')->name('destroy');
 

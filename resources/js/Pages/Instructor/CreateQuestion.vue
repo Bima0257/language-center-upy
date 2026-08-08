@@ -19,6 +19,7 @@ const passageType = ref('text');
 const questionRefs = ref([]);
 const questionAudioNames = ref({});
 const questionImageNames = ref({});
+const questionImagePreviews = ref({});
 
 const globalSkillId = ref('');
 const globalPartId = ref('');
@@ -132,10 +133,11 @@ function setGlobalMode() {
     }
 }
 
-function onQuestionSkillChange(q) {
+function onQuestionSkillChange(q, qi) {
     q.skill_part_id = '';
     q.audio_file = null;
     q.image_file = null;
+    questionImagePreviews.value[qi] = null;
 }
 
 function onQuestionAudioSelect(e, qi) {
@@ -147,6 +149,7 @@ function onQuestionAudioSelect(e, qi) {
 function onQuestionImageSelect(e, qi) {
     form.questions[qi].image_file = e.target.files[0] || null;
     questionImageNames.value[qi] = form.questions[qi].image_file?.name || null;
+    questionImagePreviews.value[qi] = form.questions[qi].image_file ? URL.createObjectURL(form.questions[qi].image_file) : null;
     e.target.value = '';
 }
 
@@ -174,6 +177,7 @@ async function addQuestion() {
 function removeQuestion(index) {
     if (form.questions.length > 1) {
         form.questions.splice(index, 1);
+        questionImagePreviews.value[index] = null;
     }
 }
 
@@ -184,6 +188,7 @@ function onPassageFile(e, field) {
 
 const selectedAudioFile = ref(null);
 const selectedImageFile = ref(null);
+const passageImagePreviewUrl = ref(null);
 
 function onAudioSelect(e) {
     selectedAudioFile.value = e.target.files[0] || null;
@@ -192,8 +197,15 @@ function onAudioSelect(e) {
 
 function onImageSelect(e) {
     selectedImageFile.value = e.target.files[0] || null;
+    passageImagePreviewUrl.value = selectedImageFile.value ? URL.createObjectURL(selectedImageFile.value) : null;
     onPassageFile(e, 'new_passage_image_file');
 }
+
+watch(passageMode, (mode) => {
+    if (mode !== 'new') {
+        passageImagePreviewUrl.value = null;
+    }
+});
 
 const canSubmit = computed(() => {
     if (!form.question_bank_id) return false;
@@ -294,6 +306,8 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                             </div>
                             <div>
                                 <label class="text-label-md font-medium text-primary block mb-1.5">Gambar Pendukung <span class="text-text-muted">(opsional)</span></label>
+                                <img v-if="passageImagePreviewUrl" :src="passageImagePreviewUrl"
+                                     class="max-h-28 rounded-lg border border-outline-variant/30 object-contain mb-2" />
                                 <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-5 py-4 cursor-pointer hover:border-secondary transition-colors">
                                     <IconUpload :size="20" class="text-text-muted" />
                                     <span class="text-label-md text-text-body">{{ selectedImageFile ? selectedImageFile.name : 'Klik untuk upload gambar' }}</span>
@@ -321,6 +335,8 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
 
                             <div v-else-if="passageType === 'image'">
                                 <label class="text-label-md font-medium text-primary block mb-1.5">File Gambar <span class="text-text-muted">(jpg/png/webp, max 20MB, otomatis dikompres)</span></label>
+                                <img v-if="passageImagePreviewUrl" :src="passageImagePreviewUrl"
+                                     class="max-h-28 rounded-lg border border-outline-variant/30 object-contain mb-2" />
                                 <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-5 py-4 cursor-pointer hover:border-secondary transition-colors">
                                     <IconUpload :size="20" class="text-text-muted" />
                                     <span class="text-label-md text-text-body">{{ selectedImageFile ? selectedImageFile.name : 'Klik untuk upload gambar' }}</span>
@@ -390,7 +406,7 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="text-label-md font-medium text-primary block mb-1.5">Skill <span v-if="perQuestionSkill" class="text-error-red">*</span></label>
-                                <select v-if="perQuestionSkill" v-model="q.skill_id" @change="onQuestionSkillChange(q)" required class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
+                                <select v-if="perQuestionSkill" v-model="q.skill_id" @change="onQuestionSkillChange(q, qi)" required class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                                     <option value="" disabled>Pilih Skill</option>
                                     <option v-for="s in availableSkills" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
                                 </select>
@@ -435,6 +451,8 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                                     </div>
                                     <div>
                                         <label class="text-label-md font-medium text-primary block mb-1.5">Gambar <span class="text-text-muted">(opsional)</span></label>
+                                        <img v-if="questionImagePreviews[qi]" :src="questionImagePreviews[qi]"
+                                             class="max-h-28 rounded-lg border border-outline-variant/30 object-contain mb-2" />
                                         <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-4 py-3 cursor-pointer hover:border-secondary transition-colors">
                                             <IconUpload :size="18" class="text-text-muted" />
                                             <span class="text-label-md text-text-body">{{ questionImageNames[qi] || 'Klik untuk upload gambar' }}</span>

@@ -1,0 +1,421 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Login - Hance TOEFL Prep</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'inverse-surface': '#2f3133',
+              'surface-dim': '#d9dadd',
+              'surface-container-lowest': '#ffffff',
+              'secondary-fixed-dim': '#c6bfff',
+              'text-body': '#6E6E85',
+              'surface-container-high': '#e8e8eb',
+              'surface-white': '#FFFFFF',
+              'on-primary-container': '#8282a9',
+              'inverse-on-surface': '#f0f0f3',
+              'pastel-purple': '#E7DEFB',
+              'on-secondary-fixed': '#160066',
+              background: '#f9f9fc',
+              'on-primary': '#ffffff',
+              'error-red': '#FF5A5F',
+              'on-error': '#ffffff',
+              error: '#ba1a1a',
+              'tertiary-fixed-dim': '#ffb955',
+              'surface-variant': '#e2e2e5',
+              'on-primary-fixed-variant': '#434467',
+              'on-secondary': '#ffffff',
+              'surface-container': '#edeef1',
+              'on-primary-fixed': '#171839',
+              'on-error-container': '#93000a',
+              'primary-fixed': '#e1e0ff',
+              'on-tertiary-fixed': '#291800',
+              'inverse-primary': '#c3c3ed',
+              'outline-variant': '#c8c5cf',
+              'surface-container-low': '#f3f3f6',
+              secondary: '#5647c8',
+              outline: '#77767f',
+              'pastel-peach': '#FBE1C6',
+              'on-background': '#1a1c1e',
+              'on-surface-variant': '#47464e',
+              'surface-bright': '#f9f9fc',
+              'on-surface': '#1a1c1e',
+              'on-tertiary': '#ffffff',
+              'surface-container-highest': '#e2e2e5',
+              'primary-container': '#191a3b',
+              'on-secondary-container': '#fffbff',
+              'on-tertiary-fixed-variant': '#633f00',
+              'text-heading': '#161328',
+              primary: '#010020',
+              'track-neutral': '#E3E3EA',
+              'primary-fixed-dim': '#c3c3ed',
+              'on-secondary-fixed-variant': '#402eb1',
+              surface: '#f9f9fc',
+              'secondary-fixed': '#e4dfff',
+              'error-container': '#ffdad6',
+              tertiary: '#080300',
+              'secondary-container': '#6f62e2',
+              'pastel-blue': '#D8E9FB',
+              'deep-space': '#1E1B3B',
+              'surface-tint': '#5a5b80',
+              'on-tertiary-container': '#b77800',
+              'text-muted': '#9B9AB0',
+              'tertiary-fixed': '#ffddb4',
+              'tertiary-container': '#2c1a00',
+            },
+            borderRadius: {
+              DEFAULT: '0.25rem',
+              lg: '0.5rem',
+              xl: '0.75rem',
+              full: '9999px',
+            },
+            spacing: {
+              'inner-padding': '1.25rem',
+              'card-gap': '1.5rem',
+              'app-margin': '2.5rem',
+              gutter: '1rem',
+            },
+            fontFamily: {
+              'label-md': ['Plus Jakarta Sans'],
+              'headline-lg-mobile': ['Plus Jakarta Sans'],
+              'stat-lg': ['Plus Jakarta Sans'],
+              'headline-lg': ['Plus Jakarta Sans'],
+              'title-lg': ['Plus Jakarta Sans'],
+              'headline-md': ['Plus Jakarta Sans'],
+              'body-md': ['Plus Jakarta Sans'],
+            },
+            fontSize: {
+              'label-md': ['13px', { lineHeight: '1', fontWeight: '500' }],
+              'headline-lg-mobile': [
+                '24px',
+                { lineHeight: '1.2', fontWeight: '700' },
+              ],
+              'stat-lg': ['28px', { lineHeight: '1', fontWeight: '700' }],
+              'headline-lg': [
+                '32px',
+                {
+                  lineHeight: '1.2',
+                  letterSpacing: '-0.02em',
+                  fontWeight: '700',
+                },
+              ],
+              'title-lg': ['18px', { lineHeight: '1.4', fontWeight: '600' }],
+              'headline-md': ['24px', { lineHeight: '1.3', fontWeight: '700' }],
+              'body-md': ['14px', { lineHeight: '1.6', fontWeight: '400' }],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: #1e1b3b; /* deep-space match from JSON-adjacent logic */
+        overflow: hidden;
+      }
+      .main-card {
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+        transition: transform 0.3s ease;
+      }
+      .input-focus-ring:focus {
+        outline: none;
+        border-color: #5647c8;
+        box-shadow: 0 0 0 2px rgba(86, 71, 200, 0.1);
+      }
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+        vertical-align: middle;
+      }
+      .glass-effect {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+      }
+    </style>
+  </head>
+  <body class="flex items-center justify-center min-h-screen p-app-margin">
+    <!-- Atmospheric Background Decoration -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden">
+      <div
+        class="absolute top-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-secondary-container opacity-10 rounded-full blur-[120px]"
+      ></div>
+      <div
+        class="absolute bottom-[-10%] left-[-10%] w-[30vw] h-[30vw] bg-pastel-purple opacity-5 rounded-full blur-[100px]"
+      ></div>
+    </div>
+    <!-- Main Container -->
+    <main
+      class="w-full max-w-7xl mx-auto flex items-center justify-center z-10"
+    >
+      <!-- Login Card Shell -->
+      <div
+        class="main-card bg-surface-white w-full max-w-[1000px] rounded-[32px] overflow-hidden flex flex-col md:flex-row min-h-[640px]"
+      >
+        <!-- Branding/Illustration Side (Left) -->
+        <div
+          class="w-full md:w-5/12 bg-surface-container-low p-10 flex flex-col justify-between relative overflow-hidden"
+        >
+          <div>
+            <div class="flex items-center gap-3 mb-12">
+              <div
+                class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center text-white"
+              >
+                <span
+                  class="material-symbols-outlined"
+                  style="font-variation-settings: 'FILL' 1"
+                  >auto_awesome</span
+                >
+              </div>
+              <span
+                class="text-primary font-headline-md text-headline-md tracking-tight"
+                >hance</span
+              >
+            </div>
+            <h2
+              class="text-text-heading font-headline-md text-headline-md mb-4 leading-tight"
+            >
+              Elevate your TOEFL iBT score.
+            </h2>
+            <p class="text-text-body font-body-md text-body-md max-w-xs">
+              Join 50,000+ candidates achieving their dreams through our
+              soft-professional learning environment.
+            </p>
+          </div>
+          <div class="relative mt-8">
+            <!-- Preview Card Floating -->
+            <div
+              class="bg-surface-white p-4 rounded-2xl shadow-sm border border-outline-variant transform rotate-[-2deg] relative z-10"
+            >
+              <div class="flex items-center gap-3 mb-3">
+                <div
+                  class="w-8 h-8 rounded-full bg-pastel-peach flex items-center justify-center"
+                >
+                  <span
+                    class="material-symbols-outlined text-[18px] text-tertiary-container"
+                    >emoji_events</span
+                  >
+                </div>
+                <span class="text-label-md font-label-md text-primary"
+                  >Success Goal Reached</span
+                >
+              </div>
+              <div
+                class="w-full h-1 bg-track-neutral rounded-full overflow-hidden"
+              >
+                <div class="w-[85%] h-full bg-primary-container"></div>
+              </div>
+            </div>
+          </div>
+          <div class="text-text-muted font-label-md text-label-md mt-auto">
+            © 2024 Hance Education.
+          </div>
+        </div>
+        <!-- Login Form Side (Right) -->
+        <div class="w-full md:w-7/12 p-10 md:p-16 flex flex-col justify-center">
+          <div class="max-w-[360px] mx-auto w-full">
+            <header class="mb-10">
+              <h1 class="text-primary font-headline-md text-headline-md mb-2">
+                Masuk ke Akun Anda
+              </h1>
+              <p class="text-text-body font-body-md text-body-md">
+                Senang melihat Anda kembali. Silakan masukkan detail Anda.
+              </p>
+            </header>
+            <form class="space-y-5" onsubmit="return false;">
+              <!-- Email Field -->
+              <div class="space-y-2">
+                <label
+                  class="text-primary font-label-md text-label-md block ml-1"
+                  for="email"
+                  >Email</label
+                >
+                <div class="relative">
+                  <span
+                    class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"
+                    >mail</span
+                  >
+                  <input
+                    class="w-full pl-11 pr-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md font-body-md input-focus-ring transition-all placeholder:text-text-muted"
+                    id="email"
+                    placeholder="nama@email.com"
+                    type="email"
+                  />
+                </div>
+              </div>
+              <!-- Password Field -->
+              <div class="space-y-2">
+                <div class="flex justify-between items-center px-1">
+                  <label
+                    class="text-primary font-label-md text-label-md"
+                    for="password"
+                    >Password</label
+                  >
+                  <a
+                    class="text-secondary font-label-md text-label-md hover:underline"
+                    href="#"
+                    >Lupa password?</a
+                  >
+                </div>
+                <div class="relative">
+                  <span
+                    class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"
+                    >lock</span
+                  >
+                  <input
+                    class="w-full pl-11 pr-12 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md font-body-md input-focus-ring transition-all"
+                    id="password"
+                    placeholder="••••••••"
+                    type="password"
+                  />
+                  <button
+                    class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
+                    type="button"
+                  >
+                    <span class="material-symbols-outlined">visibility</span>
+                  </button>
+                </div>
+              </div>
+              <!-- Submit Button -->
+              <button
+                class="w-full bg-primary-container text-white font-title-lg text-title-lg py-4 rounded-full mt-2 hover:bg-primary transition-all transform active:scale-95 shadow-lg shadow-primary-container/10"
+                type="submit"
+              >
+                Masuk
+              </button>
+            </form>
+            <!-- Divider -->
+            <div class="relative my-8 text-center">
+              <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-outline-variant"></div>
+              </div>
+              <span
+                class="relative px-4 bg-surface-white text-text-muted text-label-md font-label-md"
+                >atau</span
+              >
+            </div>
+            <!-- Social Login -->
+            <button
+              class="w-full border border-outline-variant bg-surface-white text-primary font-label-md text-label-md py-4 rounded-full flex items-center justify-center gap-3 hover:bg-surface-container-low transition-colors mb-8"
+            >
+              <svg class="w-5 h-5" viewbox="0 0 24 24">
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                ></path>
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                ></path>
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                  fill="#FBBC05"
+                ></path>
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                ></path>
+              </svg>
+              Masuk dengan Google
+            </button>
+            <p class="text-center text-body-md font-body-md text-text-body">
+              Belum punya akun?
+              <a class="text-secondary font-bold hover:underline" href="#"
+                >Daftar sekarang</a
+              >
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- Interactive Layer: Mouse Trail (Vanilla JS) -->
+    <canvas
+      class="fixed inset-0 pointer-events-none z-0"
+      id="trailCanvas"
+    ></canvas>
+    <script>
+      const canvas = document.getElementById('trailCanvas');
+      const ctx = canvas.getContext('2d');
+      let dots = [];
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+
+      class Dot {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.size = Math.random() * 2 + 1;
+          this.life = 1;
+          this.decay = 0.02 + Math.random() * 0.02;
+        }
+        update() {
+          this.life -= this.decay;
+        }
+        draw() {
+          ctx.fillStyle = `rgba(130, 130, 169, ${this.life * 0.3})`;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      window.addEventListener('mousemove', (e) => {
+        if (Math.random() > 0.5) {
+          dots.push(new Dot(e.clientX, e.clientY));
+        }
+      });
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = dots.length - 1; i >= 0; i--) {
+          dots[i].update();
+          dots[i].draw();
+          if (dots[i].life <= 0) dots.splice(i, 1);
+        }
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      // Simple button active state visual feedback
+      const buttons = document.querySelectorAll('button');
+      buttons.forEach((btn) => {
+        btn.addEventListener('mousedown', () => {
+          btn.style.transform = 'scale(0.97)';
+        });
+        btn.addEventListener('mouseup', () => {
+          btn.style.transform = 'scale(1)';
+        });
+        btn.addEventListener('mouseleave', () => {
+          btn.style.transform = 'scale(1)';
+        });
+      });
+    </script>
+  </body>
+</html>

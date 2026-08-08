@@ -207,6 +207,26 @@ class ContentLibraryController extends Controller
             ->with('success', "{$count} soal berhasil ditambahkan ke bank soal.");
     }
 
+    public function preview(Question $question): Response
+    {
+        $question->load(['passage', 'skill', 'skillPart', 'questionBank']);
+
+        $questions = $question->passage_id
+            ? Question::with(['passage', 'skill', 'skillPart'])
+                ->where('passage_id', $question->passage_id)
+                ->orderBy('order')
+                ->get()
+            : collect([$question]);
+
+        $index = $questions->search(fn ($q) => $q->id === $question->id);
+        $index = $index === false ? 0 : $index;
+
+        return Inertia::render('Instructor/QuestionPreview', [
+            'questions' => $questions->values(),
+            'index' => $index,
+        ]);
+    }
+
     public function update(Request $request, Question $question): RedirectResponse
     {
         $validated = $request->validate([

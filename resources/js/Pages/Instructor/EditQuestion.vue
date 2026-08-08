@@ -2,7 +2,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
-import { IconInfoCircle, IconUpload, IconHeadphones } from '@tabler/icons-vue';
+import { IconInfoCircle, IconUpload } from '@tabler/icons-vue';
 import { computed, ref } from 'vue';
 
 const props = defineProps({
@@ -32,6 +32,8 @@ const form = useForm({
 
 const audioFileName = ref(null);
 const imageFileName = ref(null);
+const audioPreviewUrl = ref(null);
+const imagePreviewUrl = ref(null);
 
 const selectedBank = computed(() =>
     props.questionBanks.find(b => String(b.id) === String(form.question_bank_id)) || null,
@@ -62,23 +64,33 @@ function onSkillChange() {
     form.image_file = null;
     audioFileName.value = null;
     imageFileName.value = null;
+    audioPreviewUrl.value = null;
+    imagePreviewUrl.value = null;
 }
 
 function onAudioSelect(e) {
     form.audio_file = e.target.files[0] || null;
     audioFileName.value = form.audio_file?.name || null;
+    audioPreviewUrl.value = form.audio_file ? URL.createObjectURL(form.audio_file) : null;
     e.target.value = '';
 }
 
 function onImageSelect(e) {
     form.image_file = e.target.files[0] || null;
     imageFileName.value = form.image_file?.name || null;
+    imagePreviewUrl.value = form.image_file ? URL.createObjectURL(form.image_file) : null;
     e.target.value = '';
 }
 
-const hasQuestionAudio = computed(() =>
-    form.audio_file || props.question.audio_url || props.question.passage?.audio_url,
-);
+const storedAudioUrl = computed(() => {
+    const path = props.question.audio_url || props.question.passage?.audio_url;
+    return path ? '/storage/' + path : null;
+});
+
+const storedImageUrl = computed(() => {
+    const path = props.question.image_url || props.question.passage?.image_url;
+    return path ? '/storage/' + path : null;
+});
 
 const showUploadProgress = computed(() => form.processing && (form.audio_file !== null || form.image_file !== null));
 const uploadLabel = computed(() => form.audio_file !== null ? 'Mengunggah & mengompres audio...' : 'Mengunggah & mengompres gambar...');
@@ -128,14 +140,29 @@ function submit() {
                                 <IconInfoCircle :size="16" class="text-secondary shrink-0" />
                                 Soal, materi, dan pilihan jawaban berada di audio. Peserta hanya memilih A/B/C/D.
                             </p>
-                            <div v-if="hasQuestionAudio" class="flex items-center gap-3">
-                                <IconHeadphones :size="20" class="text-secondary shrink-0" />
-                                <audio v-if="form.audio_file" :src="audioFileName ? URL.createObjectURL(form.audio_file) : ''" controls class="w-full max-w-sm h-10" />
-                                <audio v-else-if="question.audio_url || question.passage?.audio_url"
-                                       :src="'/storage/' + (question.audio_url || question.passage?.audio_url)" controls class="w-full max-w-sm h-10" />
-                                <span class="text-label-md text-text-muted">Audio aktif</span>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 min-h-[120px] flex flex-col">
+                                    <p class="text-label-md font-semibold text-primary mb-2">Preview Audio</p>
+                                    <div class="flex-1 flex items-center">
+                                        <audio v-if="audioPreviewUrl" :src="audioPreviewUrl" controls class="w-full h-10" />
+                                        <audio v-else-if="storedAudioUrl" :src="storedAudioUrl" controls class="w-full h-10" />
+                                        <p v-else class="text-label-md text-text-muted">Belum ada audio</p>
+                                    </div>
+                                </div>
+                                <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 min-h-[120px] flex flex-col">
+                                    <p class="text-label-md font-semibold text-primary mb-2">Preview Gambar</p>
+                                    <div class="flex-1 flex items-center justify-center">
+                                        <img v-if="imagePreviewUrl" :src="imagePreviewUrl"
+                                             class="max-h-28 rounded-lg border border-outline-variant/30 object-contain" />
+                                        <img v-else-if="storedImageUrl" :src="storedImageUrl"
+                                             class="max-h-28 rounded-lg border border-outline-variant/30 object-contain" />
+                                        <p v-else class="text-label-md text-text-muted">Belum ada gambar (opsional)</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-4">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-label-md font-medium text-primary block mb-1.5">Ganti Audio <span class="text-text-muted">(opsional, max 50MB)</span></label>
                                     <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-4 py-3 cursor-pointer hover:border-secondary transition-colors">
@@ -146,14 +173,16 @@ function submit() {
                                     <p v-if="form.errors.audio_file" class="text-error-red text-xs mt-1">{{ form.errors.audio_file }}</p>
                                 </div>
                                 <div>
-                                    <label class="text-label-md font-medium text-primary block mb-1.5">Gambar Pendukung <span class="text-text-muted">(opsional)</span></label>
+                                    <label class="text-label-md font-medium text-primary block mb-1.5">Ganti Gambar <span class="text-text-muted">(opsional)</span></label>
                                     <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-4 py-3 cursor-pointer hover:border-secondary transition-colors">
                                         <IconUpload :size="18" class="text-text-muted" />
                                         <span class="text-label-md text-text-body">{{ imageFileName || 'Klik untuk upload gambar' }}</span>
                                         <input type="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" @change="onImageSelect" />
                                     </label>
+                                    <p v-if="form.errors.image_file" class="text-error-red text-xs mt-1">{{ form.errors.image_file }}</p>
                                 </div>
                             </div>
+
                             <div>
                                 <p class="text-label-md font-medium text-primary mb-2">Kunci Jawaban <span class="text-error-red">*</span></p>
                                 <div class="flex flex-wrap gap-3">
