@@ -64,11 +64,14 @@ class ExamSessionController extends Controller
             'currentSection',
         ]);
 
-        // Load bank questions matching exam section skills
+        // Load bank questions matching exam section skills, scoped by exam category
         $sectionSkillIds = $session->schedule?->exam?->sections?->pluck('skill_id') ?? collect();
+        $examTypeId = $session->schedule?->exam?->exam_type_id;
+
         $bankQuestions = Question::with('passage')
             ->whereIn('skill_id', $sectionSkillIds)
             ->where('status', 'approved')
+            ->when($examTypeId, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId)))
             ->get();
 
         return Inertia::render('Exam/Take', [

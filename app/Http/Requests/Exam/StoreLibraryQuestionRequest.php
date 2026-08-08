@@ -18,12 +18,15 @@ class StoreLibraryQuestionRequest extends FormRequest
             'new_passage_image_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
             'questions' => ['required', 'array', 'min:1', 'max:50'],
             'questions.*.skill_id' => ['required', 'exists:skills,id'],
-            'questions.*.question_text' => ['required', 'string'],
-            'questions.*.option_a' => ['required', 'string'],
-            'questions.*.option_b' => ['required', 'string'],
-            'questions.*.option_c' => ['required', 'string'],
-            'questions.*.option_d' => ['required', 'string'],
+            'questions.*.skill_part_id' => ['required', 'exists:skill_parts,id'],
+            'questions.*.question_text' => ['nullable', 'string'],
+            'questions.*.option_a' => ['nullable', 'string'],
+            'questions.*.option_b' => ['nullable', 'string'],
+            'questions.*.option_c' => ['nullable', 'string'],
+            'questions.*.option_d' => ['nullable', 'string'],
             'questions.*.correct_answer' => ['required', 'string', 'max:1', 'in:A,B,C,D'],
+            'questions.*.audio_file' => ['nullable', 'file', 'mimes:mp3,wav,ogg,m4a', 'max:51200'],
+            'questions.*.image_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
         ];
     }
 

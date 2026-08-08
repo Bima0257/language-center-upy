@@ -27,6 +27,16 @@ class ExamType extends Model
         return $this->hasMany(Exam::class);
     }
 
+    public function questionBanks(): HasMany
+    {
+        return $this->hasMany(QuestionBank::class);
+    }
+
+    public function skills(): HasMany
+    {
+        return $this->hasMany(Skill::class);
+    }
+
     public function scoringRules(): HasMany
     {
         return $this->hasMany(ScoringRule::class);

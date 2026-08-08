@@ -4,7 +4,7 @@ import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import RichTextViewer from '@/Components/Shared/RichTextViewer.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
-import { IconSearch, IconBook, IconPlus, IconCheck, IconX, IconBooks, IconFileDescription, IconEdit, IconUpload, IconTrash } from '@tabler/icons-vue';
+import { IconSearch, IconBook, IconPlus, IconCheck, IconX, IconBooks, IconFileDescription, IconEdit, IconUpload, IconTrash, IconHeadphones } from '@tabler/icons-vue';
 import { ref, computed } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 import { useToast } from '@/Composables/useToast';
@@ -17,6 +17,7 @@ const props = defineProps({
     questions: { type: Object, default: () => ({ data: [] }) },
     questionBanks: { type: Array, default: () => [] },
     skills: { type: Array, default: () => [] },
+    parts: { type: Array, default: () => [] },
     passages: { type: Array, default: () => [] },
     statuses: { type: Array, default: () => ['draft', 'approved', 'rejected'] },
     selectedPassage: { type: Object, default: null },
@@ -33,6 +34,7 @@ const selectedSkillId = ref(props.filters.skill_id || '');
 const selectedBankId = ref(props.filters.question_bank_id || '');
 const selectedStatus = ref(props.filters.status || '');
 const selectedPassageId = ref(props.filters.passage_id || '');
+const selectedPartId = ref(props.filters.part_id || '');
 const selectedIds = ref([]);
 const expandedPassages = ref({});
 const editingPassageId = ref(null);
@@ -53,6 +55,7 @@ const quickQuestionForm = useForm({
     passage_id: null,
     question_bank_id: '',
     skill_id: '',
+    skill_part_id: '',
     question_text: '',
     option_a: '',
     option_b: '',
@@ -62,6 +65,28 @@ const quickQuestionForm = useForm({
 });
 
 const optionKeys = ['A', 'B', 'C', 'D'];
+
+const quickSelectedBank = computed(() =>
+    props.questionBanks.find(b => String(b.id) === String(quickQuestionForm.question_bank_id)) || null,
+);
+
+const availableQuickSkills = computed(() => {
+    if (!quickSelectedBank.value) return props.skills;
+    return props.skills.filter(s => String(s.exam_type_id) === String(quickSelectedBank.value.exam_type_id));
+});
+
+const quickIsListening = computed(() => {
+    const s = props.skills.find(s => String(s.id) === String(quickQuestionForm.skill_id));
+    return s?.code === 'listening';
+});
+
+function quickParts() {
+    return props.parts.filter(p => String(p.skill_id) === String(quickQuestionForm.skill_id));
+}
+
+function onQuickSkillChange() {
+    quickQuestionForm.skill_part_id = '';
+}
 
 const statusLabels = { draft: 'Draf', approved: 'Disetujui', rejected: 'Ditolak' };
 const statusColors = { draft: 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300', approved: 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300', rejected: 'bg-error-red/10 text-error-red' };
@@ -157,6 +182,7 @@ function saveQuickQuestion() {
             question_bank_id: data.question_bank_id,
             questions: [{
                 skill_id: data.skill_id,
+                skill_part_id: data.skill_part_id,
                 question_text: data.question_text,
                 option_a: data.option_a,
                 option_b: data.option_b,
@@ -189,31 +215,50 @@ const skillGroups = computed(() => {
     for (const q of props.questions.data) {
         const sid = q.skill_id;
         if (!skillMap.has(sid)) {
-            skillMap.set(sid, { skill: q.skill || null, passageGroups: new Map(), standalone: [] });
+            skillMap.set(sid, { skill: q.skill || null, parts: new Map() });
         }
         const bucket = skillMap.get(sid);
 
+        const pid = q.skill_part_id || 'none';
+        if (!bucket.parts.has(pid)) {
+            bucket.parts.set(pid, { part: q.skillPart || null, passageGroups: new Map(), standalone: [] });
+        }
+        const partBucket = bucket.parts.get(pid);
+
         if (q.passage) {
-            if (!bucket.passageGroups.has(q.passage_id)) {
-                bucket.passageGroups.set(q.passage_id, { passage: q.passage, questions: [] });
+            if (!partBucket.passageGroups.has(q.passage_id)) {
+                partBucket.passageGroups.set(q.passage_id, { passage: q.passage, questions: [] });
             }
-            bucket.passageGroups.get(q.passage_id).questions.push(q);
+            partBucket.passageGroups.get(q.passage_id).questions.push(q);
         } else {
-            bucket.standalone.push(q);
+            partBucket.standalone.push(q);
         }
     }
 
     return Array.from(skillMap.values())
         .map((s) => ({
             skill: s.skill,
-            groups: Array.from(s.passageGroups.values()),
-            standalone: s.standalone,
+            parts: Array.from(s.parts.values())
+                .map((p) => ({
+                    part: p.part,
+                    groups: Array.from(p.passageGroups.values()),
+                    standalone: p.standalone,
+                }))
+                .sort((a, b) => (a.part?.order ?? 99) - (b.part?.order ?? 99)),
         }))
         .sort((a, b) => (a.skill?.name || '').localeCompare(b.skill?.name || ''));
 });
 
+function partGroupTotal(partGroup) {
+    return partGroup.groups.reduce((n, g) => n + g.questions.length, 0) + partGroup.standalone.length;
+}
+
+function isPartEmpty(partGroup) {
+    return partGroup.groups.length === 0 && partGroup.standalone.length === 0;
+}
+
 function skillGroupTotal(skillGroup) {
-    return skillGroup.groups.reduce((n, g) => n + g.questions.length, 0) + skillGroup.standalone.length;
+    return skillGroup.parts.reduce((n, p) => n + partGroupTotal(p), 0);
 }
 
 let debounceTimer = null;
@@ -224,6 +269,7 @@ function applyFilters() {
     if (selectedBankId.value) p.question_bank_id = selectedBankId.value;
     if (selectedStatus.value) p.status = selectedStatus.value;
     if (selectedPassageId.value) p.passage_id = selectedPassageId.value;
+    if (selectedPartId.value) p.part_id = selectedPartId.value;
     if (searchQuery.value) p.search = searchQuery.value;
     router.get(route('content-library.index'), p, { preserveState: true });
 }
@@ -231,7 +277,7 @@ function applyFilters() {
 function onSearchInput() { clearTimeout(debounceTimer); debounceTimer = setTimeout(applyFilters, 400); }
 function resetFilters() {
     searchQuery.value = ''; selectedSkillId.value = ''; selectedBankId.value = '';
-    selectedStatus.value = ''; selectedPassageId.value = '';
+    selectedStatus.value = ''; selectedPassageId.value = ''; selectedPartId.value = '';
     applyFilters();
 }
 
@@ -250,6 +296,20 @@ function toggleSelectAll() {
         selectedIds.value = [];
     } else {
         selectedIds.value = props.questions.data.map(q => q.id);
+    }
+}
+
+function isPassageSelected(group) {
+    return group.questions.length > 0 &&
+        group.questions.every(q => selectedIds.value.includes(q.id));
+}
+
+function togglePassageSelection(group) {
+    const ids = group.questions.map(q => q.id);
+    if (isPassageSelected(group)) {
+        selectedIds.value = selectedIds.value.filter(id => !ids.includes(id));
+    } else {
+        selectedIds.value = Array.from(new Set([...selectedIds.value, ...ids]));
     }
 }
 
@@ -317,6 +377,13 @@ async function bulkReview(status) {
                         <option v-for="s in skills" :key="s.id" :value="s.id">{{ s.name }}</option>
                     </select>
                 </div>
+                <div class="w-36"><label class="text-label-md font-medium text-primary block mb-1.5">Part</label>
+                    <select v-model="selectedPartId" @change="applyFilters"
+                            class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
+                        <option value="">Semua</option>
+                        <option v-for="pt in parts" :key="pt.id" :value="pt.id">{{ pt.name }} <template v-if="pt.skill">({{ pt.skill.name }})</template></option>
+                    </select>
+                </div>
                 <div class="w-36"><label class="text-label-md font-medium text-primary block mb-1.5">Materi Soal</label>
                     <select v-model="selectedPassageId" @change="applyFilters"
                             class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
@@ -372,14 +439,25 @@ async function bulkReview(status) {
                     <span class="text-label-md text-text-muted">{{ skillGroupTotal(skillGroup) }} soal</span>
                 </div>
 
-                <div class="space-y-4">
-                    <!-- GROUP PASSAGE -->
-                    <div v-for="group in skillGroup.groups" :key="group.passage.id"
+                <div class="space-y-6">
+                    <template v-for="partGroup in skillGroup.parts" :key="partGroup.part?.id || 'no-part'">
+                        <!-- HEADER PART -->
+                        <div class="flex items-center gap-2">
+                            <span class="inline-block bg-pastel-purple/30 text-primary px-3.5 py-1.5 rounded-full text-label-md font-semibold">{{ partGroup.part?.name || 'Tanpa Part' }}</span>
+                            <span class="text-label-md text-text-muted">{{ partGroupTotal(partGroup) }} soal</span>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- GROUP PASSAGE -->
+                            <div v-for="group in partGroup.groups" :key="group.passage.id"
                  class="bg-surface-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden">
                 <div class="px-5 py-4 bg-surface-container-low/60 border-b border-outline-variant/30">
                     <!-- TAMPILAN HEADER NORMAL -->
                     <template v-if="editingPassageId !== group.passage.id">
                         <div class="flex items-center gap-2 flex-wrap">
+                            <input v-if="canReview && group.questions.length" type="checkbox" :checked="isPassageSelected(group)" @change="togglePassageSelection(group)"
+                                   class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary shrink-0"
+                                   title="Pilih semua soal di materi ini" />
                             <IconFileDescription :size="20" class="text-secondary shrink-0" />
                             <h3 class="text-title-md font-semibold text-primary">{{ group.passage.title }}</h3>
                             <span class="inline-block bg-pastel-purple/50 text-primary px-2.5 py-0.5 rounded-full text-label-md font-medium">{{ passageTypeLabel(group.passage.type) }}</span>
@@ -401,10 +479,10 @@ async function bulkReview(status) {
                         </div>
 
                         <div v-if="group.passage.type === 'audio' && group.passage.audio_url" class="mt-2">
-                            <audio controls :src="group.passage.audio_url" class="w-full max-w-md h-9"></audio>
+                            <audio controls :src="'/storage/' + group.passage.audio_url" class="w-full max-w-md h-9"></audio>
                         </div>
                         <div v-else-if="group.passage.type === 'image' && group.passage.image_url" class="mt-2">
-                            <img :src="group.passage.image_url" class="max-h-44 rounded-xl border border-outline-variant/30 object-contain" />
+                            <img :src="'/storage/' + group.passage.image_url" class="max-h-44 rounded-xl border border-outline-variant/30 object-contain" />
                         </div>
                         <template v-else-if="group.passage.content_text">
                             <RichTextViewer :content="group.passage.content_text"
@@ -446,7 +524,7 @@ async function bulkReview(status) {
 
                         <div v-else-if="passageEditType === 'audio'" class="mt-3">
                             <label class="text-label-md font-medium text-primary block mb-1">File Audio <span class="text-text-muted">(mp3/wav/m4a, max 50MB)</span></label>
-                            <audio v-if="group.passage.audio_url" controls :src="group.passage.audio_url" class="w-full max-w-md h-9 mb-2"></audio>
+                            <audio v-if="group.passage.audio_url" controls :src="'/storage/' + group.passage.audio_url" class="w-full max-w-md h-9 mb-2"></audio>
                             <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-xl px-4 py-3 cursor-pointer hover:border-secondary transition-colors">
                                 <IconUpload :size="18" class="text-text-muted" />
                                 <span class="text-label-md text-text-body">{{ selectedAudioFile ? selectedAudioFile.name : (group.passage.audio_url ? 'Ganti file audio' : 'Upload audio') }}</span>
@@ -457,7 +535,7 @@ async function bulkReview(status) {
 
                         <div v-else-if="passageEditType === 'image'" class="mt-3">
                             <label class="text-label-md font-medium text-primary block mb-1">File Gambar <span class="text-text-muted">(jpg/png/webp, max 20MB, otomatis dikompres)</span></label>
-                            <img v-if="group.passage.image_url" :src="group.passage.image_url" class="max-h-32 rounded-lg border border-outline-variant/30 object-contain mb-2" />
+                            <img v-if="group.passage.image_url" :src="'/storage/' + group.passage.image_url" class="max-h-32 rounded-lg border border-outline-variant/30 object-contain mb-2" />
                             <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-xl px-4 py-3 cursor-pointer hover:border-secondary transition-colors">
                                 <IconUpload :size="18" class="text-text-muted" />
                                 <span class="text-label-md text-text-body">{{ selectedImageFile ? selectedImageFile.name : (group.passage.image_url ? 'Ganti file gambar' : 'Upload gambar') }}</span>
@@ -484,7 +562,7 @@ async function bulkReview(status) {
                      class="px-5 py-4 bg-pastel-blue/10 border-b border-outline-variant/30">
                     <p class="text-label-md font-semibold text-primary mb-3">Tambah Soal ke "{{ group.passage.title }}"</p>
                     <form @submit.prevent="saveQuickQuestion" class="space-y-3">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <div>
                                 <label class="text-label-md font-medium text-primary block mb-1">Bank Soal <span class="text-error-red">*</span></label>
                                 <select v-model="quickQuestionForm.question_bank_id" required
@@ -496,10 +574,18 @@ async function bulkReview(status) {
                             </div>
                             <div>
                                 <label class="text-label-md font-medium text-primary block mb-1">Skill <span class="text-error-red">*</span></label>
-                                <select v-model="quickQuestionForm.skill_id" required
+                                <select v-model="quickQuestionForm.skill_id" @change="onQuickSkillChange" required
                                         class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                                     <option value="" disabled>Pilih Skill</option>
-                                    <option v-for="s in skills" :key="s.id" :value="s.id">{{ s.name }}</option>
+                                    <option v-for="s in availableQuickSkills" :key="s.id" :value="s.id">{{ s.name }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-label-md font-medium text-primary block mb-1">Part <span class="text-error-red">*</span></label>
+                                <select v-model="quickQuestionForm.skill_part_id" required :disabled="!quickQuestionForm.skill_id"
+                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary disabled:opacity-50">
+                                    <option value="" disabled>Pilih part</option>
+                                    <option v-for="p in quickParts()" :key="p.id" :value="p.id">{{ p.name }}</option>
                                 </select>
                             </div>
                             <div>
@@ -511,22 +597,30 @@ async function bulkReview(status) {
                                 </select>
                             </div>
                         </div>
-                        <div>
-                            <label class="text-label-md font-medium text-primary block mb-1">Teks Soal <span class="text-error-red">*</span></label>
-                            <textarea v-model="quickQuestionForm.question_text" rows="2" required
-                                      class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea>
-                            <p v-if="quickQuestionForm.errors.question_text" class="text-error-red text-xs mt-1">{{ quickQuestionForm.errors.question_text }}</p>
-                        </div>
-                        <div>
-                            <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban <span class="text-error-red">*</span></p>
-                            <div class="space-y-2">
-                                <div v-for="key in optionKeys" :key="key" class="flex items-center gap-2">
-                                    <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-full bg-surface-white border border-outline-variant font-semibold text-primary text-sm">{{ key }}</span>
-                                    <input type="text" v-model="quickQuestionForm['option_' + key.toLowerCase()]" required :placeholder="'Teks pilihan ' + key"
-                                           class="flex-1 px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                        <template v-if="quickIsListening">
+                            <p class="flex items-center gap-1.5 text-label-md text-text-muted bg-pastel-purple/10 border border-pastel-purple/40 rounded-xl px-4 py-3">
+                                <IconHeadphones :size="16" class="text-secondary shrink-0" />
+                                Soal listening memakai audio passage ini — tanpa teks soal dan pilihan jawaban.
+                            </p>
+                        </template>
+                        <template v-else>
+                            <div>
+                                <label class="text-label-md font-medium text-primary block mb-1">Teks Soal <span class="text-error-red">*</span></label>
+                                <textarea v-model="quickQuestionForm.question_text" rows="2" required
+                                          class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea>
+                                <p v-if="quickQuestionForm.errors.question_text" class="text-error-red text-xs mt-1">{{ quickQuestionForm.errors.question_text }}</p>
+                            </div>
+                            <div>
+                                <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban <span class="text-error-red">*</span></p>
+                                <div class="space-y-2">
+                                    <div v-for="key in optionKeys" :key="key" class="flex items-center gap-2">
+                                        <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-full bg-surface-white border border-outline-variant font-semibold text-primary text-sm">{{ key }}</span>
+                                        <input type="text" v-model="quickQuestionForm['option_' + key.toLowerCase()]" required :placeholder="'Teks pilihan ' + key"
+                                               class="flex-1 px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </template>
                         <div class="flex items-center gap-2">
                             <button type="submit" :disabled="quickQuestionForm.processing"
                                     class="flex items-center gap-1.5 bg-primary-container text-white px-5 py-2.5 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
@@ -561,6 +655,7 @@ async function bulkReview(status) {
                                            class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
                                 </td>
                                 <td class="px-5 py-4 min-w-[260px] max-w-md">
+                                    <span v-if="q.audio_url || q.passage?.audio_url" class="inline-flex items-center gap-1 bg-pastel-purple/30 text-primary px-2 py-0.5 rounded-full text-label-md font-medium mb-1"><IconHeadphones :size="12" /> Audio</span>
                                     <p class="text-text-body text-body-md text-primary font-medium line-clamp-2">{{ q.question_text }}</p>
                                 </td>
                                 <td class="px-5 py-4">
@@ -590,8 +685,8 @@ async function bulkReview(status) {
                 </div>
             </div>
 
-                    <!-- SOAL STANDALONE (per skill) -->
-                    <div v-if="skillGroup.standalone.length">
+                    <!-- SOAL STANDALONE (per part) -->
+                    <div v-if="partGroup.standalone.length">
                         <div class="flex items-center gap-2 px-1 mb-3">
                             <IconBook :size="16" class="text-text-muted" />
                             <p class="text-label-md font-semibold text-text-muted uppercase tracking-wider">Soal Standalone</p>
@@ -611,7 +706,7 @@ async function bulkReview(status) {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="q in skillGroup.standalone" :key="q.id"
+                                        <tr v-for="q in partGroup.standalone" :key="q.id"
                                             class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50 transition-colors">
                                             <td v-if="canReview" class="px-5 py-4">
                                                 <input type="checkbox" :checked="selectedIds.includes(q.id)" @change="toggleSelect(q.id)"
@@ -650,6 +745,8 @@ async function bulkReview(status) {
                 </div>
             </template>
         </div>
+    </template>
+</div>
 
         <div v-if="questions.total > questions.per_page" class="flex justify-center mt-6 gap-2">
             <Link v-for="link in questions.links" :key="link.label"

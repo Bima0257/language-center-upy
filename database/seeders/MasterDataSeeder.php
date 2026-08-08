@@ -9,27 +9,13 @@ use App\Models\QuestionBank;
 use App\Models\ScoringRule;
 use App\Models\ScoreInterpretation;
 use App\Models\Skill;
+use App\Models\SkillPart;
 use Illuminate\Database\Seeder;
 
 class MasterDataSeeder extends Seeder
 {
     public function run(): void
     {
-        $reading = Skill::create(['name' => 'Reading', 'code' => 'reading', 'is_active' => true]);
-        $listening = Skill::create(['name' => 'Listening', 'code' => 'listening', 'is_active' => true]);
-        Skill::create(['name' => 'Speaking', 'code' => 'speaking', 'is_active' => true]);
-        Skill::create(['name' => 'Writing', 'code' => 'writing', 'is_active' => true]);
-
-        $fkip = Faculty::create(['name' => 'Fakultas Keguruan dan Ilmu Pendidikan', 'code' => 'FKIP', 'is_active' => true]);
-        $ft = Faculty::create(['name' => 'Fakultas Teknik', 'code' => 'FT', 'is_active' => true]);
-
-        Department::create(['faculty_id' => $fkip->id, 'name' => 'Pendidikan Bahasa Inggris', 'code' => 'PBI', 'is_active' => true]);
-        Department::create(['faculty_id' => $fkip->id, 'name' => 'Pendidikan Matematika', 'code' => 'PMAT', 'is_active' => true]);
-        Department::create(['faculty_id' => $ft->id, 'name' => 'Teknik Informatika', 'code' => 'TI', 'is_active' => true]);
-
-        QuestionBank::create(['name' => 'Bank Soal 2022', 'description' => 'Kumpulan soal tryout tahun 2022', 'is_active' => true]);
-        QuestionBank::create(['name' => 'Bank Soal 2023', 'description' => 'Kumpulan soal tryout tahun 2023', 'is_active' => true]);
-
         $toefl = ExamType::firstOrCreate([
             'name' => 'TOEFL iBT',
         ], [
@@ -38,6 +24,51 @@ class MasterDataSeeder extends Seeder
             'is_active' => true,
         ]);
 
+        $reading = Skill::firstOrCreate(['code' => 'reading'], [
+            'exam_type_id' => $toefl->id,
+            'name' => 'Reading',
+            'is_active' => true,
+        ]);
+        $reading->update(['exam_type_id' => $toefl->id]);
+
+        $listening = Skill::firstOrCreate(['code' => 'listening'], [
+            'exam_type_id' => $toefl->id,
+            'name' => 'Listening',
+            'is_active' => true,
+        ]);
+        $listening->update(['exam_type_id' => $toefl->id]);
+
+        SkillPart::firstOrCreate(
+            ['skill_id' => $reading->id, 'name' => 'Part 1'],
+            ['order' => 1, 'directions' => 'Read each passage carefully. Answer questions based on the information given in the passage.', 'is_active' => true],
+        );
+        SkillPart::firstOrCreate(
+            ['skill_id' => $reading->id, 'name' => 'Part 2'],
+            ['order' => 2, 'directions' => 'A word or phrase is missing in each of the sentences below. Select the best answer to complete the sentence.', 'is_active' => true],
+        );
+        SkillPart::firstOrCreate(
+            ['skill_id' => $listening->id, 'name' => 'Part 1'],
+            ['order' => 1, 'directions' => 'Listen to each short conversation and question. Select the best answer to each question based on what is stated or implied by the speakers.', 'is_active' => true],
+        );
+        SkillPart::firstOrCreate(
+            ['skill_id' => $listening->id, 'name' => 'Part 2'],
+            ['order' => 2, 'directions' => 'Listen to each longer conversation or talk. Answer the questions based on the information you hear.', 'is_active' => true],
+        );
+        SkillPart::firstOrCreate(
+            ['skill_id' => $listening->id, 'name' => 'Part 3'],
+            ['order' => 3, 'directions' => 'Listen to each lecture. Answer the questions based on the information presented in the lecture.', 'is_active' => true],
+        );
+
+        $fkip = Faculty::firstOrCreate(['code' => 'FKIP'], ['name' => 'Fakultas Keguruan dan Ilmu Pendidikan', 'is_active' => true]);
+        $ft = Faculty::firstOrCreate(['code' => 'FT'], ['name' => 'Fakultas Teknik', 'is_active' => true]);
+
+        Department::firstOrCreate(['faculty_id' => $fkip->id, 'code' => 'PBI'], ['name' => 'Pendidikan Bahasa Inggris', 'is_active' => true]);
+        Department::firstOrCreate(['faculty_id' => $fkip->id, 'code' => 'PMAT'], ['name' => 'Pendidikan Matematika', 'is_active' => true]);
+        Department::firstOrCreate(['faculty_id' => $ft->id, 'code' => 'TI'], ['name' => 'Teknik Informatika', 'is_active' => true]);
+
+        QuestionBank::firstOrCreate(['name' => 'Bank Soal 2022'], ['exam_type_id' => $toefl->id, 'description' => 'Kumpulan soal tryout tahun 2022', 'is_active' => true]);
+        QuestionBank::firstOrCreate(['name' => 'Bank Soal 2023'], ['exam_type_id' => $toefl->id, 'description' => 'Kumpulan soal tryout tahun 2023', 'is_active' => true]);
+
         // Conversion table: raw 0-50 -> scaled 100-200 (2x + 100)
         $conversion = [];
         for ($raw = 0; $raw <= 50; $raw++) {
@@ -45,13 +76,14 @@ class MasterDataSeeder extends Seeder
         }
 
         foreach (['reading', 'listening'] as $skill) {
-            ScoringRule::create([
-                'exam_type_id' => $toefl->id,
-                'section_skill' => $skill,
-                'conversion_table' => $conversion,
-                'max_raw' => 50,
-                'max_scaled' => 200,
-            ]);
+            ScoringRule::firstOrCreate(
+                ['exam_type_id' => $toefl->id, 'section_skill' => $skill],
+                [
+                    'conversion_table' => $conversion,
+                    'max_raw' => 50,
+                    'max_scaled' => 200,
+                ],
+            );
         }
 
         $interpretations = [
@@ -67,15 +99,16 @@ class MasterDataSeeder extends Seeder
         ];
 
         foreach ($interpretations as $interp) {
-            ScoreInterpretation::create([
-                'exam_type_id' => $toefl->id,
-                'min_score' => $interp['min'],
-                'max_score' => $interp['max'],
-                'cefr_level' => $interp['cefr'],
-                'level_label' => $interp['label'],
-                'is_passing' => $interp['passing'],
-                'description' => $interp['desc'],
-            ]);
+            ScoreInterpretation::firstOrCreate(
+                ['exam_type_id' => $toefl->id, 'min_score' => $interp['min']],
+                [
+                    'max_score' => $interp['max'],
+                    'cefr_level' => $interp['cefr'],
+                    'level_label' => $interp['label'],
+                    'is_passing' => $interp['passing'],
+                    'description' => $interp['desc'],
+                ],
+            );
         }
     }
 }

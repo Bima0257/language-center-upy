@@ -8,42 +8,45 @@ import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
 const props = defineProps({
-    questionBanks: { type: Array, default: () => [] },
-    examTypes: { type: Array, default: () => [] },
+    parts: { type: Array, default: () => [] },
+    skills: { type: Array, default: () => [] },
 });
 
 const confirm = useConfirm();
 
 const form = useForm({
-    exam_type_id: '',
+    skill_id: '',
     name: '',
-    description: '',
+    order: 1,
+    directions: '',
     is_active: true,
 });
 
 const editForm = useForm({
-    exam_type_id: '',
+    skill_id: '',
     name: '',
-    description: '',
+    order: 1,
+    directions: '',
     is_active: true,
 });
 
 const showModal = ref(false);
 const creating = ref(false);
-const editingBank = ref(null);
+const editingPart = ref(null);
 
 const modalForm = computed(() => creating.value ? form : editForm);
 
-function stripHtml(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html || '';
-    return div.textContent || '';
-}
+const skillFilter = ref('');
+
+const filteredParts = computed(() => {
+    if (!skillFilter.value) return props.parts;
+    return props.parts.filter(p => String(p.skill_id) === String(skillFilter.value));
+});
 
 const columns = [
     { key: 'name', label: 'Nama', sortable: true, className: 'font-medium text-primary' },
-    { key: 'exam_type', label: 'Kategori', render: (val) => val?.name || '-' },
-    { key: 'description', label: 'Deskripsi', render: (val) => { const text = stripHtml(val); return text ? (text.length > 60 ? text.substring(0, 60) + '…' : text) : '-'; } },
+    { key: 'skill', label: 'Skill', render: (val) => val?.name || '-' },
+    { key: 'order', label: 'Urutan', sortable: true, render: (val) => val ?? 1 },
     { key: 'questions_count', label: 'Soal', render: (val) => val ?? 0 },
     { key: 'is_active', label: 'Status', badge: true, render: (val) => val ? 'Aktif' : 'Nonaktif' },
     { key: 'id', label: 'Aksi', slot: 'actions' },
@@ -51,17 +54,18 @@ const columns = [
 
 function openCreate() {
     creating.value = true;
-    editingBank.value = null;
+    editingPart.value = null;
     form.clearErrors();
     form.reset();
-    if (props.examTypes.length === 1) {
-        form.exam_type_id = String(props.examTypes[0].id);
+    form.skill_id = skillFilter.value || '';
+    if (props.skills.length === 1) {
+        form.skill_id = String(props.skills[0].id);
     }
     showModal.value = true;
 }
 
 function submit() {
-    form.post(route('content-library.question-banks.store'), {
+    form.post(route('admin.master-data.parts.store'), {
         preserveScroll: true,
         onSuccess: () => {
             closeModal();
@@ -70,20 +74,21 @@ function submit() {
     });
 }
 
-function startEdit(bank) {
+function startEdit(part) {
     creating.value = false;
-    editingBank.value = bank;
+    editingPart.value = part;
     editForm.clearErrors();
     editForm.reset();
-    editForm.exam_type_id = String(bank.exam_type_id);
-    editForm.name = bank.name;
-    editForm.description = bank.description || '';
-    editForm.is_active = !!bank.is_active;
+    editForm.skill_id = String(part.skill_id);
+    editForm.name = part.name;
+    editForm.order = part.order ?? 1;
+    editForm.directions = part.directions || '';
+    editForm.is_active = !!part.is_active;
     showModal.value = true;
 }
 
 function saveEdit() {
-    editForm.put(route('content-library.question-banks.update', editingBank.value.id), {
+    editForm.put(route('admin.master-data.parts.update', editingPart.value.id), {
         preserveScroll: true,
         onSuccess: closeModal,
     });
@@ -91,28 +96,44 @@ function saveEdit() {
 
 function closeModal() {
     showModal.value = false;
-    editingBank.value = null;
+    editingPart.value = null;
     creating.value = false;
     editForm.reset();
 }
 
-async function destroy(bank) {
-    if (!await confirm.confirm(`Hapus bank soal "${bank.name}"? Semua soal di dalamnya akan terhapus.`)) return;
-    router.delete(route('content-library.question-banks.destroy', bank.id), { preserveScroll: true });
+async function destroy(part) {
+    if (!await confirm.confirm(`Hapus part "${part.name}"?`)) return;
+    router.delete(route('admin.master-data.parts.destroy', part.id), { preserveScroll: true });
+}
+
+function skillName(id) {
+    return props.skills.find(s => String(s.id) === String(id))?.name || '';
+}
+
+function skillCategoryName(id) {
+    const s = props.skills.find(s => String(s.id) === String(id));
+    return s?.exam_type?.name || '';
 }
 </script>
 
 <template>
-    <Head title="Kelola Bank Soal" />
-    <DashboardLayout title="Kelola Bank Soal">
-        <div class="flex justify-end mb-6">
+    <Head title="Master Data - Part Soal" />
+    <DashboardLayout title="Master Data Part Soal">
+        <div class="flex items-center justify-between mb-6">
+            <div class="w-72">
+                <select v-model="skillFilter"
+                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
+                    <option value="">Semua Skill</option>
+                    <option v-for="s in skills" :key="s.id" :value="String(s.id)">{{ s.name }} ({{ s.exam_type?.name || '-' }})</option>
+                </select>
+            </div>
             <button @click="openCreate"
                     class="flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
-                <IconPlus :size="18" /> Tambah Bank Soal Baru
+                <IconPlus :size="18" /> Tambah Part
             </button>
         </div>
 
-        <DataTable :data="questionBanks" :columns="columns">
+        <DataTable :data="filteredParts" :columns="columns">
             <template #actions="{ row }">
                 <div class="flex items-center gap-2">
                     <button @click="startEdit(row)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit"><IconEdit :size="18" /></button>
@@ -125,31 +146,39 @@ async function destroy(bank) {
         <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div class="bg-white rounded-3xl p-8 shadow-soft w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-headline-md font-bold text-primary">{{ creating ? 'Tambah Bank Soal' : 'Edit Bank Soal' }}</h2>
+                    <h2 class="text-headline-md font-bold text-primary">{{ creating ? 'Tambah Part' : 'Edit Part' }}</h2>
                     <button @click="closeModal" class="p-2 text-text-muted hover:text-primary transition-colors">
                         <IconX :size="20" />
                     </button>
                 </div>
                 <form @submit.prevent="creating ? submit() : saveEdit()" class="space-y-5">
-                    <div>
-                        <label class="text-label-md font-medium text-primary block mb-1.5">Kategori Tes *</label>
-                        <select v-model="modalForm.exam_type_id" required
-                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
-                            <option value="" disabled>Pilih kategori tes</option>
-                            <option v-for="t in examTypes" :key="t.id" :value="String(t.id)">{{ t.name }}</option>
-                        </select>
-                        <p v-if="modalForm.errors.exam_type_id" class="text-error-red text-xs mt-1">{{ modalForm.errors.exam_type_id }}</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-label-md font-medium text-primary block mb-1.5">Skill *</label>
+                            <select v-model="modalForm.skill_id" required
+                                    class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
+                                <option value="" disabled>Pilih skill</option>
+                                <option v-for="s in skills" :key="s.id" :value="String(s.id)">{{ s.name }} ({{ s.exam_type?.name || '-' }})</option>
+                            </select>
+                            <p v-if="modalForm.errors.skill_id" class="text-error-red text-xs mt-1">{{ modalForm.errors.skill_id }}</p>
+                        </div>
+                        <div>
+                            <label class="text-label-md font-medium text-primary block mb-1.5">Urutan *</label>
+                            <input type="number" v-model="modalForm.order" required min="1"
+                                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                            <p v-if="modalForm.errors.order" class="text-error-red text-xs mt-1">{{ modalForm.errors.order }}</p>
+                        </div>
                     </div>
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-1.5">Nama Bank Soal *</label>
-                        <input type="text" v-model="modalForm.name" required placeholder="Bank Soal 2024"
+                        <label class="text-label-md font-medium text-primary block mb-1.5">Nama Part *</label>
+                        <input type="text" v-model="modalForm.name" required placeholder="Part 1"
                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
                         <p v-if="modalForm.errors.name" class="text-error-red text-xs mt-1">{{ modalForm.errors.name }}</p>
                     </div>
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-1.5">Deskripsi</label>
-                        <RichTextEditor v-model="modalForm.description" placeholder="Jelaskan bank soal ini..." :min-height="'120px'" />
-                        <p v-if="modalForm.errors.description" class="text-error-red text-xs mt-1">{{ modalForm.errors.description }}</p>
+                        <label class="text-label-md font-medium text-primary block mb-1.5">Directions</label>
+                        <RichTextEditor v-model="modalForm.directions" placeholder="Teks arahan untuk part ini..." :min-height="'120px'" />
+                        <p v-if="modalForm.errors.directions" class="text-error-red text-xs mt-1">{{ modalForm.errors.directions }}</p>
                     </div>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" v-model="modalForm.is_active" class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
@@ -159,7 +188,7 @@ async function destroy(bank) {
                     <div class="flex gap-4">
                         <button type="submit" :disabled="modalForm.processing"
                                 class="flex-1 bg-primary-container text-white py-3.5 rounded-full text-title-lg font-semibold hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
-                            {{ modalForm.processing ? 'Menyimpan...' : (creating ? 'Simpan Bank Soal' : 'Simpan Perubahan') }}
+                            {{ modalForm.processing ? 'Menyimpan...' : (creating ? 'Simpan Part' : 'Simpan Perubahan') }}
                         </button>
                         <button type="button" @click="closeModal"
                                 class="px-8 py-3.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">

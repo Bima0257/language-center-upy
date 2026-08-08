@@ -9,6 +9,7 @@ class UpdateExamRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'exam_type_id' => ['required', 'exists:exam_types,id'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'mode' => ['required', 'in:tryout,official'],

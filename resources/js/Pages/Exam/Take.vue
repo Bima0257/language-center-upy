@@ -193,7 +193,7 @@ onUnmounted(() => {
             <div v-else-if="currentSection?.skill?.code === 'listening'" class="flex-1 p-6 overflow-y-auto">
                 <div class="mb-6">
                     <p class="text-label-md text-text-muted mb-2">Putar audio sebelum menjawab soal</p>
-                    <AudioPlayer v-if="currentQuestion?.passage?.audio_url" :src="currentQuestion.passage.audio_url" />
+                    <AudioPlayer v-if="currentQuestion?.passage?.audio_url" :src="'/storage/' + currentQuestion.passage.audio_url" />
                     <div class="bg-pastel-blue/20 rounded-2xl p-6 text-center border border-dashed border-outline-variant">
                         <p class="text-text-muted text-body-md">Audio akan tersedia di sini</p>
                     </div>

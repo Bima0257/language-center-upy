@@ -3,12 +3,13 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
-import { IconPlus, IconTrash, IconFileDescription, IconUpload, IconInfoCircle } from '@tabler/icons-vue';
+import { IconPlus, IconTrash, IconFileDescription, IconUpload, IconInfoCircle, IconHeadphones } from '@tabler/icons-vue';
 import { computed, nextTick, ref, watch } from 'vue';
 
 const props = defineProps({
     questionBanks: { type: Array, default: () => [] },
     skills: { type: Array, default: () => [] },
+    parts: { type: Array, default: () => [] },
 });
 
 const optionKeys = ['A', 'B', 'C', 'D'];
@@ -16,8 +17,11 @@ const optionKeys = ['A', 'B', 'C', 'D'];
 const passageMode = ref('none');
 const passageType = ref('text');
 const questionRefs = ref([]);
+const questionAudioNames = ref({});
+const questionImageNames = ref({});
 
 const globalSkillId = ref('');
+const globalPartId = ref('');
 const perQuestionSkill = ref(false);
 
 if (props.skills.length === 1) {
@@ -27,19 +31,90 @@ if (props.skills.length === 1) {
 function newQuestion() {
     return {
         skill_id: globalSkillId.value,
+        skill_part_id: globalPartId.value,
         question_text: '',
         option_a: '',
         option_b: '',
         option_c: '',
         option_d: '',
         correct_answer: '',
+        audio_file: null,
+        image_file: null,
     };
+}
+
+const form = useForm({
+    question_bank_id: '',
+    new_passage_title: '',
+    new_passage_type: 'text',
+    new_passage_content_text: '',
+    new_passage_audio_file: null,
+    new_passage_image_file: null,
+    questions: [newQuestion()],
+});
+
+const selectedBank = computed(() =>
+    props.questionBanks.find(b => String(b.id) === String(form.question_bank_id)) || null,
+);
+
+const availableSkills = computed(() => {
+    if (!selectedBank.value) return props.skills;
+    return props.skills.filter(s => String(s.exam_type_id) === String(selectedBank.value.exam_type_id));
+});
+
+const globalSkill = computed(() =>
+    props.skills.find(s => String(s.id) === String(globalSkillId.value)) || null,
+);
+
+const globalListening = computed(() => globalSkill.value?.code === 'listening');
+
+function skillName(id) {
+    return props.skills.find(s => String(s.id) === String(id))?.name || '';
+}
+
+function isListeningSkill(id) {
+    const s = props.skills.find(s => String(s.id) === String(id));
+    return s?.code === 'listening';
+}
+
+function partsForSkill(skillId) {
+    return props.parts.filter(p => String(p.skill_id) === String(skillId));
+}
+
+function globalParts() {
+    return partsForSkill(globalSkillId.value);
 }
 
 watch(globalSkillId, (value) => {
     if (perQuestionSkill.value) return;
+    globalPartId.value = '';
     for (const q of form.questions) {
         q.skill_id = value;
+        q.skill_part_id = '';
+        q.audio_file = null;
+        q.image_file = null;
+    }
+});
+
+watch(globalPartId, (value) => {
+    if (perQuestionSkill.value) return;
+    for (const q of form.questions) {
+        q.skill_part_id = value;
+    }
+});
+
+watch(selectedBank, (bank) => {
+    if (!bank) return;
+    if (!availableSkills.value.some(s => String(s.id) === String(globalSkillId.value))) {
+        globalSkillId.value = '';
+    }
+    if (perQuestionSkill.value) {
+        for (const q of form.questions) {
+            if (!props.skills.some(s => String(s.id) === String(q.skill_id) && String(s.exam_type_id) === String(bank.exam_type_id))) {
+                q.skill_id = '';
+                q.skill_part_id = '';
+            }
+        }
     }
 });
 
@@ -52,18 +127,41 @@ function setGlobalMode() {
     if (globalSkillId.value) {
         for (const q of form.questions) {
             q.skill_id = globalSkillId.value;
+            q.skill_part_id = globalPartId.value;
         }
     }
 }
 
-const form = useForm({
-    question_bank_id: '',
-    new_passage_title: '',
-    new_passage_type: 'text',
-    new_passage_content_text: '',
-    new_passage_audio_file: null,
-    new_passage_image_file: null,
-    questions: [newQuestion()],
+function onQuestionSkillChange(q) {
+    q.skill_part_id = '';
+    q.audio_file = null;
+    q.image_file = null;
+}
+
+function onQuestionAudioSelect(e, qi) {
+    form.questions[qi].audio_file = e.target.files[0] || null;
+    questionAudioNames.value[qi] = form.questions[qi].audio_file?.name || null;
+    e.target.value = '';
+}
+
+function onQuestionImageSelect(e, qi) {
+    form.questions[qi].image_file = e.target.files[0] || null;
+    questionImageNames.value[qi] = form.questions[qi].image_file?.name || null;
+    e.target.value = '';
+}
+
+watch(globalListening, (listening) => {
+    if (listening && passageMode.value === 'new') {
+        passageType.value = 'audio';
+        form.new_passage_type = 'audio';
+    }
+});
+
+watch(passageMode, (mode) => {
+    if (mode === 'new' && globalListening.value) {
+        passageType.value = 'audio';
+        form.new_passage_type = 'audio';
+    }
 });
 
 async function addQuestion() {
@@ -102,18 +200,18 @@ const canSubmit = computed(() => {
     if (form.questions.length === 0) return false;
     if (passageMode.value === 'new' && !form.new_passage_title.trim()) return false;
     if (!perQuestionSkill.value && !globalSkillId.value) return false;
-    return form.questions.every(q =>
-        q.skill_id &&
-        q.question_text.trim() &&
-        q.option_a.trim() && q.option_b.trim() &&
-        q.option_c.trim() && q.option_d.trim() &&
-        q.correct_answer
-    );
+    if (!perQuestionSkill.value && !globalPartId.value) return false;
+    if (passageMode.value === 'new' && globalListening.value && !form.new_passage_audio_file) return false;
+    return form.questions.every(q => {
+        if (!q.skill_id || !q.skill_part_id || !q.correct_answer) return false;
+        if (isListeningSkill(q.skill_id)) {
+            return !!(q.audio_file || (passageMode.value === 'new' && form.new_passage_audio_file && form.new_passage_type === 'audio'));
+        }
+        return q.question_text.trim() &&
+            q.option_a.trim() && q.option_b.trim() &&
+            q.option_c.trim() && q.option_d.trim();
+    });
 });
-
-function skillName(id) {
-    return props.skills.find(s => String(s.id) === String(id))?.name || '';
-}
 
 function submit() {
     form.post(route('content-library.store'));
@@ -134,7 +232,7 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                 <form @submit.prevent="submit" class="space-y-6">
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="text-label-md font-medium text-primary block mb-1.5">Bank Soal <span class="text-error-red">*</span></label>
-                            <select v-model="form.question_bank_id" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="" disabled>Pilih Bank Soal</option><option v-for="b in questionBanks" :key="b.id" :value="b.id">{{ b.name }}</option></select>
+                            <select v-model="form.question_bank_id" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="" disabled>Pilih Bank Soal</option><option v-for="b in questionBanks" :key="b.id" :value="b.id">{{ b.name }} <template v-if="b.exam_type">({{ b.exam_type.name }})</template></option></select>
                             <p v-if="form.errors.question_bank_id" class="text-error-red text-xs mt-1">{{ form.errors.question_bank_id }}</p></div>
                     </div>
                     <p class="flex items-center gap-1.5 text-label-md text-text-muted">
@@ -172,39 +270,65 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                                 <input type="text" v-model="form.new_passage_title" required placeholder="Judul bacaan"
                                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                                 <p v-if="form.errors.new_passage_title" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_title }}</p></div>
-                            <div><label class="text-label-md font-medium text-primary block mb-1.5">Tipe Materi Soal <span class="text-error-red">*</span></label>
+                            <div v-if="!globalListening"><label class="text-label-md font-medium text-primary block mb-1.5">Tipe Materi Soal <span class="text-error-red">*</span></label>
                                 <select v-model="passageType" @change="form.new_passage_type = passageType" class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                                     <option value="text">Teks</option>
                                     <option value="audio">Audio</option>
                                     <option value="image">Gambar</option>
                                     <option value="prompt">Prompt</option>
                                 </select></div>
+                            <div v-else class="flex items-center gap-2 px-4 py-3 bg-pastel-purple/20 border border-pastel-purple/40 rounded-2xl text-label-md font-semibold text-primary">
+                                <IconHeadphones :size="18" /> Tipe Audio (Listening)
+                            </div>
                         </div>
 
-                        <div v-if="passageType === 'text' || passageType === 'prompt'">
-                            <label class="text-label-md font-medium text-primary block mb-1.5">Konten Teks</label>
-                            <RichTextEditor v-model="form.new_passage_content_text" placeholder="Tulis isi teks bacaan di sini..." />
-                        </div>
+                        <template v-if="globalListening">
+                            <div>
+                                <label class="text-label-md font-medium text-primary block mb-1.5">File Audio <span class="text-error-red">*</span> <span class="text-text-muted">(mp3/wav/m4a, max 50MB)</span></label>
+                                <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-5 py-4 cursor-pointer hover:border-secondary transition-colors">
+                                    <IconUpload :size="20" class="text-text-muted" />
+                                    <span class="text-label-md text-text-body">{{ selectedAudioFile ? selectedAudioFile.name : 'Klik untuk upload audio' }}</span>
+                                    <input type="file" accept=".mp3,.wav,.ogg,.m4a" class="hidden" @change="onAudioSelect" />
+                                </label>
+                                <p v-if="form.errors.new_passage_audio_file" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_audio_file }}</p>
+                            </div>
+                            <div>
+                                <label class="text-label-md font-medium text-primary block mb-1.5">Gambar Pendukung <span class="text-text-muted">(opsional)</span></label>
+                                <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-5 py-4 cursor-pointer hover:border-secondary transition-colors">
+                                    <IconUpload :size="20" class="text-text-muted" />
+                                    <span class="text-label-md text-text-body">{{ selectedImageFile ? selectedImageFile.name : 'Klik untuk upload gambar' }}</span>
+                                    <input type="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" @change="onImageSelect" />
+                                </label>
+                                <p v-if="form.errors.new_passage_image_file" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_image_file }}</p>
+                            </div>
+                        </template>
 
-                        <div v-else-if="passageType === 'audio'">
-                            <label class="text-label-md font-medium text-primary block mb-1.5">File Audio <span class="text-text-muted">(mp3/wav/m4a, max 50MB)</span></label>
-                            <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-5 py-4 cursor-pointer hover:border-secondary transition-colors">
-                                <IconUpload :size="20" class="text-text-muted" />
-                                <span class="text-label-md text-text-body">{{ selectedAudioFile ? selectedAudioFile.name : 'Klik untuk upload audio' }}</span>
-                                <input type="file" accept=".mp3,.wav,.ogg,.m4a" class="hidden" @change="onAudioSelect" />
-                            </label>
-                            <p v-if="form.errors.new_passage_audio_file" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_audio_file }}</p>
-                        </div>
+                        <template v-else>
+                            <div v-if="passageType === 'text' || passageType === 'prompt'">
+                                <label class="text-label-md font-medium text-primary block mb-1.5">Konten Teks</label>
+                                <RichTextEditor v-model="form.new_passage_content_text" placeholder="Tulis isi teks bacaan di sini..." />
+                            </div>
 
-                        <div v-else-if="passageType === 'image'">
-                            <label class="text-label-md font-medium text-primary block mb-1.5">File Gambar <span class="text-text-muted">(jpg/png/webp, max 20MB, otomatis dikompres)</span></label>
-                            <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-5 py-4 cursor-pointer hover:border-secondary transition-colors">
-                                <IconUpload :size="20" class="text-text-muted" />
-                                <span class="text-label-md text-text-body">{{ selectedImageFile ? selectedImageFile.name : 'Klik untuk upload gambar' }}</span>
-                                <input type="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" @change="onImageSelect" />
-                            </label>
-                            <p v-if="form.errors.new_passage_image_file" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_image_file }}</p>
-                        </div>
+                            <div v-else-if="passageType === 'audio'">
+                                <label class="text-label-md font-medium text-primary block mb-1.5">File Audio <span class="text-text-muted">(mp3/wav/m4a, max 50MB)</span></label>
+                                <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-5 py-4 cursor-pointer hover:border-secondary transition-colors">
+                                    <IconUpload :size="20" class="text-text-muted" />
+                                    <span class="text-label-md text-text-body">{{ selectedAudioFile ? selectedAudioFile.name : 'Klik untuk upload audio' }}</span>
+                                    <input type="file" accept=".mp3,.wav,.ogg,.m4a" class="hidden" @change="onAudioSelect" />
+                                </label>
+                                <p v-if="form.errors.new_passage_audio_file" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_audio_file }}</p>
+                            </div>
+
+                            <div v-else-if="passageType === 'image'">
+                                <label class="text-label-md font-medium text-primary block mb-1.5">File Gambar <span class="text-text-muted">(jpg/png/webp, max 20MB, otomatis dikompres)</span></label>
+                                <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-5 py-4 cursor-pointer hover:border-secondary transition-colors">
+                                    <IconUpload :size="20" class="text-text-muted" />
+                                    <span class="text-label-md text-text-body">{{ selectedImageFile ? selectedImageFile.name : 'Klik untuk upload gambar' }}</span>
+                                    <input type="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" @change="onImageSelect" />
+                                </label>
+                                <p v-if="form.errors.new_passage_image_file" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_image_file }}</p>
+                            </div>
+                        </template>
                     </div>
 
                     <hr class="border-outline-variant/50" />
@@ -218,20 +342,29 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                         </button>
                     </div>
 
-                    <!-- PENGATURAN SKILL BATCH -->
+                    <!-- PENGATURAN SKILL & PART BATCH -->
                     <div v-if="!perQuestionSkill" class="bg-pastel-blue/10 border border-pastel-blue/40 rounded-2xl p-5 space-y-3">
                         <div class="flex items-start justify-between gap-4">
-                            <div class="flex-1">
-                                <label class="text-label-md font-medium text-primary block mb-1.5">Skill untuk semua soal <span class="text-error-red">*</span></label>
-                                <select v-model="globalSkillId" class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                                    <option value="" disabled>Pilih skill</option>
-                                    <option v-for="s in skills" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
-                                </select>
+                            <div class="grid grid-cols-2 gap-4 flex-1">
+                                <div>
+                                    <label class="text-label-md font-medium text-primary block mb-1.5">Skill untuk semua soal <span class="text-error-red">*</span></label>
+                                    <select v-model="globalSkillId" class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
+                                        <option value="" disabled>Pilih skill</option>
+                                        <option v-for="s in availableSkills" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-label-md font-medium text-primary block mb-1.5">Part <span class="text-error-red">*</span></label>
+                                    <select v-model="globalPartId" :disabled="!globalSkillId" class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary disabled:opacity-50">
+                                        <option value="" disabled>Pilih part</option>
+                                        <option v-for="p in globalParts()" :key="p.id" :value="String(p.id)">{{ p.name }}</option>
+                                    </select>
+                                </div>
                             </div>
                             <button type="button" @click="setPerQuestionMode"
                                     class="shrink-0 text-secondary text-label-md font-medium hover:underline">Atur skill per soal</button>
                         </div>
-                        <p class="text-label-md text-text-muted">Skill ini otomatis diterapkan ke semua soal di bawah.</p>
+                        <p class="text-label-md text-text-muted">Skill dan part ini otomatis diterapkan ke semua soal di bawah.</p>
                     </div>
                     <div v-else class="flex justify-end">
                         <button type="button" @click="setGlobalMode"
@@ -242,7 +375,12 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                          :ref="el => questionRefs[qi] = el"
                          class="border border-outline-variant/50 rounded-2xl p-5 space-y-4 relative">
                         <div class="flex items-center justify-between">
-                            <p class="text-label-md font-semibold text-primary">Soal {{ qi + 1 }}</p>
+                            <div class="flex items-center gap-2">
+                                <p class="text-label-md font-semibold text-primary">Soal {{ qi + 1 }}</p>
+                                <span v-if="isListeningSkill(q.skill_id)" class="inline-flex items-center gap-1 bg-pastel-purple/30 text-primary px-2.5 py-0.5 rounded-full text-label-md font-medium">
+                                    <IconHeadphones :size="14" /> Listening
+                                </span>
+                            </div>
                             <button v-if="form.questions.length > 1" type="button" @click="removeQuestion(qi)"
                                     class="p-1.5 text-text-muted hover:text-error-red transition-colors" title="Hapus soal">
                                 <IconTrash :size="16" />
@@ -252,13 +390,24 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="text-label-md font-medium text-primary block mb-1.5">Skill <span v-if="perQuestionSkill" class="text-error-red">*</span></label>
-                                <select v-if="perQuestionSkill" v-model="q.skill_id" required class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
+                                <select v-if="perQuestionSkill" v-model="q.skill_id" @change="onQuestionSkillChange(q)" required class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                                     <option value="" disabled>Pilih Skill</option>
-                                    <option v-for="s in skills" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
+                                    <option v-for="s in availableSkills" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
                                 </select>
                                 <span v-else :class="q.skill_id ? 'bg-pastel-blue/50 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'"
                                       class="inline-block px-3 py-1.5 rounded-full text-label-md font-medium">
                                     {{ skillName(q.skill_id) || 'Skill belum dipilih' }}
+                                </span>
+                            </div>
+                            <div>
+                                <label class="text-label-md font-medium text-primary block mb-1.5">Part <span class="text-error-red">*</span></label>
+                                <select v-if="perQuestionSkill" v-model="q.skill_part_id" required :disabled="!q.skill_id" class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary disabled:opacity-50">
+                                    <option value="" disabled>Pilih part</option>
+                                    <option v-for="p in partsForSkill(q.skill_id)" :key="p.id" :value="String(p.id)">{{ p.name }}</option>
+                                </select>
+                                <span v-else :class="q.skill_part_id ? 'bg-pastel-peach/50 text-amber-800 dark:text-amber-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'"
+                                      class="inline-block px-3 py-1.5 rounded-full text-label-md font-medium">
+                                    {{ props.parts.find(p => String(p.id) === String(q.skill_part_id))?.name || 'Part belum dipilih' }}
                                 </span>
                             </div>
                             <div><label class="text-label-md font-medium text-primary block mb-1.5">Kunci Jawaban <span class="text-error-red">*</span></label>
@@ -268,19 +417,65 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                                 </select></div>
                         </div>
 
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Teks Soal <span class="text-error-red">*</span></label>
-                            <textarea v-model="q.question_text" rows="2" required class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea></div>
-
-                        <div>
-                            <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban <span class="text-error-red">*</span></p>
-                            <div class="space-y-2">
-                                <div v-for="key in optionKeys" :key="key" class="flex items-center gap-3">
-                                    <span class="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-surface-container-low border border-outline-variant font-semibold text-primary">{{ key }}</span>
-                                    <input type="text" v-model="q['option_' + key.toLowerCase()]" required :placeholder="'Teks pilihan ' + key"
-                                           class="flex-1 px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                        <!-- MODE LISTENING: audio + gambar, tanpa teks soal/opsi -->
+                        <template v-if="isListeningSkill(q.skill_id)">
+                            <div class="bg-pastel-purple/10 border border-pastel-purple/40 rounded-2xl p-4 space-y-4">
+                                <p class="flex items-center gap-1.5 text-label-md text-text-muted">
+                                    <IconInfoCircle :size="16" class="text-secondary shrink-0" />
+                                    Soal, materi, dan pilihan jawaban berada di audio. Peserta hanya memilih A/B/C/D.
+                                </p>
+                                <div v-if="!passageMode || passageMode === 'none'" class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-label-md font-medium text-primary block mb-1.5">File Audio <span class="text-error-red">*</span> <span class="text-text-muted">(max 50MB)</span></label>
+                                        <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-4 py-3 cursor-pointer hover:border-secondary transition-colors">
+                                            <IconUpload :size="18" class="text-text-muted" />
+                                            <span class="text-label-md text-text-body">{{ questionAudioNames[qi] || 'Klik untuk upload audio' }}</span>
+                                            <input type="file" accept=".mp3,.wav,.ogg,.m4a" class="hidden" @change="e => onQuestionAudioSelect(e, qi)" />
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="text-label-md font-medium text-primary block mb-1.5">Gambar <span class="text-text-muted">(opsional)</span></label>
+                                        <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-4 py-3 cursor-pointer hover:border-secondary transition-colors">
+                                            <IconUpload :size="18" class="text-text-muted" />
+                                            <span class="text-label-md text-text-body">{{ questionImageNames[qi] || 'Klik untuk upload gambar' }}</span>
+                                            <input type="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" @change="e => onQuestionImageSelect(e, qi)" />
+                                        </label>
+                                    </div>
+                                </div>
+                                <div v-else class="flex items-center gap-2 text-label-md text-text-muted">
+                                    <IconHeadphones :size="16" class="text-secondary shrink-0" />
+                                    Audio diambil dari passage di atas — sub-soal tidak perlu upload audio sendiri.
+                                </div>
+                                <div>
+                                    <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban</p>
+                                    <div class="flex flex-wrap gap-3">
+                                        <span v-for="key in optionKeys" :key="key"
+                                              class="flex items-center gap-2 px-4 py-2 rounded-xl border border-outline-variant bg-surface-container-lowest">
+                                            <input type="checkbox" :checked="q.correct_answer === key" @change="q.correct_answer = key"
+                                                   class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
+                                            <span class="font-semibold text-primary">{{ key }}</span>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </template>
+
+                        <!-- MODE READING: teks soal + opsi -->
+                        <template v-else>
+                            <div><label class="text-label-md font-medium text-primary block mb-1.5">Teks Soal <span class="text-error-red">*</span></label>
+                                <textarea v-model="q.question_text" rows="2" required class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea></div>
+
+                            <div>
+                                <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban <span class="text-error-red">*</span></p>
+                                <div class="space-y-2">
+                                    <div v-for="key in optionKeys" :key="key" class="flex items-center gap-3">
+                                        <span class="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-surface-container-low border border-outline-variant font-semibold text-primary">{{ key }}</span>
+                                        <input type="text" v-model="q['option_' + key.toLowerCase()]" required :placeholder="'Teks pilihan ' + key"
+                                               class="flex-1 px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
                     </div>
 
                     <hr class="border-outline-variant/50" />

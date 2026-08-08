@@ -15,6 +15,8 @@ import {
     IconDatabase,
     IconCertificate,
     IconFolders,
+    IconCategory,
+    IconListDetails,
     IconChevronDown,
 } from "@tabler/icons-vue";
 
@@ -86,6 +88,8 @@ if (isAdmin) {
                 { label: "Bank Soal Manager", icon: IconFolders, route: "content-library.question-banks.index" },
                 { label: "Materi Soal", icon: IconFileDescription, route: "content-library.passages.index" },
                 { label: "Master Skill", icon: IconDatabase, route: "admin.master-data.skills.index" },
+                { label: "Jenis Tes", icon: IconCategory, route: "admin.master-data.exam-types.index" },
+                { label: "Part Soal", icon: IconListDetails, route: "admin.master-data.parts.index" },
             ],
         },
         {

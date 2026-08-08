@@ -9,10 +9,12 @@ use App\Models\Passage;
 use App\Models\Question;
 use App\Models\QuestionBank;
 use App\Models\Skill;
+use App\Models\SkillPart;
 use App\Services\AudioCompressionService;
 use App\Services\ImageCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Mews\Purifier\Facades\Purifier;
@@ -30,16 +32,18 @@ class ContentLibraryController extends Controller
     {
         return Inertia::render('Instructor/CreateQuestion', [
             'questionBanks' => QuestionBank::where('is_active', true)->orderBy('name')->get(),
-            'skills' => Skill::where('is_active', true)->orderBy('name')->get(),
+            'skills' => Skill::with('examType')->where('is_active', true)->orderBy('name')->get(),
+            'parts' => SkillPart::where('is_active', true)->orderBy('skill_id')->orderBy('order')->get(),
         ]);
     }
 
     public function edit(Question $question): Response
     {
         return Inertia::render('Instructor/EditQuestion', [
-            'question' => $question->load(['passage', 'questionBank', 'skill', 'creator', 'updater', 'reviewer']),
+            'question' => $question->load(['passage', 'questionBank', 'skill', 'skillPart', 'creator', 'updater', 'reviewer']),
             'questionBanks' => QuestionBank::where('is_active', true)->orderBy('name')->get(),
-            'skills' => Skill::where('is_active', true)->orderBy('name')->get(),
+            'skills' => Skill::with('examType')->where('is_active', true)->orderBy('name')->get(),
+            'parts' => SkillPart::where('is_active', true)->orderBy('skill_id')->orderBy('order')->get(),
             'passages' => Passage::orderBy('title')->get(),
         ]);
     }
@@ -51,12 +55,14 @@ class ContentLibraryController extends Controller
         $status = $request->input('status');
         $search = $request->input('search');
         $passageId = $request->input('passage_id');
+        $partId = $request->input('part_id');
 
-        $questions = Question::with(['passage', 'questionBank', 'skill', 'creator', 'reviewer'])
+        $questions = Question::with(['passage', 'questionBank', 'skill', 'skillPart', 'creator', 'reviewer'])
             ->when($skillId, fn ($q) => $q->where('skill_id', $skillId))
             ->when($questionBankId, fn ($q) => $q->where('question_bank_id', $questionBankId))
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($passageId, fn ($q) => $q->where('passage_id', $passageId))
+            ->when($partId, fn ($q) => $q->where('skill_part_id', $partId))
             ->when($search, fn ($q) => $q->where('question_text', 'like', "%{$search}%"))
             ->orderBy('created_at', 'desc')
             ->paginate(20)
@@ -69,8 +75,9 @@ class ContentLibraryController extends Controller
 
         return Inertia::render('Instructor/ContentLibrary', [
             'questions' => $questions,
-            'questionBanks' => QuestionBank::where('is_active', true)->orderBy('name')->get(),
-            'skills' => Skill::where('is_active', true)->orderBy('name')->get(),
+            'questionBanks' => QuestionBank::with('examType')->where('is_active', true)->orderBy('name')->get(),
+            'skills' => Skill::with('examType')->where('is_active', true)->orderBy('name')->get(),
+            'parts' => SkillPart::with('skill')->where('is_active', true)->orderBy('skill_id')->orderBy('order')->get(),
             'passages' => Passage::orderBy('title')->get(),
             'statuses' => self::STATUSES,
             'selectedPassage' => $selectedPassage,
@@ -79,6 +86,7 @@ class ContentLibraryController extends Controller
                 'question_bank_id' => $questionBankId,
                 'status' => $status,
                 'passage_id' => $passageId,
+                'part_id' => $partId,
                 'search' => $search,
             ],
         ]);
@@ -117,6 +125,9 @@ class ContentLibraryController extends Controller
             $passageId = $passage->id;
         }
 
+        $passage = $passageId ? Passage::find($passageId) : null;
+        $bank = QuestionBank::with('examType')->findOrFail($request->question_bank_id);
+
         // Order starts at max(order) + 1 when attaching to an existing passage
         $order = 1;
         if ($passageId) {
@@ -124,17 +135,66 @@ class ContentLibraryController extends Controller
         }
 
         foreach ($request->input('questions', []) as $q) {
+            $skill = Skill::find($q['skill_id'] ?? null);
+            if (! $skill) {
+                throw ValidationException::withMessages(['questions' => 'Skill tidak valid.']);
+            }
+
+            $part = SkillPart::find($q['skill_part_id'] ?? null);
+            if (! $part || $part->skill_id !== $skill->id) {
+                throw ValidationException::withMessages(['questions' => 'Part harus milik skill yang sama dengan soal.']);
+            }
+
+            if ($skill->exam_type_id !== $bank->exam_type_id) {
+                throw ValidationException::withMessages(['questions' => 'Skill harus se-kategori dengan bank soal yang dipilih.']);
+            }
+
+            $isListening = $skill->code === 'listening';
+
+            $audioUrl = null;
+            $imageUrl = null;
+
+            if (! empty($q['audio_file']) && $q['audio_file'] instanceof \Illuminate\Http\UploadedFile) {
+                $audioPath = $q['audio_file']->store('questions/audio', 'public');
+                $audioUrl = $this->audioCompression->compress('public', $audioPath) ?? $audioPath;
+            }
+
+            if (! empty($q['image_file']) && $q['image_file'] instanceof \Illuminate\Http\UploadedFile) {
+                $imagePath = $q['image_file']->store('questions/images', 'public');
+                $imageUrl = $this->imageCompression->compress('public', $imagePath) ?? $imagePath;
+            }
+
+            if ($isListening) {
+                if (! $audioUrl && ! ($passage && $passage->audio_url)) {
+                    throw ValidationException::withMessages(['questions' => 'Soal listening wajib memiliki audio, baik di soal maupun di passage.']);
+                }
+
+                if ($passageId && $passage && ! $passage->audio_url) {
+                    throw ValidationException::withMessages(['questions' => 'Passage untuk soal listening wajib bertipe audio.']);
+                }
+            } else {
+                $optionEmpty = collect(['option_a', 'option_b', 'option_c', 'option_d'])
+                    ->contains(fn ($field) => empty(trim($q[$field] ?? '')));
+
+                if (empty(trim($q['question_text'] ?? '')) || $optionEmpty) {
+                    throw ValidationException::withMessages(['questions' => 'Soal reading wajib memiliki teks soal dan seluruh pilihan jawaban.']);
+                }
+            }
+
             Question::create([
                 'question_bank_id' => $request->question_bank_id,
-                'skill_id' => $q['skill_id'] ?? null,
+                'skill_id' => $skill->id,
+                'skill_part_id' => $part->id,
                 'passage_id' => $passageId,
                 'type' => 'multiple_choice',
-                'question_text' => $q['question_text'],
-                'option_a' => $q['option_a'],
-                'option_b' => $q['option_b'],
-                'option_c' => $q['option_c'],
-                'option_d' => $q['option_d'],
+                'question_text' => $q['question_text'] ?? '',
+                'option_a' => $q['option_a'] ?? '',
+                'option_b' => $q['option_b'] ?? '',
+                'option_c' => $q['option_c'] ?? '',
+                'option_d' => $q['option_d'] ?? '',
                 'correct_answer' => $q['correct_answer'],
+                'audio_url' => $audioUrl,
+                'image_url' => $imageUrl,
                 'order' => $order++,
                 'status' => 'draft',
                 'created_by' => auth()->id(),
@@ -152,14 +212,57 @@ class ContentLibraryController extends Controller
         $validated = $request->validate([
             'question_bank_id' => ['required', 'exists:question_banks,id'],
             'skill_id' => ['required', 'exists:skills,id'],
+            'skill_part_id' => ['required', 'exists:skill_parts,id'],
             'passage_id' => ['nullable', 'exists:passages,id'],
-            'question_text' => ['required', 'string'],
-            'option_a' => ['required', 'string'],
-            'option_b' => ['required', 'string'],
-            'option_c' => ['required', 'string'],
-            'option_d' => ['required', 'string'],
+            'question_text' => ['nullable', 'string'],
+            'option_a' => ['nullable', 'string'],
+            'option_b' => ['nullable', 'string'],
+            'option_c' => ['nullable', 'string'],
+            'option_d' => ['nullable', 'string'],
             'correct_answer' => ['required', 'string', 'max:1', 'in:A,B,C,D'],
+            'audio_file' => ['nullable', 'file', 'mimes:mp3,wav,ogg,m4a', 'max:51200'],
+            'image_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
         ]);
+
+        $skill = Skill::find($validated['skill_id']);
+        $part = SkillPart::find($validated['skill_part_id']);
+        $bank = QuestionBank::with('examType')->findOrFail($validated['question_bank_id']);
+
+        if (! $skill || ! $part || $part->skill_id !== $skill->id) {
+            throw ValidationException::withMessages(['skill_part_id' => 'Part harus milik skill yang sama dengan soal.']);
+        }
+
+        if ($skill->exam_type_id !== $bank->exam_type_id) {
+            throw ValidationException::withMessages(['skill_id' => 'Skill harus se-kategori dengan bank soal yang dipilih.']);
+        }
+
+        $isListening = $skill->code === 'listening';
+
+        if ($request->hasFile('audio_file')) {
+            $audioPath = $request->file('audio_file')->store('questions/audio', 'public');
+            $validated['audio_url'] = $this->audioCompression->compress('public', $audioPath) ?? $audioPath;
+        }
+
+        if ($request->hasFile('image_file')) {
+            $imagePath = $request->file('image_file')->store('questions/images', 'public');
+            $validated['image_url'] = $this->imageCompression->compress('public', $imagePath) ?? $imagePath;
+        }
+
+        if ($isListening) {
+            $hasAudio = ! empty($validated['audio_url']) || $question->audio_url
+                || ($question->passage && $question->passage->audio_url);
+
+            if (! $hasAudio) {
+                throw ValidationException::withMessages(['audio_file' => 'Soal listening wajib memiliki audio, baik di soal maupun di passage.']);
+            }
+        } else {
+            $optionEmpty = collect(['option_a', 'option_b', 'option_c', 'option_d'])
+                ->contains(fn ($field) => empty(trim($validated[$field] ?? '')));
+
+            if (empty(trim($validated['question_text'] ?? '')) || $optionEmpty) {
+                throw ValidationException::withMessages(['question_text' => 'Soal reading wajib memiliki teks soal dan seluruh pilihan jawaban.']);
+            }
+        }
 
         $validated['updated_by'] = auth()->id();
         // Setiap edit oleh instructor mengembalikan soal ke draft untuk direview ulang

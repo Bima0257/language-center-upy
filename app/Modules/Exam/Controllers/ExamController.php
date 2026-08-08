@@ -4,6 +4,7 @@ namespace App\Modules\Exam\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Models\ExamType;
 use App\Models\Skill;
 use App\Modules\Exam\Services\ExamService;
 use App\Http\Requests\Exam\StoreExamRequest;
@@ -27,7 +28,9 @@ class ExamController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Admin/Exams/Create');
+        return Inertia::render('Admin/Exams/Create', [
+            'examTypes' => ExamType::where('is_active', true)->orderBy('name')->get(),
+        ]);
     }
 
     public function store(StoreExamRequest $request): RedirectResponse
@@ -42,7 +45,10 @@ class ExamController extends Controller
     {
         return Inertia::render('Admin/Exams/Show', [
             'exam' => $this->examService->findWithRelations($exam->id),
-            'skills' => Skill::where('is_active', true)->orderBy('name')->get(),
+            'skills' => Skill::where('exam_type_id', $exam->exam_type_id)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
@@ -50,6 +56,7 @@ class ExamController extends Controller
     {
         return Inertia::render('Admin/Exams/Edit', [
             'exam' => $this->examService->findWithRelations($exam->id),
+            'examTypes' => ExamType::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 

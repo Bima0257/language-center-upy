@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Passage;
 use App\Models\QuestionBank;
 use App\Models\Skill;
+use App\Models\SkillPart;
 use App\Services\AudioCompressionService;
 use App\Services\ImageCompressionService;
 use Illuminate\Http\RedirectResponse;
@@ -31,8 +32,9 @@ class PassageController extends Controller
 
         return Inertia::render('Instructor/PassageView', [
             'passages' => $passages,
-            'questionBanks' => QuestionBank::where('is_active', true)->orderBy('name')->get(),
-            'skills' => Skill::where('is_active', true)->orderBy('name')->get(),
+            'questionBanks' => QuestionBank::with('examType')->where('is_active', true)->orderBy('name')->get(),
+            'skills' => Skill::with('examType')->where('is_active', true)->orderBy('name')->get(),
+            'parts' => SkillPart::where('is_active', true)->orderBy('skill_id')->orderBy('order')->get(),
         ]);
     }
 

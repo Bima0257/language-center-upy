@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Department;
+use App\Models\ExamType;
 use App\Models\Faculty;
 use App\Models\Skill;
+use App\Models\SkillPart;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,17 +16,128 @@ use Mews\Purifier\Facades\Purifier;
 
 class MasterDataController extends Controller
 {
+    // ===== Exam Types =====
+    public function examTypesIndex(): Response
+    {
+        return Inertia::render('Admin/MasterData/ExamTypes', [
+            'examTypes' => ExamType::withCount('questionBanks', 'skills')->orderBy('name')->get(),
+        ]);
+    }
+
+    public function examTypeStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:100', 'unique:exam_types,name'],
+            'max_strikes' => ['required', 'integer', 'min:0', 'max:10'],
+            'description' => ['nullable', 'string'],
+            'is_active' => ['boolean'],
+        ]);
+
+        $validated['description'] = $validated['description'] ?? null;
+        if ($validated['description']) {
+            $validated['description'] = Purifier::clean($validated['description']);
+        }
+
+        ExamType::create($validated);
+
+        return back()->with('success', 'Jenis tes berhasil ditambahkan.');
+    }
+
+    public function examTypeUpdate(Request $request, ExamType $examType): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:100', 'unique:exam_types,name,'.$examType->id],
+            'max_strikes' => ['required', 'integer', 'min:0', 'max:10'],
+            'description' => ['nullable', 'string'],
+            'is_active' => ['boolean'],
+        ]);
+
+        $validated['description'] = $validated['description'] ?? null;
+        if ($validated['description']) {
+            $validated['description'] = Purifier::clean($validated['description']);
+        }
+
+        $examType->update($validated);
+
+        return back()->with('success', 'Jenis tes berhasil diperbarui.');
+    }
+
+    public function examTypeDestroy(ExamType $examType): RedirectResponse
+    {
+        $examType->delete();
+
+        return back()->with('success', 'Jenis tes berhasil dihapus.');
+    }
+
+    // ===== Skill Parts =====
+    public function partsIndex(): Response
+    {
+        return Inertia::render('Admin/MasterData/Parts', [
+            'parts' => SkillPart::with('skill')->withCount('questions')->orderBy('skill_id')->orderBy('order')->get(),
+            'skills' => Skill::with('examType')->where('is_active', true)->orderBy('name')->get(),
+        ]);
+    }
+
+    public function partStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'skill_id' => ['required', 'exists:skills,id'],
+            'name' => ['required', 'string', 'max:100'],
+            'order' => ['required', 'integer', 'min:1'],
+            'directions' => ['nullable', 'string'],
+            'is_active' => ['boolean'],
+        ]);
+
+        $validated['directions'] = $validated['directions'] ?? null;
+        if ($validated['directions']) {
+            $validated['directions'] = Purifier::clean($validated['directions']);
+        }
+
+        SkillPart::create($validated);
+
+        return back()->with('success', 'Part berhasil ditambahkan.');
+    }
+
+    public function partUpdate(Request $request, SkillPart $skillPart): RedirectResponse
+    {
+        $validated = $request->validate([
+            'skill_id' => ['required', 'exists:skills,id'],
+            'name' => ['required', 'string', 'max:100'],
+            'order' => ['required', 'integer', 'min:1'],
+            'directions' => ['nullable', 'string'],
+            'is_active' => ['boolean'],
+        ]);
+
+        $validated['directions'] = $validated['directions'] ?? null;
+        if ($validated['directions']) {
+            $validated['directions'] = Purifier::clean($validated['directions']);
+        }
+
+        $skillPart->update($validated);
+
+        return back()->with('success', 'Part berhasil diperbarui.');
+    }
+
+    public function partDestroy(SkillPart $skillPart): RedirectResponse
+    {
+        $skillPart->delete();
+
+        return back()->with('success', 'Part berhasil dihapus.');
+    }
+
     // ===== Skills =====
     public function skillsIndex(): Response
     {
         return Inertia::render('Admin/MasterData/Skills', [
-            'skills' => Skill::withCount('questions')->orderBy('name')->get(),
+            'skills' => Skill::with('examType')->withCount('questions')->orderBy('name')->get(),
+            'examTypes' => ExamType::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
     public function skillStore(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'exam_type_id' => ['required', 'exists:exam_types,id'],
             'name' => ['required', 'string', 'max:100'],
             'code' => ['required', 'string', 'max:50'],
             'description' => ['nullable', 'string'],
@@ -44,6 +157,7 @@ class MasterDataController extends Controller
     public function skillUpdate(Request $request, Skill $skill): RedirectResponse
     {
         $validated = $request->validate([
+            'exam_type_id' => ['required', 'exists:exam_types,id'],
             'name' => ['required', 'string', 'max:100'],
             'code' => ['required', 'string', 'max:50'],
             'description' => ['nullable', 'string'],

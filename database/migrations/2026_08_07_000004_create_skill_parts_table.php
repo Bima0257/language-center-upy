@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('skill_parts', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('skill_id')->constrained()->cascadeOnDelete();
+            $table->string('name', 100);
+            $table->integer('order')->default(1);
+            $table->text('directions')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::table('questions', function (Blueprint $table) {
+            $table->foreignId('skill_part_id')->nullable()->after('skill_id')->constrained()->nullOnDelete();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('questions', function (Blueprint $table) {
+            $table->dropConstrainedForeignId('skill_part_id');
+        });
+
+        Schema::dropIfExists('skill_parts');
+    }
+};

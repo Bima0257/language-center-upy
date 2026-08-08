@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'question_bank_id', 'passage_id', 'type', 'skill_id',
+    'question_bank_id', 'passage_id', 'type', 'skill_id', 'skill_part_id',
     'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
-    'correct_answer', 'order', 'status',
+    'correct_answer', 'audio_url', 'image_url', 'order', 'status',
     'created_by', 'updated_by', 'reviewed_by', 'reviewed_at', 'review_note',
 ])]
 class Question extends Model
@@ -37,6 +37,11 @@ class Question extends Model
     public function skill(): BelongsTo
     {
         return $this->belongsTo(Skill::class);
+    }
+
+    public function skillPart(): BelongsTo
+    {
+        return $this->belongsTo(SkillPart::class);
     }
 
     public function creator(): BelongsTo

@@ -3,8 +3,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
-import { IconPlus, IconEdit, IconTrash, IconFileDescription, IconHeadphones, IconPhoto, IconBook, IconX, IconBooks, IconUpload, IconCheck } from '@tabler/icons-vue';
-import { computed, ref, watch } from 'vue';
+import { IconPlus, IconEdit, IconTrash, IconFileDescription, IconHeadphones, IconPhoto, IconBook, IconX, IconBooks, IconUpload, IconCheck } from '@tabler/icons-vue';import { computed, ref, watch } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
 const confirm = useConfirm();
@@ -13,6 +12,7 @@ const props = defineProps({
     passages: { type: Object, default: () => ({ data: [] }) },
     questionBanks: { type: Array, default: () => [] },
     skills: { type: Array, default: () => [] },
+    parts: { type: Array, default: () => [] },
 });
 
 const showForm = ref(false);
@@ -29,6 +29,7 @@ const quickQuestionForm = useForm({
     passage_id: null,
     question_bank_id: '',
     skill_id: '',
+    skill_part_id: '',
     question_text: '',
     option_a: '',
     option_b: '',
@@ -36,6 +37,28 @@ const quickQuestionForm = useForm({
     option_d: '',
     correct_answer: '',
 });
+
+const quickSelectedBank = computed(() =>
+    props.questionBanks.find(b => String(b.id) === String(quickQuestionForm.question_bank_id)) || null,
+);
+
+const availableQuickSkills = computed(() => {
+    if (!quickSelectedBank.value) return props.skills;
+    return props.skills.filter(s => String(s.exam_type_id) === String(quickSelectedBank.value.exam_type_id));
+});
+
+const quickIsListening = computed(() => {
+    const s = props.skills.find(s => String(s.id) === String(quickQuestionForm.skill_id));
+    return s?.code === 'listening';
+});
+
+function quickParts() {
+    return props.parts.filter(p => String(p.skill_id) === String(quickQuestionForm.skill_id));
+}
+
+function onQuickSkillChange() {
+    quickQuestionForm.skill_part_id = '';
+}
 
 const form = useForm({
     title: '',
@@ -153,6 +176,7 @@ function saveQuickQuestion() {
             question_bank_id: data.question_bank_id,
             questions: [{
                 skill_id: data.skill_id,
+                skill_part_id: data.skill_part_id,
                 question_text: data.question_text,
                 option_a: data.option_a,
                 option_b: data.option_b,
@@ -281,7 +305,7 @@ function previewText(text, max) {
                      class="mt-4 pt-4 border-t border-outline-variant/30 bg-pastel-blue/10 rounded-xl p-4">
                     <p class="text-label-md font-semibold text-primary mb-3">Tambah Soal ke "{{ p.title }}"</p>
                     <form @submit.prevent="saveQuickQuestion" class="space-y-3">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <div>
                                 <label class="text-label-md font-medium text-primary block mb-1">Bank Soal <span class="text-error-red">*</span></label>
                                 <select v-model="quickQuestionForm.question_bank_id" required
@@ -293,10 +317,18 @@ function previewText(text, max) {
                             </div>
                             <div>
                                 <label class="text-label-md font-medium text-primary block mb-1">Skill <span class="text-error-red">*</span></label>
-                                <select v-model="quickQuestionForm.skill_id" required
+                                <select v-model="quickQuestionForm.skill_id" @change="onQuickSkillChange" required
                                         class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                                     <option value="" disabled>Pilih Skill</option>
-                                    <option v-for="s in skills" :key="s.id" :value="s.id">{{ s.name }}</option>
+                                    <option v-for="s in availableQuickSkills" :key="s.id" :value="s.id">{{ s.name }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-label-md font-medium text-primary block mb-1">Part <span class="text-error-red">*</span></label>
+                                <select v-model="quickQuestionForm.skill_part_id" required :disabled="!quickQuestionForm.skill_id"
+                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary disabled:opacity-50">
+                                    <option value="" disabled>Pilih part</option>
+                                    <option v-for="p in quickParts()" :key="p.id" :value="p.id">{{ p.name }}</option>
                                 </select>
                             </div>
                             <div>
@@ -308,22 +340,30 @@ function previewText(text, max) {
                                 </select>
                             </div>
                         </div>
-                        <div>
-                            <label class="text-label-md font-medium text-primary block mb-1">Teks Soal <span class="text-error-red">*</span></label>
-                            <textarea v-model="quickQuestionForm.question_text" rows="2" required
-                                      class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea>
-                            <p v-if="quickQuestionForm.errors.question_text" class="text-error-red text-xs mt-1">{{ quickQuestionForm.errors.question_text }}</p>
-                        </div>
-                        <div>
-                            <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban <span class="text-error-red">*</span></p>
-                            <div class="space-y-2">
-                                <div v-for="key in optionKeys" :key="key" class="flex items-center gap-2">
-                                    <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-full bg-surface-white border border-outline-variant font-semibold text-primary text-sm">{{ key }}</span>
-                                    <input type="text" v-model="quickQuestionForm['option_' + key.toLowerCase()]" required :placeholder="'Teks pilihan ' + key"
-                                           class="flex-1 px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                        <template v-if="quickIsListening">
+                            <p class="flex items-center gap-1.5 text-label-md text-text-muted bg-pastel-purple/10 border border-pastel-purple/40 rounded-xl px-4 py-3">
+                                <IconHeadphones :size="16" class="text-secondary shrink-0" />
+                                Soal listening memakai audio passage ini — tanpa teks soal dan pilihan jawaban.
+                            </p>
+                        </template>
+                        <template v-else>
+                            <div>
+                                <label class="text-label-md font-medium text-primary block mb-1">Teks Soal <span class="text-error-red">*</span></label>
+                                <textarea v-model="quickQuestionForm.question_text" rows="2" required
+                                          class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea>
+                                <p v-if="quickQuestionForm.errors.question_text" class="text-error-red text-xs mt-1">{{ quickQuestionForm.errors.question_text }}</p>
+                            </div>
+                            <div>
+                                <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban <span class="text-error-red">*</span></p>
+                                <div class="space-y-2">
+                                    <div v-for="key in optionKeys" :key="key" class="flex items-center gap-2">
+                                        <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-full bg-surface-white border border-outline-variant font-semibold text-primary text-sm">{{ key }}</span>
+                                        <input type="text" v-model="quickQuestionForm['option_' + key.toLowerCase()]" required :placeholder="'Teks pilihan ' + key"
+                                               class="flex-1 px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </template>
                         <div class="flex items-center gap-2">
                             <button type="submit" :disabled="quickQuestionForm.processing"
                                     class="flex items-center gap-1.5 bg-primary-container text-white px-5 py-2.5 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95 disabled:opacity-50">

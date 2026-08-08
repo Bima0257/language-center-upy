@@ -11,6 +11,7 @@ use App\Models\Passage;
 use App\Models\Question;
 use App\Models\QuestionBank;
 use App\Models\Skill;
+use App\Models\SkillPart;
 use App\Models\User;
 use App\Models\ViolationLog;
 use Illuminate\Database\Seeder;
@@ -19,6 +20,12 @@ class ExamSeeder extends Seeder
 {
     public function run(): void
     {
+        if (Exam::where('title', 'TOEFL iBT Try Out 1')->exists()) {
+            $this->command->info('ExamSeeder dilewati — data demo sudah ada.');
+
+            return;
+        }
+
         $toefl = ExamType::firstOrCreate([
             'name' => 'TOEFL iBT',
         ], [
@@ -38,6 +45,9 @@ class ExamSeeder extends Seeder
 
         $readingSkill = Skill::where('code', 'reading')->firstOrFail();
         $listeningSkill = Skill::where('code', 'listening')->firstOrFail();
+
+        $readingPart = SkillPart::where('skill_id', $readingSkill->id)->orderBy('order')->first();
+        $listeningPart = SkillPart::where('skill_id', $listeningSkill->id)->orderBy('order')->first();
 
         $reading = ExamSection::create([
             'exam_id' => $exam->id,
@@ -59,7 +69,11 @@ class ExamSeeder extends Seeder
             'total_questions' => 4,
         ]);
 
-        $bank = QuestionBank::firstOrCreate(['name' => 'Bank Soal Demo'], ['is_active' => true]);
+        $bank = QuestionBank::firstOrCreate(['name' => 'Bank Soal Demo'], [
+            'exam_type_id' => $toefl->id,
+            'is_active' => true,
+        ]);
+        $bank->update(['exam_type_id' => $toefl->id]);
 
         $readingPassage = Passage::create([
             'title' => 'The History of Solar Energy',
@@ -148,6 +162,7 @@ class ExamSeeder extends Seeder
                 'question_bank_id' => $bank->id,
                 'passage_id' => $readingPassage->id,
                 'skill_id' => $readingSkill->id,
+                'skill_part_id' => $readingPart?->id,
                 'type' => 'multiple_choice',
                 'question_text' => $q['question_text'],
                 'option_a' => $q['a'],
@@ -165,6 +180,7 @@ class ExamSeeder extends Seeder
                 'question_bank_id' => $bank->id,
                 'passage_id' => $listeningPassage->id,
                 'skill_id' => $listeningSkill->id,
+                'skill_part_id' => $listeningPart?->id,
                 'type' => 'multiple_choice',
                 'question_text' => $q['question_text'],
                 'option_a' => $q['a'],
