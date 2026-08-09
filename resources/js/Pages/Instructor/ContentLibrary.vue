@@ -4,6 +4,7 @@ import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import RichTextViewer from '@/Components/Shared/RichTextViewer.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
+import DropDown from '@/Components/Shared/DropDown.vue';
 import { IconSearch, IconBook, IconPlus, IconCheck, IconX, IconBooks, IconFileDescription, IconEdit, IconUpload, IconTrash, IconHeadphones, IconEye } from '@tabler/icons-vue';
 import { ref, computed } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
@@ -15,12 +16,11 @@ const toast = useToast();
 
 const props = defineProps({
     questions: { type: Object, default: () => ({ data: [] }) },
+    examTypes: { type: Array, default: () => [] },
     questionBanks: { type: Array, default: () => [] },
     skills: { type: Array, default: () => [] },
     parts: { type: Array, default: () => [] },
-    passages: { type: Array, default: () => [] },
     statuses: { type: Array, default: () => ['draft', 'approved', 'rejected'] },
-    selectedPassage: { type: Object, default: null },
     filters: { type: Object, default: () => ({}) },
 });
 
@@ -33,8 +33,39 @@ const searchQuery = ref(props.filters.search || '');
 const selectedSkillId = ref(props.filters.skill_id || '');
 const selectedBankId = ref(props.filters.question_bank_id || '');
 const selectedStatus = ref(props.filters.status || '');
-const selectedPassageId = ref(props.filters.passage_id || '');
 const selectedPartId = ref(props.filters.part_id || '');
+const selectedTypeId = ref('');
+
+if (selectedBankId.value) {
+    const bank = props.questionBanks.find(b => String(b.id) === String(selectedBankId.value));
+    if (bank?.exam_type_id) {
+        selectedTypeId.value = String(bank.exam_type_id);
+    }
+}
+
+const selectedType = computed(() =>
+    props.examTypes.find(t => String(t.id) === String(selectedTypeId.value)) || null,
+);
+
+const filteredBanks = computed(() => {
+    if (!selectedType.value) return props.questionBanks;
+    return props.questionBanks.filter(b => String(b.exam_type_id) === String(selectedType.value.id));
+});
+
+function onTypeChange() {
+    selectedBankId.value = '';
+    selectedSkillId.value = '';
+    selectedPartId.value = '';
+    selectedStatus.value = '';
+    searchQuery.value = '';
+    applyFilters();
+}
+
+function onBankChange() {
+    selectedSkillId.value = '';
+    selectedPartId.value = '';
+    applyFilters();
+}
 const selectedIds = ref([]);
 const expandedPassages = ref({});
 const editingPassageId = ref(null);
@@ -268,7 +299,6 @@ function applyFilters() {
     if (selectedSkillId.value) p.skill_id = selectedSkillId.value;
     if (selectedBankId.value) p.question_bank_id = selectedBankId.value;
     if (selectedStatus.value) p.status = selectedStatus.value;
-    if (selectedPassageId.value) p.passage_id = selectedPassageId.value;
     if (selectedPartId.value) p.part_id = selectedPartId.value;
     if (searchQuery.value) p.search = searchQuery.value;
     router.get(route('content-library.index'), p, { preserveState: true });
@@ -277,7 +307,7 @@ function applyFilters() {
 function onSearchInput() { clearTimeout(debounceTimer); debounceTimer = setTimeout(applyFilters, 400); }
 function resetFilters() {
     searchQuery.value = ''; selectedSkillId.value = ''; selectedBankId.value = '';
-    selectedStatus.value = ''; selectedPassageId.value = ''; selectedPartId.value = '';
+    selectedStatus.value = ''; selectedPartId.value = '';
     applyFilters();
 }
 
@@ -335,6 +365,40 @@ async function bulkReview(status) {
 <template>
     <Head title="Bank Soal" />
     <DashboardLayout title="Bank Soal">
+        <!-- STEP 1 & 2: PILIH JENIS TES + BANK SOAL -->
+        <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 mb-6">
+            <div class="flex flex-wrap gap-4 items-end">
+                <div class="w-72">
+                    <DropDown
+                        v-model="selectedTypeId"
+                        :options="examTypes"
+                        label="Jenis Tes"
+                        placeholder="Pilih jenis tes"
+                        option-label="name"
+                        option-value="id"
+                        @change="onTypeChange"
+                    />
+                </div>
+                <div class="w-72">
+                    <DropDown
+                        v-model="selectedBankId"
+                        :options="filteredBanks"
+                        label="Bank Soal"
+                        placeholder="Pilih bank soal"
+                        option-label="name"
+                        option-value="id"
+                        :disabled="!selectedTypeId"
+                        @change="onBankChange"
+                    />
+                </div>
+                <button @click="resetFilters" :disabled="!selectedBankId"
+                        class="px-5 py-3 border border-outline-variant rounded-2xl text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                    Reset
+                </button>
+            </div>
+        </div>
+
+        <template v-if="selectedBankId">
         <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-4">
                 <p class="text-text-body text-text-body text-body-md">{{ questions.total || 0 }} soal ditemukan</p>
@@ -363,35 +427,28 @@ async function bulkReview(status) {
                                class="w-full pl-11 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                     </div>
                 </div>
-                <div class="w-44"><label class="text-label-md font-medium text-primary block mb-1.5">Bank Soal</label>
-                    <select v-model="selectedBankId" @change="applyFilters"
-                            class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                        <option value="">Semua Bank</option>
-                        <option v-for="b in questionBanks" :key="b.id" :value="b.id">{{ b.name }}</option>
-                    </select>
+                <div class="w-36">
+                    <DropDown
+                        v-model="selectedSkillId"
+                        :options="skills"
+                        label="Skill"
+                        placeholder="Semua"
+                        option-label="name"
+                        option-value="id"
+                        @change="applyFilters"
+                    />
                 </div>
-                <div class="w-36"><label class="text-label-md font-medium text-primary block mb-1.5">Skill</label>
-                    <select v-model="selectedSkillId" @change="applyFilters"
-                            class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                        <option value="">Semua</option>
-                        <option v-for="s in skills" :key="s.id" :value="s.id">{{ s.name }}</option>
-                    </select>
+                <div class="w-36">
+                    <DropDown
+                        v-model="selectedPartId"
+                        :options="parts"
+                        label="Part"
+                        placeholder="Semua"
+                        :option-label="(p) => p.name + (p.skill ? ' (' + p.skill.name + ')' : '')"
+                        option-value="id"
+                        @change="applyFilters"
+                    />
                 </div>
-                <div class="w-36"><label class="text-label-md font-medium text-primary block mb-1.5">Part</label>
-                    <select v-model="selectedPartId" @change="applyFilters"
-                            class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                        <option value="">Semua</option>
-                        <option v-for="pt in parts" :key="pt.id" :value="pt.id">{{ pt.name }} <template v-if="pt.skill">({{ pt.skill.name }})</template></option>
-                    </select>
-                </div>
-                <div class="w-36"><label class="text-label-md font-medium text-primary block mb-1.5">Materi Soal</label>
-                    <select v-model="selectedPassageId" @change="applyFilters"
-                            class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                        <option value="">Semua</option>
-                        <option v-for="p in passages" :key="p.id" :value="p.id">{{ p.title }}</option>
-                    </select>
-                </div>
-                <button @click="resetFilters" class="px-5 py-3 border border-outline-variant rounded-2xl text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">Reset</button>
             </div>
 
             <div class="flex gap-2 mt-4 pt-4 border-t border-outline-variant/30">
@@ -400,29 +457,6 @@ async function bulkReview(status) {
                         :class="selectedStatus === s ? 'bg-primary-container text-white border-primary-container' : 'border-outline-variant text-text-body hover:border-secondary'">
                     {{ statusLabels[s] }}
                 </button>
-            </div>
-        </div>
-
-        <div v-if="selectedPassage" class="bg-pastel-blue/20 border border-pastel-blue/50 rounded-2xl p-4 mb-6">
-            <div class="flex items-start justify-between gap-4">
-                <div class="flex-1">
-                    <h3 class="text-title-md font-semibold text-primary mb-0.5">{{ selectedPassage.title }}</h3>
-                    <RichTextViewer v-if="selectedPassage.content_text" :content="selectedPassage.content_text" :clamp="2" class="mt-1" />
-                    <p v-else-if="selectedPassage.audio_url" class="text-label-md text-text-body">Audio: {{ selectedPassage.audio_url }}</p>
-                    <div class="flex gap-2 mt-2">
-                        <span class="text-label-md text-text-muted">{{ questions.total || 0 }} soal dalam materi soal ini</span>
-                    </div>
-                </div>
-                <div class="flex gap-2 shrink-0">
-                    <Link :href="route('content-library.create')"
-                          class="flex items-center gap-1.5 bg-primary-container text-white px-4 py-2 rounded-full text-label-md font-medium hover:bg-primary transition-all">
-                        <IconPlus :size="16" /> Tambah Soal
-                    </Link>
-                    <button @click="selectedPassageId = ''; applyFilters()"
-                            class="flex items-center gap-1.5 px-4 py-2 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">
-                        <IconX :size="16" /> Hapus Filter
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -510,14 +544,20 @@ async function bulkReview(status) {
                                 <p v-if="passageForm.errors.title" class="text-error-red text-xs mt-1">{{ passageForm.errors.title }}</p>
                             </div>
                             <div>
-                                <label class="text-label-md font-medium text-primary block mb-1">Tipe Materi Soal</label>
-                                <select v-model="passageForm.type" @change="passageEditType = passageForm.type"
-                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                                    <option value="text">Teks</option>
-                                    <option value="audio">Audio</option>
-                                    <option value="image">Gambar</option>
-                                    <option value="prompt">Prompt</option>
-                                </select>
+                                <DropDown
+                                    v-model="passageForm.type"
+                                    :options="[
+                                        { id: 'text', name: 'Teks' },
+                                        { id: 'audio', name: 'Audio' },
+                                        { id: 'image', name: 'Gambar' },
+                                        { id: 'prompt', name: 'Prompt' },
+                                    ]"
+                                    label="Tipe Materi Soal"
+                                    option-label="name"
+                                    option-value="id"
+                                    size="sm"
+                                    @change="passageEditType = $event"
+                                />
                             </div>
                         </div>
 
@@ -568,37 +608,51 @@ async function bulkReview(status) {
                     <form @submit.prevent="saveQuickQuestion" class="space-y-3">
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <div>
-                                <label class="text-label-md font-medium text-primary block mb-1">Bank Soal <span class="text-error-red">*</span></label>
-                                <select v-model="quickQuestionForm.question_bank_id" required
-                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                                    <option value="" disabled>Pilih Bank</option>
-                                    <option v-for="b in questionBanks" :key="b.id" :value="b.id">{{ b.name }}</option>
-                                </select>
+                                <DropDown
+                                    v-model="quickQuestionForm.question_bank_id"
+                                    :options="questionBanks"
+                                    label="Bank Soal *"
+                                    placeholder="Pilih Bank"
+                                    option-label="name"
+                                    option-value="id"
+                                    size="sm"
+                                />
                                 <p v-if="quickQuestionForm.errors.question_bank_id" class="text-error-red text-xs mt-1">{{ quickQuestionForm.errors.question_bank_id }}</p>
                             </div>
                             <div>
-                                <label class="text-label-md font-medium text-primary block mb-1">Skill <span class="text-error-red">*</span></label>
-                                <select v-model="quickQuestionForm.skill_id" @change="onQuickSkillChange" required
-                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                                    <option value="" disabled>Pilih Skill</option>
-                                    <option v-for="s in availableQuickSkills" :key="s.id" :value="s.id">{{ s.name }}</option>
-                                </select>
+                                <DropDown
+                                    v-model="quickQuestionForm.skill_id"
+                                    :options="availableQuickSkills"
+                                    label="Skill *"
+                                    placeholder="Pilih Skill"
+                                    option-label="name"
+                                    option-value="id"
+                                    size="sm"
+                                    @change="onQuickSkillChange"
+                                />
                             </div>
                             <div>
-                                <label class="text-label-md font-medium text-primary block mb-1">Part <span class="text-error-red">*</span></label>
-                                <select v-model="quickQuestionForm.skill_part_id" required :disabled="!quickQuestionForm.skill_id"
-                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary disabled:opacity-50">
-                                    <option value="" disabled>Pilih part</option>
-                                    <option v-for="p in quickParts()" :key="p.id" :value="p.id">{{ p.name }}</option>
-                                </select>
+                                <DropDown
+                                    v-model="quickQuestionForm.skill_part_id"
+                                    :options="quickParts()"
+                                    label="Part *"
+                                    placeholder="Pilih part"
+                                    option-label="name"
+                                    option-value="id"
+                                    size="sm"
+                                    :disabled="!quickQuestionForm.skill_id"
+                                />
                             </div>
                             <div>
-                                <label class="text-label-md font-medium text-primary block mb-1">Kunci Jawaban <span class="text-error-red">*</span></label>
-                                <select v-model="quickQuestionForm.correct_answer" required
-                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                                    <option value="" disabled>Pilih kunci</option>
-                                    <option v-for="key in optionKeys" :key="key" :value="key">{{ key }}</option>
-                                </select>
+                                <DropDown
+                                    v-model="quickQuestionForm.correct_answer"
+                                    :options="optionKeys.map(k => ({ id: k, name: k }))"
+                                    label="Kunci Jawaban *"
+                                    placeholder="Pilih kunci"
+                                    option-label="name"
+                                    option-value="id"
+                                    size="sm"
+                                />
                             </div>
                         </div>
                         <template v-if="quickIsListening">
@@ -773,6 +827,14 @@ async function bulkReview(status) {
                 <button @click="selectedIds = []" class="px-3 py-2 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">Batal</button>
             </div>
         </Transition>
+        </template>
+
+        <!-- EMPTY STATE: BELUM PILIH BANK -->
+        <div v-else class="bg-surface-white rounded-2xl p-10 text-center shadow-soft border border-outline-variant/30">
+            <IconBook class="mx-auto text-text-muted mb-3" :size="48" stroke="1.5" />
+            <p class="text-text-body text-text-body text-body-md mb-1">Pilih Jenis Tes dan Bank Soal</p>
+            <p class="text-text-muted text-body-md">Daftar soal akan muncul setelah kamu memilih bank soal.</p>
+        </div>
     </DashboardLayout>
 </template>
 

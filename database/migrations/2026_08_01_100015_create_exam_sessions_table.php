@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('exam_schedule_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->enum('status', ['pending', 'in_progress', 'submitted', 'terminated', 'reviewed'])->default('pending');
+            $table->enum('status', ['pending', 'in_progress', 'submitted', 'terminated'])->default('pending');
             $table->dateTime('started_at')->nullable();
             $table->dateTime('submitted_at')->nullable();
             $table->dateTime('terminated_at')->nullable();

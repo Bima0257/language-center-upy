@@ -3,6 +3,7 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import DataTable from '@/Components/Shared/DataTable.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
+import DropDown from '@/Components/Shared/DropDown.vue';
 import { IconPlus, IconEdit, IconTrash, IconX } from '@tabler/icons-vue';
 import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
@@ -121,11 +122,13 @@ function skillCategoryName(id) {
     <DashboardLayout title="Master Data Part Soal">
         <div class="flex items-center justify-between mb-6">
             <div class="w-72">
-                <select v-model="skillFilter"
-                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
-                    <option value="">Semua Skill</option>
-                    <option v-for="s in skills" :key="s.id" :value="String(s.id)">{{ s.name }} ({{ s.exam_type?.name || '-' }})</option>
-                </select>
+                <DropDown
+                    v-model="skillFilter"
+                    :options="skills"
+                    placeholder="Semua Skill"
+                    :option-label="(s) => s.name + ' (' + (s.exam_type?.name || '-') + ')'"
+                    option-value="id"
+                />
             </div>
             <button @click="openCreate"
                     class="flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
@@ -154,12 +157,14 @@ function skillCategoryName(id) {
                 <form @submit.prevent="creating ? submit() : saveEdit()" class="space-y-5">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="text-label-md font-medium text-primary block mb-1.5">Skill *</label>
-                            <select v-model="modalForm.skill_id" required
-                                    class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
-                                <option value="" disabled>Pilih skill</option>
-                                <option v-for="s in skills" :key="s.id" :value="String(s.id)">{{ s.name }} ({{ s.exam_type?.name || '-' }})</option>
-                            </select>
+                            <DropDown
+                                v-model="modalForm.skill_id"
+                                :options="skills"
+                                label="Skill *"
+                                placeholder="Pilih skill"
+                                :option-label="(s) => s.name + ' (' + (s.exam_type?.name || '-') + ')'"
+                                option-value="id"
+                            />
                             <p v-if="modalForm.errors.skill_id" class="text-error-red text-xs mt-1">{{ modalForm.errors.skill_id }}</p>
                         </div>
                         <div>

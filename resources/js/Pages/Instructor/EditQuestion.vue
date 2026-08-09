@@ -2,6 +2,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
+import DropDown from '@/Components/Shared/DropDown.vue';
 import { IconInfoCircle, IconUpload } from '@tabler/icons-vue';
 import { computed, ref } from 'vue';
 
@@ -112,19 +113,51 @@ function submit() {
                 </div>
                 <form @submit.prevent="submit" class="space-y-6" enctype="multipart/form-data">
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Bank Soal <span class="text-error-red">*</span></label>
-                            <select v-model="form.question_bank_id" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="" disabled>Pilih Bank Soal</option><option v-for="b in questionBanks" :key="b.id" :value="b.id">{{ b.name }}</option></select></div>
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Skill <span class="text-error-red">*</span></label>
-                            <select v-model="form.skill_id" @change="onSkillChange" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option value="" disabled>Pilih Skill</option><option v-for="s in availableSkills" :key="s.id" :value="s.id">{{ s.name }}</option></select></div>
+                        <div>
+                            <DropDown
+                                v-model="form.question_bank_id"
+                                :options="questionBanks"
+                                label="Bank Soal *"
+                                placeholder="Pilih Bank Soal"
+                                option-label="name"
+                                option-value="id"
+                            />
+                        </div>
+                        <div>
+                            <DropDown
+                                v-model="form.skill_id"
+                                :options="availableSkills"
+                                label="Skill *"
+                                placeholder="Pilih Skill"
+                                option-label="name"
+                                option-value="id"
+                                @change="onSkillChange"
+                            />
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Part <span class="text-error-red">*</span></label>
-                            <select v-model="form.skill_part_id" required :disabled="!form.skill_id" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary disabled:opacity-50">
-                                <option value="" disabled>Pilih part</option>
-                                <option v-for="p in partsForSelectedSkill" :key="p.id" :value="p.id">{{ p.name }}</option>
-                            </select></div>
-                        <div><label class="text-label-md font-medium text-primary block mb-1.5">Materi Soal <span class="text-text-muted">(opsional)</span></label>
-                            <select v-model="form.passage_id" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"><option :value="null">Tanpa Materi Soal</option><option v-for="p in passages" :key="p.id" :value="p.id">{{ p.title }}</option></select></div>
+                        <div>
+                            <DropDown
+                                v-model="form.skill_part_id"
+                                :options="partsForSelectedSkill"
+                                label="Part *"
+                                placeholder="Pilih part"
+                                option-label="name"
+                                option-value="id"
+                                :disabled="!form.skill_id"
+                            />
+                        </div>
+                        <div>
+                            <DropDown
+                                v-model="form.passage_id"
+                                :options="passages"
+                                label="Materi Soal (opsional)"
+                                placeholder="Tanpa Materi Soal"
+                                option-label="title"
+                                option-value="id"
+                                clearable
+                            />
+                        </div>
                     </div>
                     <p class="flex items-center gap-1.5 text-label-md text-text-muted">
                         <IconInfoCircle :size="16" class="text-secondary shrink-0" />
@@ -214,11 +247,14 @@ function submit() {
                         </div>
 
                         <div>
-                            <label class="text-label-md font-medium text-primary block mb-1.5">Kunci Jawaban <span class="text-error-red">*</span></label>
-                            <select v-model="form.correct_answer" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                                <option value="" disabled>Pilih jawaban benar (A/B/C/D)</option>
-                                <option v-for="key in optionKeys" :key="key" :value="key">{{ key }}</option>
-                            </select>
+                            <DropDown
+                                v-model="form.correct_answer"
+                                :options="optionKeys.map(k => ({ id: k, name: k }))"
+                                label="Kunci Jawaban *"
+                                placeholder="Pilih jawaban benar (A/B/C/D)"
+                                option-label="name"
+                                option-value="id"
+                            />
                         </div>
                     </template>
 

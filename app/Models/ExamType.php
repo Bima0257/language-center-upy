@@ -46,9 +46,4 @@ class ExamType extends Model
     {
         return $this->hasMany(ScoreInterpretation::class);
     }
-
-    public function testForms(): HasMany
-    {
-        return $this->hasMany(TestForm::class);
-    }
 }

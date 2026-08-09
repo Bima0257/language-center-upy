@@ -3,6 +3,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
+import DropDown from '@/Components/Shared/DropDown.vue';
 import { IconPlus, IconEdit, IconTrash, IconFileDescription, IconHeadphones, IconPhoto, IconBook, IconX, IconBooks, IconUpload, IconCheck } from '@tabler/icons-vue';import { computed, ref, watch } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
@@ -307,37 +308,51 @@ function previewText(text, max) {
                     <form @submit.prevent="saveQuickQuestion" class="space-y-3">
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <div>
-                                <label class="text-label-md font-medium text-primary block mb-1">Bank Soal <span class="text-error-red">*</span></label>
-                                <select v-model="quickQuestionForm.question_bank_id" required
-                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                                    <option value="" disabled>Pilih Bank</option>
-                                    <option v-for="b in questionBanks" :key="b.id" :value="b.id">{{ b.name }}</option>
-                                </select>
+                                <DropDown
+                                    v-model="quickQuestionForm.question_bank_id"
+                                    :options="questionBanks"
+                                    label="Bank Soal *"
+                                    placeholder="Pilih Bank"
+                                    option-label="name"
+                                    option-value="id"
+                                    size="sm"
+                                />
                                 <p v-if="quickQuestionForm.errors.question_bank_id" class="text-error-red text-xs mt-1">{{ quickQuestionForm.errors.question_bank_id }}</p>
                             </div>
                             <div>
-                                <label class="text-label-md font-medium text-primary block mb-1">Skill <span class="text-error-red">*</span></label>
-                                <select v-model="quickQuestionForm.skill_id" @change="onQuickSkillChange" required
-                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                                    <option value="" disabled>Pilih Skill</option>
-                                    <option v-for="s in availableQuickSkills" :key="s.id" :value="s.id">{{ s.name }}</option>
-                                </select>
+                                <DropDown
+                                    v-model="quickQuestionForm.skill_id"
+                                    :options="availableQuickSkills"
+                                    label="Skill *"
+                                    placeholder="Pilih Skill"
+                                    option-label="name"
+                                    option-value="id"
+                                    size="sm"
+                                    @change="onQuickSkillChange"
+                                />
                             </div>
                             <div>
-                                <label class="text-label-md font-medium text-primary block mb-1">Part <span class="text-error-red">*</span></label>
-                                <select v-model="quickQuestionForm.skill_part_id" required :disabled="!quickQuestionForm.skill_id"
-                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary disabled:opacity-50">
-                                    <option value="" disabled>Pilih part</option>
-                                    <option v-for="p in quickParts()" :key="p.id" :value="p.id">{{ p.name }}</option>
-                                </select>
+                                <DropDown
+                                    v-model="quickQuestionForm.skill_part_id"
+                                    :options="quickParts()"
+                                    label="Part *"
+                                    placeholder="Pilih part"
+                                    option-label="name"
+                                    option-value="id"
+                                    size="sm"
+                                    :disabled="!quickQuestionForm.skill_id"
+                                />
                             </div>
                             <div>
-                                <label class="text-label-md font-medium text-primary block mb-1">Kunci Jawaban <span class="text-error-red">*</span></label>
-                                <select v-model="quickQuestionForm.correct_answer" required
-                                        class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                                    <option value="" disabled>Pilih kunci</option>
-                                    <option v-for="key in optionKeys" :key="key" :value="key">{{ key }}</option>
-                                </select>
+                                <DropDown
+                                    v-model="quickQuestionForm.correct_answer"
+                                    :options="optionKeys.map(k => ({ id: k, name: k }))"
+                                    label="Kunci Jawaban *"
+                                    placeholder="Pilih kunci"
+                                    option-label="name"
+                                    option-value="id"
+                                    size="sm"
+                                />
                             </div>
                         </div>
                         <template v-if="quickIsListening">
@@ -406,11 +421,13 @@ function previewText(text, max) {
                     </div>
 
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-1.5">Tipe Materi Soal *</label>
-                        <select v-model="form.type" required
-                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
-                            <option v-for="(label, key) in typeLabels" :key="key" :value="key">{{ label }}</option>
-                        </select>
+                        <DropDown
+                            v-model="form.type"
+                            :options="Object.entries(typeLabels).map(([id, name]) => ({ id, name }))"
+                            label="Tipe Materi Soal *"
+                            option-label="name"
+                            option-value="id"
+                        />
                     </div>
 
                     <!-- TEXT / PROMPT: content_text -->

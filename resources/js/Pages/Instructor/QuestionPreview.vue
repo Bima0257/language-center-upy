@@ -47,6 +47,14 @@ function goTo(dir) {
         currentIndex.value = next;
     }
 }
+
+function goBack() {
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        window.location.href = route('content-library.index');
+    }
+}
 </script>
 
 <template>
@@ -64,10 +72,10 @@ function goTo(dir) {
                         class="flex items-center gap-2 px-4 py-1.5 bg-secondary-container hover:bg-secondary-container/80 text-white rounded-full font-label-md text-label-md font-bold transition-all active:scale-95 duration-150 shadow-lg">
                     <IconEye :size="14" /> {{ showKey ? 'Sembunyikan Kunci' : 'Tampilkan Kunci' }}
                 </button>
-                <Link :href="route('content-library.index')"
-                      class="flex items-center gap-2 px-4 py-1.5 bg-white text-primary-container rounded-full font-label-md text-label-md font-bold transition-all active:scale-95 duration-150">
-                    <IconArrowLeft :size="14" /> Kembali
-                </Link>
+                    <button @click="goBack"
+                            class="flex items-center gap-2 px-4 py-1.5 bg-white text-primary-container rounded-full font-label-md text-label-md font-bold transition-all active:scale-95 duration-150">
+                        <IconArrowLeft :size="14" /> Kembali
+                    </button>
             </div>
         </header>
 
@@ -191,10 +199,10 @@ function goTo(dir) {
                         class="flex items-center gap-2 px-6 py-2 bg-primary-container text-white rounded-full font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all group disabled:opacity-30 disabled:cursor-not-allowed">
                     Selanjutnya <IconArrowRight :size="16" class="transition-transform group-hover:translate-x-1" />
                 </button>
-                <Link v-else :href="route('content-library.index')"
-                      class="flex items-center gap-2 px-6 py-2 bg-primary-container text-white rounded-full font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all">
+                <button v-else @click="goBack"
+                        class="flex items-center gap-2 px-6 py-2 bg-primary-container text-white rounded-full font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all">
                     <IconArrowLeft :size="16" /> Kembali
-                </Link>
+                </button>
             </footer>
     </div>
 </template>

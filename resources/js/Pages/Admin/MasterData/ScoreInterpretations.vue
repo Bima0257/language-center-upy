@@ -1,6 +1,7 @@
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
+import DropDown from '@/Components/Shared/DropDown.vue';
 import { IconPlus, IconEdit, IconTrash, IconCheck } from '@tabler/icons-vue';
 import { ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
@@ -76,12 +77,14 @@ async function destroy(interp) {
                 <h3 class="text-title-lg font-semibold text-primary mb-4">Tambah Interpretasi</h3>
                 <form @submit.prevent="submit" class="space-y-4">
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-1">Tipe Ujian</label>
-                        <select v-model="form.exam_type_id" required
-                                class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                            <option value="" disabled>Pilih tipe ujian</option>
-                            <option v-for="t in examTypes" :key="t.id" :value="t.id">{{ t.name }}</option>
-                        </select>
+                        <DropDown
+                            v-model="form.exam_type_id"
+                            :options="examTypes"
+                            label="Tipe Ujian"
+                            placeholder="Pilih tipe ujian"
+                            option-label="name"
+                            option-value="id"
+                        />
                         <p v-if="form.errors.exam_type_id" class="text-error-red text-xs mt-1">{{ form.errors.exam_type_id }}</p>
                     </div>
                     <div class="grid grid-cols-2 gap-3">

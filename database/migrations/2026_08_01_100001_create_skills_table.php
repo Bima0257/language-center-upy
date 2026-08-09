@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('skills', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('exam_type_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name', 100)->unique();
             $table->string('code', 50)->unique();
             $table->text('description')->nullable();

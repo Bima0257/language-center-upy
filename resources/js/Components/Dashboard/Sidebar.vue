@@ -1,6 +1,6 @@
 <script setup>
 import { Link, router, usePage } from "@inertiajs/vue3";
-import { ref, watch, onMounted, onUnmounted } from "vue";
+import { ref, watch } from "vue";
 import {
     IconChartPie,
     IconBooks,
@@ -26,21 +26,6 @@ const props = defineProps({
 
 defineEmits(["toggle"]);
 
-const isDark = ref(false);
-
-function syncTheme() {
-    isDark.value = document.documentElement.classList.contains('dark');
-}
-
-onMounted(() => {
-    syncTheme();
-    document.addEventListener('dashboard-theme-changed', syncTheme);
-});
-
-onUnmounted(() => {
-    document.removeEventListener('dashboard-theme-changed', syncTheme);
-});
-
 const page = usePage();
 const roles = page.props.auth?.roles || [];
 
@@ -62,7 +47,11 @@ if (isInstructor) {
     nav.push(
         { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
         { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },
-        { label: "Materi Soal", icon: IconFileDescription, route: "content-library.passages.index" },
+        {
+            label: "Materi Soal",
+            icon: IconFileDescription,
+            route: "content-library.passages.index",
+        },
     );
 }
 
@@ -84,12 +73,36 @@ if (isAdmin) {
             label: "Soal",
             icon: IconBooks,
             children: [
-                { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },
-                { label: "Bank Soal Manager", icon: IconFolders, route: "content-library.question-banks.index" },
-                { label: "Materi Soal", icon: IconFileDescription, route: "content-library.passages.index" },
-                { label: "Master Skill", icon: IconDatabase, route: "admin.master-data.skills.index" },
-                { label: "Jenis Tes", icon: IconCategory, route: "admin.master-data.exam-types.index" },
-                { label: "Part Soal", icon: IconListDetails, route: "admin.master-data.parts.index" },
+                {
+                    label: "Jenis Tes",
+                    icon: IconCategory,
+                    route: "admin.master-data.exam-types.index",
+                },
+                {
+                    label: "Bank Soal Manager",
+                    icon: IconFolders,
+                    route: "content-library.question-banks.index",
+                },
+                {
+                    label: "Master Skill",
+                    icon: IconDatabase,
+                    route: "admin.master-data.skills.index",
+                },
+                {
+                    label: "Part Soal",
+                    icon: IconListDetails,
+                    route: "admin.master-data.parts.index",
+                },
+                {
+                    label: "Materi Soal",
+                    icon: IconFileDescription,
+                    route: "content-library.passages.index",
+                },
+                {
+                    label: "Bank Soal",
+                    icon: IconBooks,
+                    route: "content-library.index",
+                },
             ],
         },
         {
@@ -135,6 +148,24 @@ function isGroupActive(children) {
     return (children || []).some((child) => isActive(child.route));
 }
 
+function itemActiveClass(active) {
+    return [
+        "relative flex items-center rounded-lg transition-all duration-200",
+        props.collapsed ? "justify-center px-2 py-3" : "gap-3 pl-4 pr-4 py-3",
+        active
+            ? "text-white font-bold bg-white/15"
+            : "text-white/70 hover:text-white hover:bg-white/10",
+    ];
+}
+
+function barClass(active, leftClass = "left-0") {
+    return [
+        "absolute top-1/2 -translate-y-1/2 w-[3px] h-[70%] rounded-r-md bg-white transition-all duration-200",
+        leftClass,
+        active ? "opacity-100 scale-y-100" : "opacity-0 scale-y-50",
+    ];
+}
+
 function toggleGroup(item) {
     if (props.collapsed && item.children) {
         router.visit(route(item.children[0].route));
@@ -163,7 +194,7 @@ watch(
 
 <template>
     <aside
-        class="hidden md:flex flex-col py-8 px-3 bg-surface-white border-r border-outline-variant shrink-0 h-full transition-all duration-300"
+        class="hidden md:flex flex-col py-8 px-3 bg-[#010020] shrink-0 h-full transition-all duration-300 shadow-[6px_0_20px_-8px_rgba(0,0,0,0.25)]"
         :class="collapsed ? 'w-[80px]' : 'w-[260px]'"
     >
         <div
@@ -171,21 +202,21 @@ watch(
             :class="collapsed ? 'px-1' : 'px-4 gap-3'"
         >
             <img
-                :src="isDark ? '/assets/image/logo-white.png' : '/assets/image/logo-dark.png'"
+                :src="'/assets/image/logo-white.png'"
                 alt="Logo"
                 class="shrink-0 object-contain rounded-xl"
                 :class="collapsed ? 'w-8 h-8' : 'w-10 h-10'"
             />
             <h1
                 v-show="!collapsed"
-                class="text-headline-md font-bold text-primary whitespace-nowrap"
+                class="text-headline-md font-bold text-white whitespace-nowrap"
             >
                 UPY
             </h1>
             <button
                 v-if="!collapsed"
                 @click="$emit('toggle')"
-                class="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-surface-white border border-outline-variant shadow-sm flex items-center justify-center text-text-muted hover:text-primary hover:border-primary transition-colors z-10"
+                class="absolute -right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-white/70 hover:text-white transition-colors z-10"
                 title="Ciutkan sidebar"
             >
                 <IconMenu2 :size="18" stroke="1.5" />
@@ -193,7 +224,7 @@ watch(
             <button
                 v-else
                 @click="$emit('toggle')"
-                class="ml-auto shrink-0 w-6 h-6 flex items-center justify-center text-text-muted hover:text-primary transition-colors z-10"
+                class="ml-auto shrink-0 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white transition-colors z-10"
                 title="Perluas sidebar"
             >
                 <IconMenu2 :size="16" stroke="1.5" />
@@ -205,15 +236,17 @@ watch(
                 <div v-if="item.children">
                     <button
                         @click="toggleGroup(item)"
-                        class="w-full flex items-center rounded-lg transition-all"
-                        :class="[
-                            collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-3',
-                            isGroupActive(item.children)
-                                ? 'text-primary font-bold border-l-4 border-primary bg-surface-container-low'
-                                : 'text-text-body hover:bg-surface-container-low',
-                        ]"
+                        class="w-full"
+                        :class="itemActiveClass(isGroupActive(item.children))"
                     >
-                        <component :is="item.icon" :size="22" stroke="1.5" />
+                        <span
+                            :class="barClass(isGroupActive(item.children))"
+                        ></span>
+                        <component
+                            :is="item.icon"
+                            :size="22"
+                            :stroke="isGroupActive(item.children) ? 2 : 1.5"
+                        />
                         <span
                             v-show="!collapsed"
                             class="flex-1 text-left text-label-md font-medium whitespace-nowrap"
@@ -224,7 +257,11 @@ watch(
                             :size="16"
                             stroke="1.5"
                             class="shrink-0 transition-transform duration-200"
-                            :class="openGroups[item.label] ? 'rotate-0' : '-rotate-90'"
+                            :class="
+                                openGroups[item.label]
+                                    ? 'rotate-0'
+                                    : '-rotate-90'
+                            "
                         />
                     </button>
                     <Transition name="dropdown">
@@ -236,18 +273,47 @@ watch(
                                 v-for="child in item.children"
                                 :key="child.label"
                                 :href="route(child.route)"
-                                class="flex items-center rounded-lg transition-all"
+                                class="group relative flex items-center rounded-lg transition-all duration-200"
                                 :class="[
-                                    collapsed ? 'justify-center px-2 py-3' : 'gap-3 pl-9 pr-4 py-2.5',
+                                    collapsed
+                                        ? 'justify-center px-2 py-3'
+                                        : 'gap-3 pr-4 py-3',
                                     isActive(child.route)
-                                        ? 'text-primary font-bold border-l-4 border-primary bg-surface-container-low'
-                                        : 'text-text-body hover:bg-surface-container-low',
+                                        ? 'text-white font-bold'
+                                        : 'text-white/70 hover:text-white',
                                 ]"
+                                :style="
+                                    collapsed ? '' : 'padding-left: 2.25rem'
+                                "
                             >
-                                <component :is="child.icon" :size="18" stroke="1.5" class="shrink-0" />
+                                <span
+                                    class="absolute inset-y-0 right-0 rounded-lg transition-all duration-200"
+                                    :class="[
+                                        collapsed ? 'left-0' : 'left-[20px]',
+                                        isActive(child.route)
+                                            ? 'bg-white/15'
+                                            : 'group-hover:bg-white/10',
+                                    ]"
+                                ></span>
+                                <span
+                                    :class="
+                                        barClass(
+                                            isActive(child.route),
+                                            collapsed
+                                                ? 'left-0'
+                                                : 'left-[20px]',
+                                        )
+                                    "
+                                ></span>
+                                <component
+                                    :is="child.icon"
+                                    :size="18"
+                                    :stroke="isActive(child.route) ? 2 : 1.5"
+                                    class="shrink-0 relative"
+                                />
                                 <span
                                     v-show="!collapsed"
-                                    class="text-label-md whitespace-nowrap"
+                                    class="text-label-md whitespace-nowrap relative"
                                     >{{ child.label }}</span
                                 >
                             </Link>
@@ -257,15 +323,14 @@ watch(
                 <Link
                     v-else
                     :href="item.route === '#' ? '#' : route(item.route)"
-                    class="flex items-center rounded-lg transition-all"
-                    :class="[
-                        collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-3',
-                        isActive(item.route)
-                            ? 'text-primary font-bold border-l-4 border-primary bg-surface-container-low'
-                            : 'text-text-body hover:bg-surface-container-low',
-                    ]"
+                    :class="itemActiveClass(isActive(item.route))"
                 >
-                    <component :is="item.icon" :size="22" stroke="1.5" />
+                    <span :class="barClass(isActive(item.route))"></span>
+                    <component
+                        :is="item.icon"
+                        :size="22"
+                        :stroke="isActive(item.route) ? 2 : 1.5"
+                    />
                     <span
                         v-show="!collapsed"
                         class="text-label-md font-medium whitespace-nowrap"
@@ -275,12 +340,12 @@ watch(
             </template>
         </nav>
 
-        <div class="mt-auto pt-6 border-t border-outline-variant space-y-2">
+        <div class="mt-auto pt-6 border-t border-white/10 space-y-2">
             <Link
                 v-for="item in bottom"
                 :key="item.label"
                 :href="item.route"
-                class="flex items-center rounded-lg text-text-body hover:bg-surface-container-low transition-all"
+                class="flex items-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
                 :class="
                     collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-3'
                 "
@@ -296,7 +361,7 @@ watch(
                 :href="route('logout')"
                 method="post"
                 as="button"
-                class="flex items-center rounded-lg text-text-body hover:bg-surface-container-low transition-all w-full text-left"
+                class="flex items-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all w-full text-left"
                 :class="
                     collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-3'
                 "
@@ -315,7 +380,9 @@ watch(
 <style scoped>
 .dropdown-enter-active,
 .dropdown-leave-active {
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
 }
 .dropdown-enter-from,
 .dropdown-leave-to {

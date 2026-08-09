@@ -17,18 +17,10 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
-
-        Schema::table('questions', function (Blueprint $table) {
-            $table->foreignId('skill_part_id')->nullable()->after('skill_id')->constrained()->nullOnDelete();
-        });
     }
 
     public function down(): void
     {
-        Schema::table('questions', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('skill_part_id');
-        });
-
         Schema::dropIfExists('skill_parts');
     }
 };

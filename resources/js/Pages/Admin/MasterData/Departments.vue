@@ -1,6 +1,7 @@
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
+import DropDown from '@/Components/Shared/DropDown.vue';
 import { IconPlus, IconEdit, IconTrash, IconCheck } from '@tabler/icons-vue';
 import { ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
@@ -67,12 +68,14 @@ async function destroy(dept) {
                 <h3 class="text-title-lg font-semibold text-primary mb-4">Tambah Program Studi</h3>
                 <form @submit.prevent="submit" class="space-y-4">
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-1">Fakultas</label>
-                        <select v-model="form.faculty_id" required
-                                class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                            <option value="" disabled>Pilih fakultas</option>
-                            <option v-for="f in faculties" :key="f.id" :value="f.id">{{ f.name }}</option>
-                        </select>
+                        <DropDown
+                            v-model="form.faculty_id"
+                            :options="faculties"
+                            label="Fakultas"
+                            placeholder="Pilih fakultas"
+                            option-label="name"
+                            option-value="id"
+                        />
                         <p v-if="form.errors.faculty_id" class="text-error-red text-xs mt-1">{{ form.errors.faculty_id }}</p>
                     </div>
                     <div>
@@ -132,9 +135,14 @@ async function destroy(dept) {
                                 <tr v-else class="border-b border-outline-variant/20 bg-pastel-blue/10">
                                     <td colspan="5" class="px-5 py-4">
                                         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                                            <select v-model="editForm.faculty_id" class="px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                                                <option v-for="f in faculties" :key="f.id" :value="f.id">{{ f.name }}</option>
-                                            </select>
+                                            <DropDown
+                                                v-model="editForm.faculty_id"
+                                                :options="faculties"
+                                                placeholder="Fakultas"
+                                                option-label="name"
+                                                option-value="id"
+                                                size="sm"
+                                            />
                                             <input type="text" v-model="editForm.name" class="px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                                             <input type="text" v-model="editForm.code" class="px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                                             <div class="flex items-center gap-2">

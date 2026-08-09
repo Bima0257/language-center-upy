@@ -54,8 +54,6 @@ class ExamSeeder extends Seeder
             'skill_id' => $readingSkill->id,
             'title' => 'Reading Section',
             'order' => 1,
-            'duration_minutes' => 35,
-            'instructions' => 'Baca setiap passage dengan saksama. Jawab soal berdasarkan informasi yang diberikan dalam passage.',
             'total_questions' => 4,
         ]);
 
@@ -64,8 +62,6 @@ class ExamSeeder extends Seeder
             'skill_id' => $listeningSkill->id,
             'title' => 'Listening Section',
             'order' => 2,
-            'duration_minutes' => 36,
-            'instructions' => 'Dengarkan setiap audio. Jawab soal berdasarkan informasi dari audio.',
             'total_questions' => 4,
         ]);
 

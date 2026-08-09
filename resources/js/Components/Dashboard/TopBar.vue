@@ -33,7 +33,7 @@ onMounted(() => {
 
 <template>
     <header
-        class="flex justify-between items-center w-full px-8 py-6 bg-surface-white"
+        class="relative z-10 flex justify-between items-center w-full px-8 py-6 bg-surface-container-low dark:bg-surface-container-low shadow-[0_8px_24px_-8px_rgba(0,0,0,0.3)]"
     >
         <h2 class="text-headline-md font-bold text-primary">{{ title }}</h2>
         <div class="flex items-center gap-6">

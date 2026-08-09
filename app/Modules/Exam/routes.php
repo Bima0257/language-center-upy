@@ -55,6 +55,12 @@ Route::middleware(['auth', 'role:admin,superadmin'])
         Route::put('/{exam}/sections/{section}', [ExamSectionController::class, 'update'])->name('sections.update');
         Route::delete('/{exam}/sections/{section}', [ExamSectionController::class, 'destroy'])->name('sections.destroy');
 
+        Route::post('/{exam}/sections/{section}/questions', [ExamSectionController::class, 'attachQuestions'])->name('sections.questions.store');
+        Route::patch('/{exam}/sections/{section}/questions/order', [ExamSectionController::class, 'reorderQuestions'])->name('sections.questions.order');
+        Route::delete('/{exam}/sections/{section}/questions/{question}', [ExamSectionController::class, 'detachQuestion'])->name('sections.questions.destroy');
+        Route::patch('/{exam}/sections/{section}/parts/order', [ExamSectionController::class, 'reorderParts'])->name('sections.parts.order');
+        Route::patch('/{exam}/sections/{section}/arrangement', [ExamSectionController::class, 'saveArrangement'])->name('sections.arrangement');
+
         Route::post('/questions', [QuestionController::class, 'store'])->name('questions.store');
         Route::post('/questions/bulk', [QuestionController::class, 'bulkStore'])->name('questions.bulk');
         Route::post('/questions/import', [QuestionController::class, 'importFile'])->name('questions.import');

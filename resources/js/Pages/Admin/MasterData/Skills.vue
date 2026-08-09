@@ -3,6 +3,7 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import DataTable from '@/Components/Shared/DataTable.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
+import DropDown from '@/Components/Shared/DropDown.vue';
 import { IconPlus, IconEdit, IconTrash, IconX } from '@tabler/icons-vue';
 import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
@@ -129,12 +130,14 @@ async function destroy(skill) {
                 </div>
                 <form @submit.prevent="creating ? submit() : saveEdit()" class="space-y-5">
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-1.5">Kategori Tes *</label>
-                        <select v-model="modalForm.exam_type_id" required
-                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
-                            <option value="" disabled>Pilih kategori tes</option>
-                            <option v-for="t in examTypes" :key="t.id" :value="String(t.id)">{{ t.name }}</option>
-                        </select>
+                        <DropDown
+                            v-model="modalForm.exam_type_id"
+                            :options="examTypes"
+                            label="Kategori Tes *"
+                            placeholder="Pilih kategori tes"
+                            option-label="name"
+                            option-value="id"
+                        />
                         <p v-if="modalForm.errors.exam_type_id" class="text-error-red text-xs mt-1">{{ modalForm.errors.exam_type_id }}</p>
                     </div>
                     <div>

@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { IconCheck, IconRefresh, IconUpload } from '@tabler/icons-vue';
 import OnboardingLayout from '@/Components/Onboarding/OnboardingLayout.vue';
+import DropDown from '@/Components/Shared/DropDown.vue';
 
 const props = defineProps({
     hasUploaded: { type: Boolean, default: false },
@@ -81,21 +82,25 @@ function submit() {
                             <p v-if="form.errors.nim" class="text-error-red text-xs mt-1">{{ form.errors.nim }}</p>
                         </div>
                         <div>
-                            <label class="text-label-md font-medium text-primary block mb-1.5">Fakultas</label>
-                            <select v-model="form.faculty_id" required
-                                    class="w-full border border-outline-variant rounded-xl px-4 py-3 text-body-md text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                                <option value="" disabled>Pilih fakultas</option>
-                                <option v-for="f in faculties" :key="f.id" :value="f.id">{{ f.name }}</option>
-                            </select>
+                            <DropDown
+                                v-model="form.faculty_id"
+                                :options="faculties"
+                                label="Fakultas"
+                                placeholder="Pilih fakultas"
+                                option-label="name"
+                                option-value="id"
+                            />
                             <p v-if="form.errors.faculty_id" class="text-error-red text-xs mt-1">{{ form.errors.faculty_id }}</p>
                         </div>
                         <div>
-                            <label class="text-label-md font-medium text-primary block mb-1.5">Program Studi</label>
-                            <select v-model="form.department_id" required
-                                    class="w-full border border-outline-variant rounded-xl px-4 py-3 text-body-md text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all">
-                                <option value="" disabled>Pilih program studi</option>
-                                <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
-                            </select>
+                            <DropDown
+                                v-model="form.department_id"
+                                :options="departments"
+                                label="Program Studi"
+                                placeholder="Pilih program studi"
+                                option-label="name"
+                                option-value="id"
+                            />
                             <p v-if="form.errors.department_id" class="text-error-red text-xs mt-1">{{ form.errors.department_id }}</p>
                         </div>
                         <div>

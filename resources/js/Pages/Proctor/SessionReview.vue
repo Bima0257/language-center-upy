@@ -1,6 +1,7 @@
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
+import DropDown from '@/Components/Shared/DropDown.vue';
 import ViolationTimeline from '@/Components/Proctor/ViolationTimeline.vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
@@ -150,14 +151,18 @@ const reviewStatusColors = {
                 <h2 class="text-title-lg font-semibold text-primary mb-4">Keputusan Review</h2>
                 <form @submit.prevent="submitReview" class="space-y-4">
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-2">Status</label>
-                        <select v-model="reviewForm.review_status" required
-                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
-                            <option value="" disabled>Pilih keputusan</option>
-                            <option value="sah">✅ Sah</option>
-                            <option value="ujian_ulang">🔄 Ujian Ulang</option>
-                            <option value="dibatalkan">❌ Dibatalkan</option>
-                        </select>
+                        <DropDown
+                            v-model="reviewForm.review_status"
+                            :options="[
+                                { id: 'sah', name: '✅ Sah' },
+                                { id: 'ujian_ulang', name: '🔄 Ujian Ulang' },
+                                { id: 'dibatalkan', name: '❌ Dibatalkan' },
+                            ]"
+                            label="Status"
+                            placeholder="Pilih keputusan"
+                            option-label="name"
+                            option-value="id"
+                        />
                     </div>
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-2">Catatan</label>

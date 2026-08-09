@@ -64,15 +64,44 @@ class ExamSessionController extends Controller
             'currentSection',
         ]);
 
-        // Load bank questions matching exam section skills, scoped by exam category
-        $sectionSkillIds = $session->schedule?->exam?->sections?->pluck('skill_id') ?? collect();
-        $examTypeId = $session->schedule?->exam?->exam_type_id;
+        $exam = $session->schedule?->exam;
+        $sections = $exam?->sections ?? collect();
+        $sectionSkillIds = $sections->pluck('skill_id') ?? collect();
 
-        $bankQuestions = Question::with('passage')
-            ->whereIn('skill_id', $sectionSkillIds)
-            ->where('status', 'approved')
-            ->when($examTypeId, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId)))
-            ->get();
+        // Load bank questions matching exam section skills, scoped by exam category
+        $pivotRows = \App\Models\ExamSectionQuestion::whereIn('exam_section_id', $sections->pluck('id'))->get();
+        $pivotQuestionIds = $pivotRows->pluck('question_id');
+
+        $questions = collect();
+
+        if ($pivotRows->isNotEmpty()) {
+            $questions = Question::with('passage')
+                ->whereIn('id', $pivotQuestionIds)
+                ->where('status', 'approved')
+                ->get()
+                ->each(function ($q) use ($pivotRows) {
+                    $row = $pivotRows->firstWhere('question_id', $q->id);
+                    $q->order = $row ? $row->order : $q->order;
+                })
+                ->sortBy('order')
+                ->values();
+        }
+
+        // Section tanpa susunan soal → fallback semua soal approved by skill
+        $emptySections = $sections->filter(fn ($s) => ! $pivotRows->where('exam_section_id', $s->id)->count());
+
+        if ($emptySections->isNotEmpty()) {
+            $fallback = Question::with('passage')
+                ->whereIn('skill_id', $emptySections->pluck('skill_id'))
+                ->where('status', 'approved')
+                ->when($exam?->exam_type_id, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $exam->exam_type_id)))
+                ->whereNotIn('id', $pivotQuestionIds)
+                ->get();
+
+            $questions = $questions->merge($fallback);
+        }
+
+        $bankQuestions = $questions;
 
         return Inertia::render('Exam/Take', [
             'session' => $session,

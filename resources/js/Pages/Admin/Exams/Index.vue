@@ -1,8 +1,8 @@
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3'
+import { Head, Link } from '@inertiajs/vue3'
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue'
 import DataTable from '@/Components/Shared/DataTable.vue'
-import { IconPlus } from '@tabler/icons-vue'
+import { IconPlus, IconEye } from '@tabler/icons-vue'
 
 const props = defineProps({
     exams: { type: Object, default: () => ({ data: [], links: [], meta: {} }) },
@@ -18,11 +18,8 @@ const columns = [
       render: (val) => val ?? 0 },
     { key: 'is_active', label: 'Status', sortable: true, badge: true,
       render: (val) => val ? 'Aktif' : 'Nonaktif' },
+    { key: 'id', label: 'Aksi', slot: 'actions' },
 ]
-
-function goToExam(exam) {
-    router.visit(route('admin.exams.show', exam.id))
-}
 </script>
 
 <template>
@@ -40,7 +37,13 @@ function goToExam(exam) {
             :columns="columns"
             :links="exams.links"
             :meta="exams.meta"
-            :row-link="goToExam"
-        />
+        >
+            <template #actions="{ row }">
+                <Link :href="route('admin.exams.show', row.id)"
+                      class="p-2 text-text-muted hover:text-secondary transition-colors" title="Detail">
+                    <IconEye :size="18" />
+                </Link>
+            </template>
+        </DataTable>
     </DashboardLayout>
 </template>

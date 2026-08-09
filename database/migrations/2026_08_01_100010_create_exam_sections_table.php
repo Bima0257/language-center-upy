@@ -14,8 +14,6 @@ return new class extends Migration
             $table->foreignId('skill_id')->constrained()->cascadeOnDelete();
             $table->string('title');
             $table->integer('order');
-            $table->integer('duration_minutes')->nullable();
-            $table->text('instructions')->nullable();
             $table->integer('total_questions')->default(0);
             $table->timestamps();
         });

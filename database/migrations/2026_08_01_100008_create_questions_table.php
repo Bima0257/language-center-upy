@@ -14,14 +14,17 @@ return new class extends Migration
             $table->foreignId('passage_id')->nullable()->constrained()->nullOnDelete();
             $table->enum('type', ['multiple_choice'])->default('multiple_choice');
             $table->foreignId('skill_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('skill_part_id')->nullable()->constrained()->nullOnDelete();
             $table->text('question_text');
             $table->text('option_a');
             $table->text('option_b');
             $table->text('option_c');
             $table->text('option_d');
             $table->char('correct_answer', 1);
+            $table->string('audio_url')->nullable();
+            $table->string('image_url')->nullable();
             $table->integer('order');
-            $table->enum('status', ['draft', 'submitted', 'approved', 'rejected', 'archived'])->default('draft');
+            $table->enum('status', ['draft', 'approved', 'rejected'])->default('draft');
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();

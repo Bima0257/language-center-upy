@@ -5,6 +5,7 @@ namespace App\Modules\Exam\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Exam\ReviewQuestionRequest;
 use App\Http\Requests\Exam\StoreLibraryQuestionRequest;
+use App\Models\ExamType;
 use App\Models\Passage;
 use App\Models\Question;
 use App\Models\QuestionBank;
@@ -57,16 +58,19 @@ class ContentLibraryController extends Controller
         $passageId = $request->input('passage_id');
         $partId = $request->input('part_id');
 
-        $questions = Question::with(['passage', 'questionBank', 'skill', 'skillPart', 'creator', 'reviewer'])
-            ->when($skillId, fn ($q) => $q->where('skill_id', $skillId))
-            ->when($questionBankId, fn ($q) => $q->where('question_bank_id', $questionBankId))
-            ->when($status, fn ($q) => $q->where('status', $status))
-            ->when($passageId, fn ($q) => $q->where('passage_id', $passageId))
-            ->when($partId, fn ($q) => $q->where('skill_part_id', $partId))
-            ->when($search, fn ($q) => $q->where('question_text', 'like', "%{$search}%"))
-            ->orderBy('created_at', 'desc')
-            ->paginate(20)
-            ->withQueryString();
+        // Soal hanya dimuat setelah bank soal dipilih
+        $questions = $questionBankId
+            ? Question::with(['passage', 'questionBank', 'skill', 'skillPart', 'creator', 'reviewer'])
+                ->when($skillId, fn ($q) => $q->where('skill_id', $skillId))
+                ->when($questionBankId, fn ($q) => $q->where('question_bank_id', $questionBankId))
+                ->when($status, fn ($q) => $q->where('status', $status))
+                ->when($passageId, fn ($q) => $q->where('passage_id', $passageId))
+                ->when($partId, fn ($q) => $q->where('skill_part_id', $partId))
+                ->when($search, fn ($q) => $q->where('question_text', 'like', "%{$search}%"))
+                ->orderBy('created_at', 'desc')
+                ->paginate(20)
+                ->withQueryString()
+            : Question::query()->whereRaw('1 = 0')->paginate(20);
 
         $selectedPassage = null;
         if ($passageId) {
@@ -75,6 +79,7 @@ class ContentLibraryController extends Controller
 
         return Inertia::render('Instructor/ContentLibrary', [
             'questions' => $questions,
+            'examTypes' => ExamType::where('is_active', true)->orderBy('name')->get(),
             'questionBanks' => QuestionBank::with('examType')->where('is_active', true)->orderBy('name')->get(),
             'skills' => Skill::with('examType')->where('is_active', true)->orderBy('name')->get(),
             'parts' => SkillPart::with('skill')->where('is_active', true)->orderBy('skill_id')->orderBy('order')->get(),

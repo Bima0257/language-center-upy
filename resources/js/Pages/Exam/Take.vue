@@ -57,7 +57,7 @@ const elapsedSeconds = props.session.started_at
     ? Math.floor((Date.now() - new Date(props.session.started_at).getTime()) / 1000)
     : 0;
 
-const totalSeconds = computed(() => (currentSection.value?.duration_minutes || 35) * 60);
+const totalSeconds = computed(() => (props.session.schedule?.exam?.duration_minutes || 35) * 60);
 
 const { remaining, minutes, seconds, isWarning, isDanger, start: startTimer } = useExamTimer({
     totalSeconds: totalSeconds.value,

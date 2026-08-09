@@ -5,17 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class TestFormQuestion extends Model
+class ExamSectionQuestion extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
-        'test_form_id',
+        'exam_section_id',
         'question_id',
         'order',
     ];
 
-    public function testForm(): BelongsTo
+    protected function casts(): array
     {
-        return $this->belongsTo(TestForm::class);
+        return [
+            'order' => 'integer',
+        ];
+    }
+
+    public function examSection(): BelongsTo
+    {
+        return $this->belongsTo(ExamSection::class);
     }
 
     public function question(): BelongsTo
