@@ -2,23 +2,12 @@
 import { Link, router, usePage } from "@inertiajs/vue3";
 import { ref, watch } from "vue";
 import {
-    IconChartPie,
-    IconBooks,
     IconSettings,
     IconLogout,
     IconMenu2,
-    IconClipboardCheck,
-    IconFileDescription,
-    IconEyeCheck,
-    IconUsers,
-    IconReport,
-    IconDatabase,
-    IconCertificate,
-    IconFolders,
-    IconCategory,
-    IconListDetails,
     IconChevronDown,
 } from "@tabler/icons-vue";
+import { getNav } from "@/Composables/useNav";
 
 const props = defineProps({
     collapsed: { type: Boolean, default: false },
@@ -29,105 +18,7 @@ defineEmits(["toggle"]);
 const page = usePage();
 const roles = page.props.auth?.roles || [];
 
-const isStudent = roles.includes("student");
-const isInstructor = roles.includes("instructor");
-const isAdmin = roles.includes("admin") || roles.includes("superadmin");
-const isProctorOnly = roles.includes("proctor") && !isAdmin;
-
-const nav = [];
-
-if (isStudent) {
-    nav.push(
-        { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
-        { label: "Tryout", icon: IconClipboardCheck, route: "exam.available" },
-    );
-}
-
-if (isInstructor) {
-    nav.push(
-        { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
-        { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },
-        {
-            label: "Materi Soal",
-            icon: IconFileDescription,
-            route: "content-library.passages.index",
-        },
-    );
-}
-
-if (isProctorOnly) {
-    nav.push(
-        { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
-        {
-            label: "Dashboard Pengawas",
-            icon: IconEyeCheck,
-            route: "proctor.dashboard",
-        },
-    );
-}
-
-if (isAdmin) {
-    nav.push(
-        { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
-        {
-            label: "Soal",
-            icon: IconBooks,
-            children: [
-                {
-                    label: "Jenis Tes",
-                    icon: IconCategory,
-                    route: "admin.master-data.exam-types.index",
-                },
-                {
-                    label: "Bank Soal Manager",
-                    icon: IconFolders,
-                    route: "content-library.question-banks.index",
-                },
-                {
-                    label: "Master Skill",
-                    icon: IconDatabase,
-                    route: "admin.master-data.skills.index",
-                },
-                {
-                    label: "Part Soal",
-                    icon: IconListDetails,
-                    route: "admin.master-data.parts.index",
-                },
-                {
-                    label: "Materi Soal",
-                    icon: IconFileDescription,
-                    route: "content-library.passages.index",
-                },
-                {
-                    label: "Bank Soal",
-                    icon: IconBooks,
-                    route: "content-library.index",
-                },
-            ],
-        },
-        {
-            label: "Manajemen Ujian",
-            icon: IconFileDescription,
-            route: "admin.exams.index",
-        },
-        { label: "Verifikasi", icon: IconUsers, route: "admin.verify-users" },
-        {
-            label: "Sertifikat",
-            icon: IconCertificate,
-            route: "admin.certificates.index",
-        },
-        {
-            label: "Dashboard Pengawas",
-            icon: IconEyeCheck,
-            route: "proctor.dashboard",
-        },
-        {
-            label: "Laporan",
-            icon: IconReport,
-            route: "admin.reports.integrity",
-        },
-    );
-}
+const nav = getNav(roles);
 
 const bottom = [
     { label: "Pengaturan", icon: IconSettings, route: route("profile.edit") },

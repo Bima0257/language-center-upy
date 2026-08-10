@@ -4,13 +4,15 @@ import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
 import DropDown from '@/Components/Shared/DropDown.vue';
-import { IconPlus, IconTrash, IconFileDescription, IconUpload, IconInfoCircle, IconHeadphones } from '@tabler/icons-vue';
+import UserGuide from '@/Components/Shared/UserGuide.vue';
+import { IconPlus, IconTrash, IconFileDescription, IconUpload, IconInfoCircle, IconHeadphones, IconBooks } from '@tabler/icons-vue';
 import { computed, nextTick, ref, watch } from 'vue';
 
 const props = defineProps({
     questionBanks: { type: Array, default: () => [] },
     skills: { type: Array, default: () => [] },
     parts: { type: Array, default: () => [] },
+    preselectedBankId: { type: Number, default: null },
 });
 
 const optionKeys = ['A', 'B', 'C', 'D'];
@@ -46,7 +48,7 @@ function newQuestion() {
 }
 
 const form = useForm({
-    question_bank_id: '',
+    question_bank_id: props.preselectedBankId || '',
     new_passage_title: '',
     new_passage_type: 'text',
     new_passage_content_text: '',
@@ -70,9 +72,23 @@ const globalSkill = computed(() =>
 
 const globalListening = computed(() => globalSkill.value?.code === 'listening');
 
-function skillName(id) {
-    return props.skills.find(s => String(s.id) === String(id))?.name || '';
-}
+const passageTypeOptions = computed(() => {
+    if (!perQuestionSkill.value && globalSkillId.value) {
+        if (globalListening.value) {
+            return [{ id: 'audio', name: 'Audio' }];
+        }
+        return [
+            { id: 'text', name: 'Teks' },
+            { id: 'image', name: 'Gambar' },
+        ];
+    }
+    return [
+        { id: 'text', name: 'Teks' },
+        { id: 'audio', name: 'Audio' },
+        { id: 'image', name: 'Gambar' },
+        { id: 'prompt', name: 'Prompt' },
+    ];
+});
 
 function isListeningSkill(id) {
     const s = props.skills.find(s => String(s.id) === String(id));
@@ -155,7 +171,14 @@ function onQuestionImageSelect(e, qi) {
 }
 
 watch(globalListening, (listening) => {
-    if (listening && passageMode.value === 'new') {
+    if (!listening) {
+        if (passageType.value !== 'text' && passageType.value !== 'image') {
+            passageType.value = 'text';
+            form.new_passage_type = 'text';
+        }
+        return;
+    }
+    if (passageMode.value === 'new') {
         passageType.value = 'audio';
         form.new_passage_type = 'audio';
     }
@@ -240,19 +263,47 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
         <Link :href="route('content-library.index')" class="inline-block text-secondary text-label-md font-medium hover:underline mb-6">← Kembali ke Content Library</Link>
         <div class="max-w-5xl mx-auto">
             <div class="bg-surface-white rounded-3xl p-8 shadow-soft border border-outline-variant/30">
-                <h2 class="text-headline-md font-bold text-primary mb-6">Tambah Soal Baru</h2>
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-headline-md font-bold text-primary">Tambah Soal Baru</h2>
+                    <UserGuide
+                        title="Panduan Tambah Soal"
+                        :steps="[
+                            { title: 'Pilih Bank Soal', desc: 'Bank menentukan kategori tes dan filter skill.' },
+                            { title: 'Pilih Skill & Part', desc: 'Skill & part ditentukan dulu — tipe materi menyesuaikan skill.' },
+                            { title: 'Isi Materi (opsional)', desc: 'Listening otomatis audio; Reading pilih Teks/Gambar.' },
+                            { title: 'Isi Soal & Kunci', desc: 'Soal standalone langsung diisi; kunci jawaban di bawah soal.' },
+                        ]"
+                        :rules="[
+                            'Soal baru berstatus Draf dan direview admin.',
+                            'Listening: materi, soal & pilihan ada di audio — audio wajib.',
+                            'Reading: teks soal + 4 pilihan jawaban wajib diisi.',
+                        ]"
+                    />
+                </div>
 
                 <form @submit.prevent="submit" class="space-y-6">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <DropDown
-                                v-model="form.question_bank_id"
-                                :options="questionBanks"
-                                label="Bank Soal *"
-                                placeholder="Pilih Bank Soal"
-                                :option-label="(b) => b.name + (b.exam_type ? ' (' + b.exam_type.name + ')' : '')"
-                                option-value="id"
-                            />
+                            <div v-if="preselectedBankId">
+                                <label class="text-label-md font-medium text-primary block mb-1.5">Bank Soal</label>
+                                <div class="flex items-center gap-2 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl">
+                                    <IconBooks :size="18" class="text-secondary shrink-0" />
+                                    <span class="text-body-md font-medium text-primary truncate">{{ selectedBank?.name }}</span>
+                                    <span v-if="selectedBank?.exam_type" class="inline-block bg-pastel-blue/50 text-primary px-2.5 py-0.5 rounded-full text-label-md shrink-0">
+                                        {{ selectedBank.exam_type.name }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div v-else>
+                                <DropDown
+                                    v-model="form.question_bank_id"
+                                    :options="questionBanks"
+                                    label="Bank Soal *"
+                                    placeholder="Pilih Bank Soal"
+                                    :option-label="(b) => b.name + (b.exam_type ? ' (' + b.exam_type.name + ')' : '')"
+                                    option-value="id"
+                                />
+                            </div>
                             <p v-if="form.errors.question_bank_id" class="text-error-red text-xs mt-1">{{ form.errors.question_bank_id }}</p>
                         </div>
                     </div>
@@ -260,6 +311,42 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                         <IconInfoCircle :size="16" class="text-secondary shrink-0" />
                         Soal baru akan direview oleh admin sebelum bisa dipakai.
                     </p>
+
+                    <!-- PENGATURAN SKILL & PART BATCH -->
+                    <div v-if="!perQuestionSkill" class="bg-pastel-blue/10 border border-pastel-blue/40 rounded-2xl p-5 space-y-3">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="grid grid-cols-2 gap-4 flex-1">
+                                <div>
+                                    <DropDown
+                                        v-model="globalSkillId"
+                                        :options="availableSkills"
+                                        label="Skill untuk semua soal *"
+                                        placeholder="Pilih skill"
+                                        option-label="name"
+                                        option-value="id"
+                                    />
+                                </div>
+                                <div>
+                                    <DropDown
+                                        v-model="globalPartId"
+                                        :options="globalParts()"
+                                        label="Part *"
+                                        placeholder="Pilih part"
+                                        option-label="name"
+                                        option-value="id"
+                                        :disabled="!globalSkillId"
+                                    />
+                                </div>
+                            </div>
+                            <button type="button" @click="setPerQuestionMode"
+                                    class="shrink-0 text-secondary text-label-md font-medium hover:underline">Atur skill per soal</button>
+                        </div>
+                        <p class="text-label-md text-text-muted">Skill dan part ini otomatis diterapkan ke semua soal di bawah.</p>
+                    </div>
+                    <div v-else class="flex justify-end">
+                        <button type="button" @click="setGlobalMode"
+                                class="text-secondary text-label-md font-medium hover:underline">Gunakan satu skill untuk semua soal</button>
+                    </div>
 
                     <hr class="border-outline-variant/50" />
 
@@ -294,20 +381,12 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                             <div v-if="!globalListening">
                                 <DropDown
                                     v-model="passageType"
-                                    :options="[
-                                        { id: 'text', name: 'Teks' },
-                                        { id: 'audio', name: 'Audio' },
-                                        { id: 'image', name: 'Gambar' },
-                                        { id: 'prompt', name: 'Prompt' },
-                                    ]"
+                                    :options="passageTypeOptions"
                                     label="Tipe Materi Soal *"
                                     option-label="name"
                                     option-value="id"
                                     @change="form.new_passage_type = $event"
                                 />
-                            </div>
-                            <div v-else class="flex items-center gap-2 px-4 py-3 bg-pastel-purple/20 border border-pastel-purple/40 rounded-2xl text-label-md font-semibold text-primary">
-                                <IconHeadphones :size="18" /> Tipe Audio (Listening)
                             </div>
                         </div>
 
@@ -364,8 +443,6 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                         </template>
                     </div>
 
-                    <hr class="border-outline-variant/50" />
-
                     <!-- DAFTAR SOAL -->
                     <div class="flex items-center justify-between">
                         <p class="text-title-lg font-semibold text-primary">Soal</p>
@@ -373,42 +450,6 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                                 class="flex items-center gap-1.5 text-secondary text-label-md font-medium hover:underline">
                             <IconPlus :size="18" /> Tambah Soal
                         </button>
-                    </div>
-
-                    <!-- PENGATURAN SKILL & PART BATCH -->
-                    <div v-if="!perQuestionSkill" class="bg-pastel-blue/10 border border-pastel-blue/40 rounded-2xl p-5 space-y-3">
-                        <div class="flex items-start justify-between gap-4">
-                            <div class="grid grid-cols-2 gap-4 flex-1">
-                                <div>
-                                    <DropDown
-                                        v-model="globalSkillId"
-                                        :options="availableSkills"
-                                        label="Skill untuk semua soal *"
-                                        placeholder="Pilih skill"
-                                        option-label="name"
-                                        option-value="id"
-                                    />
-                                </div>
-                                <div>
-                                    <DropDown
-                                        v-model="globalPartId"
-                                        :options="globalParts()"
-                                        label="Part *"
-                                        placeholder="Pilih part"
-                                        option-label="name"
-                                        option-value="id"
-                                        :disabled="!globalSkillId"
-                                    />
-                                </div>
-                            </div>
-                            <button type="button" @click="setPerQuestionMode"
-                                    class="shrink-0 text-secondary text-label-md font-medium hover:underline">Atur skill per soal</button>
-                        </div>
-                        <p class="text-label-md text-text-muted">Skill dan part ini otomatis diterapkan ke semua soal di bawah.</p>
-                    </div>
-                    <div v-else class="flex justify-end">
-                        <button type="button" @click="setGlobalMode"
-                                class="text-secondary text-label-md font-medium hover:underline">Gunakan satu skill untuk semua soal</button>
                     </div>
 
                     <div v-for="(q, qi) in form.questions" :key="qi"
@@ -427,55 +468,28 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                             </button>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
+                        <!-- SKILL & PART (hanya mode per-soal) -->
+                        <div v-if="perQuestionSkill" class="grid grid-cols-2 gap-4">
                             <div>
-                                <div v-if="perQuestionSkill">
-                                    <DropDown
-                                        v-model="q.skill_id"
-                                        :options="availableSkills"
-                                        label="Skill *"
-                                        placeholder="Pilih Skill"
-                                        option-label="name"
-                                        option-value="id"
-                                        @change="onQuestionSkillChange(q, qi)"
-                                    />
-                                </div>
-                                <div v-else>
-                                    <label class="text-label-md font-medium text-primary block mb-1.5">Skill</label>
-                                    <span :class="q.skill_id ? 'bg-pastel-blue/50 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'"
-                                          class="inline-block px-3 py-1.5 rounded-full text-label-md font-medium">
-                                        {{ skillName(q.skill_id) || 'Skill belum dipilih' }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div>
-                                <div v-if="perQuestionSkill">
-                                    <DropDown
-                                        v-model="q.skill_part_id"
-                                        :options="partsForSkill(q.skill_id)"
-                                        label="Part *"
-                                        placeholder="Pilih part"
-                                        option-label="name"
-                                        option-value="id"
-                                        :disabled="!q.skill_id"
-                                    />
-                                </div>
-                                <div v-else>
-                                    <label class="text-label-md font-medium text-primary block mb-1.5">Part</label>
-                                    <span :class="q.skill_part_id ? 'bg-pastel-peach/50 text-amber-800 dark:text-amber-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'"
-                                          class="inline-block px-3 py-1.5 rounded-full text-label-md font-medium">
-                                        {{ props.parts.find(p => String(p.id) === String(q.skill_part_id))?.name || 'Part belum dipilih' }}
-                                    </span>
-                                </div>
+                                <DropDown
+                                    v-model="q.skill_id"
+                                    :options="availableSkills"
+                                    label="Skill *"
+                                    placeholder="Pilih Skill"
+                                    option-label="name"
+                                    option-value="id"
+                                    @change="onQuestionSkillChange(q, qi)"
+                                />
                             </div>
                             <div>
                                 <DropDown
-                                    v-model="q.correct_answer"
-                                    :options="optionKeys.map(k => ({ id: k, name: k }))"
-                                    label="Kunci Jawaban *"
-                                    placeholder="Pilih jawaban benar"
+                                    v-model="q.skill_part_id"
+                                    :options="partsForSkill(q.skill_id)"
+                                    label="Part *"
+                                    placeholder="Pilih part"
                                     option-label="name"
                                     option-value="id"
+                                    :disabled="!q.skill_id"
                                 />
                             </div>
                         </div>
@@ -539,6 +553,16 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                                                class="flex-1 px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                                     </div>
                                 </div>
+                            </div>
+                            <div>
+                                <DropDown
+                                    v-model="q.correct_answer"
+                                    :options="optionKeys.map(k => ({ id: k, name: k }))"
+                                    label="Kunci Jawaban *"
+                                    placeholder="Pilih jawaban benar"
+                                    option-label="name"
+                                    option-value="id"
+                                />
                             </div>
                         </template>
                     </div>

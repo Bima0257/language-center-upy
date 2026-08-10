@@ -29,12 +29,18 @@ class ContentLibraryController extends Controller
         private ImageCompressionService $imageCompression,
     ) {}
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $preselectedBankId = $request->query('question_bank_id');
+
         return Inertia::render('Instructor/CreateQuestion', [
             'questionBanks' => QuestionBank::where('is_active', true)->orderBy('name')->get(),
             'skills' => Skill::with('examType')->where('is_active', true)->orderBy('name')->get(),
             'parts' => SkillPart::where('is_active', true)->orderBy('skill_id')->orderBy('order')->get(),
+            'preselectedBankId' => $preselectedBankId
+                && QuestionBank::whereKey($preselectedBankId)->where('is_active', true)->exists()
+                    ? (int) $preselectedBankId
+                    : null,
         ]);
     }
 

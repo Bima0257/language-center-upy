@@ -5,10 +5,14 @@ import TopBar from "@/Components/Dashboard/TopBar.vue";
 import MobileNav from "@/Components/Dashboard/MobileNav.vue";
 import ScrollToTop from "@/Components/Dashboard/ScrollToTop.vue";
 import ConfirmDialog from "@/Components/ConfirmDialog.vue";
+import Breadcrumb from "@/Components/Dashboard/Breadcrumb.vue";
+import { getBreadcrumbs } from "@/Composables/useNav";
 
-defineProps({
+const props = defineProps({
     title: { type: String, default: "Dashboard" },
 });
+
+const breadcrumbs = getBreadcrumbs(props.title);
 
 const sidebarCollapsed = ref(false);
 </script>
@@ -24,6 +28,7 @@ const sidebarCollapsed = ref(false);
             <div
                 class="flex-1 overflow-y-auto p-8 scrollbar-hide dashboard-scroll-area bg-surface-white"
             >
+                <Breadcrumb :items="breadcrumbs" class="mb-6" />
                 <slot />
             </div>
             <ScrollToTop />
