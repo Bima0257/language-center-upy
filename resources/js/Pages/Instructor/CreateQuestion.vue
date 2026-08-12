@@ -22,12 +22,18 @@ const props = defineProps({
 
 const optionKeys = ['A', 'B', 'C', 'D'];
 
+const materialTypeOptions = [
+    { id: 'text', name: 'Teks (Reading)' },
+    { id: 'audio', name: 'Audio + Gambar' },
+];
+
 const passageMode = ref('none');
 const passageType = ref('text');
 const questionRefs = ref([]);
 
 const globalSkillId = ref('');
 const globalPartId = ref('');
+const globalMaterialType = ref('text');
 const perQuestionSkill = ref(false);
 
 if (props.skills.length === 1) {
@@ -38,6 +44,7 @@ function newQuestion() {
     return {
         skill_id: globalSkillId.value,
         skill_part_id: globalPartId.value,
+        material_type: globalMaterialType.value,
         question_text: '',
         option_a: '',
         option_b: '',
@@ -72,34 +79,12 @@ const availableSkills = computed(() => {
     return props.skills.filter(s => String(s.exam_type_id) === String(selectedBank.value.exam_type_id));
 });
 
-const globalSkill = computed(() =>
-    props.skills.find(s => String(s.id) === String(globalSkillId.value)) || null,
-);
-
-const globalListening = computed(() => globalSkill.value?.code === 'listening');
-
-const passageTypeOptions = computed(() => {
-    if (!perQuestionSkill.value && globalSkillId.value) {
-        if (globalListening.value) {
-            return [{ id: 'audio', name: 'Audio' }];
-        }
-        return [
-            { id: 'text', name: 'Teks' },
-            { id: 'image', name: 'Gambar' },
-        ];
-    }
-    return [
-        { id: 'text', name: 'Teks' },
-        { id: 'audio', name: 'Audio' },
-        { id: 'image', name: 'Gambar' },
-        { id: 'prompt', name: 'Prompt' },
-    ];
-});
-
-function isListeningSkill(id) {
-    const s = props.skills.find(s => String(s.id) === String(id));
-    return s?.code === 'listening';
-}
+const passageTypeOptions = [
+    { id: 'text', name: 'Teks' },
+    { id: 'audio', name: 'Audio' },
+    { id: 'image', name: 'Gambar' },
+    { id: 'prompt', name: 'Prompt' },
+];
 
 function partsForSkill(skillId) {
     return props.parts.filter(p => String(p.skill_id) === String(skillId));
@@ -115,8 +100,6 @@ watch(globalSkillId, (value) => {
     for (const q of form.questions) {
         q.skill_id = value;
         q.skill_part_id = '';
-        q.audio_file = null;
-        q.image_file = null;
     }
 });
 
@@ -124,6 +107,13 @@ watch(globalPartId, (value) => {
     if (perQuestionSkill.value) return;
     for (const q of form.questions) {
         q.skill_part_id = value;
+    }
+});
+
+watch(globalMaterialType, (type) => {
+    if (perQuestionSkill.value) return;
+    for (const q of form.questions) {
+        q.material_type = type;
     }
 });
 
@@ -156,28 +146,12 @@ function setGlobalMode() {
     }
 }
 
-function onQuestionSkillChange(q, qi) {
+function onQuestionSkillChange(q) {
     q.skill_part_id = '';
-    q.audio_file = null;
-    q.image_file = null;
 }
 
-watch(globalListening, (listening) => {
-    if (!listening) {
-        if (passageType.value !== 'text' && passageType.value !== 'image') {
-            passageType.value = 'text';
-            form.new_passage_type = 'text';
-        }
-        return;
-    }
-    if (passageMode.value === 'new') {
-        passageType.value = 'audio';
-        form.new_passage_type = 'audio';
-    }
-});
-
 watch(passageMode, (mode) => {
-    if (mode === 'new' && globalListening.value) {
+    if (mode === 'new' && globalMaterialType.value === 'audio') {
         passageType.value = 'audio';
         form.new_passage_type = 'audio';
     }
@@ -202,10 +176,10 @@ const canSubmit = computed(() => {
     if (passageMode.value === 'new' && !form.new_passage_title.trim()) return false;
     if (!perQuestionSkill.value && !globalSkillId.value) return false;
     if (!perQuestionSkill.value && !globalPartId.value) return false;
-    if (passageMode.value === 'new' && globalListening.value && !form.new_passage_audio_file) return false;
+    if (passageMode.value === 'new' && globalMaterialType.value === 'audio' && !form.new_passage_audio_file) return false;
     return form.questions.every(q => {
         if (!q.skill_id || !q.skill_part_id || !q.correct_answer) return false;
-        if (isListeningSkill(q.skill_id)) {
+        if (q.material_type === 'audio') {
             return !!(q.audio_file || (passageMode.value === 'new' && form.new_passage_audio_file && form.new_passage_type === 'audio'));
         }
         return q.question_text.trim() &&
@@ -246,14 +220,15 @@ const indexUrl = computed(() => {
                         title="Panduan Tambah Soal"
                         :steps="[
                             { title: 'Pilih Bank Soal', desc: 'Bank menentukan kategori tes dan filter skill.' },
-                            { title: 'Pilih Skill & Part', desc: 'Skill & part ditentukan dulu — tipe materi menyesuaikan skill.' },
-                            { title: 'Isi Materi (opsional)', desc: 'Listening otomatis audio; Reading pilih Teks/Gambar.' },
+                            { title: 'Pilih Skill & Part', desc: 'Skill & part sebagai kategori soal, tidak menentukan tipe materi.' },
+                            { title: 'Pilih Tipe Materi', desc: 'Teks (Reading) atau Audio + Gambar — dipilih manual.' },
+                            { title: 'Isi Materi (opsional)', desc: 'Materi soal bisa teks, audio, gambar, atau tanpa materi.' },
                             { title: 'Isi Soal & Kunci', desc: 'Soal standalone langsung diisi; kunci jawaban di bawah soal.' },
                         ]"
                         :rules="[
                             'Soal baru berstatus Draf dan direview admin.',
-                            'Listening: materi, soal & pilihan ada di audio — audio wajib.',
-                            'Reading: teks soal + 4 pilihan jawaban wajib diisi.',
+                            'Audio + Gambar: materi, soal & pilihan ada di audio — audio wajib.',
+                            'Teks: teks soal + 4 pilihan jawaban wajib diisi.',
                         ]"
                     />
                 </div>
@@ -289,10 +264,10 @@ const indexUrl = computed(() => {
                         Soal baru akan direview oleh admin sebelum bisa dipakai.
                     </p>
 
-                    <!-- PENGATURAN SKILL & PART BATCH -->
+                    <!-- PENGATURAN SKILL, PART & TIPE MATERI BATCH -->
                     <div v-if="!perQuestionSkill" class="bg-pastel-blue/10 border border-pastel-blue/40 rounded-2xl p-5 space-y-3">
                         <div class="flex items-start justify-between gap-4">
-                            <div class="grid grid-cols-2 gap-4 flex-1">
+                            <div class="grid grid-cols-3 gap-4 flex-1">
                                 <div>
                                     <DropDown
                                         v-model="globalSkillId"
@@ -314,11 +289,21 @@ const indexUrl = computed(() => {
                                         :disabled="!globalSkillId"
                                     />
                                 </div>
+                                <div>
+                                    <DropDown
+                                        v-model="globalMaterialType"
+                                        :options="materialTypeOptions"
+                                        label="Tipe Materi *"
+                                        placeholder="Pilih tipe materi"
+                                        option-label="name"
+                                        option-value="id"
+                                    />
+                                </div>
                             </div>
                             <button type="button" @click="setPerQuestionMode"
                                     class="shrink-0 text-secondary text-label-md font-medium hover:underline">Atur skill per soal</button>
                         </div>
-                        <p class="text-label-md text-text-muted">Skill dan part ini otomatis diterapkan ke semua soal di bawah.</p>
+                        <p class="text-label-md text-text-muted">Skill, part, dan tipe materi ini otomatis diterapkan ke semua soal di bawah.</p>
                     </div>
                     <div v-else class="flex justify-end">
                         <button type="button" @click="setGlobalMode"
@@ -355,7 +340,7 @@ const indexUrl = computed(() => {
                                 <input type="text" v-model="form.new_passage_title" required placeholder="Judul bacaan"
                                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                                 <p v-if="form.errors.new_passage_title" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_title }}</p></div>
-                            <div v-if="!globalListening">
+                            <div v-if="globalMaterialType !== 'audio'">
                                 <DropDown
                                     v-model="passageType"
                                     :options="passageTypeOptions"
@@ -367,7 +352,7 @@ const indexUrl = computed(() => {
                             </div>
                         </div>
 
-                        <template v-if="globalListening">
+                        <template v-if="globalMaterialType === 'audio'">
                             <FileUpload
                                 v-model="form.new_passage_audio_file"
                                 label="File Audio (mp3/wav/m4a, max 50MB)"
@@ -432,8 +417,8 @@ const indexUrl = computed(() => {
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <p class="text-label-md font-semibold text-primary">Soal {{ qi + 1 }}</p>
-                                <span v-if="isListeningSkill(q.skill_id)" class="inline-flex items-center gap-1 bg-pastel-purple/30 text-primary px-2.5 py-0.5 rounded-full text-label-md font-medium">
-                                    <IconHeadphones :size="14" /> Listening
+                                <span v-if="q.material_type === 'audio'" class="inline-flex items-center gap-1 bg-pastel-purple/30 text-primary px-2.5 py-0.5 rounded-full text-label-md font-medium">
+                                    <IconHeadphones :size="14" /> Audio
                                 </span>
                             </div>
                             <button v-if="form.questions.length > 1" type="button" @click="removeQuestion(qi)"
@@ -442,8 +427,8 @@ const indexUrl = computed(() => {
                             </button>
                         </div>
 
-                        <!-- SKILL & PART (hanya mode per-soal) -->
-                        <div v-if="perQuestionSkill" class="grid grid-cols-2 gap-4">
+                        <!-- SKILL, PART & TIPE MATERI (hanya mode per-soal) -->
+                        <div v-if="perQuestionSkill" class="grid grid-cols-3 gap-4">
                             <div>
                                 <DropDown
                                     v-model="q.skill_id"
@@ -452,7 +437,7 @@ const indexUrl = computed(() => {
                                     placeholder="Pilih Skill"
                                     option-label="name"
                                     option-value="id"
-                                    @change="onQuestionSkillChange(q, qi)"
+                                    @change="onQuestionSkillChange(q)"
                                 />
                             </div>
                             <div>
@@ -466,10 +451,20 @@ const indexUrl = computed(() => {
                                     :disabled="!q.skill_id"
                                 />
                             </div>
+                            <div>
+                                <DropDown
+                                    v-model="q.material_type"
+                                    :options="materialTypeOptions"
+                                    label="Tipe Materi *"
+                                    placeholder="Pilih tipe materi"
+                                    option-label="name"
+                                    option-value="id"
+                                />
+                            </div>
                         </div>
 
-                        <!-- MODE LISTENING: audio + gambar, tanpa teks soal/opsi -->
-                        <template v-if="isListeningSkill(q.skill_id)">
+                        <!-- MODE AUDIO + GAMBAR: tanpa teks soal/opsi -->
+                        <template v-if="q.material_type === 'audio'">
                             <div class="bg-pastel-purple/10 border border-pastel-purple/40 rounded-2xl p-4 space-y-4">
                                 <p class="flex items-center gap-1.5 text-label-md text-text-muted">
                                     <IconInfoCircle :size="16" class="text-secondary shrink-0" />

@@ -159,7 +159,7 @@ onUnmounted(() => {
     <ExamLayout :session="session" :remaining-seconds="remaining" :minutes="minutes" :seconds="seconds"
                 :is-warning="isWarning" :is-danger="isDanger">
         <div class="flex h-full">
-            <div v-if="currentSection?.skill?.code === 'reading'" class="flex-1 flex">
+            <div v-if="currentQuestion?.material_type === 'text'" class="flex-1 flex">
                 <div class="w-1/2 p-6 overflow-y-auto border-r border-outline-variant/30">
                     <PassageViewer v-if="currentQuestion?.passage" :passage="currentQuestion.passage" />
                 </div>
@@ -203,7 +203,7 @@ onUnmounted(() => {
                 </div>
             </div>
 
-            <div v-else-if="currentSection?.skill?.code === 'listening'" class="flex-1 p-6 overflow-y-auto">
+            <div v-else-if="currentQuestion?.material_type === 'audio'" class="flex-1 p-6 overflow-y-auto">
                 <div class="mb-6">
                     <p class="text-label-md text-text-muted mb-2">Putar audio sebelum menjawab soal</p>
                     <div v-if="currentAudioSrc || currentImageSrc" class="bg-surface-container-low rounded-2xl border border-surface-variant overflow-hidden">

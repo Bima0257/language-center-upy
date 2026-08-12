@@ -35,6 +35,7 @@ const quickQuestionForm = useForm({
     question_bank_id: '',
     skill_id: '',
     skill_part_id: '',
+    material_type: 'text',
     question_text: '',
     option_a: '',
     option_b: '',
@@ -52,10 +53,7 @@ const availableQuickSkills = computed(() => {
     return props.skills.filter(s => String(s.exam_type_id) === String(quickSelectedBank.value.exam_type_id));
 });
 
-const quickIsListening = computed(() => {
-    const s = props.skills.find(s => String(s.id) === String(quickQuestionForm.skill_id));
-    return s?.code === 'listening';
-});
+const quickIsAudio = computed(() => (quickQuestionForm.material_type || 'text') === 'audio');
 
 function quickParts() {
     return props.parts.filter(p => String(p.skill_id) === String(quickQuestionForm.skill_id));
@@ -141,6 +139,8 @@ function openQuickAdd(passage) {
     quickQuestionForm.clearErrors();
     quickQuestionForm.reset();
     quickQuestionForm.passage_id = passage.id;
+    quickQuestionForm.material_type =
+        passage.audio_url || passage.type === 'audio' ? 'audio' : 'text';
     if (props.questionBanks.length === 1) {
         quickQuestionForm.question_bank_id = props.questionBanks[0].id;
     }
@@ -159,6 +159,7 @@ function saveQuickQuestion() {
             questions: [{
                 skill_id: data.skill_id,
                 skill_part_id: data.skill_part_id,
+                material_type: data.material_type,
                 question_text: data.question_text,
                 option_a: data.option_a,
                 option_b: data.option_b,
@@ -269,7 +270,7 @@ function getMediaIcon(passage) {
                     :question-banks="questionBanks"
                     :available-quick-skills="availableQuickSkills"
                     :quick-parts-fn="quickParts"
-                    :quick-is-listening="quickIsListening"
+                    :quick-is-audio="quickIsAudio"
                     :option-keys="optionKeys"
                     class="mt-4"
                     @save="saveQuickQuestion"

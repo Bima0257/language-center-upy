@@ -19,6 +19,7 @@ class StoreLibraryQuestionRequest extends FormRequest
             'questions' => ['required', 'array', 'min:1', 'max:50'],
             'questions.*.skill_id' => ['required', 'exists:skills,id'],
             'questions.*.skill_part_id' => ['required', 'exists:skill_parts,id'],
+            'questions.*.material_type' => ['required', 'string', 'in:text,audio'],
             'questions.*.question_text' => ['nullable', 'string'],
             'questions.*.option_a' => ['nullable', 'string'],
             'questions.*.option_b' => ['nullable', 'string'],

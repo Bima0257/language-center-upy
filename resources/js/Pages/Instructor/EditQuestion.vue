@@ -20,11 +20,17 @@ const props = defineProps({
 
 const optionKeys = ['A', 'B', 'C', 'D'];
 
+const materialTypeOptions = [
+    { id: 'text', name: 'Teks (Reading)' },
+    { id: 'audio', name: 'Audio + Gambar' },
+];
+
 const form = useForm({
     question_bank_id: props.question.question_bank_id || '',
     skill_id: props.question.skill_id || '',
     skill_part_id: props.question.skill_part_id || '',
     passage_id: props.question.passage_id || null,
+    material_type: props.question.material_type || 'text',
     question_text: props.question.question_text || '',
     option_a: props.question.option_a || '',
     option_b: props.question.option_b || '',
@@ -44,11 +50,7 @@ const availableSkills = computed(() => {
     return props.skills.filter(s => String(s.exam_type_id) === String(selectedBank.value.exam_type_id));
 });
 
-const selectedSkill = computed(() =>
-    props.skills.find(s => String(s.id) === String(form.skill_id)) || null,
-);
-
-const isListening = computed(() => selectedSkill.value?.code === 'listening');
+const isMaterialAudio = computed(() => (form.material_type || 'text') === 'audio');
 
 const partsForSelectedSkill = computed(() =>
     props.parts.filter(p => String(p.skill_id) === String(form.skill_id)),
@@ -60,8 +62,6 @@ function skillName(id) {
 
 function onSkillChange() {
     form.skill_part_id = '';
-    form.audio_file = null;
-    form.image_file = null;
 }
 
 const storedAudioUrl = computed(() => {
@@ -97,7 +97,7 @@ function submit() {
                     <p class="text-text-muted text-text-body text-body-md mt-1">Pilihan Ganda — {{ skillName(question.skill_id) }}</p>
                 </div>
                 <form @submit.prevent="submit" class="space-y-6" enctype="multipart/form-data">
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <DropDown
                                 v-model="form.question_bank_id"
@@ -117,6 +117,16 @@ function submit() {
                                 option-label="name"
                                 option-value="id"
                                 @change="onSkillChange"
+                            />
+                        </div>
+                        <div>
+                            <DropDown
+                                v-model="form.material_type"
+                                :options="materialTypeOptions"
+                                label="Tipe Materi *"
+                                placeholder="Pilih tipe materi"
+                                option-label="name"
+                                option-value="id"
                             />
                         </div>
                     </div>
@@ -151,8 +161,8 @@ function submit() {
 
                     <hr class="border-outline-variant/50" />
 
-                    <!-- MODE LISTENING -->
-                    <template v-if="isListening">
+                    <!-- MODE AUDIO + GAMBAR -->
+                    <template v-if="isMaterialAudio">
                         <div class="bg-pastel-purple/10 border border-pastel-purple/40 rounded-2xl p-5 space-y-4">
                             <p class="flex items-center gap-1.5 text-label-md text-text-muted">
                                 <IconInfoCircle :size="16" class="text-secondary shrink-0" />
@@ -184,7 +194,7 @@ function submit() {
                         </div>
                     </template>
 
-                    <!-- MODE READING -->
+                    <!-- MODE TEKS -->
                     <template v-else>
                         <div><label class="text-label-md font-medium text-primary block mb-1.5">Teks Soal <span class="text-error-red">*</span></label>
                             <BaseTextarea v-model="form.question_text" rows="3" required /></div>

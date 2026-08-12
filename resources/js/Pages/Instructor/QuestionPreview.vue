@@ -16,7 +16,7 @@ const showKey = ref(false);
 const currentIndex = ref(props.index);
 
 const current = computed(() => props.questions[currentIndex.value] || null);
-const isListening = computed(() => current.value?.skill?.code === 'listening');
+const isMaterialAudio = computed(() => (current.value?.material_type || 'text') === 'audio');
 const passage = computed(() => current.value?.passage || null);
 const audioSrc = computed(() => {
     const path = current.value?.audio_url || passage.value?.audio_url;
@@ -32,7 +32,7 @@ const audioLoading = useMediaLoad(audioSrc);
 
 const skillLabel = computed(() => {
     if (!current.value?.skill) return 'Soal';
-    return current.value.skill.code === 'listening' ? 'Listening' : 'Reading Passage';
+    return isMaterialAudio.value ? 'Audio + Gambar' : 'Reading Passage';
 });
 
 const partLabel = computed(() => current.value?.skillPart?.name || current.value?.skill?.name || '');
@@ -86,7 +86,7 @@ function goBack() {
             <!-- MAIN CONTENT -->
             <main class="flex-1 flex overflow-hidden">
                 <!-- READING: SPLIT PANE -->
-                <template v-if="!isListening">
+                <template v-if="!isMaterialAudio">
                     <!-- LEFT PANE: PASSAGE -->
                     <section class="w-1/2 border-r border-outline-variant overflow-y-auto scroll-hide p-8 bg-surface-bright">
                         <div class="max-w-xl mx-auto">
@@ -146,15 +146,15 @@ function goBack() {
                     </section>
                 </template>
 
-                <!-- LISTENING: SPLIT PANE -->
+                <!-- AUDIO + GAMBAR: SPLIT PANE -->
                 <template v-else>
                     <!-- LEFT PANE: MEDIA -->
                     <section class="w-1/2 border-r border-outline-variant overflow-y-auto scroll-hide p-8 bg-surface-bright">
                         <div class="max-w-xl mx-auto">
                             <div class="mb-8">
-                                <span class="bg-pastel-purple text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block">{{ partLabel || 'Listening' }}</span>
+                                <span class="bg-pastel-purple text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block">{{ partLabel || 'Audio' }}</span>
                                 <h1 v-if="passage" class="font-serif text-2xl leading-tight text-primary font-bold mb-6">{{ passage.title }}</h1>
-                                <h1 v-else class="font-serif text-2xl leading-tight text-primary font-bold mb-6">{{ partLabel || 'Listening' }}</h1>
+                                <h1 v-else class="font-serif text-2xl leading-tight text-primary font-bold mb-6">{{ partLabel || 'Audio' }}</h1>
                             </div>
                             <p class="text-label-md text-text-muted mb-4">Putar audio sebelum menjawab soal</p>
                             <div class="bg-surface-container-low rounded-2xl border border-surface-variant overflow-hidden flex flex-col">

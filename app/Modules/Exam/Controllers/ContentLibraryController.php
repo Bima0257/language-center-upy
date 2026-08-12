@@ -15,6 +15,7 @@ use App\Services\AudioCompressionService;
 use App\Services\ImageCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -162,35 +163,35 @@ class ContentLibraryController extends Controller
                 throw ValidationException::withMessages(['questions' => 'Skill harus se-kategori dengan bank soal yang dipilih.']);
             }
 
-            $isListening = $skill->code === 'listening';
+            $isAudio = ($q['material_type'] ?? 'text') === 'audio';
 
             $audioUrl = null;
             $imageUrl = null;
 
-            if (! empty($q['audio_file']) && $q['audio_file'] instanceof \Illuminate\Http\UploadedFile) {
+            if (! empty($q['audio_file']) && $q['audio_file'] instanceof UploadedFile) {
                 $audioPath = $q['audio_file']->store('questions/audio', 'public');
                 $audioUrl = $this->audioCompression->compress('public', $audioPath) ?? $audioPath;
             }
 
-            if (! empty($q['image_file']) && $q['image_file'] instanceof \Illuminate\Http\UploadedFile) {
+            if (! empty($q['image_file']) && $q['image_file'] instanceof UploadedFile) {
                 $imagePath = $q['image_file']->store('questions/images', 'public');
                 $imageUrl = $this->imageCompression->compress('public', $imagePath) ?? $imagePath;
             }
 
-            if ($isListening) {
+            if ($isAudio) {
                 if (! $audioUrl && ! ($passage && $passage->audio_url)) {
-                    throw ValidationException::withMessages(['questions' => 'Soal listening wajib memiliki audio, baik di soal maupun di passage.']);
+                    throw ValidationException::withMessages(['questions' => 'Soal dengan tipe audio wajib memiliki audio, baik di soal maupun di passage.']);
                 }
 
                 if ($passageId && $passage && ! $passage->audio_url && ! $passage->image_url) {
-                    throw ValidationException::withMessages(['questions' => 'Passage untuk soal listening wajib memiliki audio atau gambar.']);
+                    throw ValidationException::withMessages(['questions' => 'Passage untuk soal tipe audio wajib memiliki audio atau gambar.']);
                 }
             } else {
                 $optionEmpty = collect(['option_a', 'option_b', 'option_c', 'option_d'])
                     ->contains(fn ($field) => empty(trim($q[$field] ?? '')));
 
                 if (empty(trim($q['question_text'] ?? '')) || $optionEmpty) {
-                    throw ValidationException::withMessages(['questions' => 'Soal reading wajib memiliki teks soal dan seluruh pilihan jawaban.']);
+                    throw ValidationException::withMessages(['questions' => 'Soal tipe teks wajib memiliki teks soal dan seluruh pilihan jawaban.']);
                 }
             }
 
@@ -200,6 +201,7 @@ class ContentLibraryController extends Controller
                 'skill_part_id' => $part->id,
                 'passage_id' => $passageId,
                 'type' => 'multiple_choice',
+                'material_type' => $q['material_type'] ?? 'text',
                 'question_text' => $q['question_text'] ?? '',
                 'option_a' => $q['option_a'] ?? '',
                 'option_b' => $q['option_b'] ?? '',
@@ -255,6 +257,7 @@ class ContentLibraryController extends Controller
             'skill_id' => ['required', 'exists:skills,id'],
             'skill_part_id' => ['required', 'exists:skill_parts,id'],
             'passage_id' => ['nullable', 'exists:passages,id'],
+            'material_type' => ['required', 'string', 'in:text,audio'],
             'question_text' => ['nullable', 'string'],
             'option_a' => ['nullable', 'string'],
             'option_b' => ['nullable', 'string'],
@@ -277,7 +280,7 @@ class ContentLibraryController extends Controller
             throw ValidationException::withMessages(['skill_id' => 'Skill harus se-kategori dengan bank soal yang dipilih.']);
         }
 
-        $isListening = $skill->code === 'listening';
+        $isAudio = ($validated['material_type'] ?? 'text') === 'audio';
 
         if ($request->hasFile('audio_file')) {
             if ($question->audio_url && ! Question::where('audio_url', $question->audio_url)->whereKeyNot($question->id)->exists()) {
@@ -295,19 +298,19 @@ class ContentLibraryController extends Controller
             $validated['image_url'] = $this->imageCompression->compress('public', $imagePath) ?? $imagePath;
         }
 
-        if ($isListening) {
+        if ($isAudio) {
             $hasAudio = ! empty($validated['audio_url']) || $question->audio_url
                 || ($question->passage && $question->passage->audio_url);
 
             if (! $hasAudio) {
-                throw ValidationException::withMessages(['audio_file' => 'Soal listening wajib memiliki audio, baik di soal maupun di passage.']);
+                throw ValidationException::withMessages(['audio_file' => 'Soal tipe audio wajib memiliki audio, baik di soal maupun di passage.']);
             }
         } else {
             $optionEmpty = collect(['option_a', 'option_b', 'option_c', 'option_d'])
                 ->contains(fn ($field) => empty(trim($validated[$field] ?? '')));
 
             if (empty(trim($validated['question_text'] ?? '')) || $optionEmpty) {
-                throw ValidationException::withMessages(['question_text' => 'Soal reading wajib memiliki teks soal dan seluruh pilihan jawaban.']);
+                throw ValidationException::withMessages(['question_text' => 'Soal tipe teks wajib memiliki teks soal dan seluruh pilihan jawaban.']);
             }
         }
 

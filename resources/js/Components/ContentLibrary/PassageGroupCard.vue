@@ -23,7 +23,7 @@ defineProps({
     addingPassageId: { type: [Number, String, null], default: null },
     quickSkills: { type: Array, default: () => [] },
     quickPartsFn: { type: Function, default: () => [] },
-    quickIsListening: { type: Boolean, default: false },
+    quickIsAudio: { type: Boolean, default: false },
     isPassageSelectedFn: { type: Function, default: () => false },
     togglePassageSelectionFn: { type: Function, default: () => {} },
     togglePassageFn: { type: Function, default: () => {} },
@@ -167,7 +167,7 @@ const passageTypeOptions = [
             :question-banks="questionBanks"
             :available-quick-skills="quickSkills"
             :quick-parts-fn="quickPartsFn"
-            :quick-is-listening="quickIsListening"
+            :quick-is-audio="quickIsAudio"
             :option-keys="optionKeys"
             @save="$emit('save-quick')"
             @cancel="$emit('close-add')"
