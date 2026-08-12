@@ -23,7 +23,7 @@ function submit() {
     <Head title="Buat Jadwal" />
     <DashboardLayout title="Buat Jadwal">
         <div class="max-w-2xl mx-auto">
-            <div class="bg-surface-white rounded-2xl p-8 shadow-soft border border-outline-variant/30">
+            <BaseCard padding="p-8">
                 <p class="text-text-body text-body-md mb-6">Ujian: <strong>{{ exam.title }}</strong></p>
                 <form @submit.prevent="submit" class="space-y-5">
                     <div>
@@ -56,12 +56,11 @@ function submit() {
                                    class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
                         </div>
                     </div>
-                    <button type="submit" :disabled="form.processing"
-                            class="w-full bg-primary-container text-white font-semibold text-title-lg py-3.5 rounded-full hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                    <BaseButton type="submit" :disabled="form.processing" size="xl" class="w-full">
                         {{ form.processing ? 'Menyimpan...' : 'Buat Jadwal' }}
-                    </button>
+                    </BaseButton>
                 </form>
-            </div>
+            </BaseCard>
         </div>
     </DashboardLayout>
 </template>

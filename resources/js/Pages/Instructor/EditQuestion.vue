@@ -187,7 +187,7 @@ function submit() {
                     <!-- MODE READING -->
                     <template v-else>
                         <div><label class="text-label-md font-medium text-primary block mb-1.5">Teks Soal <span class="text-error-red">*</span></label>
-                            <textarea v-model="form.question_text" rows="3" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea></div>
+                            <BaseTextarea v-model="form.question_text" rows="3" required /></div>
 
                         <OptionsInput :form="form" :option-keys="optionKeys" />
 
@@ -205,8 +205,8 @@ function submit() {
 
                     <hr class="border-outline-variant/50" />
                     <div class="flex gap-4">
-                        <button type="submit" :disabled="form.processing" class="flex-1 bg-primary-container text-white py-3.5 rounded-full text-title-lg font-semibold hover:bg-primary transition-all active:scale-95 disabled:opacity-50">{{ form.processing ? 'Menyimpan...' : 'Simpan Perubahan' }}</button>
-                        <Link :href="indexUrl" class="px-8 py-3.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">Batal</Link>
+                        <BaseButton type="submit" :disabled="form.processing" size="xl" class="flex-1">{{ form.processing ? 'Menyimpan...' : 'Simpan Perubahan' }}</BaseButton>
+                        <BaseButton :href="indexUrl" variant="secondary" size="lg">Batal</BaseButton>
                     </div>
                 </form>
             </div>

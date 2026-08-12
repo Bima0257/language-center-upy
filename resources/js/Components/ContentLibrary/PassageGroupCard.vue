@@ -54,7 +54,7 @@ const passageTypeOptions = [
 </script>
 
 <template>
-    <div class="bg-surface-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden">
+    <BaseCard :padding="false" class="overflow-hidden">
         <div class="px-5 py-4 bg-surface-container-low/60 border-b border-outline-variant/30">
             <!-- TAMPILAN HEADER NORMAL -->
             <template v-if="editingPassageId !== group.passage.id">
@@ -149,14 +149,12 @@ const passageTypeOptions = [
                 </div>
 
                 <div class="flex items-center gap-2 mt-4">
-                    <button @click="$emit('save-passage', group.passage)" :disabled="passageForm.processing"
-                            class="flex items-center gap-1.5 bg-primary-container text-white px-5 py-2.5 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                    <BaseButton size="xs" @click="$emit('save-passage', group.passage)" :disabled="passageForm.processing">
                         <IconCheck :size="16" /> {{ passageForm.processing ? 'Menyimpan...' : 'Simpan' }}
-                    </button>
-                    <button @click="$emit('cancel-edit')"
-                            class="flex items-center gap-1.5 px-5 py-2.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">
+                    </BaseButton>
+                    <BaseButton variant="secondary" size="xs" @click="$emit('cancel-edit')">
                         Batal
-                    </button>
+                    </BaseButton>
                 </div>
             </template>
         </div>
@@ -186,5 +184,5 @@ const passageTypeOptions = [
             @review="(...args) => $emit('question-review', ...args)"
             @delete="(...args) => $emit('question-delete', ...args)"
         />
-    </div>
+    </BaseCard>
 </template>

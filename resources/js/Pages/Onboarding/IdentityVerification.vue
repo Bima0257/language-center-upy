@@ -74,7 +74,7 @@ function submit() {
                 <p class="text-text-body text-body-md mb-8">Unggah foto identitas dan swafoto untuk verifikasi akun Anda.</p>
 
                 <form @submit.prevent="submit" class="space-y-6">
-                    <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 space-y-5">
+                    <BaseCard class="space-y-5">
                         <div>
                             <label class="text-label-md font-medium text-primary block mb-1.5">NIM</label>
                             <input type="text" v-model="form.nim" placeholder="Masukkan NIM"
@@ -110,10 +110,10 @@ function submit() {
                                    class="w-full border border-outline-variant rounded-xl px-4 py-3 text-body-md text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all" />
                             <p v-if="form.errors.batch_year" class="text-error-red text-xs mt-1">{{ form.errors.batch_year }}</p>
                         </div>
-                    </div>
+                    </BaseCard>
 
                     <!-- FOTO KTM -->
-                    <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                    <BaseCard>
                         <label class="text-label-md font-medium text-primary block mb-4">Foto KTM/Kartu Identitas Mahasiswa</label>
                         <div class="border-2 border-dashed border-outline-variant rounded-2xl p-8 text-center relative hover:border-primary transition-colors cursor-pointer">
                             <img v-if="identityPreview" :src="identityPreview" class="max-h-40 mx-auto rounded-lg mb-2 pointer-events-none" />
@@ -124,10 +124,10 @@ function submit() {
                                    @change="(e) => onFileSelect(e, 'identity_photo')" />
                         </div>
                         <p v-if="form.errors.identity_photo" class="text-error-red text-xs mt-1">{{ form.errors.identity_photo }}</p>
-                    </div>
+                    </BaseCard>
 
                     <!-- SWAFOTO -->
-                    <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                    <BaseCard>
                         <label class="text-label-md font-medium text-primary block mb-4">Swafoto (Selfie)</label>
                         <div class="border-2 border-dashed border-outline-variant rounded-2xl p-8 text-center relative hover:border-primary transition-colors cursor-pointer">
                             <img v-if="selfiePreview" :src="selfiePreview" class="max-h-40 mx-auto rounded-lg mb-2 pointer-events-none" />
@@ -138,13 +138,13 @@ function submit() {
                                    @change="(e) => onFileSelect(e, 'photo')" />
                         </div>
                         <p v-if="form.errors.photo" class="text-error-red text-xs mt-1">{{ form.errors.photo }}</p>
-                    </div>
+                    </BaseCard>
 
-                    <button type="submit"
+                    <BaseButton type="submit"
                             :disabled="form.processing || !form.nim || !form.faculty_id || !form.department_id || !form.batch_year || !form.identity_photo || !form.photo"
-                            class="w-full bg-primary-container text-white font-semibold text-title-lg py-3.5 rounded-full hover:bg-primary transition-all active:scale-95 shadow-lg shadow-primary-container/10 disabled:opacity-50">
+                            size="xl" class="w-full shadow-lg shadow-primary-container/10">
                         {{ form.processing ? 'Mengunggah...' : 'Kirim Verifikasi' }}
-                    </button>
+                    </BaseButton>
                 </form>
 
                 <div class="mt-8 bg-pastel-blue/30 rounded-2xl p-5 text-sm text-primary">

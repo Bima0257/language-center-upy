@@ -55,16 +55,15 @@ function submitFile() {
         </div>
 
         <div v-if="importMode === 'json'" class="space-y-3">
-            <textarea v-model="jsonForm.questions" rows="6"
+            <BaseTextarea v-model="jsonForm.questions" rows="6"
                       placeholder='[{"question_bank_id":1,"skill_id":1,"question_text":"...","option_a":"...","option_b":"...","option_c":"...","option_d":"...","correct_answer":"A"}]'
                       @input="parsePreview"
-                      class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md font-mono text-sm"></textarea>
+                      class="font-mono text-sm" />
             <p class="text-text-muted text-label-md">Tipe soal otomatis: multiple_choice</p>
             <p v-if="preview.length" class="text-text-muted text-label-md">{{ preview.length }} soal akan diimpor.</p>
-            <button @click="submitJson" :disabled="jsonForm.processing || !jsonForm.questions"
-                    class="bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+            <BaseButton @click="submitJson" :disabled="jsonForm.processing || !jsonForm.questions">
                 {{ jsonForm.processing ? 'Mengimpor...' : 'Import JSON' }}
-            </button>
+            </BaseButton>
         </div>
 
         <div v-else class="space-y-3">

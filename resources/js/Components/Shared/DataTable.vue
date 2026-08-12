@@ -49,14 +49,14 @@ function onSearchInput() {
     emit('search', searchInput.value)
 }
 
-function badgeClass(val) {
+function badgeVariant(val) {
     const m = {
-        'Try Out': 'bg-pastel-blue/50 text-primary font-medium',
-        'Ujian Resmi': 'bg-pastel-purple/50 text-primary font-medium',
-        'Aktif': 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300 font-medium',
-        'Nonaktif': 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
-        'Laki-laki': 'bg-pastel-blue/50 text-primary',
-        'Perempuan': 'bg-pastel-peach/50 text-primary',
+        'Try Out': 'pastel-blue',
+        'Ujian Resmi': 'pastel',
+        'Aktif': 'success',
+        'Nonaktif': 'neutral',
+        'Laki-laki': 'pastel-blue',
+        'Perempuan': 'pastel-peach',
     }
     return m[val] || ''
 }
@@ -82,7 +82,7 @@ function cellDisplayValue(cell) {
                    class="w-full pl-11 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]" />
         </div>
 
-        <div class="bg-surface-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden relative">
+        <BaseCard :padding="false" class="overflow-hidden relative">
             <div v-if="loading" class="absolute inset-0 bg-surface-white/60 z-10 flex items-center justify-center">
                 <IconLoader2 class="text-primary animate-spin" :size="32" stroke="1.5" />
             </div>
@@ -121,11 +121,10 @@ function cellDisplayValue(cell) {
                                       :name="cell.column.columnDef.slot"
                                       :row="row.original"
                                       :value="cellDisplayValue(cell)" />
-                                <span v-else-if="cell.column.columnDef.meta?.badge && badgeClass(cellDisplayValue(cell))"
-                                      class="inline-block px-2.5 py-0.5 rounded-full text-label-md"
-                                      :class="badgeClass(cellDisplayValue(cell))">
+                                <BaseBadge v-else-if="cell.column.columnDef.meta?.badge && badgeVariant(cellDisplayValue(cell))"
+                                            :variant="badgeVariant(cellDisplayValue(cell))">
                                     {{ cellDisplayValue(cell) }}
-                                </span>
+                                </BaseBadge>
                                 <span v-else>{{ cellDisplayValue(cell) }}</span>
                             </td>
                         </tr>
@@ -151,6 +150,6 @@ function cellDisplayValue(cell) {
                           v-html="link.label" />
                 </div>
             </div>
-        </div>
+        </BaseCard>
     </div>
 </template>

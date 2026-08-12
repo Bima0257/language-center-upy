@@ -26,7 +26,7 @@ function submit() {
     <Head title="Edit Ujian" />
     <DashboardLayout title="Edit Ujian">
         <div class="max-w-2xl mx-auto">
-            <div class="bg-surface-white rounded-2xl p-8 shadow-soft border border-outline-variant/30">
+            <BaseCard padding="p-8">
                 <form @submit.prevent="submit" class="space-y-6">
                     <div>
                         <DropDown
@@ -46,8 +46,7 @@ function submit() {
                     </div>
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-2">Deskripsi</label>
-                        <textarea v-model="form.description" rows="3"
-                                  class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]"></textarea>
+                        <BaseTextarea v-model="form.description" rows="3" />
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -73,12 +72,11 @@ function submit() {
                                class="rounded border-outline-variant text-primary focus:ring-secondary" />
                         <label for="is_active" class="text-text-body text-body-md">Aktif</label>
                     </div>
-                    <button type="submit" :disabled="form.processing"
-                            class="w-full bg-primary-container text-white font-semibold text-title-lg py-3.5 rounded-full hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                    <BaseButton type="submit" :disabled="form.processing" size="xl" class="w-full">
                         {{ form.processing ? 'Menyimpan...' : 'Simpan Perubahan' }}
-                    </button>
+                    </BaseButton>
                 </form>
-            </div>
+            </BaseCard>
         </div>
     </DashboardLayout>
 </template>

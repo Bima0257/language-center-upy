@@ -14,10 +14,9 @@ const show = ref(false);
 </script>
 
 <template>
-    <button type="button" @click="show = true"
-            class="flex items-center gap-1.5 px-4 py-2 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">
+    <BaseButton type="button" variant="secondary" size="sm" @click="show = true">
         <IconBook2 :size="16" /> {{ buttonLabel }}
-    </button>
+    </BaseButton>
 
     <Modal :show="show" max-width="2xl" @close="show = false">
         <div class="bg-surface-white rounded-2xl">

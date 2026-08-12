@@ -37,7 +37,7 @@ function checkMic() {
     <Head title="Persiapan Ujian" />
     <DashboardLayout title="Persiapan Ujian">
         <div class="max-w-2xl mx-auto">
-            <div class="bg-surface-white rounded-2xl p-8 shadow-soft border border-outline-variant/30 space-y-6">
+            <BaseCard padding="p-8" class="space-y-6">
                 <div>
                     <h2 class="text-headline-md font-bold text-primary mb-2">{{ schedule.exam?.title }}</h2>
                     <p class="text-text-body text-body-md">{{ schedule.title }}</p>
@@ -51,10 +51,9 @@ function checkMic() {
                                 <p class="text-text-muted text-xs">{{ cameraOk ? 'Terdeteksi' : 'Belum dicek' }}</p>
                             </div>
                         </div>
-                        <button v-if="!cameraOk" @click="checkCamera"
-                                class="bg-primary-container text-white px-4 py-2 rounded-full text-label-md hover:bg-primary transition-all active:scale-95">
+                        <BaseButton v-if="!cameraOk" size="sm" @click="checkCamera">
                             Cek Kamera
-                        </button>
+                        </BaseButton>
                         <IconCheck v-else class="text-green-500 dark:text-green-400" :size="22" />
                     </div>
                     <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-2xl">
@@ -65,10 +64,9 @@ function checkMic() {
                                 <p class="text-text-muted text-xs">{{ micOk ? 'Terdeteksi' : 'Belum dicek' }}</p>
                             </div>
                         </div>
-                        <button v-if="!micOk" @click="checkMic"
-                                class="bg-primary-container text-white px-4 py-2 rounded-full text-label-md hover:bg-primary transition-all active:scale-95">
+                        <BaseButton v-if="!micOk" size="sm" @click="checkMic">
                             Cek Mikrofon
-                        </button>
+                        </BaseButton>
                         <IconCheck v-else class="text-green-500 dark:text-green-400" :size="22" />
                     </div>
                     <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-2xl">
@@ -83,11 +81,10 @@ function checkMic() {
                         <IconX v-else class="text-error-red" :size="22" />
                     </div>
                 </div>
-                <button @click="startExam" :disabled="!allChecked || form.processing"
-                        class="w-full bg-primary-container text-white font-semibold text-title-lg py-3.5 rounded-full hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                <BaseButton @click="startExam" :disabled="!allChecked || form.processing" size="xl" class="w-full">
                     {{ form.processing ? 'Memulai...' : 'Mulai Ujian' }}
-                </button>
-            </div>
+                </BaseButton>
+            </BaseCard>
         </div>
     </DashboardLayout>
 </template>

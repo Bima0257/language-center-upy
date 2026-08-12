@@ -23,7 +23,7 @@ function revert(user) {
 <template>
     <Head title="Verifikasi Pengguna" />
     <DashboardLayout title="Verifikasi Pengguna">
-        <div class="bg-surface-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden">
+        <BaseCard :padding="false" class="overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead>
@@ -68,32 +68,23 @@ function revert(user) {
                                 <span v-else class="text-text-muted text-label-md">-</span>
                             </td>
                             <td class="px-5 py-4">
-                                <span v-if="user.is_verified"
-                                      class="inline-block bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300 px-3 py-1 rounded-full text-label-md font-medium">
-                                    Terverifikasi
-                                </span>
-                                <span v-else
-                                      class="inline-block bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 px-3 py-1 rounded-full text-label-md font-medium">
-                                    Menunggu
-                                </span>
+                                <BaseBadge v-if="user.is_verified" variant="success">Terverifikasi</BaseBadge>
+                                <BaseBadge v-else variant="warning">Menunggu</BaseBadge>
                             </td>
                             <td class="px-5 py-4">
                                 <div class="flex items-center gap-2">
                                     <template v-if="user.is_verified">
-                                        <button @click="revert(user)"
-                                                class="flex items-center gap-1.5 bg-amber-500 text-white px-4 py-2 rounded-full text-label-md font-medium hover:bg-amber-600 transition-colors active:scale-95">
+                                        <BaseButton variant="warning" size="sm" @click="revert(user)">
                                             <IconRotate :size="16" /> Batalkan
-                                        </button>
+                                        </BaseButton>
                                     </template>
                                     <template v-else>
-                                        <button @click="approve(user)"
-                                                class="flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-full text-label-md font-medium hover:bg-green-700 transition-colors active:scale-95">
+                                        <BaseButton variant="success" size="sm" @click="approve(user)">
                                             <IconCheck :size="16" /> Setujui
-                                        </button>
-                                        <button @click="reject(user)"
-                                                class="flex items-center gap-1.5 bg-error-red text-white px-4 py-2 rounded-full text-label-md font-medium hover:bg-red-700 transition-colors active:scale-95">
+                                        </BaseButton>
+                                        <BaseButton variant="danger" size="sm" @click="reject(user)">
                                             <IconX :size="16" /> Tolak
-                                        </button>
+                                        </BaseButton>
                                     </template>
                                 </div>
                             </td>
@@ -106,6 +97,6 @@ function revert(user) {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </BaseCard>
     </DashboardLayout>
 </template>

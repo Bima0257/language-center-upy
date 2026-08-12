@@ -503,7 +503,7 @@ const indexUrl = computed(() => {
                         <!-- MODE READING: teks soal + opsi -->
                         <template v-else>
                             <div><label class="text-label-md font-medium text-primary block mb-1.5">Teks Soal <span class="text-error-red">*</span></label>
-                                <textarea v-model="q.question_text" rows="2" required class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea></div>
+                                <BaseTextarea v-model="q.question_text" rows="2" required /></div>
 
                             <OptionsInput :form="q" :option-keys="optionKeys" />
                             <div>
@@ -521,10 +521,10 @@ const indexUrl = computed(() => {
 
                     <hr class="border-outline-variant/50" />
                     <div class="flex gap-4">
-                        <button type="submit" :disabled="form.processing || !canSubmit" class="flex-1 bg-primary-container text-white py-3.5 rounded-full text-title-lg font-semibold hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                        <BaseButton type="submit" :disabled="form.processing || !canSubmit" size="xl" class="flex-1">
                             {{ form.processing ? 'Menyimpan...' : `Simpan ${form.questions.length} Soal` }}
-                        </button>
-                        <Link :href="route('content-library.index', indexUrl)" class="px-8 py-3.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">Batal</Link>
+                        </BaseButton>
+                        <BaseButton :href="route('content-library.index', indexUrl)" variant="secondary" size="lg">Batal</BaseButton>
                     </div>
                 </form>
             </div>

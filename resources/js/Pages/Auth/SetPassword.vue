@@ -78,10 +78,9 @@ const submit = () => {
                 <p v-if="form.errors.password_confirmation" class="text-error-red text-xs mt-1 ml-1">{{ form.errors.password_confirmation }}</p>
             </div>
 
-            <button type="submit" :disabled="form.processing"
-                    class="w-full bg-primary-container text-white font-semibold text-title-lg py-3.5 rounded-full mt-2 hover:bg-primary transition-all transform active:scale-95 shadow-lg shadow-primary-container/10 disabled:opacity-50">
+            <BaseButton type="submit" :disabled="form.processing" size="xl" class="w-full mt-2 shadow-lg shadow-primary-container/10">
                 {{ form.processing ? 'Menyimpan...' : 'Simpan Password' }}
-            </button>
+            </BaseButton>
         </form>
     </AuthCard>
 </template>

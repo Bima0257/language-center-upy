@@ -78,21 +78,18 @@ defineEmits(['save', 'cancel', 'skill-change']);
             <template v-else>
                 <div>
                     <label class="text-label-md font-medium text-primary block mb-1">Teks Soal <span class="text-error-red">*</span></label>
-                    <textarea v-model="form.question_text" rows="2" required
-                              class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea>
+                    <BaseTextarea v-model="form.question_text" rows="2" required />
                     <p v-if="form.errors.question_text" class="text-error-red text-xs mt-1">{{ form.errors.question_text }}</p>
                 </div>
                 <OptionsInput :form="form" :option-keys="optionKeys" size="sm" />
             </template>
             <div class="flex items-center gap-2">
-                <button type="submit" :disabled="form.processing"
-                        class="flex items-center gap-1.5 bg-primary-container text-white px-5 py-2.5 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                <BaseButton type="submit" :disabled="form.processing" size="xs">
                     <IconCheck :size="16" /> {{ form.processing ? 'Menyimpan...' : 'Simpan Soal' }}
-                </button>
-                <button type="button" @click="$emit('cancel')"
-                        class="flex items-center gap-1.5 px-5 py-2.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">
+                </BaseButton>
+                <BaseButton type="button" variant="secondary" size="xs" @click="$emit('cancel')">
                     Batal
-                </button>
+                </BaseButton>
             </div>
         </form>
     </div>

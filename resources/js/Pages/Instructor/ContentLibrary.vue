@@ -461,12 +461,11 @@ async function bulkReview(status) {
                         <IconBooks :size="16" /> Kelola Bank Soal
                     </Link>
                 </div>
-                <Link
+                <BaseButton
                     :href="route('content-library.create', createParams)"
-                    class="flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95"
                 >
                     <IconPlus :size="18" /> Tambah Soal Baru
-                </Link>
+                </BaseButton>
             </div>
 
             <ContentFilters
@@ -498,9 +497,8 @@ async function bulkReview(status) {
                     :key="skillGroup.skill?.id || 'no-skill'"
                 >
                     <div class="flex items-center gap-3">
-                        <span
-                            class="inline-block bg-primary-container text-white px-3.5 py-1.5 rounded-full text-label-md font-semibold"
-                            >{{ skillGroup.skill?.name || "Tanpa Skill" }}</span
+                        <BaseBadge variant="primary"
+                            >{{ skillGroup.skill?.name || "Tanpa Skill" }}</BaseBadge
                         >
                         <span class="text-label-md text-text-muted"
                             >{{ skillGroupTotal(skillGroup) }} soal</span
@@ -513,11 +511,10 @@ async function bulkReview(status) {
                             :key="partGroup.part?.id || 'no-part'"
                         >
                             <div class="flex items-center gap-2">
-                                <span
-                                    class="inline-block bg-pastel-purple/30 text-primary px-3.5 py-1.5 rounded-full text-label-md font-semibold"
+                                <BaseBadge variant="pastel"
                                     >{{
                                         partGroup.part?.name || "Tanpa Part"
-                                    }}</span
+                                    }}</BaseBadge
                                 >
                                 <span class="text-label-md text-text-muted"
                                     >{{ partGroupTotal(partGroup) }} soal</span
@@ -575,8 +572,9 @@ async function bulkReview(status) {
                                             Soal Standalone
                                         </p>
                                     </div>
-                                    <div
-                                        class="bg-surface-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden"
+                                    <BaseCard
+                                        :padding="false"
+                                        class="overflow-hidden"
                                     >
                                         <QuestionTable
                                             :questions="partGroup.standalone"
@@ -588,7 +586,7 @@ async function bulkReview(status) {
                                             @review="reviewQuestion"
                                             @delete="deleteQuestion"
                                         />
-                                    </div>
+                                    </BaseCard>
                                 </div>
                             </div>
                         </template>
@@ -617,24 +615,28 @@ async function bulkReview(status) {
                         >{{ selectedIds.length }} soal dipilih</span
                     >
                     <span class="w-px h-5 bg-outline-variant/40"></span>
-                    <button
+                    <BaseButton
+                        variant="success"
+                        size="sm"
                         @click="bulkReview('approved')"
-                        class="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded-full text-label-md font-medium hover:bg-green-700 transition-all"
                     >
                         <IconCheck :size="16" />Setujui
-                    </button>
-                    <button
+                    </BaseButton>
+                    <BaseButton
+                        variant="danger"
+                        size="sm"
                         @click="bulkReview('rejected')"
-                        class="flex items-center gap-1 px-4 py-2 bg-error-red text-white rounded-full text-label-md font-medium hover:bg-red-700 transition-all"
                     >
                         <IconX :size="16" />Tolak
-                    </button>
-                    <button
+                    </BaseButton>
+                    <BaseButton
+                        variant="secondary"
+                        size="sm"
                         @click="selectedIds = []"
-                        class="px-3 py-2 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all"
+                        class="px-3"
                     >
                         Batal
-                    </button>
+                    </BaseButton>
                 </div>
             </Transition>
         </template>

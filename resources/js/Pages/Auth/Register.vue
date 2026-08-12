@@ -167,11 +167,9 @@ const handleGoogleClick = (e) => {
             <div id="turnstile-register" class="flex justify-center"></div>
             <p v-if="form.errors['cf-turnstile-response']" class="text-error-red text-xs mt-1">{{ form.errors['cf-turnstile-response'] }}</p>
 
-            <button type="submit" :disabled="form.processing || !turnstileVerified"
-                class="w-full bg-primary-container text-white font-semibold text-title-lg py-3.5 rounded-full mt-2 hover:bg-primary transition-all transform active:scale-95 shadow-lg shadow-primary-container/10 disabled:opacity-50"
-            >
+            <BaseButton type="submit" :disabled="form.processing || !turnstileVerified" size="xl" class="w-full mt-2 shadow-lg shadow-primary-container/10">
                 {{ form.processing ? 'Memproses...' : 'Daftar' }}
-            </button>
+            </BaseButton>
         </form>
         </div>
 

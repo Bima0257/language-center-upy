@@ -55,7 +55,7 @@ async function destroy(faculty) {
     <Head title="Master Data - Fakultas" />
     <DashboardLayout title="Master Data Fakultas">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 h-fit">
+            <BaseCard class="h-fit">
                 <h3 class="text-title-lg font-semibold text-primary mb-4">Tambah Fakultas</h3>
                 <form @submit.prevent="submit" class="space-y-4">
                     <div>
@@ -74,14 +74,13 @@ async function destroy(faculty) {
                         <input type="checkbox" v-model="form.is_active" class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
                         <span class="text-label-md text-text-body">Aktif</span>
                     </label>
-                    <button type="submit" :disabled="form.processing"
-                            class="w-full flex items-center justify-center gap-2 bg-primary-container text-white py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                    <BaseButton type="submit" :disabled="form.processing" class="w-full">
                         <IconPlus :size="18" /> {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
-                    </button>
+                    </BaseButton>
                 </form>
-            </div>
+            </BaseCard>
 
-            <div class="lg:col-span-2 bg-surface-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden">
+            <BaseCard :padding="false" class="lg:col-span-2 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
@@ -100,10 +99,9 @@ async function destroy(faculty) {
                                     <td class="px-5 py-4 text-body-md text-text-body">{{ faculty.code }}</td>
                                     <td class="px-5 py-4 text-body-md text-text-body">{{ faculty.departments_count || 0 }}</td>
                                     <td class="px-5 py-4">
-                                        <span :class="faculty.is_active ? 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'"
-                                              class="inline-block px-3 py-1 rounded-full text-label-md font-medium">
+                                        <BaseBadge :variant="faculty.is_active ? 'success' : 'neutral'">
                                             {{ faculty.is_active ? 'Aktif' : 'Nonaktif' }}
-                                        </span>
+                                        </BaseBadge>
                                     </td>
                                     <td class="px-5 py-4">
                                         <div class="flex items-center gap-2">
@@ -135,7 +133,7 @@ async function destroy(faculty) {
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </BaseCard>
         </div>
     </DashboardLayout>
 </template>

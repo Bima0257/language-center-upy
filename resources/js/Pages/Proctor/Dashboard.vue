@@ -31,10 +31,9 @@ function refreshNow() {
     <Head title="Dashboard Pengawas" />
     <DashboardLayout title="Dashboard Pengawas">
         <div class="flex justify-end mb-4">
-            <button @click="refreshNow"
-                    class="flex items-center gap-2 bg-surface-white border border-outline-variant text-primary px-5 py-2.5 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all active:scale-95">
+            <BaseButton variant="secondary" size="xs" @click="refreshNow">
                 <IconRefresh :size="18" /> Segarkan (auto 10 detik)
-            </button>
+            </BaseButton>
         </div>
         <div class="space-y-6">
             <div>

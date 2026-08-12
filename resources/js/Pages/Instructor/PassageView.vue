@@ -198,10 +198,9 @@ function getMediaIcon(passage) {
                 <Link :href="route('content-library.index')" class="text-secondary text-label-md font-medium hover:underline">← Kembali ke Bank Soal</Link>
                 <p class="text-text-body text-body-md">{{ passages.total || 0 }} materi soal</p>
             </div>
-            <button @click="openCreate"
-                    class="flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
+            <BaseButton @click="openCreate">
                 <IconPlus :size="18" /> Materi Soal Baru
-            </button>
+            </BaseButton>
         </div>
 
         <EmptyState
@@ -209,14 +208,18 @@ function getMediaIcon(passage) {
             :icon="IconBook"
             title="Belum ada materi soal."
         >
-            <button @click="openCreate" class="mt-4 inline-flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all">
+            <BaseButton @click="openCreate" class="mt-4">
                 <IconPlus :size="16" /> Buat Materi Soal Pertama
-            </button>
+            </BaseButton>
         </EmptyState>
 
         <div v-else class="space-y-3">
-            <div v-for="p in passages.data" :key="p.id"
-                 class="bg-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 hover:border-secondary/50 transition-all">
+            <BaseCard
+                v-for="p in passages.data"
+                :key="p.id"
+                padding="p-5"
+                class="hover:border-secondary/50 transition-all"
+            >
                 <div class="flex items-start justify-between gap-4">
                     <div class="flex items-start gap-3 min-w-0">
                         <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl shrink-0 mt-1"
@@ -238,16 +241,14 @@ function getMediaIcon(passage) {
                         </div>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
-                        <Link :href="route('content-library.index', { passage_id: p.id })"
-                              class="flex items-center gap-1.5 px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:border-secondary transition-all"
+                        <BaseButton :href="route('content-library.index', { passage_id: p.id })" variant="secondary" size="sm" class="px-3"
                               title="Lihat Soal">
                             <IconBooks :size="16" /> {{ p.questions_count || 0 }} Soal
-                        </Link>
-                        <button @click="addingPassageId === p.id ? closeQuickAdd() : openQuickAdd(p)"
-                                class="flex items-center gap-1.5 px-3 py-2 bg-primary-container text-white rounded-full text-label-md font-medium hover:bg-primary transition-all"
+                        </BaseButton>
+                        <BaseButton @click="addingPassageId === p.id ? closeQuickAdd() : openQuickAdd(p)" size="sm"
                                 title="Tambah soal ke materi soal ini">
                             <IconPlus :size="16" /> Tambah Soal
-                        </button>
+                        </BaseButton>
                         <button @click="openEdit(p)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit">
                             <IconEdit :size="18" />
                         </button>
@@ -275,7 +276,7 @@ function getMediaIcon(passage) {
                     @cancel="closeQuickAdd"
                     @skill-change="onQuickSkillChange"
                 />
-            </div>
+            </BaseCard>
         </div>
 
         <Pagination
@@ -355,14 +356,12 @@ function getMediaIcon(passage) {
 
                     <hr class="border-outline-variant/50" />
                     <div class="flex gap-4">
-                        <button type="submit" :disabled="form.processing"
-                                class="flex-1 bg-primary-container text-white py-3.5 rounded-full text-title-lg font-semibold hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                        <BaseButton type="submit" :disabled="form.processing" size="xl" class="flex-1">
                             {{ form.processing ? 'Menyimpan...' : (editingPassage ? 'Simpan Perubahan' : 'Buat Materi Soal') }}
-                        </button>
-                        <button type="button" @click="closeForm"
-                                class="px-8 py-3.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">
+                        </BaseButton>
+                        <BaseButton type="button" variant="secondary" size="lg" @click="closeForm">
                             Batal
-                        </button>
+                        </BaseButton>
                     </div>
                 </form>
             </div>

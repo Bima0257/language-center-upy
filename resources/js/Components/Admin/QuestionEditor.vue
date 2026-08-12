@@ -52,8 +52,7 @@ function submit() {
         </div>
         <div>
             <label class="text-label-md font-medium text-primary block mb-1">Teks Soal</label>
-            <textarea v-model="form.question_text" rows="2" required
-                      class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea>
+            <BaseTextarea v-model="form.question_text" rows="2" required />
         </div>
 
         <div>
@@ -76,9 +75,8 @@ function submit() {
             </select>
         </div>
 
-        <button type="submit" :disabled="form.processing"
-                class="bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+        <BaseButton type="submit" :disabled="form.processing">
             {{ form.processing ? 'Menyimpan...' : 'Tambah Soal' }}
-        </button>
+        </BaseButton>
     </form>
 </template>

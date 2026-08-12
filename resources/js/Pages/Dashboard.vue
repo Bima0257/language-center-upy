@@ -157,9 +157,9 @@ async function reviewQuestion(id, status) {
                 </div>
             </div>
 
-            <div
+            <BaseCard
                 v-if="recentSessions?.length"
-                class="mt-6 bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30"
+                class="mt-6"
             >
                 <h2 class="text-title-lg font-semibold text-primary mb-4">
                     Tryout Terbaru
@@ -194,15 +194,13 @@ async function reviewQuestion(id, status) {
                         </p>
                     </div>
                 </div>
-            </div>
+            </BaseCard>
         </template>
 
         <!-- === INSTRUCTOR DASHBOARD === -->
         <template v-else-if="isInstructor">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div
-                    class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 text-center"
-                >
+                <BaseCard class="text-center">
                     <IconClipboardCheck
                         class="mx-auto text-secondary mb-2"
                         :size="32"
@@ -212,10 +210,8 @@ async function reviewQuestion(id, status) {
                         {{ totalQuestions }}
                     </p>
                     <p class="text-text-muted text-label-md">Total Soal</p>
-                </div>
-                <div
-                    class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 text-center"
-                >
+                </BaseCard>
+                <BaseCard class="text-center">
                     <IconBooks
                         class="mx-auto text-secondary mb-2"
                         :size="32"
@@ -225,55 +221,52 @@ async function reviewQuestion(id, status) {
                         {{ totalPassages }}
                     </p>
                     <p class="text-text-muted text-label-md">Total Materi Soal</p>
-                </div>
-                <div
-                    class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 flex flex-col items-center justify-center gap-3"
-                >
-                    <Link
+                </BaseCard>
+                <BaseCard class="flex flex-col items-center justify-center gap-3">
+                    <BaseButton
                         :href="route('content-library.index')"
-                        class="w-full text-center bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all"
+                        class="w-full"
                     >
                         Kelola Bank Soal →
-                    </Link>
-                    <Link
+                    </BaseButton>
+                    <BaseButton
                         :href="route('content-library.passages.index')"
-                        class="w-full text-center border border-outline-variant text-primary px-6 py-3 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all"
+                        variant="secondary"
+                        class="w-full"
                     >
                         Kelola Materi Soal →
-                    </Link>
-                </div>
+                    </BaseButton>
+                </BaseCard>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                <BaseCard>
                     <BarChart
                         :labels="skillChartLabels"
                         :data="skillChartData"
                         title="Jumlah Soal per Skill"
                     />
-                </div>
-                <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                </BaseCard>
+                <BaseCard>
                     <DoughnutChart
                         :labels="statusChartLabels"
                         :data="statusChartData"
                         title="Status Review Soal"
                     />
-                </div>
+                </BaseCard>
             </div>
-            <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 mb-6">
+            <BaseCard class="mb-6">
                 <BarChart
                     :labels="bankChartLabels"
                     :data="bankChartData"
                     title="Jumlah Soal per Bank Soal"
                 />
-            </div>
+            </BaseCard>
         </template>
 
         <!-- === ADMIN DASHBOARD === -->
         <template v-else-if="isAdmin">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div
-                    class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 text-center"
-                >
+                <BaseCard padding="p-5" class="text-center">
                     <IconUsers
                         class="mx-auto text-secondary mb-1"
                         :size="28"
@@ -283,10 +276,8 @@ async function reviewQuestion(id, status) {
                         {{ totalUsers }}
                     </p>
                     <p class="text-text-muted text-label-md">User Terdaftar</p>
-                </div>
-                <div
-                    class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 text-center"
-                >
+                </BaseCard>
+                <BaseCard padding="p-5" class="text-center">
                     <IconFileDescription
                         class="mx-auto text-secondary mb-1"
                         :size="28"
@@ -296,10 +287,8 @@ async function reviewQuestion(id, status) {
                         {{ totalExams }}
                     </p>
                     <p class="text-text-muted text-label-md">Total Ujian</p>
-                </div>
-                <div
-                    class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 text-center"
-                >
+                </BaseCard>
+                <BaseCard padding="p-5" class="text-center">
                     <IconEyeCheck
                         class="mx-auto text-secondary mb-1"
                         :size="28"
@@ -309,7 +298,7 @@ async function reviewQuestion(id, status) {
                         {{ activeSessionsCount }}
                     </p>
                     <p class="text-text-muted text-label-md">Sesi Aktif</p>
-                </div>
+                </BaseCard>
                 <div
                     class="bg-surface-white rounded-2xl p-5 shadow-soft border border-error-red/20 text-center"
                 >
@@ -362,19 +351,17 @@ async function reviewQuestion(id, status) {
                     />
                 </Link>
             </div>
-            <div
-                class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30"
-            >
+            <BaseCard padding="p-5">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-title-lg font-semibold text-primary">
                         Akses Cepat
                     </h2>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <Link
+                    <BaseButton
                         :href="route('admin.exams.index')"
-                        class="bg-primary-container text-white px-5 py-2.5 rounded-full text-label-md font-medium hover:bg-primary transition-all"
-                        >Kelola Exam</Link
+                        size="xs"
+                        >Kelola Exam</BaseButton
                     >
                     <Link
                         :href="route('proctor.dashboard')"
@@ -392,19 +379,17 @@ async function reviewQuestion(id, status) {
                         >Laporan</Link
                     >
                 </div>
-            </div>
-            <div
-                class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30"
-            >
+            </BaseCard>
+            <BaseCard padding="p-5">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
                         <h2 class="text-title-lg font-semibold text-primary">
                             Persetujuan Soal
                         </h2>
-                        <span
+                        <BaseBadge
                             v-if="pendingReviewCount > 0"
-                            class="inline-flex items-center justify-center min-w-6 h-6 px-2 rounded-full bg-error-red/10 text-error-red text-label-md font-semibold"
-                            >{{ pendingReviewCount }}</span
+                            variant="danger"
+                            >{{ pendingReviewCount }}</BaseBadge
                         >
                     </div>
                     <Link
@@ -470,7 +455,7 @@ async function reviewQuestion(id, status) {
                         </div>
                     </div>
                 </div>
-            </div>
+            </BaseCard>
         </template>
 
         <!-- === PROCTOR (standalone) DASHBOARD === -->
@@ -487,12 +472,13 @@ async function reviewQuestion(id, status) {
                 <p class="text-text-body text-body-md mb-6">
                     Pantau sesi ujian langsung dan tinjau pelanggaran
                 </p>
-                <Link
+                <BaseButton
                     :href="route('proctor.dashboard')"
-                    class="inline-block bg-primary-container text-white px-8 py-3.5 rounded-full text-title-lg font-semibold hover:bg-primary transition-all active:scale-95"
+                    size="xl"
+                    class="px-8"
                 >
                     Buka Dashboard Pengawas →
-                </Link>
+                </BaseButton>
             </div>
         </template>
     </DashboardLayout>

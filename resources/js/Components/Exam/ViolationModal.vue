@@ -25,10 +25,9 @@ const countdown = ref(5);
                         <h3 class="text-title-lg font-semibold text-primary mb-1">Peringatan Ke-{{ strike }}</h3>
                         <p class="text-text-body text-body-md">{{ message || 'Aktivitas mencurigakan terdeteksi.' }}</p>
                         <p class="text-error-red text-label-md mt-2 font-medium">3 pelanggaran = sesi dihentikan.</p>
-                        <button @click="$emit('back')"
-                                class="mt-4 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
+                        <BaseButton @click="$emit('back')" class="mt-4">
                             Kembali ke Ujian
-                        </button>
+                        </BaseButton>
                     </div>
                     <button @click="$emit('close')" class="text-text-muted hover:text-primary transition-colors">
                         <IconX :size="20" />

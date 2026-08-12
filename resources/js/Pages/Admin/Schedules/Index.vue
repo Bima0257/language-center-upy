@@ -38,15 +38,18 @@ async function deleteSchedule(id) {
             <p class="text-text-body text-body-md">Ujian: <strong>{{ exam.title }}</strong></p>
         </div>
         <div class="flex justify-end mb-6">
-            <Link :href="route('admin.schedules.create', exam.id)"
-                  class="flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
+            <BaseButton :href="route('admin.schedules.create', exam.id)">
                 <IconPlus :size="18" /> Buat Jadwal
-            </Link>
+            </BaseButton>
         </div>
 
         <div class="space-y-3">
-            <div v-for="schedule in schedules.data" :key="schedule.id"
-                 class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 flex items-center justify-between hover:border-secondary/50 transition-colors">
+            <BaseCard
+                v-for="schedule in schedules.data"
+                :key="schedule.id"
+                padding="p-5"
+                class="flex items-center justify-between hover:border-secondary/50 transition-colors"
+            >
                 <div>
                     <h3 class="text-title-lg font-semibold text-primary">{{ schedule.title }}</h3>
                     <p class="text-text-muted text-label-md">
@@ -65,7 +68,7 @@ async function deleteSchedule(id) {
                         <IconTrash :size="20" />
                     </button>
                 </div>
-            </div>
+            </BaseCard>
         </div>
 
         <div v-if="schedules.links && schedules.meta?.last_page > 1"

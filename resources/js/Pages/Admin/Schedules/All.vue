@@ -31,8 +31,12 @@ async function deleteSchedule(id) {
         </div>
 
         <div v-else class="space-y-3">
-            <div v-for="schedule in schedules.data" :key="schedule.id"
-                 class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 flex items-center justify-between hover:border-secondary/50 transition-colors">
+            <BaseCard
+                v-for="schedule in schedules.data"
+                :key="schedule.id"
+                padding="p-5"
+                class="flex items-center justify-between hover:border-secondary/50 transition-colors"
+            >
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 mb-1">
                         <IconCalendarEvent class="text-secondary shrink-0" :size="18" />
@@ -64,7 +68,7 @@ async function deleteSchedule(id) {
                         <IconTrash :size="20" />
                     </button>
                 </div>
-            </div>
+            </BaseCard>
         </div>
 
         <div v-if="schedules.links && schedules.meta?.last_page > 1"

@@ -43,9 +43,7 @@ const players = [
                 <div v-for="player in players" :key="player.rank"
                      class="flex items-center gap-4 p-3 hover:bg-surface-white dark:hover:bg-surface-container-high rounded-xl transition-colors">
                     <span class="text-title-lg font-semibold text-primary w-6">#{{ player.rank }}</span>
-                    <div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container flex items-center justify-center text-primary font-bold text-sm">
-                        {{ player.name.charAt(0).toUpperCase() }}
-                    </div>
+                    <BaseAvatar variant="neutral" :name="player.name" :size="40" />
                     <div class="flex-1 min-w-0">
                         <h6 class="text-label-md font-medium text-primary truncate">{{ player.name }}</h6>
                         <p class="text-[11px] text-text-muted truncate">{{ player.role }}</p>

@@ -130,10 +130,9 @@ function skillCategoryName(id) {
                     option-value="id"
                 />
             </div>
-            <button @click="openCreate"
-                    class="flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
+            <BaseButton @click="openCreate">
                 <IconPlus :size="18" /> Tambah Part
-            </button>
+            </BaseButton>
         </div>
 
         <DataTable :data="filteredParts" :columns="columns">
@@ -191,14 +190,12 @@ function skillCategoryName(id) {
                     </label>
                     <hr class="border-outline-variant/50" />
                     <div class="flex gap-4">
-                        <button type="submit" :disabled="modalForm.processing"
-                                class="flex-1 bg-primary-container text-white py-3.5 rounded-full text-title-lg font-semibold hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                        <BaseButton type="submit" :disabled="modalForm.processing" size="xl" class="flex-1">
                             {{ modalForm.processing ? 'Menyimpan...' : (creating ? 'Simpan Part' : 'Simpan Perubahan') }}
-                        </button>
-                        <button type="button" @click="closeModal"
-                                class="px-8 py-3.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">
+                        </BaseButton>
+                        <BaseButton type="button" variant="secondary" size="lg" @click="closeModal">
                             Batal
-                        </button>
+                        </BaseButton>
                     </div>
                 </form>
             </div>

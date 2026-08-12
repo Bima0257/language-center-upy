@@ -24,7 +24,7 @@ defineEmits([
 </script>
 
 <template>
-    <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 mb-6">
+    <BaseCard class="mb-6">
         <div class="flex flex-wrap gap-3 items-end">
             <div class="flex-1 min-w-[180px]">
                 <label class="text-label-md font-medium text-primary block mb-1.5">Cari</label>
@@ -74,5 +74,5 @@ defineEmits([
                 {{ statusLabels[s] }}
             </button>
         </div>
-    </div>
+    </BaseCard>
 </template>

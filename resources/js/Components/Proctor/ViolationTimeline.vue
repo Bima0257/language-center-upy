@@ -22,7 +22,7 @@ const violationTypeLabel = (type) => {
 </script>
 
 <template>
-    <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+    <BaseCard>
         <h3 class="text-title-lg font-semibold text-primary mb-4">Log Pelanggaran</h3>
         <div v-if="violations.length === 0" class="text-text-muted text-body-md">Tidak ada pelanggaran.</div>
         <div v-else class="space-y-3">
@@ -39,5 +39,5 @@ const violationTypeLabel = (type) => {
                 </span>
             </div>
         </div>
-    </div>
+    </BaseCard>
 </template>

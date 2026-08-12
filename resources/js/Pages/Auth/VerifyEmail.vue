@@ -46,10 +46,9 @@ const verificationLinkSent = computed(
         </div>
 
         <form @submit.prevent="submit" class="space-y-4">
-            <button type="submit" :disabled="form.processing"
-                    class="w-full bg-primary-container text-white font-semibold text-title-lg py-3.5 rounded-full hover:bg-primary transition-all active:scale-95 shadow-lg shadow-primary-container/10 disabled:opacity-50">
+            <BaseButton type="submit" :disabled="form.processing" size="xl" class="w-full shadow-lg shadow-primary-container/10">
                 {{ form.processing ? 'Mengirim...' : 'Kirim Ulang Email Verifikasi' }}
-            </button>
+            </BaseButton>
 
             <Link :href="route('logout')" method="post" as="button"
                   class="w-full text-center text-text-body text-label-md font-medium hover:text-primary transition-colors py-2">

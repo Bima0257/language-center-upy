@@ -166,7 +166,7 @@ onUnmounted(() => {
                             Soal {{ currentQuestionIndex + 1 }} dari {{ totalQuestions }}
                         </p>
                     </div>
-                    <div v-if="currentQuestion" class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                    <BaseCard v-if="currentQuestion">
                         <p class="text-body-md font-medium text-primary mb-4">{{ currentQuestion.question_text }}</p>
                         <div v-if="qOptions(currentQuestion).length" class="space-y-3">
                             <button v-for="opt in qOptions(currentQuestion)" :key="opt.key"
@@ -176,7 +176,7 @@ onUnmounted(() => {
                                 <span class="font-semibold">{{ opt.key }}.</span> {{ opt.text }}
                             </button>
                         </div>
-                    </div>
+                    </BaseCard>
                     <div v-else class="text-center py-10">
                         <p class="text-text-body text-body-md">Tidak ada soal pada section ini.</p>
                     </div>
@@ -213,7 +213,7 @@ onUnmounted(() => {
                         <p class="text-text-muted text-body-md">Audio akan tersedia di sini</p>
                     </div>
                 </div>
-                <div v-if="currentQuestion" class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                <BaseCard v-if="currentQuestion">
                     <p class="text-body-md font-medium text-primary mb-2">Soal {{ currentQuestionIndex + 1 }}</p>
                     <p v-if="currentQuestion.question_text" class="text-body-md text-primary mb-4">{{ currentQuestion.question_text }}</p>
                     <div class="space-y-3">
@@ -225,7 +225,7 @@ onUnmounted(() => {
                             <span v-if="currentQuestion['option_' + key.toLowerCase()]">{{ currentQuestion['option_' + key.toLowerCase()] }}</span>
                         </button>
                     </div>
-                </div>
+                </BaseCard>
                 <div class="flex items-center justify-between mt-6 gap-3">
                     <button @click="goToQuestion(currentQuestionIndex - 1)" :disabled="currentQuestionIndex === 0"
                             class="px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-30">
@@ -281,14 +281,12 @@ onUnmounted(() => {
             </p>
             <p class="text-text-muted text-label-md mb-6">Jawaban tidak bisa diubah setelah dikumpulkan.</p>
             <div class="flex gap-4">
-                <button @click="showSubmitConfirm = false"
-                        class="flex-1 border border-outline-variant text-primary py-3.5 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all">
+                <BaseButton variant="secondary" size="lg" class="flex-1" @click="showSubmitConfirm = false">
                     Kembali
-                </button>
-                <button @click="submitExam"
-                        class="flex-1 bg-primary-container text-white py-3.5 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
+                </BaseButton>
+                <BaseButton size="lg" class="flex-1" @click="submitExam">
                     Kumpulkan
-                </button>
+                </BaseButton>
             </div>
         </div>
     </div>

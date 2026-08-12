@@ -47,27 +47,21 @@ const state = getState()
                         </div>
 
                         <div v-if="state.type === 'prompt'" class="mb-4">
-                            <textarea
+                            <BaseTextarea
                                 v-model="state.inputValue"
                                 :placeholder="state.inputPlaceholder || 'Tulis catatan...'"
                                 rows="3"
-                                class="w-full border border-outline-variant rounded-xl px-4 py-3 text-body-md text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all resize-none"
+                                class="resize-none"
                             />
                         </div>
 
                         <div class="flex justify-end gap-3">
-                            <button
-                                @click="onCancel"
-                                class="px-5 py-2.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all"
-                            >
+                            <BaseButton variant="secondary" size="xs" @click="onCancel">
                                 Batal
-                            </button>
-                            <button
-                                @click="onOk"
-                                class="px-5 py-2.5 bg-error-red text-white rounded-full text-label-md font-medium hover:opacity-90 transition-all active:scale-95"
-                            >
+                            </BaseButton>
+                            <BaseButton variant="danger" size="xs" @click="onOk">
                                 {{ state.type === 'confirm' ? 'Ya, Hapus' : 'Simpan' }}
-                            </button>
+                            </BaseButton>
                         </div>
                     </div>
                 </Transition>

@@ -10,6 +10,8 @@ import ToastProvider from './Components/ToastProvider.vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+const baseComponents = import.meta.glob('./Components/Base/*.vue', { eager: true });
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>
@@ -18,14 +20,20 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        return createApp({
+        const app = createApp({
             render() {
                 return h('div', null, [
                     h(ToastProvider),
                     h(App, props),
                 ])
             }
-        })
+        });
+
+        Object.entries(baseComponents).forEach(([path, module]) => {
+            app.component(path.split('/').pop().replace(/\.vue$/, ''), module.default);
+        });
+
+        return app
             .use(plugin)
             .use(ZiggyVue)
             .mount(el);

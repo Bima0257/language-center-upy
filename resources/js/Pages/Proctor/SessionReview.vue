@@ -101,7 +101,7 @@ const reviewStatusColors = {
                     </div>
                 </div>
 
-                <div v-if="session.score_total !== null" class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+                <BaseCard v-if="session.score_total !== null">
                     <h2 class="text-title-lg font-semibold text-primary mb-4">Skor</h2>
                     <div class="grid grid-cols-4 gap-4 text-center">
                         <div class="bg-surface-container-low rounded-2xl p-4">
@@ -125,7 +125,7 @@ const reviewStatusColors = {
                         <p class="text-text-muted text-label-md">Total</p>
                         <p class="text-headline-lg font-bold text-primary">{{ session.score_total }}/120</p>
                     </div>
-                </div>
+                </BaseCard>
 
                 <ViolationTimeline :violations="session.violation_logs" />
 
@@ -135,19 +135,17 @@ const reviewStatusColors = {
                     <form @submit.prevent="terminateSession" class="space-y-4">
                         <div>
                             <label class="text-label-md font-medium text-primary block mb-2">Alasan</label>
-                            <textarea v-model="terminateForm.reason" rows="2" required
-                                      class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-error-red"
-                                      placeholder="Alasan penghentian..."></textarea>
+                            <BaseTextarea v-model="terminateForm.reason" rows="2" required
+                                          placeholder="Alasan penghentian..." error />
                         </div>
-                        <button type="submit" :disabled="terminateForm.processing"
-                                class="w-full bg-error-red text-white py-3.5 rounded-full text-label-md font-medium hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50">
+                        <BaseButton type="submit" :disabled="terminateForm.processing" variant="danger" size="xl" class="w-full">
                             {{ terminateForm.processing ? 'Memproses...' : 'Hentikan Sesi' }}
-                        </button>
+                        </BaseButton>
                     </form>
                 </div>
             </div>
 
-            <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 h-fit sticky top-24">
+            <BaseCard class="h-fit sticky top-24">
                 <h2 class="text-title-lg font-semibold text-primary mb-4">Keputusan Review</h2>
                 <form @submit.prevent="submitReview" class="space-y-4">
                     <div>
@@ -166,14 +164,12 @@ const reviewStatusColors = {
                     </div>
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-2">Catatan</label>
-                        <textarea v-model="reviewForm.review_note" rows="5"
-                                  class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"
-                                  placeholder="Alasan dan detail keputusan..."></textarea>
+                        <BaseTextarea v-model="reviewForm.review_note" rows="5"
+                                      placeholder="Alasan dan detail keputusan..." />
                     </div>
-                    <button type="submit" :disabled="reviewForm.processing"
-                            class="w-full bg-primary-container text-white py-3.5 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                    <BaseButton type="submit" :disabled="reviewForm.processing" size="xl" class="w-full">
                         {{ reviewForm.processing ? 'Menyimpan...' : 'Simpan Keputusan' }}
-                    </button>
+                    </BaseButton>
                 </form>
 
                 <div v-if="session.review_status" class="mt-6 pt-6 border-t border-outline-variant/30">
@@ -187,7 +183,7 @@ const reviewStatusColors = {
                         Oleh: {{ session.reviewer?.name }} — {{ session.reviewed_at ? new Date(session.reviewed_at).toLocaleString('id-ID') : '' }}
                     </p>
                 </div>
-            </div>
+            </BaseCard>
         </div>
     </DashboardLayout>
 </template>

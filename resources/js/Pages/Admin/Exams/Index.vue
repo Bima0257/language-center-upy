@@ -26,10 +26,9 @@ const columns = [
     <Head title="Manajemen Ujian" />
     <DashboardLayout title="Manajemen Ujian">
         <div class="flex justify-end mb-6">
-            <Link :href="route('admin.exams.create')"
-                  class="flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
+            <BaseButton :href="route('admin.exams.create')">
                 <IconPlus :size="18" /> Buat Ujian Baru
-            </Link>
+            </BaseButton>
         </div>
 
         <DataTable

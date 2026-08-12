@@ -202,7 +202,7 @@ function questionPreview(q) {
                 <p v-if="exam.description" class="text-text-body text-text-body text-body-md">{{ exam.description }}</p>
             </div>
 
-            <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
+            <BaseCard>
                 <h2 class="text-title-lg font-semibold text-primary mb-4">Sections &amp; Soal</h2>
 
                 <div v-if="exam.sections?.length" class="space-y-4">
@@ -279,14 +279,12 @@ function questionPreview(q) {
                             </draggable>
 
                             <div v-if="dirtySections[section.id]" class="flex flex-wrap items-center gap-3 pt-2">
-                                <button @click="saveArrangement(section)"
-                                        class="flex items-center gap-1.5 px-5 py-2 bg-primary-container text-white rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
+                                <BaseButton size="sm" @click="saveArrangement(section)">
                                     <IconCheck :size="16" /> Simpan Susunan
-                                </button>
-                                <button @click="cancelArrangement(section)"
-                                        class="flex items-center gap-1.5 px-5 py-2 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">
+                                </BaseButton>
+                                <BaseButton variant="secondary" size="sm" @click="cancelArrangement(section)">
                                     Batal
-                                </button>
+                                </BaseButton>
                             </div>
                         </div>
                     </div>
@@ -294,7 +292,7 @@ function questionPreview(q) {
                 <div v-else class="text-center py-10">
                     <p class="text-text-muted text-text-body text-body-md">Belum ada section.</p>
                 </div>
-            </div>
+            </BaseCard>
         </div>
     </DashboardLayout>
 </template>

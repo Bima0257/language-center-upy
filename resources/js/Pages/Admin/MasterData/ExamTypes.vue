@@ -101,10 +101,9 @@ async function destroy(type) {
     <Head title="Master Data - Jenis Tes" />
     <DashboardLayout title="Master Data Jenis Tes">
         <div class="flex justify-end mb-6">
-            <button @click="openCreate"
-                    class="flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
+            <BaseButton @click="openCreate">
                 <IconPlus :size="18" /> Tambah Jenis Tes
-            </button>
+            </BaseButton>
         </div>
 
         <DataTable :data="examTypes" :columns="columns">
@@ -149,14 +148,12 @@ async function destroy(type) {
                     </label>
                     <hr class="border-outline-variant/50" />
                     <div class="flex gap-4">
-                        <button type="submit" :disabled="modalForm.processing"
-                                class="flex-1 bg-primary-container text-white py-3.5 rounded-full text-title-lg font-semibold hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
+                        <BaseButton type="submit" :disabled="modalForm.processing" size="xl" class="flex-1">
                             {{ modalForm.processing ? 'Menyimpan...' : (creating ? 'Simpan Jenis Tes' : 'Simpan Perubahan') }}
-                        </button>
-                        <button type="button" @click="closeModal"
-                                class="px-8 py-3.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">
+                        </BaseButton>
+                        <BaseButton type="button" variant="secondary" size="lg" @click="closeModal">
                             Batal
-                        </button>
+                        </BaseButton>
                     </div>
                 </form>
             </div>

@@ -15,7 +15,7 @@ defineEmits(['type-change', 'bank-change', 'reset']);
 </script>
 
 <template>
-    <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30 mb-6">
+    <BaseCard class="mb-6">
         <div class="flex flex-wrap gap-4 items-end">
             <div class="w-72">
                 <DropDown
@@ -58,5 +58,5 @@ defineEmits(['type-change', 'bank-change', 'reset']);
                 ]"
             />
         </div>
-    </div>
+    </BaseCard>
 </template>

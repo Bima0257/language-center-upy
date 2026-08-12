@@ -195,14 +195,13 @@ function goBack() {
                          class="w-2 h-2 rounded-full transition-all"
                          :class="i === currentIndex ? 'bg-secondary' : 'bg-outline-variant'"></div>
                 </div>
-                <button v-if="questions.length > 1" @click="goTo(1)" :disabled="currentIndex >= questions.length - 1"
-                        class="flex items-center gap-2 px-6 py-2 bg-primary-container text-white rounded-full font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all group disabled:opacity-30 disabled:cursor-not-allowed">
+                <BaseButton v-if="questions.length > 1" @click="goTo(1)" :disabled="currentIndex >= questions.length - 1"
+                        class="px-6">
                     Selanjutnya <IconArrowRight :size="16" class="transition-transform group-hover:translate-x-1" />
-                </button>
-                <button v-else @click="goBack"
-                        class="flex items-center gap-2 px-6 py-2 bg-primary-container text-white rounded-full font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all">
+                </BaseButton>
+                <BaseButton v-else @click="goBack" class="px-6">
                     <IconArrowLeft :size="16" /> Kembali
-                </button>
+                </BaseButton>
             </footer>
     </div>
 </template>

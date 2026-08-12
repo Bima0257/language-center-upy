@@ -12,9 +12,9 @@ defineProps({
         <div class="bg-surface-white rounded-3xl p-8 shadow-app-frame max-w-md w-full text-center">
             <h1 class="text-headline-md font-bold text-primary mb-4">Section Selesai</h1>
             <p class="text-text-body text-body-md">Anda akan melanjutkan ke section berikutnya.</p>
-            <button class="mt-6 w-full bg-primary-container text-white py-3.5 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95">
+            <BaseButton size="lg" class="w-full mt-6">
                 Lanjut ke Section Berikutnya
-            </button>
+            </BaseButton>
         </div>
     </div>
 </template>

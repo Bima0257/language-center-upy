@@ -28,7 +28,7 @@ function isValid(cert) {
 <template>
     <Head title="Sertifikat" />
     <DashboardLayout title="Daftar Sertifikat">
-        <div class="bg-surface-white rounded-2xl shadow-soft border border-outline-variant/30 overflow-hidden">
+        <BaseCard :padding="false" class="overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead>
@@ -56,10 +56,9 @@ function isValid(cert) {
                             <td class="px-5 py-4 text-body-md text-text-body">{{ formatDate(cert.issued_at) }}</td>
                             <td class="px-5 py-4 text-body-md text-text-body">{{ formatDate(cert.valid_until) }}</td>
                             <td class="px-5 py-4">
-                                <span :class="isValid(cert) ? 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300' : 'bg-error-red/10 text-error-red'"
-                                      class="inline-block px-3 py-1 rounded-full text-label-md font-medium">
+                                <BaseBadge :variant="isValid(cert) ? 'success' : 'danger'">
                                     {{ isValid(cert) ? 'Aktif' : 'Kadaluarsa' }}
-                                </span>
+                                </BaseBadge>
                             </td>
                             <td class="px-5 py-4">
                                 <button @click="destroy(cert)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus">
@@ -76,6 +75,6 @@ function isValid(cert) {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </BaseCard>
     </DashboardLayout>
 </template>

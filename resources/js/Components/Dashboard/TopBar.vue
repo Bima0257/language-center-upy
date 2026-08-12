@@ -68,11 +68,12 @@ onMounted(() => {
                     <IconSun v-if="isDark" :size="20" class="transition-transform hover:rotate-90" />
                     <IconMoon v-else :size="20" class="transition-transform hover:rotate-12" />
                 </button>
-                <div
-                    class="w-10 h-10 rounded-full overflow-hidden border-2 border-outline-variant bg-surface-container flex items-center justify-center text-primary font-bold text-sm"
-                >
-                    {{ $page.props.auth.user.name.charAt(0).toUpperCase() }}
-                </div>
+                <BaseAvatar
+                    variant="neutral"
+                    :name="$page.props.auth.user.name"
+                    :size="40"
+                    class="border-2 border-outline-variant"
+                />
             </div>
         </div>
     </header>
