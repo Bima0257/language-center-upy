@@ -211,7 +211,7 @@ onUnmounted(() => {
                             <BaseMediaLoader
                                 :loading="currentImageLoading.loading.value"
                                 media-type="image"
-                                skeleton-class="max-h-[320px] rounded-none border-0"
+                                skeleton-class="h-64 max-h-[320px] rounded-none border-0"
                             >
                                 <img
                                     :src="currentImageSrc"

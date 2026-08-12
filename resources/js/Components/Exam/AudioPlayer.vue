@@ -9,7 +9,7 @@ const props = defineProps({
     strip: { type: Boolean, default: false },
 });
 
-const { loading, onLoad } = useMediaLoad(() => props.src);
+const { loading, onLoad, onError } = useMediaLoad(() => props.src);
 const isPlaying = ref(false);
 const audioRef = ref(null);
 const barRef = ref(null);
@@ -59,6 +59,7 @@ function formatTime(seconds) {
         <audio ref="audioRef" :src="src" preload="metadata" class="hidden"
                @timeupdate="onTimeUpdate"
                @loadedmetadata="onLoadedMetadata"
+               @error="onError"
                @play="isPlaying = true"
                @pause="isPlaying = false"
                @ended="isPlaying = false"></audio>

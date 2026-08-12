@@ -43,7 +43,7 @@ const imageLoading = useMediaLoad(() => props.passage.image_url);
         <BaseMediaLoader
             :loading="imageLoading.loading.value"
             media-type="image"
-            skeleton-class="max-h-44 rounded-xl"
+            skeleton-class="h-44 rounded-xl"
         >
             <img
                 :src="'/storage/' + passage.image_url"
