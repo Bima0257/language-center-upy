@@ -5,6 +5,7 @@ import PassageViewer from '@/Components/Exam/PassageViewer.vue';
 import AudioPlayer from '@/Components/Exam/AudioPlayer.vue';
 import QuestionNavigator from '@/Components/Exam/QuestionNavigator.vue';
 import ViolationModal from '@/Components/Exam/ViolationModal.vue';
+import { useMediaLoad } from '@/Composables/useMediaLoad';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useExamTimer } from '@/Modules/ExamModule/Composables/useExamTimer.js';
 import { useExamSecurity } from '@/Modules/ExamModule/Composables/useExamSecurity.js';
@@ -95,6 +96,8 @@ const currentImageSrc = computed(() => {
     const path = currentQuestion.value?.image_url || currentQuestion.value?.passage?.image_url;
     return path ? '/storage/' + path : null;
 });
+
+const currentImageLoading = useMediaLoad(currentImageSrc);
 
 function goToQuestion(index) {
     if (index >= 0 && index < totalQuestions.value) {
@@ -205,7 +208,18 @@ onUnmounted(() => {
                     <p class="text-label-md text-text-muted mb-2">Putar audio sebelum menjawab soal</p>
                     <div v-if="currentAudioSrc || currentImageSrc" class="bg-surface-container-low rounded-2xl border border-surface-variant overflow-hidden">
                         <div v-if="currentImageSrc" class="w-full bg-surface-container-lowest">
-                            <img :src="currentImageSrc" class="w-full h-auto max-h-[320px] object-contain" />
+                            <BaseMediaLoader
+                                :loading="currentImageLoading.loading.value"
+                                media-type="image"
+                                skeleton-class="max-h-[320px] rounded-none border-0"
+                            >
+                                <img
+                                    :src="currentImageSrc"
+                                    class="w-full h-auto max-h-[320px] object-contain"
+                                    @load="currentImageLoading.onLoad()"
+                                    @error="currentImageLoading.onError()"
+                                />
+                            </BaseMediaLoader>
                         </div>
                         <AudioPlayer v-if="currentAudioSrc" :src="currentAudioSrc" strip />
                     </div>

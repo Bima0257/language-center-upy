@@ -1,11 +1,15 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
+import { useMediaLoad } from '@/Composables/useMediaLoad';
 import { IconCheck, IconX, IconRotate } from '@tabler/icons-vue';
 
 defineProps({
     users: Array,
 });
+
+const identityLoading = useMediaLoad();
+const photoLoading = useMediaLoad();
 
 function approve(user) {
     useForm({}).post(route('admin.verify-users.approve', user.id), { preserveScroll: true });
@@ -53,8 +57,16 @@ function revert(user) {
                                 <a v-if="user.student_profile?.identity_photo"
                                    :href="'/storage/' + user.student_profile.identity_photo" target="_blank"
                                    class="block w-16 h-16 bg-surface-container-low rounded-lg overflow-hidden border border-outline-variant hover:opacity-80 transition-opacity">
-                                    <img :src="'/storage/' + user.student_profile.identity_photo"
-                                         class="w-full h-full object-cover" />
+                                    <BaseMediaLoader
+                                        :loading="identityLoading.loading.value"
+                                        media-type="image"
+                                        skeleton-class="h-16 rounded-none border-0"
+                                    >
+                                        <img :src="'/storage/' + user.student_profile.identity_photo"
+                                             class="w-full h-full object-cover"
+                                             @load="identityLoading.onLoad()"
+                                             @error="identityLoading.onError()" />
+                                    </BaseMediaLoader>
                                 </a>
                                 <span v-else class="text-text-muted text-label-md">-</span>
                             </td>
@@ -62,8 +74,16 @@ function revert(user) {
                                 <a v-if="user.photo"
                                    :href="'/storage/' + user.photo" target="_blank"
                                    class="block w-16 h-16 bg-surface-container-low rounded-lg overflow-hidden border border-outline-variant hover:opacity-80 transition-opacity">
-                                    <img :src="'/storage/' + user.photo"
-                                         class="w-full h-full object-cover" />
+                                    <BaseMediaLoader
+                                        :loading="photoLoading.loading.value"
+                                        media-type="image"
+                                        skeleton-class="h-16 rounded-none border-0"
+                                    >
+                                        <img :src="'/storage/' + user.photo"
+                                             class="w-full h-full object-cover"
+                                             @load="photoLoading.onLoad()"
+                                             @error="photoLoading.onError()" />
+                                    </BaseMediaLoader>
                                 </a>
                                 <span v-else class="text-text-muted text-label-md">-</span>
                             </td>

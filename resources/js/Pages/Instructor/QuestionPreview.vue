@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import RichTextViewer from '@/Components/Shared/RichTextViewer.vue';
 import AudioPlayer from '@/Components/Exam/AudioPlayer.vue';
+import { useMediaLoad } from '@/Composables/useMediaLoad';
 import { IconArrowLeft, IconArrowRight, IconCheck, IconEye } from '@tabler/icons-vue';
 import { computed, ref } from 'vue';
 
@@ -25,6 +26,9 @@ const imageSrc = computed(() => {
     const path = current.value?.image_url || passage.value?.image_url;
     return path ? '/storage/' + path : null;
 });
+
+const imageLoading = useMediaLoad(imageSrc);
+const audioLoading = useMediaLoad(audioSrc);
 
 const skillLabel = computed(() => {
     if (!current.value?.skill) return 'Soal';
@@ -95,7 +99,18 @@ function goBack() {
                                 <RichTextViewer :content="passage.content_text" />
                             </div>
                             <div v-if="passage?.image_url" class="my-6 rounded-xl border border-outline-variant/40 bg-surface-white p-3 shadow-standard">
-                                <img :src="'/storage/' + passage.image_url" class="w-full h-auto rounded-lg" />
+                                <BaseMediaLoader
+                                    :loading="imageLoading.loading.value"
+                                    media-type="image"
+                                    skeleton-class="rounded-lg"
+                                >
+                                    <img
+                                        :src="'/storage/' + passage.image_url"
+                                        class="w-full h-auto rounded-lg"
+                                        @load="imageLoading.onLoad()"
+                                        @error="imageLoading.onError()"
+                                    />
+                                </BaseMediaLoader>
                             </div>
                         </div>
                     </section>
@@ -144,7 +159,18 @@ function goBack() {
                             <p class="text-label-md text-text-muted mb-4">Putar audio sebelum menjawab soal</p>
                             <div class="bg-surface-container-low rounded-2xl border border-surface-variant overflow-hidden flex flex-col">
                                 <div v-if="imageSrc" class="relative w-full min-h-[300px]">
-                                    <img :src="imageSrc" class="absolute inset-0 w-full h-full object-cover" />
+                                    <BaseMediaLoader
+                                        :loading="imageLoading.loading.value"
+                                        media-type="image"
+                                        skeleton-class="h-full min-h-[300px] rounded-none border-0"
+                                    >
+                                        <img
+                                            :src="imageSrc"
+                                            class="absolute inset-0 w-full h-full object-cover"
+                                            @load="imageLoading.onLoad()"
+                                            @error="imageLoading.onError()"
+                                        />
+                                    </BaseMediaLoader>
                                     <div class="absolute inset-0 bg-black/5"></div>
                                 </div>
                                 <AudioPlayer v-if="audioSrc" :src="audioSrc" strip />

@@ -1,8 +1,9 @@
 <script setup>
 import RichTextViewer from "@/Components/Shared/RichTextViewer.vue";
+import { useMediaLoad } from "@/Composables/useMediaLoad";
 import { IconHeadphones, IconPhoto } from "@tabler/icons-vue";
 
-defineProps({
+const props = defineProps({
     passage: { type: Object, required: true },
     expanded: { type: Boolean, default: false },
     clamp: { type: Number, default: 3 },
@@ -10,6 +11,9 @@ defineProps({
 });
 
 defineEmits(["toggle-expand"]);
+
+const audioLoading = useMediaLoad(() => props.passage.audio_url);
+const imageLoading = useMediaLoad(() => props.passage.image_url);
 </script>
 
 <template>
@@ -18,16 +22,36 @@ defineEmits(["toggle-expand"]);
         v-if="variant === 'full' && passage.type === 'audio' && passage.audio_url"
         class="mt-2"
     >
-        <audio controls :src="'/storage/' + passage.audio_url" class="w-full max-w-md h-9"></audio>
+        <BaseMediaLoader
+            :loading="audioLoading.loading.value"
+            media-type="audio"
+            skeleton-class="h-10 max-w-md"
+        >
+            <audio
+                controls
+                :src="'/storage/' + passage.audio_url"
+                class="w-full max-w-md h-9"
+                @load="audioLoading.onLoad()"
+                @error="audioLoading.onError()"
+            ></audio>
+        </BaseMediaLoader>
     </div>
     <div
         v-else-if="variant === 'full' && passage.type === 'image' && passage.image_url"
         class="mt-2"
     >
-        <img
-            :src="'/storage/' + passage.image_url"
-            class="max-h-44 rounded-xl border border-outline-variant/30 object-contain"
-        />
+        <BaseMediaLoader
+            :loading="imageLoading.loading.value"
+            media-type="image"
+            skeleton-class="max-h-44 rounded-xl"
+        >
+            <img
+                :src="'/storage/' + passage.image_url"
+                class="max-h-44 rounded-xl border border-outline-variant/30 object-contain"
+                @load="imageLoading.onLoad()"
+                @error="imageLoading.onError()"
+            />
+        </BaseMediaLoader>
     </div>
     <template v-else-if="variant === 'full' && passage.content_text">
         <RichTextViewer
@@ -49,22 +73,38 @@ defineEmits(["toggle-expand"]);
         <template v-if="(passage.type === 'audio' || passage.audio_url) && passage.audio_url">
             <div class="flex items-center gap-2 mb-1">
                 <IconHeadphones :size="14" class="text-text-muted" />
-                <audio
-                    :src="'/storage/' + passage.audio_url"
-                    controls
-                    class="h-8 w-full max-w-xs"
-                    preload="none"
-                ></audio>
+                <BaseMediaLoader
+                    :loading="audioLoading.loading.value"
+                    media-type="audio"
+                    skeleton-class="h-8 max-w-xs"
+                >
+                    <audio
+                        :src="'/storage/' + passage.audio_url"
+                        controls
+                        class="h-8 w-full max-w-xs"
+                        preload="none"
+                        @load="audioLoading.onLoad()"
+                        @error="audioLoading.onError()"
+                    ></audio>
+                </BaseMediaLoader>
             </div>
         </template>
         <template v-else-if="(passage.type === 'image' || passage.image_url) && passage.image_url">
             <div class="flex items-center gap-2 mb-1">
                 <IconPhoto :size="14" class="text-text-muted" />
-                <img
-                    :src="'/storage/' + passage.image_url"
-                    class="h-12 rounded-lg object-cover"
-                    :alt="passage.title"
-                />
+                <BaseMediaLoader
+                    :loading="imageLoading.loading.value"
+                    media-type="image"
+                    skeleton-class="h-12 rounded-lg"
+                >
+                    <img
+                        :src="'/storage/' + passage.image_url"
+                        class="h-12 rounded-lg object-cover"
+                        :alt="passage.title"
+                        @load="imageLoading.onLoad()"
+                        @error="imageLoading.onError()"
+                    />
+                </BaseMediaLoader>
             </div>
         </template>
         <p

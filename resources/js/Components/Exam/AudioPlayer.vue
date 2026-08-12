@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import { useMediaLoad } from '@/Composables/useMediaLoad';
 import { IconVolume, IconPlayerPlayFilled, IconPlayerPauseFilled } from '@tabler/icons-vue';
 
 const props = defineProps({
@@ -8,6 +9,7 @@ const props = defineProps({
     strip: { type: Boolean, default: false },
 });
 
+const { loading, onLoad } = useMediaLoad(() => props.src);
 const isPlaying = ref(false);
 const audioRef = ref(null);
 const barRef = ref(null);
@@ -31,6 +33,7 @@ function onTimeUpdate() {
 
 function onLoadedMetadata() {
     duration.value = audioRef.value?.duration || 0;
+    onLoad();
 }
 
 function onSeek(e) {
@@ -60,6 +63,13 @@ function formatTime(seconds) {
                @pause="isPlaying = false"
                @ended="isPlaying = false"></audio>
 
+        <BaseMediaLoader
+            v-if="loading"
+            media-type="audio"
+            skeleton-class="h-12"
+        />
+
+        <template v-else>
         <div class="flex justify-between items-center text-text-heading font-label-md text-label-md">
             <span>{{ formatTime(currentTime) }}</span>
             <span class="text-text-muted">{{ formatTime(duration) }}</span>
@@ -86,5 +96,6 @@ function formatTime(seconds) {
                 <IconVolume :size="20" />
             </button>
         </div>
+        </template>
     </div>
 </template>
