@@ -17,6 +17,7 @@ const props = defineProps({
     skills: { type: Array, default: () => [] },
     parts: { type: Array, default: () => [] },
     preselectedBankId: { type: Number, default: null },
+    returnFilters: { type: Object, default: () => ({}) },
 });
 
 const optionKeys = ['A', 'B', 'C', 'D'];
@@ -55,6 +56,10 @@ const form = useForm({
     new_passage_content_text: '',
     new_passage_audio_file: null,
     new_passage_image_file: null,
+    _return_skill_id: props.returnFilters?.skill_id || '',
+    _return_part_id: props.returnFilters?.part_id || '',
+    _return_status: props.returnFilters?.status || '',
+    _return_search: props.returnFilters?.search || '',
     questions: [newQuestion()],
 });
 
@@ -217,12 +222,22 @@ const { showUploadProgress, uploadLabel } = useUploadProgress(form, {
     audioField: 'new_passage_audio_file',
     imageField: 'new_passage_image_file',
 });
+
+const indexUrl = computed(() => {
+    const p = {};
+    if (form.question_bank_id) p.question_bank_id = form.question_bank_id;
+    if (form._return_skill_id) p.skill_id = form._return_skill_id;
+    if (form._return_part_id) p.part_id = form._return_part_id;
+    if (form._return_status) p.status = form._return_status;
+    if (form._return_search) p.search = form._return_search;
+    return p;
+});
 </script>
 
 <template>
     <Head title="Tambah Soal Baru" />
     <DashboardLayout title="Tambah Soal Baru">
-        <Link :href="route('content-library.index')" class="inline-block text-secondary text-label-md font-medium hover:underline mb-6">← Kembali ke Content Library</Link>
+        <Link :href="route('content-library.index', indexUrl)" class="inline-block text-secondary text-label-md font-medium hover:underline mb-6">← Kembali ke Content Library</Link>
         <div class="max-w-5xl mx-auto">
             <div class="bg-surface-white rounded-3xl p-8 shadow-soft border border-outline-variant/30">
                 <div class="flex items-center justify-between mb-6">
@@ -509,7 +524,7 @@ const { showUploadProgress, uploadLabel } = useUploadProgress(form, {
                         <button type="submit" :disabled="form.processing || !canSubmit" class="flex-1 bg-primary-container text-white py-3.5 rounded-full text-title-lg font-semibold hover:bg-primary transition-all active:scale-95 disabled:opacity-50">
                             {{ form.processing ? 'Menyimpan...' : `Simpan ${form.questions.length} Soal` }}
                         </button>
-                        <Link :href="route('content-library.index')" class="px-8 py-3.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">Batal</Link>
+                        <Link :href="route('content-library.index', indexUrl)" class="px-8 py-3.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">Batal</Link>
                     </div>
                 </form>
             </div>

@@ -74,6 +74,11 @@ const storedImageUrl = computed(() => {
     return path ? '/storage/' + path : null;
 });
 
+const indexUrl = computed(() => route('content-library.index', {
+    question_bank_id: props.question.question_bank_id,
+    skill_id: props.question.skill_id,
+}));
+
 const { showUploadProgress, uploadLabel } = useUploadProgress(form);
 
 function submit() {
@@ -84,7 +89,7 @@ function submit() {
 <template>
     <Head title="Edit Soal" />
     <DashboardLayout title="Edit Soal">
-        <Link :href="route('content-library.index')" class="inline-block text-secondary text-label-md font-medium hover:underline mb-6">← Kembali ke Content Library</Link>
+        <Link :href="indexUrl" class="inline-block text-secondary text-label-md font-medium hover:underline mb-6">← Kembali ke Content Library</Link>
         <div class="max-w-5xl mx-auto">
             <div class="bg-surface-white rounded-3xl p-8 shadow-soft border border-outline-variant/30">
                 <div class="mb-6">
@@ -201,7 +206,7 @@ function submit() {
                     <hr class="border-outline-variant/50" />
                     <div class="flex gap-4">
                         <button type="submit" :disabled="form.processing" class="flex-1 bg-primary-container text-white py-3.5 rounded-full text-title-lg font-semibold hover:bg-primary transition-all active:scale-95 disabled:opacity-50">{{ form.processing ? 'Menyimpan...' : 'Simpan Perubahan' }}</button>
-                        <Link :href="route('content-library.index')" class="px-8 py-3.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">Batal</Link>
+                        <Link :href="indexUrl" class="px-8 py-3.5 border border-outline-variant rounded-full text-label-md font-medium text-text-body hover:bg-surface-container-low transition-all">Batal</Link>
                     </div>
                 </form>
             </div>

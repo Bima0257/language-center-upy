@@ -40,6 +40,16 @@ const selectedStatus = ref(props.filters.status || "");
 const selectedPartId = ref(props.filters.part_id || "");
 const selectedTypeId = ref("");
 
+const createParams = computed(() => {
+    const p = {};
+    if (selectedBankId.value) p.question_bank_id = selectedBankId.value;
+    if (selectedSkillId.value) p.skill_id = selectedSkillId.value;
+    if (selectedPartId.value) p.part_id = selectedPartId.value;
+    if (selectedStatus.value) p.status = selectedStatus.value;
+    if (searchQuery.value) p.search = searchQuery.value;
+    return p;
+});
+
 if (selectedBankId.value) {
     const bank = props.questionBanks.find(
         (b) => String(b.id) === String(selectedBankId.value),
@@ -452,14 +462,7 @@ async function bulkReview(status) {
                     </Link>
                 </div>
                 <Link
-                    :href="
-                        route(
-                            'content-library.create',
-                            selectedBankId
-                                ? { question_bank_id: selectedBankId }
-                                : {},
-                        )
-                    "
+                    :href="route('content-library.create', createParams)"
                     class="flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95"
                 >
                     <IconPlus :size="18" /> Tambah Soal Baru

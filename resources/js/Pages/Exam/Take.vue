@@ -86,6 +86,16 @@ const showViolationModal = ref(false);
 const currentViolation = ref(null);
 const showSubmitConfirm = ref(false);
 
+const currentAudioSrc = computed(() => {
+    const path = currentQuestion.value?.audio_url || currentQuestion.value?.passage?.audio_url;
+    return path ? '/storage/' + path : null;
+});
+
+const currentImageSrc = computed(() => {
+    const path = currentQuestion.value?.image_url || currentQuestion.value?.passage?.image_url;
+    return path ? '/storage/' + path : null;
+});
+
 function goToQuestion(index) {
     if (index >= 0 && index < totalQuestions.value) {
         currentQuestionIndex.value = index;
@@ -193,20 +203,26 @@ onUnmounted(() => {
             <div v-else-if="currentSection?.skill?.code === 'listening'" class="flex-1 p-6 overflow-y-auto">
                 <div class="mb-6">
                     <p class="text-label-md text-text-muted mb-2">Putar audio sebelum menjawab soal</p>
-                    <AudioPlayer v-if="currentQuestion?.passage?.audio_url" :src="'/storage/' + currentQuestion.passage.audio_url" />
-                    <div class="bg-pastel-blue/20 rounded-2xl p-6 text-center border border-dashed border-outline-variant">
+                    <div v-if="currentAudioSrc || currentImageSrc" class="bg-surface-container-low rounded-2xl border border-surface-variant overflow-hidden">
+                        <div v-if="currentImageSrc" class="w-full bg-surface-container-lowest">
+                            <img :src="currentImageSrc" class="w-full h-auto max-h-[320px] object-contain" />
+                        </div>
+                        <AudioPlayer v-if="currentAudioSrc" :src="currentAudioSrc" strip />
+                    </div>
+                    <div v-else class="bg-pastel-blue/20 rounded-2xl p-6 text-center border border-dashed border-outline-variant">
                         <p class="text-text-muted text-body-md">Audio akan tersedia di sini</p>
                     </div>
                 </div>
                 <div v-if="currentQuestion" class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
                     <p class="text-body-md font-medium text-primary mb-2">Soal {{ currentQuestionIndex + 1 }}</p>
-                    <p class="text-body-md text-primary mb-4">{{ currentQuestion.question_text }}</p>
-                    <div v-if="qOptions(currentQuestion).length" class="space-y-3">
-                        <button v-for="opt in qOptions(currentQuestion)" :key="opt.key"
-                                @click="selectAnswer(opt.key)"
+                    <p v-if="currentQuestion.question_text" class="text-body-md text-primary mb-4">{{ currentQuestion.question_text }}</p>
+                    <div class="space-y-3">
+                        <button v-for="key in optionKeys" :key="key"
+                                @click="selectAnswer(key)"
                                 class="w-full text-left p-4 rounded-2xl border transition-all"
-                                :class="answers[currentQuestion.id] === opt.key ? 'border-secondary bg-pastel-purple/20 text-primary' : 'border-outline-variant bg-surface-container-lowest hover:border-secondary'">
-                            <span class="font-semibold">{{ opt.key }}.</span> {{ opt.text }}
+                                :class="answers[currentQuestion.id] === key ? 'border-secondary bg-pastel-purple/20 text-primary' : 'border-outline-variant bg-surface-container-lowest hover:border-secondary'">
+                            <span class="font-semibold">{{ key }}.</span>
+                            <span v-if="currentQuestion['option_' + key.toLowerCase()]">{{ currentQuestion['option_' + key.toLowerCase()] }}</span>
                         </button>
                     </div>
                 </div>

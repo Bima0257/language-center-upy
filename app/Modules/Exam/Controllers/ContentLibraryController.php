@@ -15,6 +15,7 @@ use App\Services\AudioCompressionService;
 use App\Services\ImageCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -41,6 +42,7 @@ class ContentLibraryController extends Controller
                 && QuestionBank::whereKey($preselectedBankId)->where('is_active', true)->exists()
                     ? (int) $preselectedBankId
                     : null,
+            'returnFilters' => $this->filterQuery($request),
         ]);
     }
 
@@ -180,8 +182,8 @@ class ContentLibraryController extends Controller
                     throw ValidationException::withMessages(['questions' => 'Soal listening wajib memiliki audio, baik di soal maupun di passage.']);
                 }
 
-                if ($passageId && $passage && ! $passage->audio_url) {
-                    throw ValidationException::withMessages(['questions' => 'Passage untuk soal listening wajib bertipe audio.']);
+                if ($passageId && $passage && ! $passage->audio_url && ! $passage->image_url) {
+                    throw ValidationException::withMessages(['questions' => 'Passage untuk soal listening wajib memiliki audio atau gambar.']);
                 }
             } else {
                 $optionEmpty = collect(['option_a', 'option_b', 'option_c', 'option_d'])
@@ -214,7 +216,15 @@ class ContentLibraryController extends Controller
 
         $count = count($request->input('questions', []));
 
-        return to_route('content-library.index')
+        $filters = array_filter([
+            'question_bank_id' => $request->input('question_bank_id'),
+            'skill_id' => $request->input('_return_skill_id') ?: $request->input('questions.0.skill_id'),
+            'part_id' => $request->input('_return_part_id'),
+            'status' => $request->input('_return_status'),
+            'search' => $request->input('_return_search'),
+        ], fn ($value) => ! empty($value));
+
+        return to_route('content-library.index', $filters)
             ->with('success', "{$count} soal berhasil ditambahkan ke bank soal.");
     }
 
@@ -270,11 +280,17 @@ class ContentLibraryController extends Controller
         $isListening = $skill->code === 'listening';
 
         if ($request->hasFile('audio_file')) {
+            if ($question->audio_url && ! Question::where('audio_url', $question->audio_url)->whereKeyNot($question->id)->exists()) {
+                Storage::disk('public')->delete($question->audio_url);
+            }
             $audioPath = $request->file('audio_file')->store('questions/audio', 'public');
             $validated['audio_url'] = $this->audioCompression->compress('public', $audioPath) ?? $audioPath;
         }
 
         if ($request->hasFile('image_file')) {
+            if ($question->image_url && ! Question::where('image_url', $question->image_url)->whereKeyNot($question->id)->exists()) {
+                Storage::disk('public')->delete($question->image_url);
+            }
             $imagePath = $request->file('image_file')->store('questions/images', 'public');
             $validated['image_url'] = $this->imageCompression->compress('public', $imagePath) ?? $imagePath;
         }
@@ -300,11 +316,21 @@ class ContentLibraryController extends Controller
         $validated['status'] = 'draft';
         $question->update($validated);
 
-        return to_route('content-library.index')->with('success', 'Soal berhasil diperbarui.');
+        return to_route('content-library.index', [
+            'question_bank_id' => $question->question_bank_id,
+            'skill_id' => $question->skill_id,
+        ])->with('success', 'Soal berhasil diperbarui.');
     }
 
     public function destroy(Question $question): RedirectResponse
     {
+        if ($question->audio_url && ! Question::where('audio_url', $question->audio_url)->whereKeyNot($question->id)->exists()) {
+            Storage::disk('public')->delete($question->audio_url);
+        }
+        if ($question->image_url && ! Question::where('image_url', $question->image_url)->whereKeyNot($question->id)->exists()) {
+            Storage::disk('public')->delete($question->image_url);
+        }
+
         $question->delete();
 
         return back()->with('success', 'Soal berhasil dihapus.');
@@ -343,5 +369,13 @@ class ContentLibraryController extends Controller
         $count = count($ids);
 
         return back()->with('success', "{$count} soal berhasil {$label}.");
+    }
+
+    private function filterQuery(Request $request): array
+    {
+        return array_filter(
+            $request->only(['question_bank_id', 'skill_id', 'part_id', 'status', 'search']),
+            fn ($value) => $value !== null && $value !== ''
+        );
     }
 }

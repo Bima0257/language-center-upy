@@ -30,6 +30,8 @@ class QuestionsImport implements ToModel, WithHeadingRow
             'option_c' => $row['option_c'] ?? '',
             'option_d' => $row['option_d'] ?? '',
             'correct_answer' => $row['correct_answer'] ?? null,
+            'audio_url' => $row['audio_url'] ?? null,
+            'image_url' => $row['image_url'] ?? null,
             'order' => $this->order,
         ]);
     }

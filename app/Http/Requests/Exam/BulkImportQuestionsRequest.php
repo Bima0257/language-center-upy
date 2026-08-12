@@ -13,12 +13,14 @@ class BulkImportQuestionsRequest extends FormRequest
             'questions.*.question_bank_id' => ['required', 'exists:question_banks,id'],
             'questions.*.skill_id' => ['required', 'exists:skills,id'],
             'questions.*.passage_id' => ['nullable', 'exists:passages,id'],
-            'questions.*.question_text' => ['required', 'string'],
-            'questions.*.option_a' => ['required', 'string'],
-            'questions.*.option_b' => ['required', 'string'],
-            'questions.*.option_c' => ['required', 'string'],
-            'questions.*.option_d' => ['required', 'string'],
+            'questions.*.question_text' => ['nullable', 'string'],
+            'questions.*.option_a' => ['nullable', 'string'],
+            'questions.*.option_b' => ['nullable', 'string'],
+            'questions.*.option_c' => ['nullable', 'string'],
+            'questions.*.option_d' => ['nullable', 'string'],
             'questions.*.correct_answer' => ['required', 'string', 'max:1', 'in:A,B,C,D'],
+            'questions.*.audio_url' => ['nullable', 'string'],
+            'questions.*.image_url' => ['nullable', 'string'],
         ];
     }
 
