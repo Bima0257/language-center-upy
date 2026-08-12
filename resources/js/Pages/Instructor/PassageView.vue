@@ -134,7 +134,7 @@ function submit() {
     }
 }
 
-const { showUploadProgress, uploadLabel } = useUploadProgress(form);
+const { showUploadProgress, uploadLabel, mediaType } = useUploadProgress(form);
 
 function openQuickAdd(passage) {
     addingPassageId.value = passage.id;
@@ -367,6 +367,6 @@ function getMediaIcon(passage) {
                 </form>
             </div>
         </Modal>
-        <UploadProgressBar :show="showUploadProgress" :label="uploadLabel" />
+        <UploadProgressBar :show="showUploadProgress" :label="uploadLabel" :media-type="mediaType" />
     </DashboardLayout>
 </template>

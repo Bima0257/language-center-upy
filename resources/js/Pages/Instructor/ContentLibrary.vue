@@ -215,7 +215,7 @@ function savePassage(passage) {
     });
 }
 
-const { showUploadProgress, uploadLabel } = useUploadProgress(passageForm);
+const { showUploadProgress, uploadLabel, mediaType } = useUploadProgress(passageForm);
 
 function openQuickAdd(passage) {
     addingPassageId.value = passage.id;
@@ -604,6 +604,7 @@ async function bulkReview(status) {
             <UploadProgressBar
                 :show="showUploadProgress"
                 :label="uploadLabel"
+                :media-type="mediaType"
             />
 
             <Transition name="fade-slide">

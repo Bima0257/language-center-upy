@@ -79,7 +79,7 @@ const indexUrl = computed(() => route('content-library.index', {
     skill_id: props.question.skill_id,
 }));
 
-const { showUploadProgress, uploadLabel } = useUploadProgress(form);
+const { showUploadProgress, uploadLabel, mediaType } = useUploadProgress(form);
 
 function submit() {
     form.put(route('content-library.update', props.question.id));
@@ -211,6 +211,6 @@ function submit() {
                 </form>
             </div>
         </div>
-        <UploadProgressBar :show="showUploadProgress" :label="uploadLabel" />
+        <UploadProgressBar :show="showUploadProgress" :label="uploadLabel" :media-type="mediaType" />
     </DashboardLayout>
 </template>

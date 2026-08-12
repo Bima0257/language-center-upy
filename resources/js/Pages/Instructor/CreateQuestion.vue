@@ -218,7 +218,7 @@ function submit() {
     form.post(route('content-library.store'));
 }
 
-const { showUploadProgress, uploadLabel } = useUploadProgress(form, {
+const { showUploadProgress, uploadLabel, mediaType } = useUploadProgress(form, {
     audioField: 'new_passage_audio_file',
     imageField: 'new_passage_image_file',
 });
@@ -529,6 +529,6 @@ const indexUrl = computed(() => {
                 </form>
             </div>
         </div>
-        <UploadProgressBar :show="showUploadProgress" :label="uploadLabel" />
+        <UploadProgressBar :show="showUploadProgress" :label="uploadLabel" :media-type="mediaType" />
     </DashboardLayout>
 </template>

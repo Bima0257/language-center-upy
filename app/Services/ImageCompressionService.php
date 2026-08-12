@@ -72,7 +72,7 @@ class ImageCompressionService
         } catch (\Throwable $e) {
             $ok = false;
         } finally {
-            if ($resized !== null && $resized !== $source) {
+            if ($resized !== null && $resized !== false && $resized !== $source) {
                 imagedestroy($resized);
             }
             imagedestroy($source);
