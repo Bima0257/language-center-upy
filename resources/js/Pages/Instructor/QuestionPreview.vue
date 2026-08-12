@@ -59,7 +59,7 @@ function goBack() {
 
 <template>
     <Head title="Preview Soal" />
-    <div class="h-screen flex flex-col bg-surface-white">
+    <div class="h-screen flex flex-col bg-surface">
         <!-- HEADER (TopAppBar) -->
         <header class="shrink-0 flex justify-between items-center px-6 h-14 bg-primary-container border-b border-white/10 z-10">
             <div class="flex items-center gap-6">

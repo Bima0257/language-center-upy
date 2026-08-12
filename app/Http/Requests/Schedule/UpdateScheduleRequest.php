@@ -4,7 +4,7 @@ namespace App\Http\Requests\Schedule;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreScheduleRequest extends FormRequest
+class UpdateScheduleRequest extends FormRequest
 {
     public function rules(): array
     {
@@ -13,7 +13,8 @@ class StoreScheduleRequest extends FormRequest
             'scheduled_start' => ['required', 'date'],
             'scheduled_end' => ['required', 'date', 'after:scheduled_start'],
             'late_tolerance_minutes' => ['required', 'integer', 'min:0', 'max:180'],
-            'max_participants' => ['integer', 'min:1', 'max:500'],
+            'max_participants' => ['required', 'integer', 'min:1', 'max:500'],
+            'is_active' => ['boolean'],
         ];
     }
 

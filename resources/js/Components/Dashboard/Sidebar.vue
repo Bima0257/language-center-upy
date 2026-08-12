@@ -44,14 +44,14 @@ function itemActiveClass(active) {
         "relative flex items-center rounded-lg transition-all duration-200",
         props.collapsed ? "justify-center px-2 py-3" : "gap-3 pl-4 pr-4 py-3",
         active
-            ? "text-white font-bold bg-white/15"
-            : "text-white/70 hover:text-white hover:bg-white/10",
+            ? "text-white font-bold bg-white/15 dark:text-primary dark:bg-surface-container"
+            : "text-white/70 hover:text-white hover:bg-white/10 dark:text-text-body dark:hover:text-text-heading dark:hover:bg-surface-container",
     ];
 }
 
 function barClass(active, leftClass = "left-0") {
     return [
-        "absolute top-1/2 -translate-y-1/2 w-[3px] h-[70%] rounded-r-md bg-white transition-all duration-200",
+        "absolute top-1/2 -translate-y-1/2 w-[3px] h-[70%] rounded-r-md bg-white dark:bg-primary transition-all duration-200",
         leftClass,
         active ? "opacity-100 scale-y-100" : "opacity-0 scale-y-50",
     ];
@@ -85,7 +85,7 @@ watch(
 
 <template>
     <aside
-        class="hidden md:flex flex-col py-8 px-3 bg-[#010020] shrink-0 h-full transition-all duration-300 shadow-[6px_0_20px_-8px_rgba(0,0,0,0.25)]"
+        class="hidden md:flex flex-col py-8 px-3 bg-[#010020] dark:bg-surface-container-low shrink-0 h-full transition-all duration-300 shadow-[6px_0_20px_-8px_rgba(0,0,0,0.25)]"
         :class="collapsed ? 'w-[80px]' : 'w-[260px]'"
     >
         <div
@@ -100,14 +100,14 @@ watch(
             />
             <h1
                 v-show="!collapsed"
-                class="text-headline-md font-bold text-white whitespace-nowrap"
+                class="text-headline-md font-bold text-white dark:text-primary whitespace-nowrap"
             >
                 UPY
             </h1>
             <button
                 v-if="!collapsed"
                 @click="$emit('toggle')"
-                class="absolute -right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-white/70 hover:text-white transition-colors z-10"
+                class="absolute -right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-white/70 hover:text-white dark:text-text-body dark:hover:text-text-heading transition-colors z-10"
                 title="Ciutkan sidebar"
             >
                 <IconMenu2 :size="18" stroke="1.5" />
@@ -115,7 +115,7 @@ watch(
             <button
                 v-else
                 @click="$emit('toggle')"
-                class="ml-auto shrink-0 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white transition-colors z-10"
+                class="ml-auto shrink-0 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white dark:text-text-body dark:hover:text-text-heading transition-colors z-10"
                 title="Perluas sidebar"
             >
                 <IconMenu2 :size="16" stroke="1.5" />
@@ -170,8 +170,8 @@ watch(
                                         ? 'justify-center px-2 py-3'
                                         : 'gap-3 pr-4 py-3',
                                     isActive(child.route)
-                                        ? 'text-white font-bold'
-                                        : 'text-white/70 hover:text-white',
+                                        ? 'text-white font-bold dark:text-primary'
+                                        : 'text-white/70 hover:text-white dark:text-text-body dark:hover:text-text-heading',
                                 ]"
                                 :style="
                                     collapsed ? '' : 'padding-left: 2.25rem'
@@ -182,8 +182,8 @@ watch(
                                     :class="[
                                         collapsed ? 'left-0' : 'left-[20px]',
                                         isActive(child.route)
-                                            ? 'bg-white/15'
-                                            : 'group-hover:bg-white/10',
+                                            ? 'bg-white/15 dark:bg-surface-container'
+                                            : 'group-hover:bg-white/10 dark:group-hover:bg-surface-container-high',
                                     ]"
                                 ></span>
                                 <span
@@ -231,12 +231,12 @@ watch(
             </template>
         </nav>
 
-        <div class="mt-auto pt-6 border-t border-white/10 space-y-2">
+        <div class="mt-auto pt-6 border-t border-white/10 dark:border-transparent space-y-2">
             <Link
                 v-for="item in bottom"
                 :key="item.label"
                 :href="item.route"
-                class="flex items-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
+                class="flex items-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 dark:text-text-body dark:hover:text-text-heading dark:hover:bg-surface-container transition-all duration-200"
                 :class="
                     collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-3'
                 "
@@ -252,7 +252,7 @@ watch(
                 :href="route('logout')"
                 method="post"
                 as="button"
-                class="flex items-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all w-full text-left"
+                class="flex items-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 dark:text-text-body dark:hover:text-text-heading dark:hover:bg-surface-container transition-all w-full text-left"
                 :class="
                     collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-3'
                 "

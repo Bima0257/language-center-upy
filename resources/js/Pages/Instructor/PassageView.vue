@@ -4,8 +4,14 @@ import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
 import DropDown from '@/Components/Shared/DropDown.vue';
+import FileUpload from '@/Components/Shared/FileUpload.vue';
+import EmptyState from '@/Components/Shared/EmptyState.vue';
+import Pagination from '@/Components/Shared/Pagination.vue';
+import Modal from '@/Components/Modal.vue';
 import QuickAddQuestionForm from '@/Components/ContentLibrary/QuickAddQuestionForm.vue';
-import { IconPlus, IconEdit, IconTrash, IconFileDescription, IconHeadphones, IconPhoto, IconBook, IconX, IconBooks, IconUpload } from '@tabler/icons-vue';
+import PassageMediaViewer from '@/Components/ContentLibrary/PassageMediaViewer.vue';
+import { useUploadProgress } from '@/Composables/useUploadProgress';
+import { IconPlus, IconEdit, IconTrash, IconFileDescription, IconHeadphones, IconPhoto, IconBook, IconX, IconBooks } from '@tabler/icons-vue';
 import { computed, ref, watch } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
@@ -20,10 +26,6 @@ const props = defineProps({
 
 const showForm = ref(false);
 const editingPassage = ref(null);
-const audioPreviewUrl = ref(null);
-const imagePreviewUrl = ref(null);
-const audioFileInput = ref(null);
-const imageFileInput = ref(null);
 const addingPassageId = ref(null);
 
 const optionKeys = ['A', 'B', 'C', 'D'];
@@ -79,8 +81,6 @@ function openCreate() {
     editingPassage.value = null;
     form.reset();
     form.type = 'text';
-    audioPreviewUrl.value = null;
-    imagePreviewUrl.value = null;
     showForm.value = true;
 }
 
@@ -91,8 +91,6 @@ function openEdit(passage) {
     form.content_text = passage.content_text || '';
     form.audio_file = null;
     form.image_file = null;
-    audioPreviewUrl.value = passage.audio_url ? '/storage/' + passage.audio_url : null;
-    imagePreviewUrl.value = passage.image_url ? '/storage/' + passage.image_url : null;
     showForm.value = true;
 }
 
@@ -101,37 +99,19 @@ function closeForm() {
     editingPassage.value = null;
 }
 
-function onAudioFileChange(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    form.audio_file = file;
-    audioPreviewUrl.value = URL.createObjectURL(file);
-}
+const storedAudioPreview = computed(() => {
+    if (form.audio_file) return null;
+    return editingPassage.value?.audio_url ? '/storage/' + editingPassage.value.audio_url : null;
+});
 
-function onImageFileChange(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    form.image_file = file;
-    imagePreviewUrl.value = URL.createObjectURL(file);
-}
-
-function removeAudio() {
-    form.audio_file = null;
-    audioPreviewUrl.value = null;
-    if (audioFileInput.value) audioFileInput.value.value = '';
-}
-
-function removeImage() {
-    form.image_file = null;
-    imagePreviewUrl.value = null;
-    if (imageFileInput.value) imageFileInput.value.value = '';
-}
+const storedImagePreview = computed(() => {
+    if (form.image_file) return null;
+    return editingPassage.value?.image_url ? '/storage/' + editingPassage.value.image_url : null;
+});
 
 watch(() => form.type, () => {
     form.audio_file = null;
     form.image_file = null;
-    audioPreviewUrl.value = null;
-    imagePreviewUrl.value = null;
 });
 
 function submit() {
@@ -154,8 +134,7 @@ function submit() {
     }
 }
 
-const showUploadProgress = computed(() => form.processing && (form.audio_file !== null || form.image_file !== null));
-const uploadLabel = computed(() => form.audio_file !== null ? 'Mengunggah & mengompres audio...' : 'Mengunggah & mengompres gambar...');
+const { showUploadProgress, uploadLabel } = useUploadProgress(form);
 
 function openQuickAdd(passage) {
     addingPassageId.value = passage.id;
@@ -209,18 +188,6 @@ function getMediaIcon(passage) {
     if (passage.type === 'prompt') return 'prompt';
     return 'text';
 }
-
-function stripHtml(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html || '';
-    return div.textContent || '';
-}
-
-function previewText(text, max) {
-    if (!text) return '';
-    const plain = stripHtml(text);
-    return plain.length > max ? plain.substring(0, max) + '...' : plain;
-}
 </script>
 
 <template>
@@ -237,13 +204,15 @@ function previewText(text, max) {
             </button>
         </div>
 
-        <div v-if="passages.data?.length === 0" class="bg-white rounded-2xl p-10 text-center shadow-soft border border-outline-variant/30">
-            <IconBook class="mx-auto text-text-muted mb-3" :size="48" stroke="1.5" />
-            <p class="text-text-body text-body-md">Belum ada materi soal.</p>
+        <EmptyState
+            v-if="passages.data?.length === 0"
+            :icon="IconBook"
+            title="Belum ada materi soal."
+        >
             <button @click="openCreate" class="mt-4 inline-flex items-center gap-2 bg-primary-container text-white px-6 py-3 rounded-full text-label-md font-medium hover:bg-primary transition-all">
                 <IconPlus :size="16" /> Buat Materi Soal Pertama
             </button>
-        </div>
+        </EmptyState>
 
         <div v-else class="space-y-3">
             <div v-for="p in passages.data" :key="p.id"
@@ -262,19 +231,7 @@ function previewText(text, max) {
                                 <h3 class="text-body-md font-semibold text-primary">{{ p.title }}</h3>
                                 <span class="inline-block bg-pastel-purple/30 text-primary px-2 py-0.5 rounded-full text-label-md">{{ typeLabels[p.type] || 'Teks' }}</span>
                             </div>
-                            <p v-if="p.content_text" class="text-label-md text-text-body mb-2 line-clamp-2">{{ previewText(p.content_text, 120) }}</p>
-                            <template v-else-if="p.audio_url">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <IconHeadphones :size="14" class="text-text-muted" />
-                                    <audio :src="'/storage/' + p.audio_url" controls class="h-8 w-full max-w-xs" preload="none"></audio>
-                                </div>
-                            </template>
-                            <template v-else-if="p.image_url">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <IconPhoto :size="14" class="text-text-muted" />
-                                    <img :src="'/storage/' + p.image_url" class="h-12 rounded-lg object-cover" :alt="p.title" />
-                                </div>
-                            </template>
+                            <PassageMediaViewer v-if="p.content_text || p.audio_url || p.image_url" :passage="p" variant="compact" />
                             <p class="text-label-md text-text-muted mt-1">
                                 {{ p.questions_count || 0 }} soal
                             </p>
@@ -321,17 +278,15 @@ function previewText(text, max) {
             </div>
         </div>
 
-        <div v-if="passages.total > passages.per_page" class="flex justify-center mt-6 gap-2">
-            <Link v-for="link in passages.links" :key="link.label"
-                  :href="link.url || '#'"
-                  class="px-4 py-2 rounded-full text-label-md font-medium transition-all"
-                  :class="link.active ? 'bg-primary-container text-white' : 'bg-surface-white border border-outline-variant text-text-body hover:bg-surface-container-low'"
-                  v-html="link.label" />
-        </div>
+        <Pagination
+            :links="passages.links"
+            :total="passages.total"
+            :per-page="passages.per_page"
+        />
 
         <!-- Modal Form -->
-        <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div class="bg-white rounded-3xl p-8 shadow-soft w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <Modal :show="showForm" max-width="2xl" scrollable @close="closeForm">
+            <div class="p-8">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-headline-md font-bold text-primary">{{ editingPassage ? 'Edit Materi Soal' : 'Materi Soal Baru' }}</h2>
                     <button @click="closeForm" class="p-2 text-text-muted hover:text-primary transition-colors">
@@ -370,52 +325,32 @@ function previewText(text, max) {
 
                     <!-- AUDIO: file upload -->
                     <div v-if="form.type === 'audio'">
-                        <label class="text-label-md font-medium text-primary block mb-1.5">Audio</label>
-                        <div class="border-2 border-dashed border-outline-variant rounded-2xl p-6 text-center hover:border-secondary transition-colors cursor-pointer"
-                             :class="{ 'border-error-red': form.errors.audio_file }"
-                             @click="audioFileInput?.click()">
-                            <IconUpload class="mx-auto text-text-muted mb-2" :size="24" stroke="1.5" />
-                            <p class="text-label-md text-text-body font-medium">
-                                {{ form.audio_file ? form.audio_file.name : 'Klik untuk upload file audio' }}
-                            </p>
-                            <p class="text-xs text-text-muted mt-1">MP3, WAV, OGG, M4A (max 50MB)</p>
-                        </div>
-                        <p v-if="form.errors.audio_file" class="text-error-red text-xs mt-1">{{ form.errors.audio_file }}</p>
-                        <input ref="audioFileInput" type="file" accept="audio/*" @change="onAudioFileChange" class="hidden" />
-
-                        <div v-if="audioPreviewUrl" class="relative mt-3 bg-surface-container-low rounded-xl p-3">
-                            <audio :src="audioPreviewUrl" controls class="w-full h-10" preload="metadata"></audio>
-                            <button type="button" @click="removeAudio"
-                                    class="absolute -top-2 -right-2 w-6 h-6 bg-error-red text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-sm"
-                                    title="Hapus audio">
-                                <IconX :size="14" />
-                            </button>
-                        </div>
+                        <FileUpload
+                            v-model="form.audio_file"
+                            label="Audio"
+                            placeholder="Klik untuk upload file audio"
+                            accept="audio/*"
+                            hint="MP3, WAV, OGG, M4A (max 50MB)"
+                            variant="dropzone"
+                            media-type="audio"
+                            :preview-url="storedAudioPreview"
+                            :error="form.errors.audio_file"
+                        />
                     </div>
 
                     <!-- IMAGE: file upload -->
                     <div v-if="form.type === 'image'">
-                        <label class="text-label-md font-medium text-primary block mb-1.5">Gambar</label>
-                        <div class="border-2 border-dashed border-outline-variant rounded-2xl p-6 text-center hover:border-secondary transition-colors cursor-pointer"
-                             :class="{ 'border-error-red': form.errors.image_file }"
-                             @click="imageFileInput?.click()">
-                            <IconUpload class="mx-auto text-text-muted mb-2" :size="24" stroke="1.5" />
-                            <p class="text-label-md text-text-body font-medium">
-                                {{ form.image_file ? form.image_file.name : 'Klik untuk upload gambar' }}
-                            </p>
-                            <p class="text-xs text-text-muted mt-1">JPG, PNG, WebP (max 20MB, otomatis dikompres)</p>
-                        </div>
-                        <p v-if="form.errors.image_file" class="text-error-red text-xs mt-1">{{ form.errors.image_file }}</p>
-                        <input ref="imageFileInput" type="file" accept="image/*" @change="onImageFileChange" class="hidden" />
-
-                        <div v-if="imagePreviewUrl" class="relative mt-3 bg-surface-container-low rounded-xl p-3">
-                            <img :src="imagePreviewUrl" class="max-h-40 rounded-lg object-contain mx-auto" :alt="form.title" />
-                            <button type="button" @click="removeImage"
-                                    class="absolute -top-2 -right-2 w-6 h-6 bg-error-red text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-sm"
-                                    title="Hapus gambar">
-                                <IconX :size="14" />
-                            </button>
-                        </div>
+                        <FileUpload
+                            v-model="form.image_file"
+                            label="Gambar"
+                            placeholder="Klik untuk upload gambar"
+                            accept="image/*"
+                            hint="JPG, PNG, WebP (max 20MB, otomatis dikompres)"
+                            variant="dropzone"
+                            media-type="image"
+                            :preview-url="storedImagePreview"
+                            :error="form.errors.image_file"
+                        />
                     </div>
 
                     <hr class="border-outline-variant/50" />
@@ -431,7 +366,7 @@ function previewText(text, max) {
                     </div>
                 </form>
             </div>
-        </div>
+        </Modal>
         <UploadProgressBar :show="showUploadProgress" :label="uploadLabel" />
     </DashboardLayout>
 </template>

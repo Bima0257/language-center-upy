@@ -24,7 +24,7 @@ const tabs = [
 
 <template>
     <nav
-        class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-white border-t border-outline-variant px-4 py-2 flex justify-between items-center z-50"
+        class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-white dark:bg-surface-container-lowest border-t border-outline-variant dark:border-t-transparent px-4 py-2 flex justify-between items-center z-50"
     >
         <template v-for="tab in tabs" :key="tab.label">
             <Link

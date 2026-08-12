@@ -5,7 +5,11 @@ import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
 import DropDown from '@/Components/Shared/DropDown.vue';
 import UserGuide from '@/Components/Shared/UserGuide.vue';
-import { IconPlus, IconTrash, IconFileDescription, IconUpload, IconInfoCircle, IconHeadphones, IconBooks } from '@tabler/icons-vue';
+import FileUpload from '@/Components/Shared/FileUpload.vue';
+import OptionsInput from '@/Components/ContentLibrary/OptionsInput.vue';
+import AnswerKeyPicker from '@/Components/ContentLibrary/AnswerKeyPicker.vue';
+import { useUploadProgress } from '@/Composables/useUploadProgress';
+import { IconPlus, IconTrash, IconFileDescription, IconInfoCircle, IconHeadphones, IconBooks } from '@tabler/icons-vue';
 import { computed, nextTick, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -20,9 +24,6 @@ const optionKeys = ['A', 'B', 'C', 'D'];
 const passageMode = ref('none');
 const passageType = ref('text');
 const questionRefs = ref([]);
-const questionAudioNames = ref({});
-const questionImageNames = ref({});
-const questionImagePreviews = ref({});
 
 const globalSkillId = ref('');
 const globalPartId = ref('');
@@ -154,20 +155,6 @@ function onQuestionSkillChange(q, qi) {
     q.skill_part_id = '';
     q.audio_file = null;
     q.image_file = null;
-    questionImagePreviews.value[qi] = null;
-}
-
-function onQuestionAudioSelect(e, qi) {
-    form.questions[qi].audio_file = e.target.files[0] || null;
-    questionAudioNames.value[qi] = form.questions[qi].audio_file?.name || null;
-    e.target.value = '';
-}
-
-function onQuestionImageSelect(e, qi) {
-    form.questions[qi].image_file = e.target.files[0] || null;
-    questionImageNames.value[qi] = form.questions[qi].image_file?.name || null;
-    questionImagePreviews.value[qi] = form.questions[qi].image_file ? URL.createObjectURL(form.questions[qi].image_file) : null;
-    e.target.value = '';
 }
 
 watch(globalListening, (listening) => {
@@ -201,35 +188,8 @@ async function addQuestion() {
 function removeQuestion(index) {
     if (form.questions.length > 1) {
         form.questions.splice(index, 1);
-        questionImagePreviews.value[index] = null;
     }
 }
-
-function onPassageFile(e, field) {
-    form[field] = e.target.files[0] || null;
-    e.target.value = '';
-}
-
-const selectedAudioFile = ref(null);
-const selectedImageFile = ref(null);
-const passageImagePreviewUrl = ref(null);
-
-function onAudioSelect(e) {
-    selectedAudioFile.value = e.target.files[0] || null;
-    onPassageFile(e, 'new_passage_audio_file');
-}
-
-function onImageSelect(e) {
-    selectedImageFile.value = e.target.files[0] || null;
-    passageImagePreviewUrl.value = selectedImageFile.value ? URL.createObjectURL(selectedImageFile.value) : null;
-    onPassageFile(e, 'new_passage_image_file');
-}
-
-watch(passageMode, (mode) => {
-    if (mode !== 'new') {
-        passageImagePreviewUrl.value = null;
-    }
-});
 
 const canSubmit = computed(() => {
     if (!form.question_bank_id) return false;
@@ -253,8 +213,10 @@ function submit() {
     form.post(route('content-library.store'));
 }
 
-const showUploadProgress = computed(() => form.processing && (form.new_passage_audio_file !== null || form.new_passage_image_file !== null));
-const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengunggah & mengompres audio...' : 'Mengunggah & mengompres gambar...');
+const { showUploadProgress, uploadLabel } = useUploadProgress(form, {
+    audioField: 'new_passage_audio_file',
+    imageField: 'new_passage_image_file',
+});
 </script>
 
 <template>
@@ -391,26 +353,23 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                         </div>
 
                         <template v-if="globalListening">
-                            <div>
-                                <label class="text-label-md font-medium text-primary block mb-1.5">File Audio <span class="text-error-red">*</span> <span class="text-text-muted">(mp3/wav/m4a, max 50MB)</span></label>
-                                <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-5 py-4 cursor-pointer hover:border-secondary transition-colors">
-                                    <IconUpload :size="20" class="text-text-muted" />
-                                    <span class="text-label-md text-text-body">{{ selectedAudioFile ? selectedAudioFile.name : 'Klik untuk upload audio' }}</span>
-                                    <input type="file" accept=".mp3,.wav,.ogg,.m4a" class="hidden" @change="onAudioSelect" />
-                                </label>
-                                <p v-if="form.errors.new_passage_audio_file" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_audio_file }}</p>
-                            </div>
-                            <div>
-                                <label class="text-label-md font-medium text-primary block mb-1.5">Gambar Pendukung <span class="text-text-muted">(opsional)</span></label>
-                                <img v-if="passageImagePreviewUrl" :src="passageImagePreviewUrl"
-                                     class="max-h-28 rounded-lg border border-outline-variant/30 object-contain mb-2" />
-                                <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-5 py-4 cursor-pointer hover:border-secondary transition-colors">
-                                    <IconUpload :size="20" class="text-text-muted" />
-                                    <span class="text-label-md text-text-body">{{ selectedImageFile ? selectedImageFile.name : 'Klik untuk upload gambar' }}</span>
-                                    <input type="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" @change="onImageSelect" />
-                                </label>
-                                <p v-if="form.errors.new_passage_image_file" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_image_file }}</p>
-                            </div>
+                            <FileUpload
+                                v-model="form.new_passage_audio_file"
+                                label="File Audio (mp3/wav/m4a, max 50MB)"
+                                placeholder="Klik untuk upload audio"
+                                accept=".mp3,.wav,.ogg,.m4a"
+                                media-type="audio"
+                                :required="true"
+                                :error="form.errors.new_passage_audio_file"
+                            />
+                            <FileUpload
+                                v-model="form.new_passage_image_file"
+                                label="Gambar Pendukung (opsional)"
+                                placeholder="Klik untuk upload gambar"
+                                accept=".jpg,.jpeg,.png,.webp"
+                                media-type="image"
+                                :error="form.errors.new_passage_image_file"
+                            />
                         </template>
 
                         <template v-else>
@@ -420,25 +379,25 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                             </div>
 
                             <div v-else-if="passageType === 'audio'">
-                                <label class="text-label-md font-medium text-primary block mb-1.5">File Audio <span class="text-text-muted">(mp3/wav/m4a, max 50MB)</span></label>
-                                <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-5 py-4 cursor-pointer hover:border-secondary transition-colors">
-                                    <IconUpload :size="20" class="text-text-muted" />
-                                    <span class="text-label-md text-text-body">{{ selectedAudioFile ? selectedAudioFile.name : 'Klik untuk upload audio' }}</span>
-                                    <input type="file" accept=".mp3,.wav,.ogg,.m4a" class="hidden" @change="onAudioSelect" />
-                                </label>
-                                <p v-if="form.errors.new_passage_audio_file" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_audio_file }}</p>
+                                <FileUpload
+                                    v-model="form.new_passage_audio_file"
+                                    label="File Audio (mp3/wav/m4a, max 50MB)"
+                                    placeholder="Klik untuk upload audio"
+                                    accept=".mp3,.wav,.ogg,.m4a"
+                                    media-type="audio"
+                                    :error="form.errors.new_passage_audio_file"
+                                />
                             </div>
 
                             <div v-else-if="passageType === 'image'">
-                                <label class="text-label-md font-medium text-primary block mb-1.5">File Gambar <span class="text-text-muted">(jpg/png/webp, max 20MB, otomatis dikompres)</span></label>
-                                <img v-if="passageImagePreviewUrl" :src="passageImagePreviewUrl"
-                                     class="max-h-28 rounded-lg border border-outline-variant/30 object-contain mb-2" />
-                                <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-5 py-4 cursor-pointer hover:border-secondary transition-colors">
-                                    <IconUpload :size="20" class="text-text-muted" />
-                                    <span class="text-label-md text-text-body">{{ selectedImageFile ? selectedImageFile.name : 'Klik untuk upload gambar' }}</span>
-                                    <input type="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" @change="onImageSelect" />
-                                </label>
-                                <p v-if="form.errors.new_passage_image_file" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_image_file }}</p>
+                                <FileUpload
+                                    v-model="form.new_passage_image_file"
+                                    label="File Gambar (jpg/png/webp, max 20MB, otomatis dikompres)"
+                                    placeholder="Klik untuk upload gambar"
+                                    accept=".jpg,.jpeg,.png,.webp"
+                                    media-type="image"
+                                    :error="form.errors.new_passage_image_file"
+                                />
                             </div>
                         </template>
                     </div>
@@ -502,40 +461,27 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                                     Soal, materi, dan pilihan jawaban berada di audio. Peserta hanya memilih A/B/C/D.
                                 </p>
                                 <div v-if="!passageMode || passageMode === 'none'" class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="text-label-md font-medium text-primary block mb-1.5">File Audio <span class="text-error-red">*</span> <span class="text-text-muted">(max 50MB)</span></label>
-                                        <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-4 py-3 cursor-pointer hover:border-secondary transition-colors">
-                                            <IconUpload :size="18" class="text-text-muted" />
-                                            <span class="text-label-md text-text-body">{{ questionAudioNames[qi] || 'Klik untuk upload audio' }}</span>
-                                            <input type="file" accept=".mp3,.wav,.ogg,.m4a" class="hidden" @change="e => onQuestionAudioSelect(e, qi)" />
-                                        </label>
-                                    </div>
-                                    <div>
-                                        <label class="text-label-md font-medium text-primary block mb-1.5">Gambar <span class="text-text-muted">(opsional)</span></label>
-                                        <img v-if="questionImagePreviews[qi]" :src="questionImagePreviews[qi]"
-                                             class="max-h-28 rounded-lg border border-outline-variant/30 object-contain mb-2" />
-                                        <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-4 py-3 cursor-pointer hover:border-secondary transition-colors">
-                                            <IconUpload :size="18" class="text-text-muted" />
-                                            <span class="text-label-md text-text-body">{{ questionImageNames[qi] || 'Klik untuk upload gambar' }}</span>
-                                            <input type="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" @change="e => onQuestionImageSelect(e, qi)" />
-                                        </label>
-                                    </div>
+                                    <FileUpload
+                                        v-model="q.audio_file"
+                                        label="File Audio (max 50MB)"
+                                        placeholder="Klik untuk upload audio"
+                                        accept=".mp3,.wav,.ogg,.m4a"
+                                        media-type="audio"
+                                        :required="true"
+                                    />
+                                    <FileUpload
+                                        v-model="q.image_file"
+                                        label="Gambar (opsional)"
+                                        placeholder="Klik untuk upload gambar"
+                                        accept=".jpg,.jpeg,.png,.webp"
+                                        media-type="image"
+                                    />
                                 </div>
                                 <div v-else class="flex items-center gap-2 text-label-md text-text-muted">
                                     <IconHeadphones :size="16" class="text-secondary shrink-0" />
                                     Audio diambil dari passage di atas — sub-soal tidak perlu upload audio sendiri.
                                 </div>
-                                <div>
-                                    <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban</p>
-                                    <div class="flex flex-wrap gap-3">
-                                        <span v-for="key in optionKeys" :key="key"
-                                              class="flex items-center gap-2 px-4 py-2 rounded-xl border border-outline-variant bg-surface-container-lowest">
-                                            <input type="checkbox" :checked="q.correct_answer === key" @change="q.correct_answer = key"
-                                                   class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
-                                            <span class="font-semibold text-primary">{{ key }}</span>
-                                        </span>
-                                    </div>
-                                </div>
+                                <AnswerKeyPicker v-model="q.correct_answer" :option-keys="optionKeys" label="Pilihan Jawaban" />
                             </div>
                         </template>
 
@@ -544,16 +490,7 @@ const uploadLabel = computed(() => form.new_passage_audio_file !== null ? 'Mengu
                             <div><label class="text-label-md font-medium text-primary block mb-1.5">Teks Soal <span class="text-error-red">*</span></label>
                                 <textarea v-model="q.question_text" rows="2" required class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea></div>
 
-                            <div>
-                                <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban <span class="text-error-red">*</span></p>
-                                <div class="space-y-2">
-                                    <div v-for="key in optionKeys" :key="key" class="flex items-center gap-3">
-                                        <span class="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-surface-container-low border border-outline-variant font-semibold text-primary">{{ key }}</span>
-                                        <input type="text" v-model="q['option_' + key.toLowerCase()]" required :placeholder="'Teks pilihan ' + key"
-                                               class="flex-1 px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
-                                    </div>
-                                </div>
-                            </div>
+                            <OptionsInput :form="q" :option-keys="optionKeys" />
                             <div>
                                 <DropDown
                                     v-model="q.correct_answer"

@@ -20,6 +20,12 @@ class StartExamSession
     {
         $schedule = $this->scheduleRepo->findOrFail($scheduleId);
 
+        $lateDeadline = $schedule->scheduled_start->copy()->addMinutes($schedule->late_tolerance_minutes);
+
+        if (now()->gt($lateDeadline)) {
+            throw new \RuntimeException('Batas toleransi keterlambatan sudah lewat, ujian tidak dapat dimulai.');
+        }
+
         if (! $schedule->isAvailable()) {
             throw new \RuntimeException('Sesi ujian tidak tersedia atau sudah penuh.');
         }

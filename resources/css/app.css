@@ -15,17 +15,17 @@
         --color-text-heading: #161328;
         --color-text-body: #6e6e85;
         --color-text-muted: #9b9ab0;
-        --color-surface: #f9f9fc;
+        --color-surface: #f1f2f6;
         --color-surface-white: #ffffff;
         --color-surface-container: #edeef1;
-        --color-surface-container-low: #f3f3f6;
+        --color-surface-container-low: #ebecf1;
         --color-surface-container-highest: #e2e2e5;
         --color-surface-container-lowest: #fbfbfd;
         --color-outline-variant: #c8c5cf;
         --color-on-primary: #ffffff;
         --color-on-primary-container: #8282a9;
         --color-background: #191a3b;
-        --color-canvas: #f9f9fc;
+        --color-canvas: #f1f2f6;
         --color-track-neutral: #e3e3ea;
         --color-error-red: #ff5a5f;
         --color-text-pastel: #161328;
@@ -34,63 +34,67 @@
     }
 
     .dark {
-        --color-primary: #c3c3ed;
+        --color-primary: #c6bfff;
         --color-primary-container: #2c2b4e;
-        --color-secondary: #c6bfff;
-        --color-secondary-container: #3f33ab;
+        --color-secondary: #78d2f9;
+        --color-secondary-container: #017ea2;
         --color-deep-space: #1E1B3B;
-        --color-pastel-blue: #d8e9fb;
-        --color-pastel-purple: #e7defb;
-        --color-pastel-peach: #fbe1c6;
-        --color-text-heading: #ffffff;
-        --color-text-body: #9b9ab0;
-        --color-text-muted: #77767f;
+        --color-pastel-blue: #2f3d54;
+        --color-pastel-purple: #3b3554;
+        --color-pastel-peach: #543f2f;
+        --color-text-heading: #e5e1ec;
+        --color-text-body: #c8c4d6;
+        --color-text-muted: #928f9f;
         --color-surface: #13121a;
-        --color-surface-white: #13121a;
-        --color-surface-container: #1e1d27;
-        --color-surface-container-low: #1b1a23;
-        --color-surface-container-highest: #33323e;
-        --color-surface-container-lowest: #0b0a10;
-        --color-outline-variant: #47464e;
-        --color-on-primary: #191a3b;
+        --color-surface-white: #201f27;
+        --color-surface-container: #201f27;
+        --color-surface-container-low: #1c1b23;
+        --color-surface-container-highest: #35343c;
+        --color-surface-container-lowest: #0e0d15;
+        --color-surface-container-high: #2a2931;
+        --color-surface-bright: #3a3841;
+        --color-outline-variant: #474554;
+        --color-on-primary: #28069c;
         --color-on-primary-container: #e1e0ff;
-        --color-background: #1E1B3B;
+        --color-background: #13121a;
         --color-canvas: #13121a;
-        --color-track-neutral: #47464e;
-        --color-error-red: #ff5a5f;
+        --color-track-neutral: #35343c;
+        --color-error-red: #ffb4ab;
         --color-text-pastel: #161328;
         --color-icon-pastel: #5647c8;
-        --shadow-standard: 0 4px 30px rgba(0, 0, 0, 0.2);
+        --shadow-standard: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
 
     .dark-dashboard {
-        --color-primary: #c3c3ed;
+        --color-primary: #c6bfff;
         --color-primary-container: #2c2b4e;
-        --color-secondary: #c6bfff;
-        --color-secondary-container: #3f33ab;
+        --color-secondary: #78d2f9;
+        --color-secondary-container: #017ea2;
         --color-deep-space: #1E1B3B;
-        --color-pastel-blue: #d8e9fb;
-        --color-pastel-purple: #e7defb;
-        --color-pastel-peach: #fbe1c6;
-        --color-text-heading: #ffffff;
-        --color-text-body: #9b9ab0;
-        --color-text-muted: #77767f;
+        --color-pastel-blue: #2f3d54;
+        --color-pastel-purple: #3b3554;
+        --color-pastel-peach: #543f2f;
+        --color-text-heading: #e5e1ec;
+        --color-text-body: #c8c4d6;
+        --color-text-muted: #928f9f;
         --color-surface: #13121a;
-        --color-surface-white: #13121a;
-        --color-surface-container: #1e1d27;
-        --color-surface-container-low: #1b1a23;
-        --color-surface-container-highest: #33323e;
-        --color-surface-container-lowest: #0b0a10;
-        --color-outline-variant: #47464e;
-        --color-on-primary: #191a3b;
+        --color-surface-white: #201f27;
+        --color-surface-container: #201f27;
+        --color-surface-container-low: #1c1b23;
+        --color-surface-container-highest: #35343c;
+        --color-surface-container-lowest: #0e0d15;
+        --color-surface-container-high: #2a2931;
+        --color-surface-bright: #3a3841;
+        --color-outline-variant: #474554;
+        --color-on-primary: #28069c;
         --color-on-primary-container: #e1e0ff;
-        --color-background: #1E1B3B;
+        --color-background: #13121a;
         --color-canvas: #13121a;
-        --color-track-neutral: #47464e;
-        --color-error-red: #ff5a5f;
+        --color-track-neutral: #35343c;
+        --color-error-red: #ffb4ab;
         --color-text-pastel: #161328;
         --color-icon-pastel: #5647c8;
-        --shadow-standard: 0 4px 30px rgba(0, 0, 0, 0.2);
+        --shadow-standard: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
 
     body {
@@ -101,6 +105,29 @@
 @layer components {
     .shadow-standard {
         box-shadow: var(--shadow-standard);
+    }
+    .dark .shadow-soft {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    .dark .bg-primary-container.text-white:hover {
+        color: var(--color-on-primary);
+    }
+    .dark [class*="border-outline-variant"] {
+        border-color: transparent !important;
+    }
+    .dark [class*="border-surface-container-low"] {
+        border-color: transparent !important;
+    }
+    .dark [class*="border-white/"] {
+        border-color: transparent !important;
+    }
+    .dark [class*="hover:border-secondary"] {
+        border-color: transparent !important;
+    }
+    .dark .bg-surface-container-lowest[class*="border-outline-variant"]:not(.border-t):not(.border-b):not(.border-r):not(.border-l),
+    .dark .bg-surface-container-low[class*="border-outline-variant"]:not(.border-t):not(.border-b):not(.border-r):not(.border-l),
+    .dark .bg-surface-white[class*="border-outline-variant"]:not(.rounded-2xl):not(.rounded-3xl):not(.border-t):not(.border-b):not(.border-r):not(.border-l) {
+        border-color: var(--color-outline-variant) !important;
     }
     .browser-frame {
         min-height: calc(100vh - 80px);

@@ -14,7 +14,7 @@ defineProps({
 </script>
 
 <template>
-    <div class="min-h-screen bg-[#FAFAFA]">
+    <div class="min-h-screen bg-[#F1F2F6]">
         <header class="fixed top-0 inset-x-0 z-50 h-14 bg-white border-b border-outline-variant flex items-center px-6 gap-4 shadow-sm">
             <div class="bg-primary-container rounded-lg w-8 h-8 flex items-center justify-center">
                 <span class="text-white font-bold text-xs">UPY</span>

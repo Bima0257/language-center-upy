@@ -5,6 +5,7 @@ namespace App\Modules\Schedule\Repositories;
 use App\Models\ExamSchedule;
 use App\Modules\Schedule\Repositories\Contracts\ScheduleRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class ScheduleRepository implements ScheduleRepositoryInterface
@@ -13,6 +14,14 @@ class ScheduleRepository implements ScheduleRepositoryInterface
     {
         return ExamSchedule::where('exam_id', $examId)
             ->withCount('sessions')
+            ->paginate($perPage);
+    }
+
+    public function paginateAll(int $perPage = 15): LengthAwarePaginator
+    {
+        return ExamSchedule::with('exam')
+            ->withCount('sessions')
+            ->latest('scheduled_start')
             ->paginate($perPage);
     }
 
@@ -29,6 +38,7 @@ class ScheduleRepository implements ScheduleRepositoryInterface
     public function update(ExamSchedule $schedule, array $data): ExamSchedule
     {
         $schedule->update($data);
+
         return $schedule->fresh();
     }
 
@@ -37,13 +47,15 @@ class ScheduleRepository implements ScheduleRepositoryInterface
         $schedule->delete();
     }
 
-    public function hasOverlap(array $data): bool
+    public function hasOverlap(array $data, ?int $excludeId = null): bool
     {
+        $start = Carbon::parse($data['scheduled_start']);
+        $end = Carbon::parse($data['scheduled_end']);
+
         return ExamSchedule::where('exam_id', $data['exam_id'])
-            ->where(function ($q) use ($data) {
-                $q->whereBetween('scheduled_start', [$data['scheduled_start'], $data['scheduled_end']])
-                  ->orWhereBetween('scheduled_end', [$data['scheduled_start'], $data['scheduled_end']]);
-            })
+            ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
+            ->where('scheduled_start', '<', $end)
+            ->where('scheduled_end', '>', $start)
             ->exists();
     }
 

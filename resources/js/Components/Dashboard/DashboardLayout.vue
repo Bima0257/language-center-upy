@@ -26,7 +26,7 @@ const sidebarCollapsed = ref(false);
         <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
             <TopBar :title="title" />
             <div
-                class="flex-1 overflow-y-auto p-8 scrollbar-hide dashboard-scroll-area bg-surface-white"
+                class="flex-1 overflow-y-auto p-8 scrollbar-hide dashboard-scroll-area bg-surface"
             >
                 <Breadcrumb :items="breadcrumbs" class="mb-6" />
                 <slot />

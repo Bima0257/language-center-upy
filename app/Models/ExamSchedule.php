@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['exam_id', 'title', 'scheduled_start', 'scheduled_end', 'max_participants', 'is_active'])]
+#[Fillable(['exam_id', 'title', 'scheduled_start', 'scheduled_end', 'late_tolerance_minutes', 'max_participants', 'is_active'])]
 class ExamSchedule extends Model
 {
     protected function casts(): array
@@ -15,8 +15,9 @@ class ExamSchedule extends Model
         return [
             'scheduled_start' => 'datetime',
             'scheduled_end' => 'datetime',
-            'is_active' => 'boolean',
+            'late_tolerance_minutes' => 'integer',
             'max_participants' => 'integer',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -34,6 +35,7 @@ class ExamSchedule extends Model
     {
         return $this->is_active
             && now()->between($this->scheduled_start, $this->scheduled_end)
+            && now()->lte($this->scheduled_start->copy()->addMinutes($this->late_tolerance_minutes))
             && $this->sessions()->count() < $this->max_participants;
     }
 }

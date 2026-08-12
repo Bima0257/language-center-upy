@@ -11,6 +11,7 @@ import {
     IconFolders,
     IconCategory,
     IconListDetails,
+    IconCalendarEvent,
 } from "@tabler/icons-vue";
 
 export function getNav(roles) {
@@ -58,7 +59,14 @@ export function getNav(roles) {
                     { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },
                 ],
             },
-            { label: "Manajemen Ujian", icon: IconFileDescription, route: "admin.exams.index" },
+            {
+                label: "Manajemen Ujian",
+                icon: IconFileDescription,
+                children: [
+                    { label: "Daftar Ujian", icon: IconClipboardCheck, route: "admin.exams.index" },
+                    { label: "Penjadwalan", icon: IconCalendarEvent, route: "admin.schedules.all" },
+                ],
+            },
             { label: "Verifikasi", icon: IconUsers, route: "admin.verify-users" },
             { label: "Sertifikat", icon: IconCertificate, route: "admin.certificates.index" },
             { label: "Dashboard Pengawas", icon: IconEyeCheck, route: "proctor.dashboard" },

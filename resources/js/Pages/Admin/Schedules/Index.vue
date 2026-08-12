@@ -2,7 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue'
 import DataTable from '@/Components/Shared/DataTable.vue'
-import { IconPlus, IconTrash } from '@tabler/icons-vue'
+import { IconPlus, IconTrash, IconEdit } from '@tabler/icons-vue'
 import { useConfirm } from '@/Composables/useConfirm'
 
 const confirm = useConfirm()
@@ -51,13 +51,20 @@ async function deleteSchedule(id) {
                     <h3 class="text-title-lg font-semibold text-primary">{{ schedule.title }}</h3>
                     <p class="text-text-muted text-label-md">
                         {{ new Date(schedule.scheduled_start).toLocaleDateString('id-ID') }} —
-                        {{ schedule.sessions_count || 0 }}/{{ schedule.max_participants }} peserta
+                        {{ schedule.sessions_count || 0 }}/{{ schedule.max_participants }} peserta —
+                        toleransi {{ schedule.late_tolerance_minutes ?? 15 }} menit
                     </p>
                 </div>
-                <button @click="deleteSchedule(schedule.id)"
-                        class="p-2 text-text-muted hover:text-error-red transition-colors">
-                    <IconTrash :size="20" />
-                </button>
+                <div class="flex items-center gap-1">
+                    <Link :href="route('admin.schedules.edit', [exam.id, schedule.id])"
+                          class="p-2 text-text-muted hover:text-secondary transition-colors">
+                        <IconEdit :size="20" />
+                    </Link>
+                    <button @click="deleteSchedule(schedule.id)"
+                            class="p-2 text-text-muted hover:text-error-red transition-colors">
+                        <IconTrash :size="20" />
+                    </button>
+                </div>
             </div>
         </div>
 

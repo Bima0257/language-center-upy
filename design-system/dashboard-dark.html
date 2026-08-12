@@ -1,0 +1,958 @@
+<!doctype html>
+
+<html class="dark" lang="id" style="">
+    <head>
+        <meta charset="utf-8" />
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+        <title>hance - TOEFL Dashboard</title>
+        <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+            rel="stylesheet"
+        />
+        <!-- Integration of Design System Tokens via Tailwind Config -->
+        <script id="tailwind-config">
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            "inverse-surface": "#e5e1ec",
+                            tertiary: "#ffb787",
+                            "on-surface": "#e5e1ec",
+                            "surface-tint": "#c6bfff",
+                            primary: "#c6bfff",
+                            "on-tertiary-fixed": "#311300",
+                            "on-surface-variant": "#c8c4d6",
+                            "surface-container-highest": "#35343c",
+                            "surface-container-high": "#2a2931",
+                            "surface-dim": "#13121a",
+                            "inverse-on-surface": "#312f38",
+                            background: "#13121a",
+                            "surface-bright": "#3a3841",
+                            "tertiary-fixed": "#ffdcc7",
+                            "on-primary-fixed": "#160066",
+                            "surface-container-lowest": "#0e0d15",
+                            "inverse-primary": "#594aca",
+                            surface: "#13121a",
+                            "on-primary-fixed-variant": "#402eb1",
+                            "on-tertiary-fixed-variant": "#6e380d",
+                            "outline-variant": "#474554",
+                            "primary-fixed-dim": "#c6bfff",
+                            "on-secondary-fixed-variant": "#004d64",
+                            "on-error-container": "#ffdad6",
+                            "surface-variant": "#35343c",
+                            "secondary-container": "#017ea2",
+                            "tertiary-container": "#c7804f",
+                            error: "#ffb4ab",
+                            "surface-container": "#201f27",
+                            "on-secondary-container": "#fbfdff",
+                            "on-background": "#e5e1ec",
+                            "on-primary": "#28069c",
+                            "on-secondary": "#003546",
+                            "primary-container": "#8c80ff",
+                            "secondary-fixed": "#bee9ff",
+                            "on-error": "#690005",
+                            "primary-fixed": "#e4dfff",
+                            "surface-container-low": "#1c1b23",
+                            "on-primary-container": "#22008d",
+                            secondary: "#78d2f9",
+                            outline: "#928f9f",
+                            "tertiary-fixed-dim": "#ffb787",
+                            "on-tertiary-container": "#461f00",
+                            "on-secondary-fixed": "#001f2a",
+                            "on-tertiary": "#502400",
+                            "secondary-fixed-dim": "#78d2f9",
+                            "error-container": "#93000a",
+                            "pastel-purple": "#E7DEFB",
+                            "pastel-blue": "#D8E9FB",
+                            "pastel-peach": "#FBE1C6",
+                            "track-neutral": "#E3E3EA",
+                        },
+                        borderRadius: {
+                            DEFAULT: "0.25rem",
+                            lg: "0.5rem",
+                            xl: "0.75rem",
+                            "2xl": "1.25rem",
+                            "3xl": "1.875rem",
+                            full: "9999px",
+                        },
+                        spacing: {
+                            "margin-mobile": "16px",
+                            "margin-desktop": "40px",
+                            "container-max": "1200px",
+                            gutter: "24px",
+                            unit: "8px",
+                        },
+                        fontFamily: {
+                            "title-md": ["Manrope"],
+                            "label-sm": ["JetBrains Mono"],
+                            "body-md": ["Inter"],
+                            "body-lg": ["Inter"],
+                            "display-lg": ["Manrope"],
+                            "headline-lg-mobile": ["Manrope"],
+                            "headline-lg": ["Manrope"],
+                            "label-md": ["Plus Jakarta Sans"],
+                            "title-lg": ["Plus Jakarta Sans"],
+                            "headline-md": ["Plus Jakarta Sans"],
+                        },
+                        fontSize: {
+                            "title-md": [
+                                "20px",
+                                {
+                                    lineHeight: "28px",
+                                    fontWeight: "600",
+                                },
+                            ],
+                            "label-sm": [
+                                "12px",
+                                {
+                                    lineHeight: "16px",
+                                    letterSpacing: "0.05em",
+                                    fontWeight: "500",
+                                },
+                            ],
+                            "body-md": [
+                                "16px",
+                                {
+                                    lineHeight: "24px",
+                                    fontWeight: "400",
+                                },
+                            ],
+                            "body-lg": [
+                                "18px",
+                                {
+                                    lineHeight: "28px",
+                                    fontWeight: "400",
+                                },
+                            ],
+                            "display-lg": [
+                                "48px",
+                                {
+                                    lineHeight: "56px",
+                                    letterSpacing: "-0.02em",
+                                    fontWeight: "800",
+                                },
+                            ],
+                            "headline-lg-mobile": [
+                                "28px",
+                                {
+                                    lineHeight: "36px",
+                                    fontWeight: "700",
+                                },
+                            ],
+                            "headline-lg": [
+                                "32px",
+                                {
+                                    lineHeight: "40px",
+                                    fontWeight: "700",
+                                },
+                            ],
+                            "label-md": [
+                                "13px",
+                                { lineHeight: "1", fontWeight: "500" },
+                            ],
+                            "title-lg": [
+                                "18px",
+                                { lineHeight: "1.4", fontWeight: "600" },
+                            ],
+                            "headline-md": [
+                                "24px",
+                                { lineHeight: "1.3", fontWeight: "700" },
+                            ],
+                        },
+                        boxShadow: {
+                            soft: "0 4px 20px rgba(0,0,0,0.4)",
+                            "app-frame": "0 20px 80px rgba(0,0,0,0.5)",
+                        },
+                    },
+                },
+            };
+        </script>
+        <style>
+            body {
+                font-family: "Plus Jakarta Sans", sans-serif;
+                background-color: #0e0d15;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 2.5rem;
+            }
+
+            .material-symbols-outlined {
+                font-variation-settings:
+                    "FILL" 0,
+                    "wght" 400,
+                    "GRAD" 0,
+                    "opsz" 24;
+            }
+
+            .fill-icon {
+                font-variation-settings: "FILL" 1;
+            }
+
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+
+            /* Responsive height fix for the app frame */
+            .app-frame {
+                height: calc(100vh - 5rem);
+                max-height: 900px;
+                width: 100%;
+                max-width: 1440px;
+            }
+        </style>
+    </head>
+    <body class="bg-surface-container-lowest">
+        <!-- The Main Elevated App Frame -->
+        <div
+            class="app-frame bg-surface rounded-3xl shadow-app-frame overflow-hidden flex relative"
+        >
+            <!-- SideNavBar (Shared Component Guide) -->
+            <aside
+                class="hidden md:flex flex-col py-8 px-4 w-[260px] bg-surface-container-low border-r border-outline-variant shrink-0 h-full"
+            >
+                <div class="px-4 mb-10 flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center"
+                    >
+                        <span
+                            class="material-symbols-outlined text-on-primary"
+                            style="font-variation-settings: &quot;FILL&quot; 1"
+                            >auto_awesome</span
+                        >
+                    </div>
+                    <h1
+                        class="font-headline-md text-headline-md font-bold text-primary"
+                    >
+                        hance
+                    </h1>
+                </div>
+                <nav class="flex-1 space-y-2">
+                    <!-- Dashboard Belajar: ACTIVE STATE -->
+                    <a
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold border-l-4 border-primary bg-surface-container transition-all translate-x-1"
+                        href="#"
+                    >
+                        <span class="material-symbols-outlined fill-icon"
+                            >pie_chart</span
+                        >
+                        <span class="font-label-md text-label-md"
+                            >Dashboard Belajar</span
+                        >
+                    </a>
+                    <a
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all"
+                        href="#"
+                    >
+                        <span class="material-symbols-outlined"
+                            >library_books</span
+                        >
+                        <span class="font-label-md text-label-md"
+                            >Materi Skill</span
+                        >
+                    </a>
+                    <a
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all"
+                        href="#"
+                    >
+                        <span class="material-symbols-outlined">edit_note</span>
+                        <span class="font-label-md text-label-md"
+                            >Latihan Soal</span
+                        >
+                    </a>
+                    <a
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all"
+                        href="#"
+                    >
+                        <span class="material-symbols-outlined"
+                            >assignment</span
+                        >
+                        <span class="font-label-md text-label-md">Try Out</span>
+                    </a>
+                    <a
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all"
+                        href="#"
+                    >
+                        <span class="material-symbols-outlined">analytics</span>
+                        <span class="font-label-md text-label-md"
+                            >Skor &amp; Progress</span
+                        >
+                    </a>
+                    <a
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all"
+                        href="#"
+                    >
+                        <span class="material-symbols-outlined"
+                            >leaderboard</span
+                        >
+                        <span class="font-label-md text-label-md"
+                            >Peringkat</span
+                        >
+                    </a>
+                    <a
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all"
+                        href="#"
+                    >
+                        <span class="material-symbols-outlined">sensors</span>
+                        <span class="font-label-md text-label-md"
+                            >Sesi Live</span
+                        >
+                    </a>
+                    <a
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all"
+                        href="#"
+                    >
+                        <span class="material-symbols-outlined">school</span>
+                        <span class="font-label-md text-label-md">Mentor</span>
+                    </a>
+                </nav>
+                <div
+                    class="mt-auto pt-6 border-t border-outline-variant space-y-2"
+                >
+                    <a
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all"
+                        href="#"
+                    >
+                        <span class="material-symbols-outlined">settings</span>
+                        <span class="font-label-md text-label-md"
+                            >Settings</span
+                        >
+                    </a>
+                    <a
+                        class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all"
+                        href="#"
+                    >
+                        <span class="material-symbols-outlined">help</span>
+                        <span class="font-label-md text-label-md"
+                            >Help Center</span
+                        >
+                    </a>
+                    <button
+                        class="mt-4 w-full bg-primary text-on-primary py-3 rounded-full font-label-md text-label-md hover:opacity-90 transition-all active:scale-95"
+                    >
+                        Upgrade Pro
+                    </button>
+                </div>
+            </aside>
+            <!-- Main Workspace -->
+            <main
+                class="flex-1 flex flex-col min-w-0 overflow-hidden bg-surface"
+            >
+                <!-- TopAppBar -->
+                <header
+                    class="flex justify-between items-center w-full px-8 py-6 bg-surface-container-lowest border-b border-outline-variant"
+                >
+                    <h2
+                        class="font-headline-md text-headline-md font-bold text-on-surface"
+                    >
+                        Overview
+                    </h2>
+                    <div class="flex items-center gap-6">
+                        <!-- Search Bar -->
+                        <div class="relative hidden lg:block">
+                            <span
+                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant"
+                                >search</span
+                            >
+                            <input
+                                class="bg-surface-container border-none text-on-surface rounded-full py-2.5 pl-12 pr-6 w-72 font-body-md text-body-md focus:ring-2 focus:ring-primary/10"
+                                placeholder="Press ⌘ + F to search"
+                                type="text"
+                            />
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <button
+                                class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container rounded-full transition-colors"
+                            >
+                                <span class="material-symbols-outlined"
+                                    >mail</span
+                                >
+                            </button>
+                            <button
+                                class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container rounded-full transition-colors relative"
+                            >
+                                <span class="material-symbols-outlined"
+                                    >notifications</span
+                                >
+                                <span
+                                    class="absolute top-2.5 right-2.5 w-2 h-2 bg-error rounded-full border-2 border-surface-container-lowest"
+                                ></span>
+                            </button>
+                            <div
+                                class="w-10 h-10 rounded-full overflow-hidden border-2 border-outline-variant"
+                            >
+                                <img
+                                    class="w-full h-full object-cover"
+                                    data-alt="A professional studio portrait of a young adult woman with a warm, confident smile. She has dark hair tied back and is wearing a stylish navy blue blazer against a soft, clean white background. The lighting is crisp and modern, matching a SaaS product aesthetic."
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAajOrTGgJvmeKGAI6_S1GrAnAg79WseMD1A88fPEIGU0UN2wdCdk7YZoJwmRJO05ENwqKupVdGO7m19pTmnTy8xVszoLDfgmT-iIhRAyaZH3nylNgu9k6AmGJPY2mIEGsDjwaQSXGaPrStPu92Y07zMcag4EO2ELlk5-qZ1rQfMoyxIb3fYArP7Bq4xeo_QBlkVSLRUTGQ6DzFOsknD_h0ro5YWtdnJgf5sV4oH1t-Sq_FuBX-LPs"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                <!-- Scrollable Content Area -->
+                <div class="flex-1 overflow-y-auto p-8 scrollbar-hide">
+                    <!-- Hero Section Cluster -->
+                    <section
+                        class="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-10"
+                    >
+                        <!-- Dark Hero Banner -->
+                        <div
+                            class="xl:col-span-12 bg-primary-container rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 text-on-primary-container relative overflow-hidden"
+                        >
+                            <div class="flex-1 z-10">
+                                <p
+                                    class="font-body-md text-body-md opacity-70 mb-2"
+                                >
+                                    Hello, Alexandra!
+                                </p>
+                                <h3
+                                    class="font-headline-lg text-headline-lg max-w-md leading-tight mb-6"
+                                >
+                                    Kamu sudah menyelesaikan 8 sesi latihan
+                                    minggu ini
+                                </h3>
+                                <button
+                                    class="bg-primary text-on-primary px-8 py-3 rounded-full font-title-lg text-title-lg hover:bg-primary/90 transition-all active:scale-95"
+                                >
+                                    Lihat Semua
+                                </button>
+                            </div>
+                            <!-- Mini Cards Row -->
+                            <div
+                                class="flex gap-4 overflow-x-auto w-full md:w-auto pb-2 scrollbar-hide z-10"
+                            >
+                                <!-- Lesson Card: Reading -->
+                                <div
+                                    class="min-w-[200px] bg-surface-container-high rounded-2xl p-4 flex flex-col shadow-lg border border-outline-variant"
+                                >
+                                    <div
+                                        class="w-full h-24 bg-pastel-purple/20 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden"
+                                    >
+                                        <span
+                                            class="material-symbols-outlined text-primary text-4xl"
+                                            >auto_stories</span
+                                        >
+                                        <div
+                                            class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary to-transparent"
+                                        ></div>
+                                    </div>
+                                    <h4
+                                        class="font-title-lg text-title-lg text-on-surface leading-tight mb-1"
+                                    >
+                                        Reading Task
+                                    </h4>
+                                    <p
+                                        class="font-label-md text-label-md text-on-surface-variant mb-4"
+                                    >
+                                        5 / 9 sessions
+                                    </p>
+                                    <div
+                                        class="h-1.5 w-full bg-surface-container-highest rounded-full"
+                                    >
+                                        <div
+                                            class="h-full bg-primary rounded-full"
+                                            style="width: 55%"
+                                        ></div>
+                                    </div>
+                                </div>
+                                <!-- Lesson Card: Listening -->
+                                <div
+                                    class="min-w-[200px] bg-surface-container-high rounded-2xl p-4 flex flex-col shadow-lg border border-outline-variant"
+                                >
+                                    <div
+                                        class="w-full h-24 bg-pastel-blue/20 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden"
+                                    >
+                                        <span
+                                            class="material-symbols-outlined text-primary text-4xl"
+                                            >headphones</span
+                                        >
+                                    </div>
+                                    <h4
+                                        class="font-title-lg text-title-lg text-on-surface leading-tight mb-1"
+                                    >
+                                        Listening Practice
+                                    </h4>
+                                    <p
+                                        class="font-label-md text-label-md text-on-surface-variant mb-4"
+                                    >
+                                        2 / 5 sessions
+                                    </p>
+                                    <div
+                                        class="h-1.5 w-full bg-surface-container-highest rounded-full"
+                                    >
+                                        <div
+                                            class="h-full bg-primary rounded-full"
+                                            style="width: 40%"
+                                        ></div>
+                                    </div>
+                                </div>
+                                <!-- Lesson Card: Speaking -->
+                                <div
+                                    class="min-w-[200px] bg-surface-container-high rounded-2xl p-4 flex flex-col shadow-lg border border-outline-variant"
+                                >
+                                    <div
+                                        class="w-full h-24 bg-pastel-peach/20 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden"
+                                    >
+                                        <span
+                                            class="material-symbols-outlined text-primary text-4xl"
+                                            >record_voice_over</span
+                                        >
+                                    </div>
+                                    <h4
+                                        class="font-title-lg text-title-lg text-on-surface leading-tight mb-1"
+                                    >
+                                        Speaking Drill
+                                    </h4>
+                                    <p
+                                        class="font-label-md text-label-md text-on-surface-variant mb-4"
+                                    >
+                                        7 / 10 sessions
+                                    </p>
+                                    <div
+                                        class="h-1.5 w-full bg-surface-container-highest rounded-full"
+                                    >
+                                        <div
+                                            class="h-full bg-primary rounded-full"
+                                            style="width: 70%"
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Atmospheric Background Glows -->
+                            <div
+                                class="absolute -right-20 -top-20 w-80 h-80 bg-secondary-container/10 blur-[100px] rounded-full"
+                            ></div>
+                            <div
+                                class="absolute -left-20 -bottom-20 w-60 h-60 bg-pastel-purple/5 blur-[80px] rounded-full"
+                            ></div>
+                        </div>
+                    </section>
+                    <!-- Statistics & Assignments Section -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 space-y-8">
+                            <!-- Stats Grid -->
+                            <div>
+                                <h3
+                                    class="font-headline-md text-headline-md text-on-surface mb-6"
+                                >
+                                    Statistics
+                                </h3>
+                                <div
+                                    class="grid grid-cols-2 sm:grid-cols-4 gap-4"
+                                >
+                                    <div
+                                        class="bg-surface-container p-6 rounded-2xl shadow-soft border border-outline-variant"
+                                    >
+                                        <p
+                                            class="font-headline-md text-headline-md text-primary mb-1"
+                                        >
+                                            85
+                                        </p>
+                                        <p
+                                            class="font-label-md text-label-md text-on-surface-variant"
+                                        >
+                                            Skor Rata-rata
+                                        </p>
+                                    </div>
+                                    <div
+                                        class="bg-surface-container p-6 rounded-2xl shadow-soft border border-outline-variant"
+                                    >
+                                        <p
+                                            class="font-headline-md text-headline-md text-primary mb-1"
+                                        >
+                                            3
+                                        </p>
+                                        <p
+                                            class="font-label-md text-label-md text-on-surface-variant"
+                                        >
+                                            Try Out Selesai
+                                        </p>
+                                    </div>
+                                    <div
+                                        class="bg-surface-container p-6 rounded-2xl shadow-soft border border-outline-variant"
+                                    >
+                                        <p
+                                            class="font-headline-md text-headline-md text-primary mb-1"
+                                        >
+                                            24
+                                        </p>
+                                        <p
+                                            class="font-label-md text-label-md text-on-surface-variant"
+                                        >
+                                            Streak Hari
+                                        </p>
+                                    </div>
+                                    <div
+                                        class="bg-surface-container p-6 rounded-2xl shadow-soft border border-outline-variant"
+                                    >
+                                        <p
+                                            class="font-headline-md text-headline-md text-primary mb-1"
+                                        >
+                                            7
+                                        </p>
+                                        <p
+                                            class="font-label-md text-label-md text-on-surface-variant"
+                                        >
+                                            Jam Belajar
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Assignments -->
+                            <div>
+                                <div
+                                    class="flex justify-between items-center mb-6"
+                                >
+                                    <h3
+                                        class="font-headline-md text-headline-md text-on-surface"
+                                    >
+                                        My Assignments (5)
+                                    </h3>
+                                    <button
+                                        class="text-primary hover:underline font-label-md text-label-md"
+                                    >
+                                        See All
+                                    </button>
+                                </div>
+                                <div class="space-y-3">
+                                    <!-- Assignment Item -->
+                                    <div
+                                        class="bg-surface-container p-5 rounded-2xl shadow-soft border border-outline-variant flex items-center group hover:border-primary/50 transition-colors"
+                                    >
+                                        <div
+                                            class="w-12 h-12 bg-pastel-blue/20 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform"
+                                        >
+                                            <span
+                                                class="material-symbols-outlined"
+                                                >auto_stories</span
+                                            >
+                                        </div>
+                                        <div class="ml-4 flex-1">
+                                            <h5
+                                                class="font-title-lg text-title-lg text-on-surface"
+                                            >
+                                                Reading Task 1: Teks Astronomi
+                                            </h5>
+                                            <p
+                                                class="font-body-md text-body-md text-on-surface-variant"
+                                            >
+                                                Academic Reading • Deadline:
+                                                Tomorrow
+                                            </p>
+                                        </div>
+                                        <span
+                                            class="material-symbols-outlined text-on-surface-variant"
+                                            >more_horiz</span
+                                        >
+                                    </div>
+                                    <div
+                                        class="bg-surface-container p-5 rounded-2xl shadow-soft border border-outline-variant flex items-center group hover:border-primary/50 transition-colors"
+                                    >
+                                        <div
+                                            class="w-12 h-12 bg-pastel-purple/20 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform"
+                                        >
+                                            <span
+                                                class="material-symbols-outlined"
+                                                >headphones</span
+                                            >
+                                        </div>
+                                        <div class="ml-4 flex-1">
+                                            <h5
+                                                class="font-title-lg text-title-lg text-on-surface"
+                                            >
+                                                Listening: Lecture on Marine
+                                                Biology
+                                            </h5>
+                                            <p
+                                                class="font-body-md text-body-md text-on-surface-variant"
+                                            >
+                                                Academic Listening • Completed
+                                            </p>
+                                        </div>
+                                        <span
+                                            class="material-symbols-outlined text-primary"
+                                            style="
+                                                font-variation-settings: &quot;FILL&quot;
+                                                    1;
+                                            "
+                                            >check_circle</span
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Right Column: Leaderboard -->
+                        <div class="space-y-8">
+                            <div>
+                                <div
+                                    class="flex justify-between items-center mb-6"
+                                >
+                                    <h3
+                                        class="font-headline-md text-headline-md text-on-surface"
+                                    >
+                                        Peringkat
+                                    </h3>
+                                    <span
+                                        class="material-symbols-outlined text-on-surface-variant"
+                                        >chevron_right</span
+                                    >
+                                </div>
+                                <!-- User Highlight Card -->
+                                <div
+                                    class="bg-surface-container-high rounded-2xl p-6 mb-6"
+                                >
+                                    <div class="flex items-center gap-4 mb-4">
+                                        <div
+                                            class="w-12 h-12 rounded-full border-2 border-primary overflow-hidden"
+                                        >
+                                            <img
+                                                class="w-full h-full object-cover"
+                                                data-alt="Close up of Alexandra, the user. A bright and friendly young woman with light makeup, looking into the camera. Modern professional headshot style."
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuARRhO-2LzxhNWBqD-6ufEYtnuWwTJ9Cr3qIs3YayeF8TM0KHtEtWTeiZ0anAgRvwz8k5JaEja4FIRelVcX_563gEJxdUIOk65C8E5NKi0IRD6CvhPFBJA3AFZU91HtFockm5wjrwZDARP3J_FOeYDjJufQE0cMvoT1JYg5wa_vrNviI5LIdyvvRUGzouAx1uYBeScHIXC93j_N1dfZSKwigXWVdLKtXxU8W8bdEvSoG0QkigIgK5M"
+                                            />
+                                        </div>
+                                        <div>
+                                            <p
+                                                class="font-headline-md text-headline-md text-on-surface"
+                                            >
+                                                #14
+                                            </p>
+                                            <p
+                                                class="font-label-md text-label-md text-on-surface-variant"
+                                            >
+                                                Your position on the leaderboard
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <div
+                                            class="flex items-center gap-1.5 bg-pastel-peach/20 px-3 py-1.5 rounded-full"
+                                        >
+                                            <span
+                                                class="material-symbols-outlined text-tertiary-fixed-dim text-sm"
+                                                style="
+                                                    font-variation-settings: &quot;FILL&quot;
+                                                        1;
+                                                "
+                                                >monetization_on</span
+                                            >
+                                            <span
+                                                class="font-label-md text-label-md text-tertiary-fixed-dim"
+                                                >288 points</span
+                                            >
+                                        </div>
+                                        <div
+                                            class="flex items-center gap-1.5 bg-pastel-purple/20 px-3 py-1.5 rounded-full"
+                                        >
+                                            <span
+                                                class="material-symbols-outlined text-primary text-sm"
+                                                style="
+                                                    font-variation-settings: &quot;FILL&quot;
+                                                        1;
+                                                "
+                                                >military_tech</span
+                                            >
+                                            <span
+                                                class="font-label-md text-label-md text-primary"
+                                                >7 badges</span
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Top Players List -->
+                                <div class="space-y-4">
+                                    <div
+                                        class="flex items-center gap-4 p-3 hover:bg-surface-container-high rounded-xl transition-colors"
+                                    >
+                                        <span
+                                            class="font-title-lg text-title-lg text-primary w-6"
+                                            >#1</span
+                                        >
+                                        <div
+                                            class="w-10 h-10 rounded-full overflow-hidden bg-surface-container"
+                                        >
+                                            <img
+                                                class="w-full h-full object-cover"
+                                                data-alt="A smiling woman with glasses, Liz Cheng, a professional educational consultant look. Vibrant high-quality portrait for a learning app interface."
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOD-a-cExp1HWqLTlb5rBu51PulKFcRtZOib917yzHOH-4bUXRKWcX3yRVJweJb_d3btXTs8qaUgadiVnEjecuf9cbnS040MkGmzQgKgD7InkFdvnimAQA5MO4cc8NUaIUbJnodMV82pliLmqJCWBsu9K8XzPuZQAsmelIciIU4mywhGfiZdkkPC2W5jbueRf3MJVzCwFio4mc974-_LFSVUTuZo8GD0-LezFA1S-S70s2OejOVkU"
+                                            />
+                                        </div>
+                                        <div class="flex-1">
+                                            <h6
+                                                class="font-label-md text-label-md text-on-surface"
+                                            >
+                                                Liz Cheng
+                                            </h6>
+                                            <p
+                                                class="text-[11px] text-on-surface-variant"
+                                            >
+                                                Customer Service
+                                            </p>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <span
+                                                class="material-symbols-outlined text-tertiary-fixed-dim text-sm"
+                                                style="
+                                                    font-variation-settings: &quot;FILL&quot;
+                                                        1;
+                                                "
+                                                >monetization_on</span
+                                            >
+                                            <span
+                                                class="font-label-md text-label-md text-on-surface"
+                                                >476 pts</span
+                                            >
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="flex items-center gap-4 p-3 hover:bg-surface-container-high rounded-xl transition-colors"
+                                    >
+                                        <span
+                                            class="font-title-lg text-title-lg text-primary w-6"
+                                            >#2</span
+                                        >
+                                        <div
+                                            class="w-10 h-10 rounded-full overflow-hidden bg-surface-container"
+                                        >
+                                            <img
+                                                class="w-full h-full object-cover"
+                                                data-alt="A cheerful young man, Jenny Wilson, with a modern haircut. He looks ambitious and friendly. Clean studio lighting."
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUMsPinHi4wzWSbtQflHK2rax8sfEz481qvIaWuVgMEfYLy8BXIpb4bkd1YDznJE-BIv56avZ1gWM-vQ38ghXzS_AJyNYy4g6oxmHW0XnBCUPZipfUPfngrmWZOnbTsM8J8w8AqShma98xV9PAH_Ephy9l76yoUMeanqAVkSI7kwfnk4q3YlX59M0jbhzMV-zlxU3u_So_s0iq-Tkzb_0s0PB3p2KCHCpJKwUbFupei9UpxEVkoHE"
+                                            />
+                                        </div>
+                                        <div class="flex-1">
+                                            <h6
+                                                class="font-label-md text-label-md text-on-surface"
+                                            >
+                                                Jenny Wilson
+                                            </h6>
+                                            <p
+                                                class="text-[11px] text-on-surface-variant"
+                                            >
+                                                Marketing
+                                            </p>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <span
+                                                class="material-symbols-outlined text-tertiary-fixed-dim text-sm"
+                                                style="
+                                                    font-variation-settings: &quot;FILL&quot;
+                                                        1;
+                                                "
+                                                >monetization_on</span
+                                            >
+                                            <span
+                                                class="font-label-md text-label-md text-on-surface"
+                                                >461 pts</span
+                                            >
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="flex items-center gap-4 p-3 hover:bg-surface-container-high rounded-xl transition-colors"
+                                    >
+                                        <span
+                                            class="font-title-lg text-title-lg text-primary w-6"
+                                            >#3</span
+                                        >
+                                        <div
+                                            class="w-10 h-10 rounded-full overflow-hidden bg-surface-container"
+                                        >
+                                            <img
+                                                class="w-full h-full object-cover"
+                                                data-alt="A focused young professional man, Ralph Edwards, in business casual attire. High contrast professional photography."
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtMJQF8Fmeo5Tai-m7404R8lWC0fXf-uXYXKro56BZJZkQggPSBVsWqSZ7oO0bQDU42er3oAC6EZPasLFa5tBPKcRtQtmK6gnjmEiUo1E3axgRJGEKlY-PtF4YJrlJ5zNn1k9HV63hiu-Yfzl7E6NloIs0yGyJH5EimTba2Lf0MZ-QwWxZuXxObsEwOPdCdczskvZ5MWQn91pQrOOmzpRekZxahFhz93JR8dqi0W57ilenwu-L4GQ"
+                                            />
+                                        </div>
+                                        <div class="flex-1">
+                                            <h6
+                                                class="font-label-md text-label-md text-on-surface"
+                                            >
+                                                Ralph Edwards
+                                            </h6>
+                                            <p
+                                                class="text-[11px] text-on-surface-variant"
+                                            >
+                                                Finance
+                                            </p>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <span
+                                                class="material-symbols-outlined text-tertiary-fixed-dim text-sm"
+                                                style="
+                                                    font-variation-settings: &quot;FILL&quot;
+                                                        1;
+                                                "
+                                                >monetization_on</span
+                                            >
+                                            <span
+                                                class="font-label-md text-label-md text-on-surface"
+                                                >429 pts</span
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <!-- Mobile Navigation (Switching according to Shared Components Logic) -->
+        <div
+            class="fixed bottom-0 left-0 right-0 md:hidden bg-surface-container-lowest border-t border-outline-variant px-6 py-3 flex justify-between items-center z-50"
+        >
+            <button class="flex flex-col items-center gap-1 text-primary">
+                <span class="material-symbols-outlined fill-icon"
+                    >pie_chart</span
+                >
+                <span class="text-[10px] font-bold">Overview</span>
+            </button>
+            <button
+                class="flex flex-col items-center gap-1 text-on-surface-variant"
+            >
+                <span class="material-symbols-outlined">library_books</span>
+                <span class="text-[10px]">Courses</span>
+            </button>
+            <button
+                class="flex flex-col items-center gap-1 text-on-surface-variant"
+            >
+                <span class="material-symbols-outlined">military_tech</span>
+                <span class="text-[10px]">Badges</span>
+            </button>
+            <button
+                class="flex flex-col items-center gap-1 text-on-surface-variant"
+            >
+                <span class="material-symbols-outlined">person</span>
+                <span class="text-[10px]">Profile</span>
+            </button>
+        </div>
+        <script>
+            // Micro-interactions and effects
+            document.querySelectorAll(".group").forEach((item) => {
+                item.addEventListener("mouseenter", () => {
+                    // Potential for lightweight particle effects or subtle shadow shifts
+                });
+            });
+
+            // Command + F listener mockup
+            window.addEventListener("keydown", function (e) {
+                if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+                    e.preventDefault();
+                    document.querySelector('input[type="text"]').focus();
+                }
+            });
+        </script>
+    </body>
+</html>

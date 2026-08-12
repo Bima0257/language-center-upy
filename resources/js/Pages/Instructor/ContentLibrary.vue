@@ -2,6 +2,8 @@
 import { Head, Link, router, useForm, usePage } from "@inertiajs/vue3";
 import DashboardLayout from "@/Components/Dashboard/DashboardLayout.vue";
 import UploadProgressBar from "@/Components/Shared/UploadProgressBar.vue";
+import EmptyState from "@/Components/Shared/EmptyState.vue";
+import Pagination from "@/Components/Shared/Pagination.vue";
 import ContentSelector from "@/Components/ContentLibrary/ContentSelector.vue";
 import ContentFilters from "@/Components/ContentLibrary/ContentFilters.vue";
 import QuestionTable from "@/Components/ContentLibrary/QuestionTable.vue";
@@ -10,6 +12,7 @@ import { IconBook, IconPlus, IconCheck, IconX, IconBooks } from "@tabler/icons-v
 import { ref, computed } from "vue";
 import { useConfirm } from "@/Composables/useConfirm";
 import { useToast } from "@/Composables/useToast";
+import { useUploadProgress } from "@/Composables/useUploadProgress";
 
 const page = usePage();
 const confirm = useConfirm();
@@ -60,7 +63,8 @@ const filteredBanks = computed(() => {
     );
 });
 
-function onTypeChange() {
+function onTypeChange(value) {
+    selectedTypeId.value = value;
     selectedBankId.value = "";
     selectedSkillId.value = "";
     selectedPartId.value = "";
@@ -69,7 +73,8 @@ function onTypeChange() {
     applyFilters();
 }
 
-function onBankChange() {
+function onBankChange(value) {
+    selectedBankId.value = value;
     selectedSkillId.value = "";
     selectedPartId.value = "";
     applyFilters();
@@ -79,8 +84,6 @@ const selectedIds = ref([]);
 const expandedPassages = ref({});
 const editingPassageId = ref(null);
 const passageEditType = ref("text");
-const selectedAudioFile = ref(null);
-const selectedImageFile = ref(null);
 const addingPassageId = ref(null);
 
 const passageForm = useForm({
@@ -144,12 +147,6 @@ const statusLabels = {
     approved: "Disetujui",
     rejected: "Ditolak",
 };
-const statusColors = {
-    draft: "bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300",
-    approved:
-        "bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300",
-    rejected: "bg-error-red/10 text-error-red",
-};
 
 const passageTypeLabels = {
     text: "Teks",
@@ -181,8 +178,6 @@ function togglePassage(id) {
 function startEditPassage(passage) {
     editingPassageId.value = passage.id;
     passageEditType.value = passage.type || "text";
-    selectedAudioFile.value = null;
-    selectedImageFile.value = null;
     passageForm.clearErrors();
     passageForm.reset();
     passageForm.title = passage.title;
@@ -193,20 +188,6 @@ function startEditPassage(passage) {
 function cancelEditPassage() {
     editingPassageId.value = null;
     passageForm.reset();
-    selectedAudioFile.value = null;
-    selectedImageFile.value = null;
-}
-
-function onEditAudioSelect(e) {
-    selectedAudioFile.value = e.target.files[0] || null;
-    passageForm.audio_file = selectedAudioFile.value;
-    e.target.value = "";
-}
-
-function onEditImageSelect(e) {
-    selectedImageFile.value = e.target.files[0] || null;
-    passageForm.image_file = selectedImageFile.value;
-    e.target.value = "";
 }
 
 function savePassage(passage) {
@@ -215,8 +196,6 @@ function savePassage(passage) {
         onSuccess: () => {
             editingPassageId.value = null;
             passageForm.reset();
-            selectedAudioFile.value = null;
-            selectedImageFile.value = null;
             router.reload({
                 only: ["questions"],
                 preserveState: true,
@@ -226,16 +205,7 @@ function savePassage(passage) {
     });
 }
 
-const showUploadProgress = computed(
-    () =>
-        passageForm.processing &&
-        (passageForm.audio_file !== null || passageForm.image_file !== null),
-);
-const uploadLabel = computed(() =>
-    passageForm.audio_file !== null
-        ? "Mengunggah & mengompres audio..."
-        : "Mengunggah & mengompres gambar...",
-);
+const { showUploadProgress, uploadLabel } = useUploadProgress(passageForm);
 
 function openQuickAdd(passage) {
     addingPassageId.value = passage.id;
@@ -513,19 +483,11 @@ async function bulkReview(status) {
                 @filter-change="applyFilters"
             />
 
-            <div
+            <EmptyState
                 v-if="questions.data?.length === 0"
-                class="bg-surface-white rounded-2xl p-10 text-center shadow-soft border border-outline-variant/30"
-            >
-                <IconBook
-                    class="mx-auto text-text-muted mb-3"
-                    :size="48"
-                    stroke="1.5"
-                />
-                <p class="text-text-body text-text-body text-body-md">
-                    Tidak ada soal ditemukan.
-                </p>
-            </div>
+                :icon="IconBook"
+                title="Tidak ada soal ditemukan."
+            />
 
             <div v-else class="space-y-8">
                 <template
@@ -568,11 +530,7 @@ async function bulkReview(status) {
                                     :passage-form="passageForm"
                                     :editing-passage-id="editingPassageId"
                                     :passage-edit-type="passageEditType"
-                                    :selected-audio-file="selectedAudioFile"
-                                    :selected-image-file="selectedImageFile"
                                     :selected-ids="selectedIds"
-                                    :status-labels="statusLabels"
-                                    :status-colors="statusColors"
                                     :skill-name-fn="skillName"
                                     :bank-name-fn="bankName"
                                     :option-keys="optionKeys"
@@ -590,8 +548,6 @@ async function bulkReview(status) {
                                     @start-edit="startEditPassage"
                                     @cancel-edit="cancelEditPassage"
                                     @save-passage="savePassage"
-                                    @audio-select="onEditAudioSelect"
-                                    @image-select="onEditImageSelect"
                                     @add-soal="openQuickAdd"
                                     @close-add="closeQuickAdd"
                                     @save-quick="saveQuickQuestion"
@@ -622,8 +578,6 @@ async function bulkReview(status) {
                                         <QuestionTable
                                             :questions="partGroup.standalone"
                                             :can-review="canReview"
-                                            :status-labels="statusLabels"
-                                            :status-colors="statusColors"
                                             :skill-name-fn="skillName"
                                             :bank-name-fn="bankName"
                                             :selected-ids="selectedIds"
@@ -639,23 +593,11 @@ async function bulkReview(status) {
                 </template>
             </div>
 
-            <div
-                v-if="questions.total > questions.per_page"
-                class="flex justify-center mt-6 gap-2"
-            >
-                <Link
-                    v-for="link in questions.links"
-                    :key="link.label"
-                    :href="link.url || '#'"
-                    class="px-4 py-2 rounded-full text-label-md font-medium transition-all"
-                    :class="
-                        link.active
-                            ? 'bg-primary-container text-white'
-                            : 'bg-surface-white border border-outline-variant text-text-body hover:bg-surface-container-low'
-                    "
-                    v-html="link.label"
-                />
-            </div>
+            <Pagination
+                :links="questions.links"
+                :total="questions.total"
+                :per-page="questions.per_page"
+            />
             <UploadProgressBar
                 :show="showUploadProgress"
                 :label="uploadLabel"
@@ -694,22 +636,12 @@ async function bulkReview(status) {
         </template>
 
         <!-- EMPTY STATE: BELUM PILIH BANK -->
-        <div
+        <EmptyState
             v-else
-            class="bg-surface-white rounded-2xl p-10 text-center shadow-soft border border-outline-variant/30"
-        >
-            <IconBook
-                class="mx-auto text-text-muted mb-3"
-                :size="48"
-                stroke="1.5"
-            />
-            <p class="text-text-body text-text-body text-body-md mb-1">
-                Pilih Jenis Tes dan Bank Soal
-            </p>
-            <p class="text-text-muted text-body-md">
-                Daftar soal akan muncul setelah kamu memilih bank soal.
-            </p>
-        </div>
+            :icon="IconBook"
+            title="Pilih Jenis Tes dan Bank Soal"
+            description="Daftar soal akan muncul setelah kamu memilih bank soal."
+        />
     </DashboardLayout>
 </template>
 

@@ -3,13 +3,14 @@
 namespace App\Modules\Schedule\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Schedule\StoreScheduleRequest;
+use App\Http\Requests\Schedule\UpdateScheduleRequest;
 use App\Models\Exam;
 use App\Models\ExamSchedule;
 use App\Modules\Schedule\Services\ScheduleService;
-use App\Http\Requests\Schedule\StoreScheduleRequest;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
 
 class ScheduleController extends Controller
 {
@@ -25,6 +26,13 @@ class ScheduleController extends Controller
         ]);
     }
 
+    public function all(): Response
+    {
+        return Inertia::render('Admin/Schedules/All', [
+            'schedules' => $this->scheduleService->paginatedAll(),
+        ]);
+    }
+
     public function create(Exam $exam): Response
     {
         return Inertia::render('Admin/Schedules/Create', [
@@ -34,10 +42,33 @@ class ScheduleController extends Controller
 
     public function store(StoreScheduleRequest $request, Exam $exam): RedirectResponse
     {
-        $this->scheduleService->create(array_merge($request->validated(), ['exam_id' => $exam->id]));
+        try {
+            $this->scheduleService->create(array_merge($request->validated(), ['exam_id' => $exam->id]));
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return to_route('admin.schedules.index', $exam)
             ->with('success', 'Jadwal berhasil dibuat.');
+    }
+
+    public function edit(Exam $exam, ExamSchedule $schedule): Response
+    {
+        return Inertia::render('Admin/Schedules/Edit', [
+            'exam' => $exam,
+            'schedule' => $schedule,
+        ]);
+    }
+
+    public function update(UpdateScheduleRequest $request, Exam $exam, ExamSchedule $schedule): RedirectResponse
+    {
+        try {
+            $this->scheduleService->update($schedule, $request->validated());
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Jadwal diperbarui.');
     }
 
     public function destroy(Exam $exam, ExamSchedule $schedule): RedirectResponse

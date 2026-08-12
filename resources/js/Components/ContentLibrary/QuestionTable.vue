@@ -1,12 +1,11 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
 import { IconHeadphones, IconCheck, IconX, IconEye, IconEdit, IconTrash } from '@tabler/icons-vue';
 
 defineProps({
     questions: { type: Array, default: () => [] },
     canReview: { type: Boolean, default: false },
-    statusLabels: { type: Object, default: () => ({}) },
-    statusColors: { type: Object, default: () => ({}) },
     skillNameFn: { type: Function, default: () => '' },
     bankNameFn: { type: Function, default: () => '' },
     selectedIds: { type: Array, default: () => [] },
@@ -56,10 +55,7 @@ defineEmits(['toggle', 'review', 'delete']);
                         </span>
                     </td>
                     <td class="px-5 py-4">
-                        <span :class="statusColors[q.status] || 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'"
-                              class="inline-block px-2.5 py-0.5 rounded-full text-label-md">
-                            {{ statusLabels[q.status] || q.status }}
-                        </span>
+                        <StatusBadge :status="q.status" />
                     </td>
                     <td class="px-5 py-4 text-body-md text-text-body whitespace-nowrap">{{ q.creator?.name || '-' }}</td>
                     <td class="px-5 py-4">

@@ -17,9 +17,27 @@ class ScheduleService
         return $this->scheduleRepo->paginateByExam($examId, $perPage);
     }
 
+    public function paginatedAll(int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->scheduleRepo->paginateAll($perPage);
+    }
+
     public function create(array $data): ExamSchedule
     {
+        if ($this->scheduleRepo->hasOverlap($data)) {
+            throw new \RuntimeException('Jadwal bertabrakan dengan jadwal lain pada ujian ini.');
+        }
+
         return $this->scheduleRepo->create($data);
+    }
+
+    public function update(ExamSchedule $schedule, array $data): ExamSchedule
+    {
+        if ($this->scheduleRepo->hasOverlap(array_merge($data, ['exam_id' => $schedule->exam_id]), $schedule->id)) {
+            throw new \RuntimeException('Jadwal bertabrakan dengan jadwal lain pada ujian ini.');
+        }
+
+        return $this->scheduleRepo->update($schedule, $data);
     }
 
     public function delete(ExamSchedule $schedule): void

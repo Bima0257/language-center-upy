@@ -156,7 +156,7 @@ onUnmounted(() => {
                             Soal {{ currentQuestionIndex + 1 }} dari {{ totalQuestions }}
                         </p>
                     </div>
-                    <div v-if="currentQuestion" class="bg-surface-white rounded-2xl p-6 border border-outline-variant/30">
+                    <div v-if="currentQuestion" class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
                         <p class="text-body-md font-medium text-primary mb-4">{{ currentQuestion.question_text }}</p>
                         <div v-if="qOptions(currentQuestion).length" class="space-y-3">
                             <button v-for="opt in qOptions(currentQuestion)" :key="opt.key"
@@ -198,7 +198,7 @@ onUnmounted(() => {
                         <p class="text-text-muted text-body-md">Audio akan tersedia di sini</p>
                     </div>
                 </div>
-                <div v-if="currentQuestion" class="bg-surface-white rounded-2xl p-6 border border-outline-variant/30">
+                <div v-if="currentQuestion" class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
                     <p class="text-body-md font-medium text-primary mb-2">Soal {{ currentQuestionIndex + 1 }}</p>
                     <p class="text-body-md text-primary mb-4">{{ currentQuestion.question_text }}</p>
                     <div v-if="qOptions(currentQuestion).length" class="space-y-3">

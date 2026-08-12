@@ -4,16 +4,17 @@ namespace App\Modules\Session\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExamSchedule;
+use App\Models\ExamSectionQuestion;
 use App\Models\ExamSession;
 use App\Models\Question;
 use App\Models\Skill;
 use App\Modules\Schedule\Repositories\Contracts\ScheduleRepositoryInterface;
+use App\Modules\Security\Actions\LogViolation;
 use App\Modules\Session\Actions\CompleteSection;
 use App\Modules\Session\Actions\Heartbeat;
 use App\Modules\Session\Actions\SaveAnswer;
 use App\Modules\Session\Actions\StartExamSession;
 use App\Modules\Session\Actions\SubmitExam;
-use App\Modules\Security\Actions\LogViolation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,10 +49,14 @@ class ExamSessionController extends Controller
 
     public function start(ExamSchedule $examSchedule): RedirectResponse
     {
-        $result = $this->startExamSession->execute(
-            userId: auth()->id(),
-            scheduleId: $examSchedule->id,
-        );
+        try {
+            $result = $this->startExamSession->execute(
+                userId: auth()->id(),
+                scheduleId: $examSchedule->id,
+            );
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return to_route('exam.take', ['examSession' => $result->sessionId]);
     }
@@ -69,7 +74,7 @@ class ExamSessionController extends Controller
         $sectionSkillIds = $sections->pluck('skill_id') ?? collect();
 
         // Load bank questions matching exam section skills, scoped by exam category
-        $pivotRows = \App\Models\ExamSectionQuestion::whereIn('exam_section_id', $sections->pluck('id'))->get();
+        $pivotRows = ExamSectionQuestion::whereIn('exam_section_id', $sections->pluck('id'))->get();
         $pivotQuestionIds = $pivotRows->pluck('question_id');
 
         $questions = collect();
@@ -161,8 +166,8 @@ class ExamSessionController extends Controller
 
         return response()->json([
             'strike' => $result->strikeCount,
-            'warning' => !$result->terminated,
-            'sessionActive' => !$result->terminated,
+            'warning' => ! $result->terminated,
+            'sessionActive' => ! $result->terminated,
         ]);
     }
 }

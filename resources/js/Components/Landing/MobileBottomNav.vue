@@ -34,7 +34,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll));
 </script>
 
 <template>
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-white border-t border-outline-variant/30 shadow-lg">
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-white border-t border-outline-variant/30 dark:border-t-transparent shadow-lg">
         <div class="flex items-center justify-around h-16">
             <button v-for="item in sections" :key="item.id"
                     @click="scrollTo(item.id)"

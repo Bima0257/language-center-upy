@@ -3,8 +3,12 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
 import DropDown from '@/Components/Shared/DropDown.vue';
-import { IconInfoCircle, IconUpload } from '@tabler/icons-vue';
-import { computed, ref } from 'vue';
+import FileUpload from '@/Components/Shared/FileUpload.vue';
+import OptionsInput from '@/Components/ContentLibrary/OptionsInput.vue';
+import AnswerKeyPicker from '@/Components/ContentLibrary/AnswerKeyPicker.vue';
+import { useUploadProgress } from '@/Composables/useUploadProgress';
+import { IconInfoCircle } from '@tabler/icons-vue';
+import { computed } from 'vue';
 
 const props = defineProps({
     question: { type: Object, required: true },
@@ -30,11 +34,6 @@ const form = useForm({
     audio_file: null,
     image_file: null,
 });
-
-const audioFileName = ref(null);
-const imageFileName = ref(null);
-const audioPreviewUrl = ref(null);
-const imagePreviewUrl = ref(null);
 
 const selectedBank = computed(() =>
     props.questionBanks.find(b => String(b.id) === String(form.question_bank_id)) || null,
@@ -63,24 +62,6 @@ function onSkillChange() {
     form.skill_part_id = '';
     form.audio_file = null;
     form.image_file = null;
-    audioFileName.value = null;
-    imageFileName.value = null;
-    audioPreviewUrl.value = null;
-    imagePreviewUrl.value = null;
-}
-
-function onAudioSelect(e) {
-    form.audio_file = e.target.files[0] || null;
-    audioFileName.value = form.audio_file?.name || null;
-    audioPreviewUrl.value = form.audio_file ? URL.createObjectURL(form.audio_file) : null;
-    e.target.value = '';
-}
-
-function onImageSelect(e) {
-    form.image_file = e.target.files[0] || null;
-    imageFileName.value = form.image_file?.name || null;
-    imagePreviewUrl.value = form.image_file ? URL.createObjectURL(form.image_file) : null;
-    e.target.value = '';
 }
 
 const storedAudioUrl = computed(() => {
@@ -93,8 +74,7 @@ const storedImageUrl = computed(() => {
     return path ? '/storage/' + path : null;
 });
 
-const showUploadProgress = computed(() => form.processing && (form.audio_file !== null || form.image_file !== null));
-const uploadLabel = computed(() => form.audio_file !== null ? 'Mengunggah & mengompres audio...' : 'Mengunggah & mengompres gambar...');
+const { showUploadProgress, uploadLabel } = useUploadProgress(form);
 
 function submit() {
     form.put(route('content-library.update', props.question.id));
@@ -175,58 +155,27 @@ function submit() {
                             </p>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 min-h-[120px] flex flex-col">
-                                    <p class="text-label-md font-semibold text-primary mb-2">Preview Audio</p>
-                                    <div class="flex-1 flex items-center">
-                                        <audio v-if="audioPreviewUrl" :src="audioPreviewUrl" controls class="w-full h-10" />
-                                        <audio v-else-if="storedAudioUrl" :src="storedAudioUrl" controls class="w-full h-10" />
-                                        <p v-else class="text-label-md text-text-muted">Belum ada audio</p>
-                                    </div>
-                                </div>
-                                <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 min-h-[120px] flex flex-col">
-                                    <p class="text-label-md font-semibold text-primary mb-2">Preview Gambar</p>
-                                    <div class="flex-1 flex items-center justify-center">
-                                        <img v-if="imagePreviewUrl" :src="imagePreviewUrl"
-                                             class="max-h-28 rounded-lg border border-outline-variant/30 object-contain" />
-                                        <img v-else-if="storedImageUrl" :src="storedImageUrl"
-                                             class="max-h-28 rounded-lg border border-outline-variant/30 object-contain" />
-                                        <p v-else class="text-label-md text-text-muted">Belum ada gambar (opsional)</p>
-                                    </div>
-                                </div>
+                                <FileUpload
+                                    v-model="form.audio_file"
+                                    label="Ganti Audio (opsional, max 50MB)"
+                                    placeholder="Klik untuk upload audio"
+                                    accept=".mp3,.wav,.ogg,.m4a"
+                                    media-type="audio"
+                                    :preview-url="storedAudioUrl"
+                                    :error="form.errors.audio_file"
+                                />
+                                <FileUpload
+                                    v-model="form.image_file"
+                                    label="Ganti Gambar (opsional)"
+                                    placeholder="Klik untuk upload gambar"
+                                    accept=".jpg,.jpeg,.png,.webp"
+                                    media-type="image"
+                                    :preview-url="storedImageUrl"
+                                    :error="form.errors.image_file"
+                                />
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-label-md font-medium text-primary block mb-1.5">Ganti Audio <span class="text-text-muted">(opsional, max 50MB)</span></label>
-                                    <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-4 py-3 cursor-pointer hover:border-secondary transition-colors">
-                                        <IconUpload :size="18" class="text-text-muted" />
-                                        <span class="text-label-md text-text-body">{{ audioFileName || 'Klik untuk upload audio' }}</span>
-                                        <input type="file" accept=".mp3,.wav,.ogg,.m4a" class="hidden" @change="onAudioSelect" />
-                                    </label>
-                                    <p v-if="form.errors.audio_file" class="text-error-red text-xs mt-1">{{ form.errors.audio_file }}</p>
-                                </div>
-                                <div>
-                                    <label class="text-label-md font-medium text-primary block mb-1.5">Ganti Gambar <span class="text-text-muted">(opsional)</span></label>
-                                    <label class="flex items-center gap-3 border-2 border-dashed border-outline-variant rounded-2xl px-4 py-3 cursor-pointer hover:border-secondary transition-colors">
-                                        <IconUpload :size="18" class="text-text-muted" />
-                                        <span class="text-label-md text-text-body">{{ imageFileName || 'Klik untuk upload gambar' }}</span>
-                                        <input type="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" @change="onImageSelect" />
-                                    </label>
-                                    <p v-if="form.errors.image_file" class="text-error-red text-xs mt-1">{{ form.errors.image_file }}</p>
-                                </div>
-                            </div>
-
-                            <div>
-                                <p class="text-label-md font-medium text-primary mb-2">Kunci Jawaban <span class="text-error-red">*</span></p>
-                                <div class="flex flex-wrap gap-3">
-                                    <span v-for="key in optionKeys" :key="key"
-                                          class="flex items-center gap-2 px-4 py-2 rounded-xl border border-outline-variant bg-surface-container-lowest">
-                                        <input type="checkbox" :checked="form.correct_answer === key" @change="form.correct_answer = key"
-                                               class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
-                                        <span class="font-semibold text-primary">{{ key }}</span>
-                                    </span>
-                                </div>
-                            </div>
+                            <AnswerKeyPicker v-model="form.correct_answer" :option-keys="optionKeys" />
                         </div>
                     </template>
 
@@ -235,16 +184,7 @@ function submit() {
                         <div><label class="text-label-md font-medium text-primary block mb-1.5">Teks Soal <span class="text-error-red">*</span></label>
                             <textarea v-model="form.question_text" rows="3" required class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea></div>
 
-                        <div>
-                            <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban <span class="text-error-red">*</span></p>
-                            <div class="space-y-3">
-                                <div v-for="key in optionKeys" :key="key" class="flex items-center gap-3">
-                                    <span class="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-surface-container-low border border-outline-variant font-semibold text-primary">{{ key }}</span>
-                                    <input type="text" v-model="form['option_' + key.toLowerCase()]" required :placeholder="'Teks pilihan ' + key"
-                                           class="flex-1 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
-                                </div>
-                            </div>
-                        </div>
+                        <OptionsInput :form="form" :option-keys="optionKeys" />
 
                         <div>
                             <DropDown

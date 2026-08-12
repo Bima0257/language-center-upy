@@ -1,5 +1,6 @@
 <script setup>
 import DropDown from '@/Components/Shared/DropDown.vue';
+import OptionsInput from '@/Components/ContentLibrary/OptionsInput.vue';
 import { IconHeadphones, IconCheck } from '@tabler/icons-vue';
 
 defineProps({
@@ -81,16 +82,7 @@ defineEmits(['save', 'cancel', 'skill-change']);
                               class="w-full px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary"></textarea>
                     <p v-if="form.errors.question_text" class="text-error-red text-xs mt-1">{{ form.errors.question_text }}</p>
                 </div>
-                <div>
-                    <p class="text-label-md font-medium text-primary mb-2">Pilihan Jawaban <span class="text-error-red">*</span></p>
-                    <div class="space-y-2">
-                        <div v-for="key in optionKeys" :key="key" class="flex items-center gap-2">
-                            <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-full bg-surface-white border border-outline-variant font-semibold text-primary text-sm">{{ key }}</span>
-                            <input type="text" v-model="form['option_' + key.toLowerCase()]" required :placeholder="'Teks pilihan ' + key"
-                                   class="flex-1 px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
-                        </div>
-                    </div>
-                </div>
+                <OptionsInput :form="form" :option-keys="optionKeys" size="sm" />
             </template>
             <div class="flex items-center gap-2">
                 <button type="submit" :disabled="form.processing"

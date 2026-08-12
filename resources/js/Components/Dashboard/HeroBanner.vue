@@ -23,7 +23,7 @@ const lessons = [
 
             <div class="flex gap-4 overflow-x-auto w-full md:w-auto pb-2 z-10 scrollbar-hide">
                 <div v-for="lesson in lessons" :key="lesson.label"
-                     class="min-w-[200px] bg-surface-white rounded-2xl p-4 flex flex-col shadow-lg flex-shrink-0">
+                     class="min-w-[200px] bg-surface-white dark:bg-surface-container-high rounded-2xl p-4 flex flex-col shadow-lg flex-shrink-0">
                     <div class="w-full h-24 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden"
                          :class="lesson.bg">
                         <component :is="lesson.icon" class="text-primary" :size="36" stroke="1.5" />

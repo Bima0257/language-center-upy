@@ -14,6 +14,10 @@ const props = defineProps({
         type: Boolean,
         default: true,
     },
+    scrollable: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(['close']);
@@ -112,8 +116,13 @@ const maxWidthClass = computed(() => {
             >
                 <div
                     v-show="show"
-                    class="mb-6 transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:mx-auto sm:w-full"
-                    :class="maxWidthClass"
+                    class="mb-6 transform rounded-lg bg-white shadow-xl transition-all sm:mx-auto sm:w-full"
+                    :class="[
+                        maxWidthClass,
+                        scrollable
+                            ? 'max-h-[90vh] overflow-y-auto'
+                            : 'overflow-hidden',
+                    ]"
                 >
                     <slot v-if="showSlot" />
                 </div>

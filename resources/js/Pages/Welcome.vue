@@ -17,7 +17,7 @@ defineProps({
 <template>
     <Head title="UPY Language Test" />
 
-    <div class="flex flex-col min-h-screen md:h-screen md:overflow-hidden bg-surface-white">
+    <div class="flex flex-col min-h-screen md:h-screen md:overflow-hidden bg-surface">
         <Navbar :can-login="canLogin" :can-register="canRegister" class="shrink-0" />
 
         <main class="flex-1 overflow-hidden relative">

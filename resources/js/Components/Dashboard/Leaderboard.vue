@@ -17,7 +17,7 @@ const players = [
                 <IconChevronRight class="text-text-muted" :size="20" />
             </div>
 
-            <div class="bg-surface-container-low rounded-2xl p-6 mb-6">
+            <div class="bg-surface-container-low dark:bg-surface-container-high rounded-2xl p-6 mb-6">
                 <div class="flex items-center gap-4 mb-4">
                     <div class="w-12 h-12 rounded-full border-2 border-primary overflow-hidden bg-surface flex items-center justify-center text-primary font-bold">
                         {{ $page.props.auth.user.name.charAt(0).toUpperCase() }}
@@ -41,7 +41,7 @@ const players = [
 
             <div class="space-y-4">
                 <div v-for="player in players" :key="player.rank"
-                     class="flex items-center gap-4 p-3 hover:bg-surface-white rounded-xl transition-colors">
+                     class="flex items-center gap-4 p-3 hover:bg-surface-white dark:hover:bg-surface-container-high rounded-xl transition-colors">
                     <span class="text-title-lg font-semibold text-primary w-6">#{{ player.rank }}</span>
                     <div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container flex items-center justify-center text-primary font-bold text-sm">
                         {{ player.name.charAt(0).toUpperCase() }}

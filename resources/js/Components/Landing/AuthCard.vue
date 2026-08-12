@@ -58,7 +58,7 @@ defineProps({
             <div class="text-white/30 text-label-md mt-auto hidden md:block">&copy; 2026 UPY Language Test.</div>
         </div>
 
-        <div class="flex-1 min-h-0 bg-surface-white p-6 md:p-10 flex flex-col justify-start overflow-y-auto">
+        <div class="flex-1 min-h-0 bg-surface p-6 md:p-10 flex flex-col justify-start overflow-y-auto">
             <div class="max-w-[520px] mx-auto w-full bg-white shadow-sm rounded-3xl px-6 py-12 md:px-8 md:py-16">
                 <slot />
             </div>
