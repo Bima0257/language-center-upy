@@ -58,11 +58,17 @@ class OnboardingController extends Controller
         $profile->batch_year = $request->batch_year;
 
         if ($request->hasFile('identity_photo')) {
+            if ($profile->identity_photo) {
+                Storage::disk('public')->delete($profile->identity_photo);
+            }
             $path = $request->file('identity_photo')->store('identities', 'public');
             $profile->identity_photo = $path;
         }
 
         if ($request->hasFile('photo')) {
+            if ($user->photo) {
+                Storage::disk('public')->delete($user->photo);
+            }
             $path = $request->file('photo')->store('photos', 'public');
             $user->photo = $path;
         }

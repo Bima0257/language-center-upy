@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
@@ -42,42 +43,49 @@ class GoogleAuthController extends Controller
         $remember = session('google_auth_remember', false);
         session()->forget(['google_auth_action', 'google_auth_remember']);
 
-        $googleUser = Socialite::driver('google')->user();
+        try {
+            $googleUser = Socialite::driver('google')->user();
 
-        $user = User::where('email', $googleUser->email)->first();
+            $user = User::where('email', $googleUser->email)->first();
 
-        if ($action === 'register' && $user) {
-            return redirect()->route('login')
-                ->with('error', 'Akun sudah terdaftar dengan email ini. Silakan login.');
-        }
-
-        if ($user) {
-            if (! $user->is_active) {
+            if ($action === 'register' && $user) {
                 return redirect()->route('login')
-                    ->with('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.');
+                    ->with('error', 'Akun sudah terdaftar dengan email ini. Silakan login.');
             }
 
-            $user->google_id = $googleUser->id;
-            $user->google_avatar = $googleUser->avatar;
-            if (! $user->email_verified_at) {
-                $user->email_verified_at = now();
-            }
-            $user->save();
-        } else {
-            $user = DB::transaction(function () use ($googleUser) {
-                $user = User::create([
-                    'name' => $googleUser->name,
-                    'email' => $googleUser->email,
-                    'google_id' => $googleUser->id,
-                    'google_avatar' => $googleUser->avatar,
-                    'password' => bcrypt(Str::random(32)),
-                ]);
-                $user->email_verified_at = now();
+            if ($user) {
+                if (! $user->is_active) {
+                    return redirect()->route('login')
+                        ->with('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.');
+                }
+
+                $user->google_id = $googleUser->id;
+                $user->google_avatar = $googleUser->avatar;
+                if (! $user->email_verified_at) {
+                    $user->email_verified_at = now();
+                }
                 $user->save();
-                $user->assignRole('student');
+            } else {
+                $user = DB::transaction(function () use ($googleUser) {
+                    $user = User::create([
+                        'name' => $googleUser->name,
+                        'email' => $googleUser->email,
+                        'google_id' => $googleUser->id,
+                        'google_avatar' => $googleUser->avatar,
+                        'password' => bcrypt(Str::random(32)),
+                    ]);
+                    $user->email_verified_at = now();
+                    $user->save();
+                    $user->assignRole('student');
 
-                return $user;
-            });
+                    return $user;
+                });
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Google login gagal', ['error' => $e->getMessage()]);
+
+            return redirect()->route('login')
+                ->with('error', 'Login dengan Google gagal. Silakan coba lagi.');
         }
 
         Auth::login($user, $remember);

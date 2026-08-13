@@ -21,7 +21,7 @@ class ReviewSession
         ]);
 
         activity()
-            ->performedOn(\App\Models\ExamSession::find($sessionId))
+            ->performedOn($this->sessionRepo->findOrFail($sessionId))
             ->withProperties(['decision' => $decision->status])
             ->log('review:' . $decision->status);
     }

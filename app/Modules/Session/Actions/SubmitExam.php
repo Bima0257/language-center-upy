@@ -8,6 +8,7 @@ use App\Modules\Scoring\Actions\AutoScoreReading;
 use App\Modules\Scoring\Actions\CalculateTotalScore;
 use App\Modules\Session\DTOs\SubmitResult;
 use App\Modules\Session\Repositories\Contracts\ExamSessionRepositoryInterface;
+use Illuminate\Support\Facades\DB;
 
 class SubmitExam
 {
@@ -26,32 +27,36 @@ class SubmitExam
             throw new \RuntimeException('Ujian sudah disubmit sebelumnya.');
         }
 
-        $scoreReading = $this->autoScoreReading->execute($sessionId);
-        $scoreListening = $this->autoScoreListening->execute($sessionId);
+        [$scoreReading, $scoreListening, $total] = DB::transaction(function () use ($session, $sessionId) {
+            $scoreReading = $this->autoScoreReading->execute($sessionId);
+            $scoreListening = $this->autoScoreListening->execute($sessionId);
 
-        $total = $this->calculateTotal->execute(
-            $scoreReading,
-            $scoreListening,
-            0,
-            0,
-        );
+            $total = $this->calculateTotal->execute(
+                $scoreReading,
+                $scoreListening,
+                0,
+                0,
+            );
 
-        $updates = [
-            'status' => SessionStatus::SUBMITTED,
-            'submitted_at' => now(),
-            'score_reading' => $scoreReading,
-            'score_listening' => $scoreListening,
-            'score_total' => $total,
-        ];
+            $updates = [
+                'status' => SessionStatus::SUBMITTED,
+                'submitted_at' => now(),
+                'score_reading' => $scoreReading,
+                'score_listening' => $scoreListening,
+                'score_total' => $total,
+            ];
 
-        $maxStrikes = $session->getMaxStrikes();
+            $maxStrikes = $session->getMaxStrikes();
 
-        if ($session->violation_strikes >= $maxStrikes) {
-            $updates['is_flagged'] = true;
-            $updates['flag_reason'] = "Pelanggaran mencapai {$maxStrikes} strike.";
-        }
+            if ($session->violation_strikes >= $maxStrikes) {
+                $updates['is_flagged'] = true;
+                $updates['flag_reason'] = "Pelanggaran mencapai {$maxStrikes} strike.";
+            }
 
-        $this->sessionRepo->update($sessionId, $updates);
+            $this->sessionRepo->update($sessionId, $updates);
+
+            return [$scoreReading, $scoreListening, $total];
+        });
 
         activity()
             ->performedOn($session)

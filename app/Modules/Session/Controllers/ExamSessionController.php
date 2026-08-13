@@ -2,6 +2,7 @@
 
 namespace App\Modules\Session\Controllers;
 
+use App\Enums\ViolationType;
 use App\Http\Controllers\Controller;
 use App\Models\ExamSchedule;
 use App\Models\ExamSectionQuestion;
@@ -18,6 +19,7 @@ use App\Modules\Session\Actions\SubmitExam;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -140,7 +142,11 @@ class ExamSessionController extends Controller
 
     public function submit(ExamSession $examSession): RedirectResponse
     {
-        $result = $this->submitExam->execute($examSession->id);
+        try {
+            $result = $this->submitExam->execute($examSession->id);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return to_route('dashboard')
             ->with('success', "Ujian berhasil disubmit. Skor Anda: Reading {$result->scoreReading}/30, Listening {$result->scoreListening}/30");
@@ -156,7 +162,7 @@ class ExamSessionController extends Controller
     public function logViolation(Request $request, ExamSession $examSession): JsonResponse
     {
         $validated = $request->validate([
-            'type' => ['required', 'string', 'max:50'],
+            'type' => ['required', Rule::enum(ViolationType::class)],
         ]);
 
         $result = $this->logViolation->execute(

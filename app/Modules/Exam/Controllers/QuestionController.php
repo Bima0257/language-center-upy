@@ -11,6 +11,8 @@ use App\Http\Requests\Exam\BulkImportFileRequest;
 use App\Services\AudioCompressionService;
 use App\Services\ImageCompressionService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -35,14 +37,19 @@ class QuestionController extends Controller
 
     public function bulkStore(BulkImportQuestionsRequest $request): RedirectResponse
     {
-        $imported = 0;
-        foreach ($request->validated('questions') as $question) {
-            Question::create(array_merge(
-                $question,
-                ['type' => 'multiple_choice', 'created_by' => auth()->id()]
-            ));
-            $imported++;
-        }
+        $imported = DB::transaction(function () use ($request) {
+            $imported = 0;
+
+            foreach ($request->validated('questions') as $question) {
+                Question::create(array_merge(
+                    $question,
+                    ['type' => 'multiple_choice', 'created_by' => auth()->id()]
+                ));
+                $imported++;
+            }
+
+            return $imported;
+        });
 
         return back()->with('success', "{$imported} soal berhasil diimpor.");
     }
@@ -93,7 +100,13 @@ class QuestionController extends Controller
 
     public function importFile(BulkImportFileRequest $request): RedirectResponse
     {
-        Excel::import(new QuestionsImport, $request->file('file'));
+        try {
+            Excel::import(new QuestionsImport, $request->file('file'));
+        } catch (\Throwable $e) {
+            Log::warning('Import soal dari file gagal', ['error' => $e->getMessage()]);
+
+            return back()->with('error', 'Gagal mengimpor file. Pastikan format file sesuai template yang disediakan.');
+        }
 
         return back()->with('success', 'Soal berhasil diimpor dari file.');
     }

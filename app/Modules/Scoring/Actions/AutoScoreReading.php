@@ -22,6 +22,10 @@ class AutoScoreReading
 
         $readingSkillId = Skill::where('code', 'reading')->value('id');
 
+        if (! $readingSkillId) {
+            return 0;
+        }
+
         $readingQuestions = Question::where('skill_id', $readingSkillId)
             ->whereIn('id', $answers->pluck('question_id'))
             ->get();

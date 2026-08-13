@@ -13,7 +13,7 @@ class SecurityService
     public function logSystemEvent(int $sessionId, string $event): void
     {
         activity()
-            ->performedOn(\App\Models\ExamSession::find($sessionId))
+            ->performedOn(\App\Models\ExamSession::findOrFail($sessionId))
             ->log($event);
     }
 

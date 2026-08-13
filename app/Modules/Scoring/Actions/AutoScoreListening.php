@@ -22,6 +22,10 @@ class AutoScoreListening
 
         $listeningSkillId = Skill::where('code', 'listening')->value('id');
 
+        if (! $listeningSkillId) {
+            return 0;
+        }
+
         $listeningQuestions = Question::where('skill_id', $listeningSkillId)
             ->whereIn('id', $answers->pluck('question_id'))
             ->get();

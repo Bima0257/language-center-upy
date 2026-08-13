@@ -13,6 +13,8 @@ class TerminateSession
 
     public function execute(int $sessionId, string $reason): void
     {
+        $session = $this->sessionRepo->findOrFail($sessionId);
+
         $this->sessionRepo->update($sessionId, [
             'status' => SessionStatus::TERMINATED,
             'terminated_at' => now(),
@@ -22,7 +24,7 @@ class TerminateSession
         ]);
 
         activity()
-            ->performedOn(\App\Models\ExamSession::find($sessionId))
+            ->performedOn($session)
             ->withProperties(['reason' => $reason])
             ->log('session_terminated');
     }

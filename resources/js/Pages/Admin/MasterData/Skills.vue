@@ -18,7 +18,6 @@ const confirm = useConfirm();
 const form = useForm({
     exam_type_id: '',
     name: '',
-    code: '',
     description: '',
     is_active: true,
 });
@@ -26,7 +25,6 @@ const form = useForm({
 const editForm = useForm({
     exam_type_id: '',
     name: '',
-    code: '',
     description: '',
     is_active: true,
 });
@@ -74,7 +72,6 @@ function startEdit(skill) {
     editForm.reset();
     editForm.exam_type_id = String(skill.exam_type_id);
     editForm.name = skill.name;
-    editForm.code = skill.code;
     editForm.description = skill.description || '';
     editForm.is_active = !!skill.is_active;
     showModal.value = true;
@@ -113,7 +110,8 @@ async function destroy(skill) {
             <template #actions="{ row }">
                 <div class="flex items-center gap-2">
                     <button @click="startEdit(row)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit"><IconEdit :size="18" /></button>
-                    <button @click="destroy(row)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus"><IconTrash :size="18" /></button>
+                    <button @click="destroy(row)" :disabled="row.is_system" :title="row.is_system ? 'Skill sistem tidak dapat dihapus' : 'Hapus'"
+                            class="p-2 text-text-muted hover:text-error-red transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-text-muted"><IconTrash :size="18" /></button>
                 </div>
             </template>
         </DataTable>
@@ -144,12 +142,6 @@ async function destroy(skill) {
                         <input type="text" v-model="modalForm.name" required placeholder="Reading"
                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
                         <p v-if="modalForm.errors.name" class="text-error-red text-xs mt-1">{{ modalForm.errors.name }}</p>
-                    </div>
-                    <div>
-                        <label class="text-label-md font-medium text-primary block mb-1.5">Kode *</label>
-                        <input type="text" v-model="modalForm.code" required placeholder="reading"
-                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
-                        <p v-if="modalForm.errors.code" class="text-error-red text-xs mt-1">{{ modalForm.errors.code }}</p>
                     </div>
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-1.5">Deskripsi</label>

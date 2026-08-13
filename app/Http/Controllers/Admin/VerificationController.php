@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -65,10 +66,16 @@ class VerificationController extends Controller
         $profile = $user->studentProfile;
 
         if ($profile) {
+            if ($profile->identity_photo) {
+                Storage::disk('public')->delete($profile->identity_photo);
+            }
             $profile->identity_photo = null;
             $profile->save();
         }
 
+        if ($user->photo) {
+            Storage::disk('public')->delete($user->photo);
+        }
         $user->photo = null;
         $user->save();
 

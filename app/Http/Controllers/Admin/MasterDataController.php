@@ -10,6 +10,7 @@ use App\Models\Skill;
 use App\Models\SkillPart;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Mews\Purifier\Facades\Purifier;
@@ -139,10 +140,11 @@ class MasterDataController extends Controller
         $validated = $request->validate([
             'exam_type_id' => ['required', 'exists:exam_types,id'],
             'name' => ['required', 'string', 'max:100'],
-            'code' => ['required', 'string', 'max:50'],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
         ]);
+
+        $validated['code'] = $this->generateUniqueSkillCode($validated['name']);
 
         $validated['description'] = $validated['description'] ?? null;
         if ($validated['description']) {
@@ -159,10 +161,13 @@ class MasterDataController extends Controller
         $validated = $request->validate([
             'exam_type_id' => ['required', 'exists:exam_types,id'],
             'name' => ['required', 'string', 'max:100'],
-            'code' => ['required', 'string', 'max:50'],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
         ]);
+
+        if ($skill->name !== $validated['name'] && ! $skill->isSystemSkill()) {
+            $validated['code'] = $this->generateUniqueSkillCode($validated['name'], $skill->id);
+        }
 
         $validated['description'] = $validated['description'] ?? null;
         if ($validated['description']) {
@@ -176,9 +181,30 @@ class MasterDataController extends Controller
 
     public function skillDestroy(Skill $skill): RedirectResponse
     {
+        if ($skill->isSystemSkill()) {
+            return back()->with('error', 'Skill sistem tidak dapat dihapus.');
+        }
+
         $skill->delete();
 
         return back()->with('success', 'Skill berhasil dihapus.');
+    }
+
+    private function generateUniqueSkillCode(string $name, ?int $excludeId = null): string
+    {
+        $base = Str::slug($name) ?: 'skill';
+        $code = $base;
+        $i = 2;
+
+        while (Skill::where('code', $code)
+            ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
+            ->exists()
+        ) {
+            $code = $base.'-'.$i;
+            $i++;
+        }
+
+        return $code;
     }
 
     // ===== Faculties =====

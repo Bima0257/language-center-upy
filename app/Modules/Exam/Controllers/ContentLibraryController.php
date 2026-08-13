@@ -16,6 +16,7 @@ use App\Services\ImageCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -108,112 +109,128 @@ class ContentLibraryController extends Controller
 
     public function store(StoreLibraryQuestionRequest $request): RedirectResponse
     {
-        $passageId = $request->input('passage_id');
+        $storedFiles = [];
 
-        if (! $passageId && $request->filled('new_passage_title')) {
-            $audioUrl = null;
-            $imageUrl = null;
+        try {
+            DB::transaction(function () use ($request, &$storedFiles) {
+                $passageId = $request->input('passage_id');
 
-            if ($request->hasFile('new_passage_audio_file')) {
-                $audioPath = $request->file('new_passage_audio_file')->store('passages/audio', 'public');
-                $compressedPath = $this->audioCompression->compress('public', $audioPath);
-                $audioUrl = $compressedPath ?? $audioPath;
-            }
+                if (! $passageId && $request->filled('new_passage_title')) {
+                    $audioUrl = null;
+                    $imageUrl = null;
 
-            if ($request->hasFile('new_passage_image_file')) {
-                $imagePath = $request->file('new_passage_image_file')->store('passages/images', 'public');
-                $compressedPath = $this->imageCompression->compress('public', $imagePath);
-                $imageUrl = $compressedPath ?? $imagePath;
-            }
+                    if ($request->hasFile('new_passage_audio_file')) {
+                        $audioPath = $request->file('new_passage_audio_file')->store('passages/audio', 'public');
+                        $compressedPath = $this->audioCompression->compress('public', $audioPath);
+                        $audioUrl = $compressedPath ?? $audioPath;
+                        $storedFiles[] = $audioUrl;
+                    }
 
-            $passage = Passage::create([
-                'title' => $request->new_passage_title,
-                'type' => $request->new_passage_type ?? 'text',
-                'content_text' => $request->filled('new_passage_content_text')
-                    ? Purifier::clean($request->new_passage_content_text)
-                    : null,
-                'audio_url' => $audioUrl,
-                'image_url' => $imageUrl,
-            ]);
+                    if ($request->hasFile('new_passage_image_file')) {
+                        $imagePath = $request->file('new_passage_image_file')->store('passages/images', 'public');
+                        $compressedPath = $this->imageCompression->compress('public', $imagePath);
+                        $imageUrl = $compressedPath ?? $imagePath;
+                        $storedFiles[] = $imageUrl;
+                    }
 
-            $passageId = $passage->id;
-        }
+                    $passage = Passage::create([
+                        'title' => $request->new_passage_title,
+                        'type' => $request->new_passage_type ?? 'text',
+                        'content_text' => $request->filled('new_passage_content_text')
+                            ? Purifier::clean($request->new_passage_content_text)
+                            : null,
+                        'audio_url' => $audioUrl,
+                        'image_url' => $imageUrl,
+                    ]);
 
-        $passage = $passageId ? Passage::find($passageId) : null;
-        $bank = QuestionBank::with('examType')->findOrFail($request->question_bank_id);
-
-        // Order starts at max(order) + 1 when attaching to an existing passage
-        $order = 1;
-        if ($passageId) {
-            $order = (Question::where('passage_id', $passageId)->max('order') ?? 0) + 1;
-        }
-
-        foreach ($request->input('questions', []) as $q) {
-            $skill = Skill::find($q['skill_id'] ?? null);
-            if (! $skill) {
-                throw ValidationException::withMessages(['questions' => 'Skill tidak valid.']);
-            }
-
-            $part = SkillPart::find($q['skill_part_id'] ?? null);
-            if (! $part || $part->skill_id !== $skill->id) {
-                throw ValidationException::withMessages(['questions' => 'Part harus milik skill yang sama dengan soal.']);
-            }
-
-            if ($skill->exam_type_id !== $bank->exam_type_id) {
-                throw ValidationException::withMessages(['questions' => 'Skill harus se-kategori dengan bank soal yang dipilih.']);
-            }
-
-            $isAudio = ($q['material_type'] ?? 'text') === 'audio';
-
-            $audioUrl = null;
-            $imageUrl = null;
-
-            if (! empty($q['audio_file']) && $q['audio_file'] instanceof UploadedFile) {
-                $audioPath = $q['audio_file']->store('questions/audio', 'public');
-                $audioUrl = $this->audioCompression->compress('public', $audioPath) ?? $audioPath;
-            }
-
-            if (! empty($q['image_file']) && $q['image_file'] instanceof UploadedFile) {
-                $imagePath = $q['image_file']->store('questions/images', 'public');
-                $imageUrl = $this->imageCompression->compress('public', $imagePath) ?? $imagePath;
-            }
-
-            if ($isAudio) {
-                if (! $audioUrl && ! ($passage && $passage->audio_url)) {
-                    throw ValidationException::withMessages(['questions' => 'Soal dengan tipe audio wajib memiliki audio, baik di soal maupun di passage.']);
+                    $passageId = $passage->id;
                 }
 
-                if ($passageId && $passage && ! $passage->audio_url && ! $passage->image_url) {
-                    throw ValidationException::withMessages(['questions' => 'Passage untuk soal tipe audio wajib memiliki audio atau gambar.']);
-                }
-            } else {
-                $optionEmpty = collect(['option_a', 'option_b', 'option_c', 'option_d'])
-                    ->contains(fn ($field) => empty(trim($q[$field] ?? '')));
+                $passage = $passageId ? Passage::find($passageId) : null;
+                $bank = QuestionBank::with('examType')->findOrFail($request->question_bank_id);
 
-                if (empty(trim($q['question_text'] ?? '')) || $optionEmpty) {
-                    throw ValidationException::withMessages(['questions' => 'Soal tipe teks wajib memiliki teks soal dan seluruh pilihan jawaban.']);
+                // Order starts at max(order) + 1 when attaching to an existing passage
+                $order = 1;
+                if ($passageId) {
+                    $order = (Question::where('passage_id', $passageId)->max('order') ?? 0) + 1;
                 }
+
+                foreach ($request->input('questions', []) as $q) {
+                    $skill = Skill::find($q['skill_id'] ?? null);
+                    if (! $skill) {
+                        throw ValidationException::withMessages(['questions' => 'Skill tidak valid.']);
+                    }
+
+                    $part = SkillPart::find($q['skill_part_id'] ?? null);
+                    if (! $part || $part->skill_id !== $skill->id) {
+                        throw ValidationException::withMessages(['questions' => 'Part harus milik skill yang sama dengan soal.']);
+                    }
+
+                    if ($skill->exam_type_id !== $bank->exam_type_id) {
+                        throw ValidationException::withMessages(['questions' => 'Skill harus se-kategori dengan bank soal yang dipilih.']);
+                    }
+
+                    $isAudio = ($q['material_type'] ?? 'text') === 'audio';
+
+                    $audioUrl = null;
+                    $imageUrl = null;
+
+                    if (! empty($q['audio_file']) && $q['audio_file'] instanceof UploadedFile) {
+                        $audioPath = $q['audio_file']->store('questions/audio', 'public');
+                        $audioUrl = $this->audioCompression->compress('public', $audioPath) ?? $audioPath;
+                        $storedFiles[] = $audioUrl;
+                    }
+
+                    if (! empty($q['image_file']) && $q['image_file'] instanceof UploadedFile) {
+                        $imagePath = $q['image_file']->store('questions/images', 'public');
+                        $imageUrl = $this->imageCompression->compress('public', $imagePath) ?? $imagePath;
+                        $storedFiles[] = $imageUrl;
+                    }
+
+                    if ($isAudio) {
+                        if (! $audioUrl && ! ($passage && $passage->audio_url)) {
+                            throw ValidationException::withMessages(['questions' => 'Soal dengan tipe audio wajib memiliki audio, baik di soal maupun di passage.']);
+                        }
+
+                        if ($passageId && $passage && ! $passage->audio_url && ! $passage->image_url) {
+                            throw ValidationException::withMessages(['questions' => 'Passage untuk soal tipe audio wajib memiliki audio atau gambar.']);
+                        }
+                    } else {
+                        $optionEmpty = collect(['option_a', 'option_b', 'option_c', 'option_d'])
+                            ->contains(fn ($field) => empty(trim($q[$field] ?? '')));
+
+                        if (empty(trim($q['question_text'] ?? '')) || $optionEmpty) {
+                            throw ValidationException::withMessages(['questions' => 'Soal tipe teks wajib memiliki teks soal dan seluruh pilihan jawaban.']);
+                        }
+                    }
+
+                    Question::create([
+                        'question_bank_id' => $request->question_bank_id,
+                        'skill_id' => $skill->id,
+                        'skill_part_id' => $part->id,
+                        'passage_id' => $passageId,
+                        'type' => 'multiple_choice',
+                        'material_type' => $q['material_type'] ?? 'text',
+                        'question_text' => $q['question_text'] ?? '',
+                        'option_a' => $q['option_a'] ?? '',
+                        'option_b' => $q['option_b'] ?? '',
+                        'option_c' => $q['option_c'] ?? '',
+                        'option_d' => $q['option_d'] ?? '',
+                        'correct_answer' => $q['correct_answer'],
+                        'audio_url' => $audioUrl,
+                        'image_url' => $imageUrl,
+                        'order' => $order++,
+                        'status' => 'draft',
+                        'created_by' => auth()->id(),
+                    ]);
+                }
+            });
+        } catch (\Throwable $e) {
+            foreach ($storedFiles as $file) {
+                Storage::disk('public')->delete($file);
             }
 
-            Question::create([
-                'question_bank_id' => $request->question_bank_id,
-                'skill_id' => $skill->id,
-                'skill_part_id' => $part->id,
-                'passage_id' => $passageId,
-                'type' => 'multiple_choice',
-                'material_type' => $q['material_type'] ?? 'text',
-                'question_text' => $q['question_text'] ?? '',
-                'option_a' => $q['option_a'] ?? '',
-                'option_b' => $q['option_b'] ?? '',
-                'option_c' => $q['option_c'] ?? '',
-                'option_d' => $q['option_d'] ?? '',
-                'correct_answer' => $q['correct_answer'],
-                'audio_url' => $audioUrl,
-                'image_url' => $imageUrl,
-                'order' => $order++,
-                'status' => 'draft',
-                'created_by' => auth()->id(),
-            ]);
+            throw $e;
         }
 
         $count = count($request->input('questions', []));

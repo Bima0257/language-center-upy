@@ -12,6 +12,7 @@ use App\Models\SkillPart;
 use App\Modules\Exam\Services\ExamSectionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ExamSectionController extends Controller
@@ -29,24 +30,26 @@ class ExamSectionController extends Controller
             'total_questions' => ['nullable', 'integer'],
         ]);
 
-        $section = $this->sectionService->create($exam, $validated);
+        $attached = DB::transaction(function () use ($validated, $exam) {
+            $section = $this->sectionService->create($exam, $validated);
 
-        // Auto-fill: semua approved soal skill tsb dari bank kategori exam langsung terpasang
-        $approvedQuestions = Question::where('skill_id', $validated['skill_id'])
-            ->where('status', 'approved')
-            ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $exam->exam_type_id))
-            ->orderBy('id')
-            ->get();
+            // Auto-fill: semua approved soal skill tsb dari bank kategori exam langsung terpasang
+            $approvedQuestions = Question::where('skill_id', $validated['skill_id'])
+                ->where('status', 'approved')
+                ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $exam->exam_type_id))
+                ->orderBy('id')
+                ->get();
 
-        $number = 1;
-        foreach ($approvedQuestions as $question) {
-            ExamSectionQuestion::firstOrCreate(
-                ['exam_section_id' => $section->id, 'question_id' => $question->id],
-                ['order' => $number++],
-            );
-        }
+            $number = 1;
+            foreach ($approvedQuestions as $question) {
+                ExamSectionQuestion::firstOrCreate(
+                    ['exam_section_id' => $section->id, 'question_id' => $question->id],
+                    ['order' => $number++],
+                );
+            }
 
-        $attached = $approvedQuestions->count();
+            return $approvedQuestions->count();
+        });
 
         return back()->with('success', "Section berhasil dibuat. {$attached} soal approved otomatis terpasang.");
     }
@@ -79,31 +82,35 @@ class ExamSectionController extends Controller
             'question_ids.*' => ['integer', 'distinct'],
         ]);
 
-        $allowed = Question::whereIn('id', $validated['question_ids'])
-            ->where('status', 'approved')
-            ->where('skill_id', $section->skill_id)
-            ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $exam->exam_type_id))
-            ->pluck('id');
+        $attached = DB::transaction(function () use ($validated, $exam, $section) {
+            $allowed = Question::whereIn('id', $validated['question_ids'])
+                ->where('status', 'approved')
+                ->where('skill_id', $section->skill_id)
+                ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $exam->exam_type_id))
+                ->pluck('id');
 
-        $existing = ExamSectionQuestion::where('exam_section_id', $section->id)
-            ->whereIn('question_id', $allowed)
-            ->pluck('question_id');
+            $existing = ExamSectionQuestion::where('exam_section_id', $section->id)
+                ->whereIn('question_id', $allowed)
+                ->pluck('question_id');
 
-        $nextOrder = (ExamSectionQuestion::where('exam_section_id', $section->id)->max('order') ?? 0) + 1;
+            $nextOrder = (ExamSectionQuestion::where('exam_section_id', $section->id)->max('order') ?? 0) + 1;
 
-        $attached = 0;
-        foreach ($allowed as $questionId) {
-            if ($existing->contains($questionId)) {
-                continue;
+            $attached = 0;
+            foreach ($allowed as $questionId) {
+                if ($existing->contains($questionId)) {
+                    continue;
+                }
+
+                ExamSectionQuestion::create([
+                    'exam_section_id' => $section->id,
+                    'question_id' => $questionId,
+                    'order' => $nextOrder++,
+                ]);
+                $attached++;
             }
 
-            ExamSectionQuestion::create([
-                'exam_section_id' => $section->id,
-                'question_id' => $questionId,
-                'order' => $nextOrder++,
-            ]);
-            $attached++;
-        }
+            return $attached;
+        });
 
         return back()->with('success', "{$attached} soal berhasil ditambahkan ke section.");
     }
@@ -119,56 +126,58 @@ class ExamSectionController extends Controller
 
     public function saveArrangement(Request $request, Exam $exam, ExamSection $section): RedirectResponse
     {
-        if ($request->filled('part_order')) {
-            $validated = $request->validate([
-                'part_order' => ['required', 'array'],
-                'part_order.*.skill_part_id' => ['required', 'integer', 'distinct'],
-                'part_order.*.order' => ['required', 'integer', 'min:1'],
-            ]);
+        DB::transaction(function () use ($request, $exam, $section) {
+            if ($request->filled('part_order')) {
+                $validated = $request->validate([
+                    'part_order' => ['required', 'array'],
+                    'part_order.*.skill_part_id' => ['required', 'integer', 'distinct'],
+                    'part_order.*.order' => ['required', 'integer', 'min:1'],
+                ]);
 
-            $skillPartIds = SkillPart::where('skill_id', $section->skill_id)->pluck('id');
+                $skillPartIds = SkillPart::where('skill_id', $section->skill_id)->pluck('id');
 
-            foreach ($validated['part_order'] as $part) {
-                if (! $skillPartIds->contains($part['skill_part_id'])) {
-                    throw ValidationException::withMessages(['part_order' => 'Part tidak valid untuk section ini.']);
+                foreach ($validated['part_order'] as $part) {
+                    if (! $skillPartIds->contains($part['skill_part_id'])) {
+                        throw ValidationException::withMessages(['part_order' => 'Part tidak valid untuk section ini.']);
+                    }
+
+                    ExamSectionPart::updateOrCreate(
+                        ['exam_section_id' => $section->id, 'skill_part_id' => $part['skill_part_id']],
+                        ['order' => $part['order']],
+                    );
                 }
 
-                ExamSectionPart::updateOrCreate(
-                    ['exam_section_id' => $section->id, 'skill_part_id' => $part['skill_part_id']],
-                    ['order' => $part['order']],
-                );
+                $this->renumberSection($section);
             }
 
-            $this->renumberSection($section);
-        }
+            if ($request->filled('question_orders')) {
+                $validated = $request->validate([
+                    'question_orders' => ['required', 'array'],
+                    'question_orders.*.question_id' => ['required', 'integer', 'distinct'],
+                    'question_orders.*.number' => ['required', 'integer', 'min:1'],
+                ]);
 
-        if ($request->filled('question_orders')) {
-            $validated = $request->validate([
-                'question_orders' => ['required', 'array'],
-                'question_orders.*.question_id' => ['required', 'integer', 'distinct'],
-                'question_orders.*.number' => ['required', 'integer', 'min:1'],
-            ]);
+                $numbers = array_column($validated['question_orders'], 'number');
+                if (count($numbers) !== count(array_unique($numbers))) {
+                    throw ValidationException::withMessages(['question_orders' => 'Nomor soal harus unik di seluruh section.']);
+                }
 
-            $numbers = array_column($validated['question_orders'], 'number');
-            if (count($numbers) !== count(array_unique($numbers))) {
-                throw ValidationException::withMessages(['question_orders' => 'Nomor soal harus unik di seluruh section.']);
-            }
+                $sectionQuestionIds = ExamSectionQuestion::where('exam_section_id', $section->id)
+                    ->pluck('question_id');
 
-            $sectionQuestionIds = ExamSectionQuestion::where('exam_section_id', $section->id)
-                ->pluck('question_id');
+                foreach ($validated['question_orders'] as $order) {
+                    if (! $sectionQuestionIds->contains($order['question_id'])) {
+                        throw ValidationException::withMessages(['question_orders' => 'Soal tidak terpasang di section ini.']);
+                    }
+                }
 
-            foreach ($validated['question_orders'] as $order) {
-                if (! $sectionQuestionIds->contains($order['question_id'])) {
-                    throw ValidationException::withMessages(['question_orders' => 'Soal tidak terpasang di section ini.']);
+                foreach ($validated['question_orders'] as $order) {
+                    ExamSectionQuestion::where('exam_section_id', $section->id)
+                        ->where('question_id', $order['question_id'])
+                        ->update(['order' => $order['number']]);
                 }
             }
-
-            foreach ($validated['question_orders'] as $order) {
-                ExamSectionQuestion::where('exam_section_id', $section->id)
-                    ->where('question_id', $order['question_id'])
-                    ->update(['order' => $order['number']]);
-            }
-        }
+        });
 
         return back()->with('success', 'Susunan section disimpan.');
     }
@@ -194,11 +203,13 @@ class ExamSectionController extends Controller
             }
         }
 
-        foreach ($validated['orders'] as $order) {
-            ExamSectionQuestion::where('exam_section_id', $section->id)
-                ->where('question_id', $order['question_id'])
-                ->update(['order' => $order['number']]);
-        }
+        DB::transaction(function () use ($validated, $section) {
+            foreach ($validated['orders'] as $order) {
+                ExamSectionQuestion::where('exam_section_id', $section->id)
+                    ->where('question_id', $order['question_id'])
+                    ->update(['order' => $order['number']]);
+            }
+        });
 
         return back()->with('success', 'Nomor soal diperbarui.');
     }
@@ -217,14 +228,18 @@ class ExamSectionController extends Controller
             if (! $skillPartIds->contains($part['skill_part_id'])) {
                 throw ValidationException::withMessages(['order' => 'Part tidak valid untuk section ini.']);
             }
-
-            ExamSectionPart::updateOrCreate(
-                ['exam_section_id' => $section->id, 'skill_part_id' => $part['skill_part_id']],
-                ['order' => $part['order']],
-            );
         }
 
-        $this->renumberSection($section);
+        DB::transaction(function () use ($validated, $section) {
+            foreach ($validated['order'] as $part) {
+                ExamSectionPart::updateOrCreate(
+                    ['exam_section_id' => $section->id, 'skill_part_id' => $part['skill_part_id']],
+                    ['order' => $part['order']],
+                );
+            }
+
+            $this->renumberSection($section);
+        });
 
         return back()->with('success', 'Urutan part diperbarui dan nomor soal disusun ulang.');
     }
