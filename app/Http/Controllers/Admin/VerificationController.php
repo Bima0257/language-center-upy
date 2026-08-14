@@ -15,7 +15,7 @@ class VerificationController extends Controller
     public function index(): Response
     {
         $users = User::role('student')
-            ->whereHas('studentProfile', fn($q) => $q->whereNotNull('identity_photo'))
+            ->whereHas('studentProfile', fn ($q) => $q->whereNotNull('identity_photo'))
             ->with(['studentProfile.faculty', 'studentProfile.department'])
             ->select(['id', 'name', 'email', 'photo', 'created_at'])
             ->get();

@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
 
-const props = defineProps({
+defineProps({
     text: { type: String, required: true },
     position: { type: String, default: "top" },
 });

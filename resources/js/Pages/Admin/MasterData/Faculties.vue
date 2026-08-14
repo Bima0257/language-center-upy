@@ -5,7 +5,7 @@ import { IconPlus, IconEdit, IconTrash, IconCheck } from '@tabler/icons-vue';
 import { ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
-const props = defineProps({
+defineProps({
     faculties: { type: Array, default: () => [] },
 });
 

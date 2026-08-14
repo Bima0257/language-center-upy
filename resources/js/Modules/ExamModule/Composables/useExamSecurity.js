@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import axios from 'axios';
 
 export function useExamSecurity({ sessionId, heartbeatInterval = 30000 }) {

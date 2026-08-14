@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Department;
 use App\Models\Faculty;
 use App\Models\StudentProfile;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -40,7 +39,7 @@ class OnboardingController extends Controller
             'nim' => 'required|string|max:20',
             'faculty_id' => 'required|exists:faculties,id',
             'department_id' => 'required|exists:departments,id',
-            'batch_year' => 'required|integer|min:2000|max:' . (date('Y') + 1),
+            'batch_year' => 'required|integer|min:2000|max:'.(date('Y') + 1),
             'identity_photo' => 'required|image|mimes:jpg,jpeg,png|max:5120',
             'photo' => 'required|image|mimes:jpg,jpeg,png|max:5120',
         ]);

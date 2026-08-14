@@ -28,6 +28,7 @@ class ExamSessionRepository implements ExamSessionRepositoryInterface
     {
         $session = ExamSession::findOrFail($id);
         $session->update($data);
+
         return $session->fresh();
     }
 

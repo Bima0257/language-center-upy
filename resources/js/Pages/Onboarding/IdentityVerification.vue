@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { IconCheck, IconRefresh, IconUpload } from '@tabler/icons-vue';
+import { IconCheck, IconRefresh } from '@tabler/icons-vue';
 import OnboardingLayout from '@/Components/Onboarding/OnboardingLayout.vue';
 import DropDown from '@/Components/Shared/DropDown.vue';
 

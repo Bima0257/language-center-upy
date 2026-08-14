@@ -3,7 +3,10 @@
 namespace App\Modules\Exam\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Exam\StoreExamRequest;
+use App\Http\Requests\Exam\UpdateExamRequest;
 use App\Models\Exam;
+use App\Models\ExamSection;
 use App\Models\ExamSectionPart;
 use App\Models\ExamSectionQuestion;
 use App\Models\ExamType;
@@ -11,12 +14,10 @@ use App\Models\Question;
 use App\Models\Skill;
 use App\Models\SkillPart;
 use App\Modules\Exam\Services\ExamService;
-use App\Http\Requests\Exam\StoreExamRequest;
-use App\Http\Requests\Exam\UpdateExamRequest;
-use Inertia\Inertia;
-use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ExamController extends Controller
 {
@@ -51,7 +52,8 @@ class ExamController extends Controller
                 ->get();
 
             foreach ($skills as $index => $skill) {
-                $section = $exam->sections()->create([
+                $section = ExamSection::create([
+                    'exam_id' => $exam->id,
                     'skill_id' => $skill->id,
                     'title' => $skill->name,
                     'order' => $index + 1,

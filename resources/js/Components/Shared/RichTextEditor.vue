@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onBeforeUnmount, watch } from 'vue';
+import { onBeforeUnmount, watch } from 'vue';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';

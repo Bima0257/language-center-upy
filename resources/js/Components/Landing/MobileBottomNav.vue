@@ -1,5 +1,4 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
 import { IconHome, IconLayoutGrid, IconSparkles, IconLogin2, IconUserPlus } from '@tabler/icons-vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 

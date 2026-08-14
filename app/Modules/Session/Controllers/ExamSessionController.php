@@ -72,8 +72,8 @@ class ExamSessionController extends Controller
         ]);
 
         $exam = $session->schedule?->exam;
-        $sections = $exam?->sections ?? collect();
-        $sectionSkillIds = $sections->pluck('skill_id') ?? collect();
+        $sections = $exam !== null ? $exam->sections : collect();
+        $sectionSkillIds = $sections->pluck('skill_id');
 
         // Load bank questions matching exam section skills, scoped by exam category
         $pivotRows = ExamSectionQuestion::whereIn('exam_section_id', $sections->pluck('id'))->get();

@@ -1,5 +1,5 @@
 <script setup>
-const props = defineProps({
+defineProps({
     name: { type: String, required: true },
     options: { type: Array, default: () => [] },
     modelValue: { default: null },

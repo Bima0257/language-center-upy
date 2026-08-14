@@ -4,10 +4,26 @@ namespace App\Models;
 
 use App\Enums\ExamMode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int|null $exam_type_id
+ * @property string $title
+ * @property string|null $description
+ * @property ExamMode $mode
+ * @property int $duration_minutes
+ * @property bool $is_active
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read ExamType|null $examType
+ * @property-read Collection<int, ExamSection> $sections
+ * @property-read Collection<int, ExamSchedule> $schedules
+ */
 #[Fillable(['exam_type_id', 'title', 'description', 'mode', 'duration_minutes', 'is_active'])]
 class Exam extends Model
 {

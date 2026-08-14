@@ -12,7 +12,7 @@ class EnsureExamReady
     {
         $user = $request->user();
 
-        if (! $user || ! $user->isVerified()) {
+        if (! $user || ! $user->hasVerifiedProfile()) {
             return to_route('onboarding.verify-identity')
                 ->with('error', 'Verifikasi identitas diperlukan sebelum mengikuti ujian.');
         }

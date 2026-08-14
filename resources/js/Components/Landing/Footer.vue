@@ -1,6 +1,5 @@
 <script setup>
 import { IconWorld, IconBrandGithub } from '@tabler/icons-vue';
-import { Link } from '@inertiajs/vue3';
 import { ref, onMounted, onUnmounted } from 'vue';
 
 const isDark = ref(false);

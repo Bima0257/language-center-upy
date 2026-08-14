@@ -4,7 +4,7 @@ import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import { IconTrash, IconCertificate } from '@tabler/icons-vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
-const props = defineProps({
+defineProps({
     certificates: { type: Array, default: () => [] },
 });
 

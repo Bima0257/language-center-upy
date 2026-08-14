@@ -18,10 +18,6 @@ const form = useForm({
     duration_minutes: 160,
 });
 
-const selectedType = computed(() =>
-    props.examTypes.find(t => String(t.id) === String(form.exam_type_id)) || null,
-);
-
 const typeSkills = computed(() =>
     props.skills.filter(s => String(s.exam_type_id) === String(form.exam_type_id)),
 );

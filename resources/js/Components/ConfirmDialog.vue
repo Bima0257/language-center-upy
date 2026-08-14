@@ -2,7 +2,7 @@
 import { useConfirm } from '@/Composables/useConfirm'
 import { IconAlertTriangle } from '@tabler/icons-vue'
 
-const { getState, onOk, onCancel, dismiss } = useConfirm()
+const { getState, onOk, onCancel } = useConfirm()
 const state = getState()
 </script>
 

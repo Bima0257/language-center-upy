@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\Storage;
 class ImageCompressionService
 {
     private const MAX_DIMENSION = 1920;
+
     private const KEEP_UNDER_BYTES = 5 * 1024 * 1024; // 5MB
+
     private const WEBP_QUALITY = 80;
+
     private const ABSOLUTE_MAX_DIMENSION = 12000; // skip compress if larger (OOM safety)
 
     /**

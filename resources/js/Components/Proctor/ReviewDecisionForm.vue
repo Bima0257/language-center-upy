@@ -1,14 +1,14 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
 
-defineProps({
+const props = defineProps({
     sessionId: { type: Number, required: true },
 });
 
 const form = useForm({});
 
 function terminate(reason) {
-    form.post(route('proctor.session.terminate', sessionId), { reason });
+    form.post(route('proctor.session.terminate', props.sessionId), { reason });
 }
 </script>
 

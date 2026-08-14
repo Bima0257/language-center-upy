@@ -22,10 +22,6 @@ class ScoreConversionService
 
         $conversionTable = $rule->conversion_table;
 
-        if (! is_array($conversionTable)) {
-            return 0;
-        }
-
         $pct = round($rawScore / $maxRaw * $rule->max_raw);
         $pct = min($pct, $rule->max_raw);
 

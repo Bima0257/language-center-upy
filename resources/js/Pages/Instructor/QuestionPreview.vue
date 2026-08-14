@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import RichTextViewer from '@/Components/Shared/RichTextViewer.vue';
 import AudioPlayer from '@/Components/Exam/AudioPlayer.vue';
 import { useMediaLoad } from '@/Composables/useMediaLoad';
@@ -28,12 +28,6 @@ const imageSrc = computed(() => {
 });
 
 const imageLoading = useMediaLoad(imageSrc);
-const audioLoading = useMediaLoad(audioSrc);
-
-const skillLabel = computed(() => {
-    if (!current.value?.skill) return 'Soal';
-    return isMaterialAudio.value ? 'Audio + Gambar' : 'Reading Passage';
-});
 
 const partLabel = computed(() => current.value?.skillPart?.name || current.value?.skill?.name || '');
 

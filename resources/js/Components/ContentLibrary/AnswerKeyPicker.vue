@@ -5,7 +5,7 @@ defineProps({
     label: { type: String, default: "Kunci Jawaban *" },
 });
 
-const emit = defineEmits(["update:modelValue"]);
+defineEmits(["update:modelValue"]);
 </script>
 
 <template>

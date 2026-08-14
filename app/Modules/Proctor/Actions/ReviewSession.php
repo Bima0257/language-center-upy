@@ -23,6 +23,6 @@ class ReviewSession
         activity()
             ->performedOn($this->sessionRepo->findOrFail($sessionId))
             ->withProperties(['decision' => $decision->status])
-            ->log('review:' . $decision->status);
+            ->log('review:'.$decision->status);
     }
 }

@@ -1,7 +1,7 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
 
-const props = defineProps({
+defineProps({
     questionBanks: { type: Array, default: () => [] },
     skills: { type: Array, default: () => [] },
 });

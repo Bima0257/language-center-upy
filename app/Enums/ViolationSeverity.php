@@ -12,9 +12,9 @@ enum ViolationSeverity: string
     public function strikeIncrement(): int
     {
         return match ($this) {
-            self::WARNING  => 0,
-            self::MINOR    => 1,
-            self::MAJOR    => 2,
+            self::WARNING => 0,
+            self::MINOR => 1,
+            self::MAJOR => 2,
             self::CRITICAL => 3,
         };
     }

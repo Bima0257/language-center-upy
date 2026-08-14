@@ -27,7 +27,7 @@ const rules = [
     {
         key: 'symbol',
         label: 'Minimal 1 simbol',
-        test: (pwd) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pwd),
+        test: (pwd) => /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(pwd),
     },
 ];
 </script>

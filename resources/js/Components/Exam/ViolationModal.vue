@@ -1,16 +1,13 @@
 <script setup>
 import { IconAlertTriangle, IconX } from '@tabler/icons-vue';
-import { ref } from 'vue';
 
-const props = defineProps({
+defineProps({
     show: { type: Boolean, default: false },
     message: { type: String, default: '' },
     strike: { type: Number, default: 0 },
 });
 
-const emit = defineEmits(['close', 'back']);
-
-const countdown = ref(5);
+defineEmits(['close', 'back']);
 </script>
 
 <template>

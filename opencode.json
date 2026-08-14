@@ -1,0 +1,22 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "github": {
+      "type": "local",
+      "command": ["npx", "-y", "@anthropic/github-mcp"],
+      "enabled": true,
+      "env": {
+        "GITHUB_TOKEN": "{env:GITHUB_TOKEN}"
+      }
+    },
+    "google-sheets": {
+      "type": "local",
+      "command": ["C:\\Users\\Lenovo\\.local\\bin\\uvx.exe", "mcp-google-sheets@latest"],
+      "enabled": true,
+      "env": {
+        "CREDENTIALS_PATH": "D:\\project-coding\\language-center-upy\\schema\\client_secret_659589634746-b49qrk27lk70iqsf7um2ce0rlh5ae9he.apps.googleusercontent.com.json",
+        "TOKEN_PATH": "D:\\project-coding\\language-center-upy\\schema\\token.json"
+      }
+    }
+  }
+}

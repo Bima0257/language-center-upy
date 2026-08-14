@@ -67,7 +67,7 @@ const submit = () => {
     });
 };
 
-const handleGoogleClick = (e) => {
+const handleGoogleClick = () => {
     googleLoading.value = true;
 };
 </script>

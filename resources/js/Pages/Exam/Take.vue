@@ -1,5 +1,5 @@
 <script setup>
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import ExamLayout from '@/Layouts/ExamLayout.vue';
 import PassageViewer from '@/Components/Exam/PassageViewer.vue';
 import AudioPlayer from '@/Components/Exam/AudioPlayer.vue';
@@ -18,7 +18,6 @@ const props = defineProps({
     skills: { type: Object, default: () => ({}) },
 });
 
-const user = usePage().props.auth.user;
 const currentSection = computed(() => props.session.current_section);
 
 const currentQuestions = computed(() => {
@@ -110,10 +109,6 @@ function selectAnswer(key) {
     if (!q) return;
     answers.value[q.id] = key;
     autoSave(q.id, key);
-}
-
-function isAnswered(qId) {
-    return answers.value[qId] !== undefined;
 }
 
 function handleTimeUp() {

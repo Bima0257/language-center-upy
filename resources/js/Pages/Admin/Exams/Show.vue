@@ -139,10 +139,6 @@ function skillName(id) {
     return props.skills.find(s => s.id === id)?.name || '';
 }
 
-function partName(id) {
-    return props.parts.find(p => p.id === id)?.name || '';
-}
-
 function sectionOffset(section) {
     let offset = 0;
     for (const s of props.exam.sections) {

@@ -42,7 +42,7 @@ class LogViolation
         $this->violationRepo->create([
             'exam_session_id' => $sessionId,
             'type' => $type,
-            'severity' => $severity?->value ?? 'minor',
+            'severity' => $severity !== null ? $severity->value : 'minor',
             'strike_count' => $newStrikeCount,
         ]);
 

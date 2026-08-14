@@ -25,7 +25,8 @@ class Heartbeat
 
         if ($session->started_at) {
             $elapsedMinutes = now()->diffInMinutes($session->started_at);
-            $durationMinutes = $session->schedule?->exam?->duration_minutes ?? 160;
+            $exam = $session->schedule?->exam;
+            $durationMinutes = $exam !== null ? $exam->duration_minutes : 160;
 
             if ($elapsedMinutes > $durationMinutes + 1) {
                 $this->sessionRepo->update($sessionId, [

@@ -1,6 +1,5 @@
 <script setup>
 import { IconCoin, IconAward, IconChevronRight } from '@tabler/icons-vue';
-import { h } from 'vue';
 
 const players = [
     { rank: 1, name: 'Liz Cheng', role: 'Customer Service', points: 476, avatar: '#1' },

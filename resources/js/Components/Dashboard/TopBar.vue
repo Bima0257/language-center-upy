@@ -1,6 +1,5 @@
 <script setup>
 import { IconSearch, IconMail, IconBell, IconSun, IconMoon } from "@tabler/icons-vue";
-import { Link } from "@inertiajs/vue3";
 import { ref, onMounted } from "vue";
 
 defineProps({

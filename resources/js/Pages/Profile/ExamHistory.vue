@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3'
+import { Head } from '@inertiajs/vue3'
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue'
 import DataTable from '@/Components/Shared/DataTable.vue'
 

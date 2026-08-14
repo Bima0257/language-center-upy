@@ -106,15 +106,6 @@ async function destroy(part) {
     if (!await confirm.confirm(`Hapus part "${part.name}"?`)) return;
     router.delete(route('admin.master-data.parts.destroy', part.id), { preserveScroll: true });
 }
-
-function skillName(id) {
-    return props.skills.find(s => String(s.id) === String(id))?.name || '';
-}
-
-function skillCategoryName(id) {
-    const s = props.skills.find(s => String(s.id) === String(id));
-    return s?.exam_type?.name || '';
-}
 </script>
 
 <template>

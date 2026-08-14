@@ -126,7 +126,7 @@ class ExamSectionController extends Controller
 
     public function saveArrangement(Request $request, Exam $exam, ExamSection $section): RedirectResponse
     {
-        DB::transaction(function () use ($request, $exam, $section) {
+        DB::transaction(function () use ($request, $section) {
             if ($request->filled('part_order')) {
                 $validated = $request->validate([
                     'part_order' => ['required', 'array'],
@@ -183,7 +183,8 @@ class ExamSectionController extends Controller
     }
 
     public function reorderQuestions(Request $request, Exam $exam, ExamSection $section): RedirectResponse
-    {        $validated = $request->validate([
+    {
+        $validated = $request->validate([
             'orders' => ['required', 'array'],
             'orders.*.question_id' => ['required', 'integer', 'distinct'],
             'orders.*.number' => ['required', 'integer', 'min:1'],

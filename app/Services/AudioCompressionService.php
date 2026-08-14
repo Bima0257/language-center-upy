@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 class AudioCompressionService
 {
     public const BITRATE = '128k';
+
     private const KEEP_SMALL_MP3_BYTES = 8 * 1024 * 1024; // 8MB
 
     private ?string $binary = null;

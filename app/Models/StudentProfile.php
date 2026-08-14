@@ -4,7 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string|null $nim
+ * @property int $faculty_id
+ * @property int $department_id
+ * @property int|null $batch_year
+ * @property string|null $identity_photo
+ * @property bool $is_verified
+ * @property Carbon|null $verified_at
+ * @property int|null $verified_by
+ * @property string|null $verification_note
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read User $user
+ * @property-read Faculty $faculty
+ * @property-read Department $department
+ * @property-read User|null $verifier
+ */
 class StudentProfile extends Model
 {
     protected $fillable = [

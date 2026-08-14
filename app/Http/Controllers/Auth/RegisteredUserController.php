@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\StudentProfile;
+use App\Rules\Turnstile;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-use App\Rules\Turnstile;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,7 +28,7 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'cf-turnstile-response' => ['required', new Turnstile],
+            'cf-turnstile-response' => [app()->environment('local', 'testing') ? 'sometimes' : 'required', new Turnstile],
         ]);
 
         $user = DB::transaction(function () use ($request) {
@@ -40,8 +39,6 @@ class RegisteredUserController extends Controller
             ]);
 
             $user->assignRole('student');
-
-            StudentProfile::create(['user_id' => $user->id]);
 
             return $user;
         });

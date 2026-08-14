@@ -4,7 +4,7 @@ import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue'
 import DataTable from '@/Components/Shared/DataTable.vue'
 import { IconPlus, IconEye } from '@tabler/icons-vue'
 
-const props = defineProps({
+defineProps({
     exams: { type: Object, default: () => ({ data: [], links: [], meta: {} }) },
 })
 

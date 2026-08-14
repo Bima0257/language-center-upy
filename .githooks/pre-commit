@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# Pre-commit hook: eslint --fix untuk file JS/Vue yang di-stage, pint untuk file PHP yang di-stage, lalu re-stage.
+# Commit di-blokir jika masih ada error lint/pint.
+
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|vue)$' || true)
+STAGED_PHP=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.php$' || true)
+
+FAILED=0
+
+if [ -n "$STAGED_JS" ]; then
+    if ! echo "$STAGED_JS" | xargs npx eslint --fix; then
+        FAILED=1
+    fi
+fi
+
+if [ -n "$STAGED_PHP" ]; then
+    if ! echo "$STAGED_PHP" | xargs ./vendor/bin/pint; then
+        FAILED=1
+    fi
+fi
+
+# Re-stage file yang diperbaiki hook
+if [ -n "$STAGED_JS" ] || [ -n "$STAGED_PHP" ]; then
+    git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|vue|php)$' | xargs git add -- || true
+fi
+
+if [ "$FAILED" -ne 0 ]; then
+    echo "Pre-commit hook: lint/pint gagal. Perbaiki error lalu commit ulang."
+    exit 1
+fi
+
+exit 0

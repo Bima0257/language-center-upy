@@ -12,7 +12,7 @@ class EnsureVerified
     {
         $user = $request->user();
 
-        if (! $user || ! $user->isVerified()) {
+        if (! $user || ! $user->hasVerifiedProfile()) {
             return redirect()->route('onboarding.verify-identity');
         }
 

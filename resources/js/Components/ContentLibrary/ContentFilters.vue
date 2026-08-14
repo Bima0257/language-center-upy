@@ -2,7 +2,7 @@
 import DropDown from '@/Components/Shared/DropDown.vue';
 import { IconSearch } from '@tabler/icons-vue';
 
-const props = defineProps({
+defineProps({
     searchQuery: { type: String, default: '' },
     selectedSkillId: { type: String, default: '' },
     selectedPartId: { type: String, default: '' },

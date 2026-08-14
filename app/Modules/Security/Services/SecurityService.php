@@ -2,6 +2,7 @@
 
 namespace App\Modules\Security\Services;
 
+use App\Models\ExamSession;
 use App\Modules\Security\Repositories\Contracts\ViolationRepositoryInterface;
 
 class SecurityService
@@ -13,7 +14,7 @@ class SecurityService
     public function logSystemEvent(int $sessionId, string $event): void
     {
         activity()
-            ->performedOn(\App\Models\ExamSession::findOrFail($sessionId))
+            ->performedOn(ExamSession::findOrFail($sessionId))
             ->log($event);
     }
 

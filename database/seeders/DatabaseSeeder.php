@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Department;
+use App\Models\Faculty;
 use App\Models\StudentProfile;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -69,7 +70,7 @@ class DatabaseSeeder extends Seeder
         ]);
         $student->assignRole('student');
 
-        $fkip = \App\Models\Faculty::where('code', 'FKIP')->first();
+        $fkip = Faculty::where('code', 'FKIP')->first();
         $pbi = Department::where('code', 'PBI')->first();
 
         if ($fkip && $pbi) {

@@ -17,15 +17,15 @@ enum ViolationType: string
     public function severity(): ViolationSeverity
     {
         return match ($this) {
-            self::RIGHT_CLICK      => ViolationSeverity::WARNING,
-            self::TAB_SWITCH       => ViolationSeverity::MINOR,
-            self::FULLSCREEN_EXIT  => ViolationSeverity::MINOR,
-            self::WINDOW_BLUR      => ViolationSeverity::MINOR,
-            self::COPY_PASTE       => ViolationSeverity::MAJOR,
-            self::DEVTOOLS         => ViolationSeverity::MAJOR,
-            self::PRINT_ATTEMPT    => ViolationSeverity::MAJOR,
-            self::HEARTBEAT_LOST   => ViolationSeverity::CRITICAL,
-            self::MULTIPLE_LOGIN   => ViolationSeverity::CRITICAL,
+            self::RIGHT_CLICK => ViolationSeverity::WARNING,
+            self::TAB_SWITCH => ViolationSeverity::MINOR,
+            self::FULLSCREEN_EXIT => ViolationSeverity::MINOR,
+            self::WINDOW_BLUR => ViolationSeverity::MINOR,
+            self::COPY_PASTE => ViolationSeverity::MAJOR,
+            self::DEVTOOLS => ViolationSeverity::MAJOR,
+            self::PRINT_ATTEMPT => ViolationSeverity::MAJOR,
+            self::HEARTBEAT_LOST => ViolationSeverity::CRITICAL,
+            self::MULTIPLE_LOGIN => ViolationSeverity::CRITICAL,
         };
     }
 }

@@ -1,8 +1,7 @@
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3'
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue'
 import DataTable from '@/Components/Shared/DataTable.vue'
-import { IconDownload } from '@tabler/icons-vue'
 
 defineProps({
     sessions: { type: Object, default: () => ({ data: [], links: [], meta: {} }) },

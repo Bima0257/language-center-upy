@@ -2,6 +2,7 @@
 
 namespace App\Modules\Session\Actions;
 
+use App\Models\ExamSection;
 use App\Models\ExamSession;
 use App\Modules\Session\Repositories\Contracts\ExamSessionRepositoryInterface;
 
@@ -14,9 +15,12 @@ class CompleteSection
     public function execute(ExamSession $session): void
     {
         $currentSection = $session->currentSection;
-        if (! $currentSection) return;
+        if (! $currentSection) {
+            return;
+        }
 
-        $nextSection = $session->schedule->exam->sections()
+        $nextSection = ExamSection::query()
+            ->where('exam_id', $currentSection->exam_id)
             ->where('order', '>', $currentSection->order)
             ->orderBy('order')
             ->first();

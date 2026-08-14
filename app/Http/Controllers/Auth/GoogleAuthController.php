@@ -18,7 +18,7 @@ use Laravel\Socialite\Facades\Socialite;
 
 class GoogleAuthController extends Controller
 {
-    public function redirect(Request $request): RedirectResponse
+    public function redirect(Request $request): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $action = $request->query('action', 'login');
 
@@ -46,7 +46,7 @@ class GoogleAuthController extends Controller
         try {
             $googleUser = Socialite::driver('google')->user();
 
-            $user = User::where('email', $googleUser->email)->first();
+            $user = User::where('email', $googleUser->getEmail())->first();
 
             if ($action === 'register' && $user) {
                 return redirect()->route('login')
@@ -59,8 +59,8 @@ class GoogleAuthController extends Controller
                         ->with('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.');
                 }
 
-                $user->google_id = $googleUser->id;
-                $user->google_avatar = $googleUser->avatar;
+                $user->google_id = $googleUser->getId();
+                $user->google_avatar = $googleUser->getAvatar();
                 if (! $user->email_verified_at) {
                     $user->email_verified_at = now();
                 }
@@ -68,10 +68,10 @@ class GoogleAuthController extends Controller
             } else {
                 $user = DB::transaction(function () use ($googleUser) {
                     $user = User::create([
-                        'name' => $googleUser->name,
-                        'email' => $googleUser->email,
-                        'google_id' => $googleUser->id,
-                        'google_avatar' => $googleUser->avatar,
+                        'name' => $googleUser->getName(),
+                        'email' => $googleUser->getEmail(),
+                        'google_id' => $googleUser->getId(),
+                        'google_avatar' => $googleUser->getAvatar(),
                         'password' => bcrypt(Str::random(32)),
                     ]);
                     $user->email_verified_at = now();
@@ -100,7 +100,7 @@ class GoogleAuthController extends Controller
             return redirect()->route('google.set-password');
         }
 
-        if ($user->hasRole('student') && !$user->isVerified()) {
+        if ($user->hasRole('student') && ! $user->hasVerifiedProfile()) {
             return redirect()->route('onboarding.verify-identity');
         }
 
@@ -126,7 +126,7 @@ class GoogleAuthController extends Controller
 
         cookie()->queue(cookie('_logged', '1', config('session.lifetime')));
 
-        if ($user->hasRole('student') && !$user->isVerified()) {
+        if ($user->hasRole('student') && ! $user->hasVerifiedProfile()) {
             return redirect()->route('onboarding.verify-identity');
         }
 

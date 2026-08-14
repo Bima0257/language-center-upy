@@ -1,7 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue'
-import DataTable from '@/Components/Shared/DataTable.vue'
 import { IconPlus, IconTrash, IconEdit } from '@tabler/icons-vue'
 import { useConfirm } from '@/Composables/useConfirm'
 
@@ -11,18 +10,6 @@ const props = defineProps({
     exam: { type: Object, required: true },
     schedules: { type: Object, default: () => ({ data: [], links: [], meta: {} }) },
 })
-
-const columns = [
-    { key: 'title', label: 'Nama Jadwal', sortable: true, className: 'font-medium text-primary' },
-    { key: 'scheduled_start', label: 'Mulai', sortable: true,
-      render: (val) => val ? new Date(val).toLocaleDateString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-' },
-    { key: 'scheduled_end', label: 'Selesai', sortable: true,
-      render: (val) => val ? new Date(val).toLocaleDateString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-' },
-    { key: 'capacity', label: 'Kuota',
-      render: (val, row) => `${row.sessions_count ?? 0}/${row.max_participants}` },
-    { key: 'is_active', label: 'Status', sortable: true, badge: true,
-      render: (val) => val ? 'Aktif' : 'Nonaktif' },
-]
 
 async function deleteSchedule(id) {
     if (await confirm.confirm('Hapus jadwal ini?')) {

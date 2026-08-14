@@ -6,6 +6,12 @@ use App\Http\Controllers\Admin\ScoreInterpretationController;
 use App\Http\Controllers\Admin\VerificationController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Exam;
+use App\Models\ExamSchedule;
+use App\Models\ExamSession;
+use App\Models\Passage;
+use App\Models\Question;
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -30,24 +36,24 @@ Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
         $data = [];
 
         if ($user->hasRole('student')) {
-            $data['recentSessions'] = \App\Models\ExamSession::with('schedule.exam')
+            $data['recentSessions'] = ExamSession::with('schedule.exam')
                 ->where('user_id', $user->id)
                 ->orderBy('created_at', 'desc')
                 ->take(3)
                 ->get();
-            $data['availableExamsCount'] = \App\Models\ExamSchedule::where('is_active', true)
+            $data['availableExamsCount'] = ExamSchedule::where('is_active', true)
                 ->where('scheduled_start', '<=', now())
                 ->where('scheduled_end', '>=', now())
                 ->count();
         }
 
         if ($user->hasRole('admin') || $user->hasRole('superadmin')) {
-            $data['totalUsers'] = \App\Models\User::count();
-            $data['totalExams'] = \App\Models\Exam::count();
-            $data['activeSessionsCount'] = \App\Models\ExamSession::where('status', 'in_progress')->count();
-            $data['flaggedSessionsCount'] = \App\Models\ExamSession::where('is_flagged', true)->whereNull('reviewed_at')->count();
-            $data['pendingReviewCount'] = \App\Models\Question::where('status', 'draft')->count();
-            $data['pendingQuestions'] = \App\Models\Question::with(['passage', 'questionBank', 'skill', 'creator'])
+            $data['totalUsers'] = User::count();
+            $data['totalExams'] = Exam::count();
+            $data['activeSessionsCount'] = ExamSession::where('status', 'in_progress')->count();
+            $data['flaggedSessionsCount'] = ExamSession::where('is_flagged', true)->whereNull('reviewed_at')->count();
+            $data['pendingReviewCount'] = Question::where('status', 'draft')->count();
+            $data['pendingQuestions'] = Question::with(['passage', 'questionBank', 'skill', 'creator'])
                 ->where('status', 'draft')
                 ->latest()
                 ->take(10)
@@ -55,22 +61,22 @@ Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
         }
 
         if ($user->hasRole('instructor')) {
-            $data['totalQuestions'] = \App\Models\Question::count();
-            $data['totalPassages'] = \App\Models\Passage::count();
+            $data['totalQuestions'] = Question::count();
+            $data['totalPassages'] = Passage::count();
 
-            $data['questionsBySkill'] = \App\Models\Question::selectRaw('skills.name as label, COUNT(*) as count')
+            $data['questionsBySkill'] = Question::selectRaw('skills.name as label, COUNT(*) as count')
                 ->leftJoin('skills', 'skills.id', '=', 'questions.skill_id')
                 ->whereNotNull('questions.skill_id')
                 ->groupBy('skills.name')
                 ->orderByDesc('count')
                 ->get();
 
-            $data['questionsByStatus'] = \App\Models\Question::selectRaw('status, COUNT(*) as count')
+            $data['questionsByStatus'] = Question::selectRaw('status, COUNT(*) as count')
                 ->groupBy('status')
                 ->orderByDesc('count')
                 ->get();
 
-            $data['questionsByBank'] = \App\Models\Question::selectRaw('question_banks.name as label, COUNT(*) as count')
+            $data['questionsByBank'] = Question::selectRaw('question_banks.name as label, COUNT(*) as count')
                 ->leftJoin('question_banks', 'question_banks.id', '=', 'questions.question_bank_id')
                 ->groupBy('question_banks.name')
                 ->orderByDesc('count')

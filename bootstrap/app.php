@@ -1,9 +1,15 @@
 <?php
 
+use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\EnsureExamReady;
+use App\Http\Middleware\EnsureExamSessionActive;
+use App\Http\Middleware\EnsureVerified;
+use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -14,15 +20,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
-            \App\Http\Middleware\HandleInertiaRequests::class,
-            \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            HandleInertiaRequests::class,
+            AddLinkHeadersForPreloadedAssets::class,
         ]);
 
         $middleware->alias([
-            'role' => \App\Http\Middleware\CheckRole::class,
-            'verified.user' => \App\Http\Middleware\EnsureVerified::class,
-            'exam.session.active' => \App\Http\Middleware\EnsureExamSessionActive::class,
-            'exam.ready' => \App\Http\Middleware\EnsureExamReady::class,
+            'role' => CheckRole::class,
+            'verified.user' => EnsureVerified::class,
+            'exam.session.active' => EnsureExamSessionActive::class,
+            'exam.ready' => EnsureExamReady::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

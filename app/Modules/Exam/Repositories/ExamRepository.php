@@ -27,6 +27,7 @@ class ExamRepository implements ExamRepositoryInterface
     public function update(Exam $exam, array $data): Exam
     {
         $exam->update($data);
+
         return $exam->fresh();
     }
 

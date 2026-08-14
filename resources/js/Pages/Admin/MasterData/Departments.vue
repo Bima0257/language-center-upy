@@ -6,7 +6,7 @@ import { IconPlus, IconEdit, IconTrash, IconCheck } from '@tabler/icons-vue';
 import { ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
-const props = defineProps({
+defineProps({
     departments: { type: Array, default: () => [] },
     faculties: { type: Array, default: () => [] },
 });
@@ -27,10 +27,6 @@ const editForm = useForm({
     code: '',
     is_active: true,
 });
-
-function facultyName(id) {
-    return props.faculties.find(f => f.id === id)?.name || '-';
-}
 
 function submit() {
     form.post(route('admin.master-data.departments.store'), {

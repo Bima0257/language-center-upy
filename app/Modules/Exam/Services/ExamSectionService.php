@@ -9,12 +9,13 @@ class ExamSectionService
 {
     public function create(Exam $exam, array $data): ExamSection
     {
-        return $exam->sections()->create($data);
+        return ExamSection::create([...$data, 'exam_id' => $exam->id]);
     }
 
     public function update(ExamSection $section, array $data): ExamSection
     {
         $section->update($data);
+
         return $section->fresh();
     }
 

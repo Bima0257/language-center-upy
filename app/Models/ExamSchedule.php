@@ -3,10 +3,26 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $exam_id
+ * @property string $title
+ * @property Carbon $scheduled_start
+ * @property Carbon $scheduled_end
+ * @property int $late_tolerance_minutes
+ * @property int $max_participants
+ * @property bool $is_active
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Exam|null $exam
+ * @property-read Collection<int, ExamSession> $sessions
+ */
 #[Fillable(['exam_id', 'title', 'scheduled_start', 'scheduled_end', 'late_tolerance_minutes', 'max_participants', 'is_active'])]
 class ExamSchedule extends Model
 {
