@@ -13,7 +13,7 @@ import { ref, computed } from "vue";
 import { useConfirm } from "@/Composables/useConfirm";
 import { useToast } from "@/Composables/useToast";
 import { useUploadProgress } from "@/Composables/useUploadProgress";
-import { SKILL_OPTIONS, skillLabel, materialOfSkill } from "@/constants/skills";
+import { skillLabel, materialOfSkill } from "@/constants/skills";
 
 const page = usePage();
 const confirm = useConfirm();
@@ -128,10 +128,6 @@ function quickParts() {
     return props.parts.filter(
         (p) => String(p.skill) === String(quickQuestionForm.skill),
     );
-}
-
-function onQuickSkillChange() {
-    quickQuestionForm.skill_part_id = "";
 }
 
 const statusLabels = {
@@ -513,7 +509,6 @@ async function bulkReview(status) {
                                     :quick-form="quickQuestionForm"
                                     :question-banks="questionBanks"
                                     :adding-passage-id="addingPassageId"
-                                    :quick-skills="SKILL_OPTIONS"
                                     :quick-parts-fn="quickParts"
                                     :quick-is-audio="quickIsAudio"
                                     :is-passage-selected-fn="isPassageSelected"
@@ -527,7 +522,6 @@ async function bulkReview(status) {
                                     @add-soal="openQuickAdd"
                                     @close-add="closeQuickAdd"
                                     @save-quick="saveQuickQuestion"
-                                    @quick-skill-change="onQuickSkillChange"
                                     @question-toggle="toggleSelect"
                                     @question-review="reviewQuestion"
                                     @question-delete="deleteQuestion"

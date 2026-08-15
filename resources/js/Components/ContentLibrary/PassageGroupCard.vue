@@ -21,7 +21,6 @@ defineProps({
     quickForm: { type: Object, required: true },
     questionBanks: { type: Array, default: () => [] },
     addingPassageId: { type: [Number, String, null], default: null },
-    quickSkills: { type: Array, default: () => [] },
     quickPartsFn: { type: Function, default: () => [] },
     quickIsAudio: { type: Boolean, default: false },
     isPassageSelectedFn: { type: Function, default: () => false },
@@ -38,7 +37,6 @@ defineEmits([
     'add-soal',
     'close-add',
     'save-quick',
-    'quick-skill-change',
     'question-toggle',
     'question-review',
     'question-delete',
@@ -164,13 +162,11 @@ const passageTypeOptions = [
             :form="quickForm"
             :passage-title="group.passage.title"
             :question-banks="questionBanks"
-            :available-quick-skills="quickSkills"
             :quick-parts-fn="quickPartsFn"
             :quick-is-audio="quickIsAudio"
             :option-keys="optionKeys"
             @save="$emit('save-quick')"
             @cancel="$emit('close-add')"
-            @skill-change="$emit('quick-skill-change')"
         />
 
         <QuestionTable

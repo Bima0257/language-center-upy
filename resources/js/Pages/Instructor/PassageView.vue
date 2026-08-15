@@ -14,7 +14,7 @@ import { useUploadProgress } from '@/Composables/useUploadProgress';
 import { IconPlus, IconEdit, IconTrash, IconHeadphones, IconPhoto, IconBook, IconX, IconBooks } from '@tabler/icons-vue';
 import { computed, ref, watch } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
-import { SKILL_OPTIONS, materialOfSkill } from '@/constants/skills';
+import { materialOfSkill } from '@/constants/skills';
 
 const confirm = useConfirm();
 
@@ -48,10 +48,6 @@ const quickIsAudio = computed(() => materialOfSkill(quickQuestionForm.skill) ===
 
 function quickParts() {
     return props.parts.filter(p => String(p.skill) === String(quickQuestionForm.skill));
-}
-
-function onQuickSkillChange() {
-    quickQuestionForm.skill_part_id = '';
 }
 
 const form = useForm({
@@ -255,14 +251,12 @@ function getMediaIcon(passage) {
                     :form="quickQuestionForm"
                     :passage-title="p.title"
                     :question-banks="questionBanks"
-                    :available-quick-skills="SKILL_OPTIONS"
                     :quick-parts-fn="quickParts"
                     :quick-is-audio="quickIsAudio"
                     :option-keys="optionKeys"
                     class="mt-4"
                     @save="saveQuickQuestion"
                     @cancel="closeQuickAdd"
-                    @skill-change="onQuickSkillChange"
                 />
             </BaseCard>
         </div>

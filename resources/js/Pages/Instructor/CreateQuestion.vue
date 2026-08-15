@@ -39,7 +39,13 @@ function globalParts() {
     return partsForSkill(globalSkill.value);
 }
 
-const isGlobalAudio = computed(() => materialOfSkill(globalSkill.value) === 'audio');
+const isAudioQuestion = (q) => materialOfSkill(q.skill) === 'audio';
+
+// Passage otomatis audio jika ada soal listening (mode global via globalSkill, mode per-soal via soal)
+const hasListeningQuestion = computed(() => {
+    if (!perQuestionSkill.value) return materialOfSkill(globalSkill.value) === 'audio';
+    return form.questions.some(isAudioQuestion);
+});
 
 function newQuestion() {
     return {
@@ -105,6 +111,14 @@ watch(passageMode, (mode) => {
     }
 });
 
+// Jika ada soal listening (termasuk mode per-soal), passage wajib audio
+watch(hasListeningQuestion, (isAudio) => {
+    if (isAudio) {
+        passageType.value = 'audio';
+        form.new_passage_type = 'audio';
+    }
+});
+
 function setPerQuestionMode() {
     perQuestionSkill.value = true;
 }
@@ -135,8 +149,6 @@ function removeQuestion(index) {
         form.questions.splice(index, 1);
     }
 }
-
-const isAudioQuestion = (q) => materialOfSkill(q.skill) === 'audio';
 
 const canSubmit = computed(() => {
     if (!form.question_bank_id) return false;
@@ -300,7 +312,7 @@ const indexUrl = computed(() => {
                                 <input type="text" v-model="form.new_passage_title" required placeholder="Judul bacaan"
                                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                                 <p v-if="form.errors.new_passage_title" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_title }}</p></div>
-                            <div v-if="!isGlobalAudio">
+                            <div v-if="!hasListeningQuestion">
                                 <DropDown
                                     v-model="passageType"
                                     :options="passageTypeOptions"
@@ -312,7 +324,7 @@ const indexUrl = computed(() => {
                             </div>
                         </div>
 
-                        <template v-if="isGlobalAudio">
+                        <template v-if="hasListeningQuestion">
                             <FileUpload
                                 v-model="form.new_passage_audio_file"
                                 label="File Audio (mp3/wav/m4a, max 50MB)"

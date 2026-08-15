@@ -2,25 +2,25 @@
 import DropDown from '@/Components/Shared/DropDown.vue';
 import OptionsInput from '@/Components/ContentLibrary/OptionsInput.vue';
 import { IconHeadphones, IconCheck } from '@tabler/icons-vue';
+import { skillLabel } from '@/constants/skills';
 
 defineProps({
     form: { type: Object, required: true },
     passageTitle: { type: String, default: '' },
     questionBanks: { type: Array, default: () => [] },
-    availableQuickSkills: { type: Array, default: () => [] },
     quickPartsFn: { type: Function, default: () => [] },
     quickIsAudio: { type: Boolean, default: false },
     optionKeys: { type: Array, default: () => [] },
 });
 
-defineEmits(['save', 'cancel', 'skill-change']);
+defineEmits(['save', 'cancel']);
 </script>
 
 <template>
     <div class="px-5 py-4 bg-pastel-blue/10 border-b border-outline-variant/30">
         <p class="text-label-md font-semibold text-primary mb-3">Tambah Soal ke "{{ passageTitle }}"</p>
         <form @submit.prevent="$emit('save')" class="space-y-3">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                     <DropDown
                         v-model="form.question_bank_id"
@@ -32,18 +32,6 @@ defineEmits(['save', 'cancel', 'skill-change']);
                         size="sm"
                     />
                     <p v-if="form.errors.question_bank_id" class="text-error-red text-xs mt-1">{{ form.errors.question_bank_id }}</p>
-                </div>
-                <div>
-                    <DropDown
-                        v-model="form.skill"
-                        :options="availableQuickSkills"
-                        label="Skill *"
-                        placeholder="Pilih Skill"
-                        option-label="label"
-                        option-value="value"
-                        size="sm"
-                        @change="$emit('skill-change')"
-                    />
                 </div>
                 <div>
                     <DropDown
@@ -69,6 +57,9 @@ defineEmits(['save', 'cancel', 'skill-change']);
                     />
                 </div>
             </div>
+            <p class="text-label-md text-text-muted">
+                Skill: <span class="font-semibold text-primary">{{ skillLabel(form.skill) }}</span> — mengikuti tipe passage ini.
+            </p>
             <template v-if="quickIsAudio">
                 <p class="flex items-center gap-1.5 text-label-md text-text-muted bg-pastel-purple/10 border border-pastel-purple/40 rounded-xl px-4 py-3">
                     <IconHeadphones :size="16" class="text-secondary shrink-0" />

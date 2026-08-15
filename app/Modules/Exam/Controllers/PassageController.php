@@ -129,6 +129,17 @@ class PassageController extends Controller
             return back()->with('error', 'Passage tipe teks wajib memiliki isi teks.');
         }
 
+        // Passage yang dipakai soal listening wajib tetap audio
+        if ($passage->questions()->where('skill', SkillCode::LISTENING)->exists()) {
+            if ($validated['type'] !== 'audio') {
+                return back()->with('error', 'Passage ini dipakai soal listening — tipe wajib tetap Audio.');
+            }
+
+            if (empty($validated['audio_url']) && empty($passage->audio_url)) {
+                return back()->with('error', 'Passage audio wajib memiliki file audio.');
+            }
+        }
+
         $passage->update($validated);
 
         return back()->with('success', 'Passage berhasil diperbarui.');
