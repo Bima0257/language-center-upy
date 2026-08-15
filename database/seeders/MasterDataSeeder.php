@@ -24,26 +24,25 @@ class MasterDataSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        SkillPart::firstOrCreate(
-            ['skill' => SkillCode::READING, 'name' => 'Part 1'],
-            ['order' => 1, 'directions' => 'Read each passage carefully. Answer questions based on the information given in the passage.', 'is_active' => true],
-        );
-        SkillPart::firstOrCreate(
-            ['skill' => SkillCode::READING, 'name' => 'Part 2'],
-            ['order' => 2, 'directions' => 'A word or phrase is missing in each of the sentences below. Select the best answer to complete the sentence.', 'is_active' => true],
-        );
-        SkillPart::firstOrCreate(
-            ['skill' => SkillCode::LISTENING, 'name' => 'Part 1'],
-            ['order' => 1, 'directions' => 'Listen to each short conversation and question. Select the best answer to each question based on what is stated or implied by the speakers.', 'is_active' => true],
-        );
-        SkillPart::firstOrCreate(
-            ['skill' => SkillCode::LISTENING, 'name' => 'Part 2'],
-            ['order' => 2, 'directions' => 'Listen to each longer conversation or talk. Answer the questions based on the information you hear.', 'is_active' => true],
-        );
-        SkillPart::firstOrCreate(
-            ['skill' => SkillCode::LISTENING, 'name' => 'Part 3'],
-            ['order' => 3, 'directions' => 'Listen to each lecture. Answer the questions based on the information presented in the lecture.', 'is_active' => true],
-        );
+        $bank2022 = QuestionBank::firstOrCreate(['name' => 'Bank Soal 2022'], ['exam_type_id' => $toefl->id, 'description' => 'Kumpulan soal tryout tahun 2022', 'is_active' => true]);
+        $bank2023 = QuestionBank::firstOrCreate(['name' => 'Bank Soal 2023'], ['exam_type_id' => $toefl->id, 'description' => 'Kumpulan soal tryout tahun 2023', 'is_active' => true]);
+
+        $partDefinitions = [
+            [SkillCode::READING, 'Part 1', 1, 'Read each passage carefully. Answer questions based on the information given in the passage.'],
+            [SkillCode::READING, 'Part 2', 2, 'A word or phrase is missing in each of the sentences below. Select the best answer to complete the sentence.'],
+            [SkillCode::LISTENING, 'Part 1', 1, 'Listen to each short conversation and question. Select the best answer to each question based on what is stated or implied by the speakers.'],
+            [SkillCode::LISTENING, 'Part 2', 2, 'Listen to each longer conversation or talk. Answer the questions based on the information you hear.'],
+            [SkillCode::LISTENING, 'Part 3', 3, 'Listen to each lecture. Answer the questions based on the information presented in the lecture.'],
+        ];
+
+        foreach ([$bank2022, $bank2023] as $bank) {
+            foreach ($partDefinitions as [$skill, $name, $order, $directions]) {
+                SkillPart::firstOrCreate(
+                    ['question_bank_id' => $bank->id, 'skill' => $skill, 'name' => $name],
+                    ['order' => $order, 'directions' => $directions, 'is_active' => true],
+                );
+            }
+        }
 
         $fkip = Faculty::firstOrCreate(['code' => 'FKIP'], ['name' => 'Fakultas Keguruan dan Ilmu Pendidikan', 'is_active' => true]);
         $ft = Faculty::firstOrCreate(['code' => 'FT'], ['name' => 'Fakultas Teknik', 'is_active' => true]);
@@ -51,9 +50,6 @@ class MasterDataSeeder extends Seeder
         Department::firstOrCreate(['faculty_id' => $fkip->id, 'code' => 'PBI'], ['name' => 'Pendidikan Bahasa Inggris', 'is_active' => true]);
         Department::firstOrCreate(['faculty_id' => $fkip->id, 'code' => 'PMAT'], ['name' => 'Pendidikan Matematika', 'is_active' => true]);
         Department::firstOrCreate(['faculty_id' => $ft->id, 'code' => 'TI'], ['name' => 'Teknik Informatika', 'is_active' => true]);
-
-        QuestionBank::firstOrCreate(['name' => 'Bank Soal 2022'], ['exam_type_id' => $toefl->id, 'description' => 'Kumpulan soal tryout tahun 2022', 'is_active' => true]);
-        QuestionBank::firstOrCreate(['name' => 'Bank Soal 2023'], ['exam_type_id' => $toefl->id, 'description' => 'Kumpulan soal tryout tahun 2023', 'is_active' => true]);
 
         // Conversion table: raw 0-50 -> scaled 100-200 (2x + 100)
         $conversion = [];

@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $exam_id
+ * @property int|null $question_bank_id
  * @property SkillCode $skill
  * @property string $title
  * @property int $order
@@ -20,10 +21,11 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Exam $exam
+ * @property-read QuestionBank|null $questionBank
  * @property-read Collection<int, ExamSectionQuestion> $examSectionQuestions
  * @property-read Collection<int, ExamSectionPart> $examSectionParts
  */
-#[Fillable(['exam_id', 'skill', 'title', 'order', 'total_questions'])]
+#[Fillable(['exam_id', 'question_bank_id', 'skill', 'title', 'order', 'total_questions'])]
 class ExamSection extends Model
 {
     protected function casts(): array
@@ -38,6 +40,11 @@ class ExamSection extends Model
     public function exam(): BelongsTo
     {
         return $this->belongsTo(Exam::class);
+    }
+
+    public function questionBank(): BelongsTo
+    {
+        return $this->belongsTo(QuestionBank::class);
     }
 
     public function examSectionQuestions(): HasMany

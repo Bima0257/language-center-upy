@@ -43,11 +43,33 @@ class ExamSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        $readingPart = SkillPart::where('skill', SkillCode::READING)->orderBy('order')->first();
-        $listeningPart = SkillPart::where('skill', SkillCode::LISTENING)->orderBy('order')->first();
+        $bank = QuestionBank::firstOrCreate(['name' => 'Bank Soal Demo'], [
+            'exam_type_id' => $toefl->id,
+            'is_active' => true,
+        ]);
+        $bank->update(['exam_type_id' => $toefl->id]);
+
+        $partDefinitions = [
+            [SkillCode::READING, 'Part 1', 1],
+            [SkillCode::READING, 'Part 2', 2],
+            [SkillCode::LISTENING, 'Part 1', 1],
+            [SkillCode::LISTENING, 'Part 2', 2],
+            [SkillCode::LISTENING, 'Part 3', 3],
+        ];
+
+        foreach ($partDefinitions as [$skill, $name, $order]) {
+            SkillPart::firstOrCreate(
+                ['question_bank_id' => $bank->id, 'skill' => $skill, 'name' => $name],
+                ['order' => $order, 'is_active' => true],
+            );
+        }
+
+        $readingPart = SkillPart::where('question_bank_id', $bank->id)->where('skill', SkillCode::READING)->orderBy('order')->first();
+        $listeningPart = SkillPart::where('question_bank_id', $bank->id)->where('skill', SkillCode::LISTENING)->orderBy('order')->first();
 
         $reading = ExamSection::create([
             'exam_id' => $exam->id,
+            'question_bank_id' => $bank->id,
             'skill' => SkillCode::READING,
             'title' => 'Reading Section',
             'order' => 1,
@@ -56,17 +78,12 @@ class ExamSeeder extends Seeder
 
         $listening = ExamSection::create([
             'exam_id' => $exam->id,
+            'question_bank_id' => $bank->id,
             'skill' => SkillCode::LISTENING,
             'title' => 'Listening Section',
             'order' => 2,
             'total_questions' => 4,
         ]);
-
-        $bank = QuestionBank::firstOrCreate(['name' => 'Bank Soal Demo'], [
-            'exam_type_id' => $toefl->id,
-            'is_active' => true,
-        ]);
-        $bank->update(['exam_type_id' => $toefl->id]);
 
         $readingPassage = Passage::create([
             'title' => 'The History of Solar Energy',
