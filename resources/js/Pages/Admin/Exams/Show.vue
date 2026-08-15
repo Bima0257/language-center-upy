@@ -1,9 +1,10 @@
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
+import DropDown from '@/Components/Shared/DropDown.vue';
 import draggable from 'vuedraggable';
-import { IconEdit, IconChevronDown, IconChevronRight, IconFileDescription, IconCheck, IconGripVertical } from '@tabler/icons-vue';
-import { ref } from 'vue';
+import { IconEdit, IconChevronDown, IconChevronRight, IconFileDescription, IconCheck, IconGripVertical, IconPlus, IconX, IconTrash } from '@tabler/icons-vue';
+import { computed, ref, watch } from 'vue';
 import { useToast } from '@/Composables/useToast';
 import { skillLabel } from '@/constants/skills';
 
@@ -13,7 +14,9 @@ const props = defineProps({
     exam: { type: Object, required: true },
     skillOptions: { type: Array, default: () => [] },
     parts: { type: Array, default: () => [] },
+    questionBanks: { type: Array, default: () => [] },
     sectionQuestions: { type: Object, default: () => ({}) },
+    attachableQuestions: { type: Object, default: () => ({}) },
 });
 
 const expandedSections = ref({});
@@ -21,6 +24,87 @@ const localOrders = ref({});
 const itemsBySection = ref({});
 const dirtySections = ref({});
 
+// ===== Modal Tambah Section =====
+const showSectionModal = ref(false);
+const sectionForm = useForm({
+    question_bank_id: '',
+    skill: '',
+    title: '',
+    order: 1,
+});
+
+const sectionTitlePreview = computed(() => {
+    if (!sectionForm.skill) return '';
+    const skill = skillLabel(sectionForm.skill) || sectionForm.skill;
+    const bank = props.questionBanks.find((b) => String(b.id) === String(sectionForm.question_bank_id))?.name;
+    return bank ? `${skill} — ${bank}` : skill;
+});
+
+watch([() => sectionForm.question_bank_id, () => sectionForm.skill], () => {
+    sectionForm.title = sectionTitlePreview.value;
+});
+
+function openAddSection() {
+    sectionForm.clearErrors();
+    sectionForm.reset();
+    sectionForm.order = (props.exam.sections?.length || 0) + 1;
+    showSectionModal.value = true;
+}
+
+function submitSection() {
+    sectionForm.post(route('admin.exams.sections.store', props.exam.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showSectionModal.value = false;
+            toast.success('Section berhasil dibuat.');
+        },
+    });
+}
+
+// ===== Modal Tambah Soal =====
+const showQuestionModal = ref(false);
+const activeSection = ref(null);
+const questionForm = useForm({ question_ids: [] });
+
+function openAddQuestions(section) {
+    activeSection.value = section;
+    questionForm.clearErrors();
+    questionForm.reset();
+    showQuestionModal.value = true;
+}
+
+function attachableFor(sectionId) {
+    return props.attachableQuestions[sectionId] || [];
+}
+
+function toggleQuestion(questionId) {
+    const idx = questionForm.question_ids.indexOf(questionId);
+    if (idx >= 0) {
+        questionForm.question_ids.splice(idx, 1);
+    } else {
+        questionForm.question_ids.push(questionId);
+    }
+}
+
+function submitQuestions() {
+    if (questionForm.question_ids.length === 0) return;
+    questionForm.post(route('admin.exams.sections.questions.store', [props.exam.id, activeSection.value.id]), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showQuestionModal.value = false;
+            questionForm.reset();
+            toast.success('Soal berhasil ditambahkan ke section.');
+        },
+    });
+}
+
+function detachQuestion(section, questionId) {
+    router.delete(route('admin.exams.sections.questions.destroy', [props.exam.id, section.id, questionId]), {
+        preserveScroll: true,
+    });
+}
+
+// ===== Susunan (drag & drop) =====
 function savedOrderFor(sectionId) {
     return (props.sectionQuestions[sectionId] || [])
         .slice()
@@ -200,7 +284,12 @@ function questionPreview(q) {
             </div>
 
             <BaseCard>
-                <h2 class="text-title-lg font-semibold text-primary mb-4">Sections &amp; Soal</h2>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-title-lg font-semibold text-primary">Sections &amp; Soal</h2>
+                    <BaseButton size="sm" @click="openAddSection">
+                        <IconPlus :size="16" /> Tambah Section
+                    </BaseButton>
+                </div>
 
                 <div v-if="exam.sections?.length" class="space-y-4">
                     <div v-for="section in exam.sections" :key="section.id"
@@ -220,6 +309,12 @@ function questionPreview(q) {
                                     </p>
                                 </div>
                             </div>
+                            <button
+                                v-if="attachableFor(section.id).length > 0"
+                                @click.stop="openAddQuestions(section)"
+                                class="flex items-center gap-1.5 text-secondary text-label-md font-medium hover:underline">
+                                <IconPlus :size="16" /> Tambah Soal ({{ attachableFor(section.id).length }})
+                            </button>
                         </div>
 
                         <div v-if="expandedSections[section.id]" class="p-4 border-t border-outline-variant/30 space-y-5">
@@ -270,6 +365,10 @@ function questionPreview(q) {
                                             </div>
                                             <span v-if="element.row.question.passage?.audio_url"
                                                   class="text-label-md text-text-muted shrink-0">🎧</span>
+                                            <button @click="detachQuestion(section, element.questionId)"
+                                                    class="p-1.5 text-text-muted hover:text-error-red transition-colors shrink-0" title="Lepas dari section">
+                                                <IconTrash :size="16" />
+                                            </button>
                                         </div>
                                     </div>
                                 </template>
@@ -291,5 +390,106 @@ function questionPreview(q) {
                 </div>
             </BaseCard>
         </div>
+
+        <!-- Modal Tambah Section -->
+        <BaseModal :show="showSectionModal" @close="showSectionModal = false" max-width="2xl">
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-headline-md font-bold text-primary">Tambah Section</h2>
+                    <button @click="showSectionModal = false" class="p-2 text-text-muted hover:text-primary transition-colors">
+                        <IconX :size="20" />
+                    </button>
+                </div>
+                <form @submit.prevent="submitSection" class="space-y-5">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <DropDown
+                                v-model="sectionForm.question_bank_id"
+                                :options="questionBanks"
+                                label="Bank Soal *"
+                                placeholder="Pilih bank"
+                                option-label="name"
+                                option-value="id"
+                            />
+                            <p v-if="sectionForm.errors.question_bank_id" class="text-error-red text-xs mt-1">{{ sectionForm.errors.question_bank_id }}</p>
+                        </div>
+                        <div>
+                            <DropDown
+                                v-model="sectionForm.skill"
+                                :options="skillOptions"
+                                label="Skill *"
+                                placeholder="Pilih skill"
+                                option-label="label"
+                                option-value="value"
+                            />
+                            <p v-if="sectionForm.errors.skill" class="text-error-red text-xs mt-1">{{ sectionForm.errors.skill }}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-label-md font-medium text-primary block mb-1.5">Judul Section</label>
+                        <input type="text" v-model="sectionForm.title" placeholder="Judul otomatis dari bank & skill"
+                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                        <p v-if="sectionForm.errors.title" class="text-error-red text-xs mt-1">{{ sectionForm.errors.title }}</p>
+                    </div>
+                    <p v-if="sectionTitlePreview" class="text-label-md text-text-muted">
+                        Preview: <span class="font-semibold text-primary">{{ sectionTitlePreview }}</span>
+                    </p>
+                    <div class="flex gap-4 pt-2">
+                        <BaseButton type="submit" :disabled="sectionForm.processing" size="xl" class="flex-1">
+                            {{ sectionForm.processing ? 'Menyimpan...' : 'Buat Section' }}
+                        </BaseButton>
+                        <BaseButton type="button" variant="secondary" size="lg" @click="showSectionModal = false">
+                            Batal
+                        </BaseButton>
+                    </div>
+                </form>
+            </div>
+        </BaseModal>
+
+        <!-- Modal Tambah Soal -->
+        <BaseModal :show="showQuestionModal" @close="showQuestionModal = false" max-width="2xl" scrollable>
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-headline-md font-bold text-primary">Tambah Soal ke Section</h2>
+                    <button @click="showQuestionModal = false" class="p-2 text-text-muted hover:text-primary transition-colors">
+                        <IconX :size="20" />
+                    </button>
+                </div>
+                <p v-if="activeSection" class="text-label-md text-text-muted mb-4">
+                    Section: <span class="font-semibold text-primary">{{ activeSection.title }}</span> — hanya soal approved dari bank section yang ditampilkan.
+                </p>
+
+                <div v-if="activeSection && attachableFor(activeSection.id).length === 0"
+                     class="text-center py-8 bg-surface-container-low rounded-2xl">
+                    <p class="text-text-muted text-body-md">Tidak ada soal approved yang tersedia untuk ditambahkan.</p>
+                </div>
+
+                <div v-else class="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+                    <label v-for="q in attachableFor(activeSection?.id)" :key="q.id"
+                           class="flex items-start gap-3 p-3 rounded-xl border border-outline-variant/40 cursor-pointer hover:border-secondary/50 transition-colors">
+                        <input type="checkbox"
+                               :checked="questionForm.question_ids.includes(q.id)"
+                               @change="toggleQuestion(q.id)"
+                               class="mt-1 w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
+                        <div class="min-w-0">
+                            <p class="text-body-md text-primary font-medium truncate">{{ questionPreview(q) }}</p>
+                            <p class="text-label-md text-text-muted truncate">
+                                {{ q.skillPart?.name || 'Tanpa part' }}<span v-if="q.passage"> — 📄 {{ q.passage.title }}</span>
+                            </p>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <BaseButton type="button" :disabled="questionForm.processing || questionForm.question_ids.length === 0"
+                                size="xl" class="flex-1" @click="submitQuestions">
+                        {{ questionForm.processing ? 'Menyimpan...' : `Tambah ${questionForm.question_ids.length || ''} Soal` }}
+                    </BaseButton>
+                    <BaseButton type="button" variant="secondary" size="lg" @click="showQuestionModal = false">
+                        Batal
+                    </BaseButton>
+                </div>
+            </div>
+        </BaseModal>
     </DashboardLayout>
 </template>

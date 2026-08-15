@@ -7,6 +7,7 @@ use App\Models\Exam;
 use App\Models\ExamSection;
 use App\Modules\Exam\Repositories\Contracts\ExamRepositoryInterface;
 use App\Modules\Exam\Repositories\Contracts\ExamSectionRepositoryInterface;
+use App\Modules\Exam\Repositories\Contracts\QuestionBankRepositoryInterface;
 use App\Modules\Exam\Repositories\Contracts\QuestionRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\SkillPartRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -18,6 +19,7 @@ class ExamService
         private ExamRepositoryInterface $examRepo,
         private ExamSectionRepositoryInterface $sectionRepo,
         private QuestionRepositoryInterface $questionRepo,
+        private QuestionBankRepositoryInterface $questionBanks,
         private SkillPartRepositoryInterface $skillParts,
     ) {}
 
@@ -80,12 +82,32 @@ class ExamService
         $exam = $this->examRepo->findWithRelations($exam->id);
         $sectionIds = $exam->sections->pluck('id');
 
+        $attachable = [];
+        foreach ($exam->sections as $section) {
+            $bankId = $section->question_bank_id;
+
+            if ($bankId === null) {
+                $attachable[$section->id] = collect();
+
+                continue;
+            }
+
+            $excludeIds = $this->sectionRepo->questionIdsInSection($section->id);
+            $attachable[$section->id] = $this->questionRepo->approvedByBankAndSkillNotIn(
+                $bankId,
+                $section->skill->value,
+                $excludeIds,
+            );
+        }
+
         return [
             'exam' => $exam,
             'skillOptions' => SkillCode::options(),
             'parts' => $this->skillParts->allActiveOrdered(),
+            'questionBanks' => $this->questionBanks->allActiveOrdered(),
             'sectionQuestions' => $this->sectionRepo->questionsGroupedBySection($sectionIds),
             'sectionParts' => $this->sectionRepo->partsGroupedBySection($sectionIds),
+            'attachableQuestions' => $attachable,
         ];
     }
 

@@ -3,8 +3,12 @@
 namespace Tests\Feature\Exam;
 
 use App\Models\Exam;
+use App\Models\ExamSection;
+use App\Models\ExamSectionQuestion;
 use App\Models\ExamType;
+use App\Models\Question;
 use App\Models\QuestionBank;
+use App\Models\SkillPart;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -133,6 +137,87 @@ class ExamsTest extends TestCase
 
         $this->assertDatabaseMissing('exam_sections', [
             'title' => 'Reading Tanpa Bank',
+        ]);
+    }
+
+    public function test_admin_can_attach_approved_questions_to_section(): void
+    {
+        $this->loginAs('admin');
+
+        $section = ExamSection::where('title', 'Reading Section')->first();
+        $bank = QuestionBank::find($section->question_bank_id);
+
+        $question = Question::where('question_bank_id', $bank->id)
+            ->where('skill', 'reading')
+            ->where('status', 'approved')
+            ->first();
+
+        $this->post("/admin/exams/{$section->exam_id}/sections/{$section->id}/questions", [
+            'question_ids' => [$question->id],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('exam_section_questions', [
+            'exam_section_id' => $section->id,
+            'question_id' => $question->id,
+        ]);
+    }
+
+    public function test_question_from_other_bank_cannot_be_attached(): void
+    {
+        $this->loginAs('admin');
+
+        $section = ExamSection::where('title', 'Reading Section')->first();
+        $otherBank = QuestionBank::where('name', 'Bank Soal 2022')->first();
+
+        $foreignQuestion = Question::create([
+            'question_bank_id' => $otherBank->id,
+            'skill' => 'reading',
+            'skill_part_id' => SkillPart::where('question_bank_id', $otherBank->id)->where('skill', 'reading')->first()->id,
+            'type' => 'multiple_choice',
+            'question_text' => 'Soal dari bank lain',
+            'option_a' => 'A',
+            'option_b' => 'B',
+            'option_c' => 'C',
+            'option_d' => 'D',
+            'correct_answer' => 'A',
+            'order' => 1,
+            'status' => 'approved',
+        ]);
+
+        $this->post("/admin/exams/{$section->exam_id}/sections/{$section->id}/questions", [
+            'question_ids' => [$foreignQuestion->id],
+        ])->assertRedirect();
+
+        $this->assertDatabaseMissing('exam_section_questions', [
+            'exam_section_id' => $section->id,
+            'question_id' => $foreignQuestion->id,
+        ]);
+    }
+
+    public function test_admin_can_detach_question_from_section(): void
+    {
+        $this->loginAs('admin');
+
+        $section = ExamSection::where('title', 'Reading Section')->first();
+        $bank = QuestionBank::find($section->question_bank_id);
+
+        $question = Question::where('question_bank_id', $bank->id)
+            ->where('skill', 'reading')
+            ->where('status', 'approved')
+            ->first();
+
+        ExamSectionQuestion::create([
+            'exam_section_id' => $section->id,
+            'question_id' => $question->id,
+            'order' => 1,
+        ]);
+
+        $this->delete("/admin/exams/{$section->exam_id}/sections/{$section->id}/questions/{$question->id}")
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('exam_section_questions', [
+            'exam_section_id' => $section->id,
+            'question_id' => $question->id,
         ]);
     }
 }
