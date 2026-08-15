@@ -8,6 +8,7 @@ use App\Models\ExamType;
 use App\Models\Faculty;
 use App\Models\ScoreInterpretation;
 use App\Models\SkillPart;
+use App\Modules\Exam\Repositories\Contracts\QuestionBankRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\CertificateRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\DepartmentRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\ExamTypeRepositoryInterface;
@@ -26,6 +27,7 @@ class MasterDataService
         private DepartmentRepositoryInterface $departments,
         private ScoreInterpretationRepositoryInterface $scoreInterpretations,
         private CertificateRepositoryInterface $certificates,
+        private QuestionBankRepositoryInterface $questionBanks,
     ) {}
 
     public function examTypesIndexData(): array
@@ -50,10 +52,13 @@ class MasterDataService
         $this->examTypes->delete($examType);
     }
 
-    public function skillPartsIndexData(): array
+    public function skillPartsIndexData(?int $bankId = null): array
     {
+        $parts = $this->skillParts->allWithQuestionCounts();
+
         return [
-            'parts' => $this->skillParts->allWithQuestionCounts(),
+            'parts' => $bankId !== null ? $parts->where('question_bank_id', $bankId)->values() : $parts,
+            'questionBanks' => $this->questionBanks->allActiveOrdered(),
         ];
     }
 
@@ -169,7 +174,7 @@ class MasterDataService
 
     public function activeSkillParts(): Collection
     {
-        return $this->skillParts->allActiveOrderedBySkill();
+        return $this->skillParts->allActiveOrdered();
     }
 
     public function activeExamTypes(): Collection

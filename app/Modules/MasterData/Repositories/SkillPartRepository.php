@@ -15,28 +15,54 @@ class SkillPartRepository implements SkillPartRepositoryInterface
 
     public function allWithQuestionCounts(): Collection
     {
-        return SkillPart::withCount('questions')->orderBy('skill')->orderBy('order')->get();
+        return SkillPart::with('questionBank')
+            ->withCount('questions')
+            ->orderBy('question_bank_id')
+            ->orderBy('skill')
+            ->orderBy('order')
+            ->get();
     }
 
-    public function allActiveOrderedBySkill(): Collection
+    public function allActiveOrdered(): Collection
     {
-        return SkillPart::where('is_active', true)->orderBy('skill')->orderBy('order')->get();
+        return SkillPart::with('questionBank')
+            ->where('is_active', true)
+            ->orderBy('question_bank_id')
+            ->orderBy('skill')
+            ->orderBy('order')
+            ->get();
+    }
+
+    public function allActiveByBank(int $bankId): Collection
+    {
+        return SkillPart::where('question_bank_id', $bankId)
+            ->where('is_active', true)
+            ->orderBy('skill')
+            ->orderBy('order')
+            ->get();
     }
 
     /**
      * @return array<int>
      */
-    public function idsBySkill(string $skill): array
+    public function idsByBankAndSkill(int $bankId, string $skill): array
     {
-        return SkillPart::where('skill', $skill)->pluck('id')->all();
+        return SkillPart::where('question_bank_id', $bankId)
+            ->where('skill', $skill)
+            ->pluck('id')
+            ->all();
     }
 
     /**
      * @return array<int>
      */
-    public function orderedIdsBySkill(string $skill): array
+    public function orderedIdsByBankAndSkill(int $bankId, string $skill): array
     {
-        return SkillPart::where('skill', $skill)->orderBy('order')->pluck('id')->all();
+        return SkillPart::where('question_bank_id', $bankId)
+            ->where('skill', $skill)
+            ->orderBy('order')
+            ->pluck('id')
+            ->all();
     }
 
     public function create(array $data): SkillPart

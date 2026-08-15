@@ -11,20 +11,22 @@ interface SkillPartRepositoryInterface
 
     public function allWithQuestionCounts(): Collection;
 
+    public function allActiveOrdered(): Collection;
+
     /**
      * @return Collection<int, SkillPart>
      */
-    public function allActiveOrderedBySkill(): Collection;
+    public function allActiveByBank(int $bankId): Collection;
 
     /**
      * @return array<int>
      */
-    public function idsBySkill(string $skill): array;
+    public function idsByBankAndSkill(int $bankId, string $skill): array;
 
     /**
      * @return array<int>
      */
-    public function orderedIdsBySkill(string $skill): array;
+    public function orderedIdsByBankAndSkill(int $bankId, string $skill): array;
 
     public function create(array $data): SkillPart;
 

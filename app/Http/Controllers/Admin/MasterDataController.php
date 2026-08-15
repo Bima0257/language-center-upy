@@ -18,6 +18,7 @@ use App\Models\Faculty;
 use App\Models\SkillPart;
 use App\Modules\MasterData\Services\MasterDataService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -55,9 +56,11 @@ class MasterDataController extends Controller
     }
 
     // ===== Skill Parts =====
-    public function partsIndex(): Response
+    public function partsIndex(Request $request): Response
     {
-        return Inertia::render('Admin/MasterData/Parts', $this->masterData->skillPartsIndexData() + [
+        $bankId = $request->integer('bank_id') ?: null;
+
+        return Inertia::render('Admin/MasterData/Parts', $this->masterData->skillPartsIndexData($bankId) + [
             'skillOptions' => SkillCode::options(),
         ]);
     }
