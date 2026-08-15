@@ -1,8 +1,5 @@
 <script setup>
 import AuthCard from '@/Components/Landing/AuthCard.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
@@ -30,8 +27,8 @@ const submit = () => {
 
         <form @submit.prevent="submit" class="space-y-5">
             <div class="space-y-2">
-                <InputLabel for="password" value="Password" />
-                <TextInput
+                <BaseFieldLabel for="password" value="Password" />
+                <BaseInput
                     id="password"
                     type="password"
                     class="mt-1 block w-full"
@@ -40,7 +37,7 @@ const submit = () => {
                     autocomplete="current-password"
                     autofocus
                 />
-                <InputError class="mt-2" :message="form.errors.password" />
+                <BaseInputError class="mt-2" :message="form.errors.password" />
             </div>
 
             <div class="flex justify-end">

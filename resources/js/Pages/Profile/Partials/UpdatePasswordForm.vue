@@ -1,7 +1,4 @@
 <script setup>
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
 import PasswordStrengthCheck from '@/Components/PasswordStrengthCheck.vue';
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -48,9 +45,9 @@ const updatePassword = () => {
 
         <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
             <div>
-                <InputLabel for="current_password" value="Current Password" />
+                <BaseFieldLabel for="current_password" value="Current Password" />
 
-                <TextInput
+                <BaseInput
                     id="current_password"
                     ref="currentPasswordInput"
                     v-model="form.current_password"
@@ -59,16 +56,16 @@ const updatePassword = () => {
                     autocomplete="current-password"
                 />
 
-                <InputError
+                <BaseInputError
                     :message="form.errors.current_password"
                     class="mt-2"
                 />
             </div>
 
             <div>
-                <InputLabel for="password" value="New Password" />
+                <BaseFieldLabel for="password" value="New Password" />
 
-                <TextInput
+                <BaseInput
                     id="password"
                     ref="passwordInput"
                     v-model="form.password"
@@ -78,16 +75,16 @@ const updatePassword = () => {
                 />
 
                 <PasswordStrengthCheck :password="form.password" />
-                <InputError :message="form.errors.password" class="mt-2" />
+                <BaseInputError :message="form.errors.password" class="mt-2" />
             </div>
 
             <div>
-                <InputLabel
+                <BaseFieldLabel
                     for="password_confirmation"
                     value="Confirm Password"
                 />
 
-                <TextInput
+                <BaseInput
                     id="password_confirmation"
                     v-model="form.password_confirmation"
                     type="password"
@@ -95,7 +92,7 @@ const updatePassword = () => {
                     autocomplete="new-password"
                 />
 
-                <InputError
+                <BaseInputError
                     :message="form.errors.password_confirmation"
                     class="mt-2"
                 />

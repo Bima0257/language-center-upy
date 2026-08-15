@@ -1,5 +1,4 @@
 <script setup>
-import Modal from '@/Components/Modal.vue';
 import { IconBook2, IconCheck, IconX } from '@tabler/icons-vue';
 import { ref } from 'vue';
 
@@ -18,7 +17,7 @@ const show = ref(false);
         <IconBook2 :size="16" /> {{ buttonLabel }}
     </BaseButton>
 
-    <Modal :show="show" max-width="2xl" @close="show = false">
+    <BaseModal :show="show" max-width="2xl" @close="show = false">
         <div class="bg-surface-white rounded-2xl">
             <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant/30">
                 <h3 class="text-title-lg font-semibold text-primary flex items-center gap-2">
@@ -56,5 +55,5 @@ const show = ref(false);
                 <slot name="content" />
             </div>
         </div>
-    </Modal>
+    </BaseModal>
 </template>

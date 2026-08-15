@@ -1,7 +1,4 @@
 <script setup>
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineProps({
@@ -38,9 +35,9 @@ const form = useForm({
             class="mt-6 space-y-6"
         >
             <div>
-                <InputLabel for="name" value="Name" />
+                <BaseFieldLabel for="name" value="Name" />
 
-                <TextInput
+                <BaseInput
                     id="name"
                     type="text"
                     class="mt-1 block w-full"
@@ -50,13 +47,13 @@ const form = useForm({
                     autocomplete="name"
                 />
 
-                <InputError class="mt-2" :message="form.errors.name" />
+                <BaseInputError class="mt-2" :message="form.errors.name" />
             </div>
 
             <div>
-                <InputLabel for="email" value="Email" />
+                <BaseFieldLabel for="email" value="Email" />
 
-                <TextInput
+                <BaseInput
                     id="email"
                     type="email"
                     class="mt-1 block w-full"
@@ -65,7 +62,7 @@ const form = useForm({
                     autocomplete="username"
                 />
 
-                <InputError class="mt-2" :message="form.errors.email" />
+                <BaseInputError class="mt-2" :message="form.errors.email" />
             </div>
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">

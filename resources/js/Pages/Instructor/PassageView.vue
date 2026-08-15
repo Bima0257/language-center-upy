@@ -7,7 +7,6 @@ import DropDown from '@/Components/Shared/DropDown.vue';
 import FileUpload from '@/Components/Shared/FileUpload.vue';
 import EmptyState from '@/Components/Shared/EmptyState.vue';
 import Pagination from '@/Components/Shared/Pagination.vue';
-import Modal from '@/Components/Modal.vue';
 import QuickAddQuestionForm from '@/Components/ContentLibrary/QuickAddQuestionForm.vue';
 import PassageMediaViewer from '@/Components/ContentLibrary/PassageMediaViewer.vue';
 import { useUploadProgress } from '@/Composables/useUploadProgress';
@@ -268,7 +267,7 @@ function getMediaIcon(passage) {
         />
 
         <!-- Modal Form -->
-        <Modal :show="showForm" max-width="2xl" scrollable @close="closeForm">
+        <BaseModal :show="showForm" max-width="2xl" scrollable @close="closeForm">
             <div class="p-8">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-headline-md font-bold text-primary">{{ editingPassage ? 'Edit Materi Soal' : 'Materi Soal Baru' }}</h2>
@@ -346,7 +345,7 @@ function getMediaIcon(passage) {
                     </div>
                 </form>
             </div>
-        </Modal>
+        </BaseModal>
         <UploadProgressBar :show="showUploadProgress" :label="uploadLabel" :media-type="mediaType" />
     </DashboardLayout>
 </template>

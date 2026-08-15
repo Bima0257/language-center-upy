@@ -1,8 +1,4 @@
 <script setup>
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import Modal from '@/Components/Modal.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { useForm } from '@inertiajs/vue3';
 import { nextTick, ref } from 'vue';
 
@@ -52,7 +48,7 @@ const closeModal = () => {
 
         <BaseButton variant="danger" @click="confirmUserDeletion">Delete Account</BaseButton>
 
-        <Modal :show="confirmingUserDeletion" @close="closeModal">
+        <BaseModal :show="confirmingUserDeletion" @close="closeModal">
             <div class="p-6">
                 <h2
                     class="text-lg font-medium text-gray-900 dark:text-gray-100"
@@ -67,13 +63,13 @@ const closeModal = () => {
                 </p>
 
                 <div class="mt-6">
-                    <InputLabel
+                    <BaseFieldLabel
                         for="password"
                         value="Password"
                         class="sr-only"
                     />
 
-                    <TextInput
+                    <BaseInput
                         id="password"
                         ref="passwordInput"
                         v-model="form.password"
@@ -83,7 +79,7 @@ const closeModal = () => {
                         @keyup.enter="deleteUser"
                     />
 
-                    <InputError :message="form.errors.password" class="mt-2" />
+                    <BaseInputError :message="form.errors.password" class="mt-2" />
                 </div>
 
                 <div class="mt-6 flex justify-end">
@@ -101,6 +97,6 @@ const closeModal = () => {
                     </BaseButton>
                 </div>
             </div>
-        </Modal>
+        </BaseModal>
     </section>
 </template>

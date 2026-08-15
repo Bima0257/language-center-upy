@@ -1,13 +1,18 @@
 <script setup>
 defineProps({
+    for: {
+        type: String,
+        default: undefined,
+    },
     value: {
         type: String,
+        default: undefined,
     },
 });
 </script>
 
 <template>
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <label :for="$props.for" class="block text-label-md font-medium text-primary mb-1.5">
         <span v-if="value">{{ value }}</span>
         <span v-else><slot /></span>
     </label>

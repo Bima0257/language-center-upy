@@ -4,7 +4,6 @@ import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import DataTable from '@/Components/Shared/DataTable.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import DropDown from '@/Components/Shared/DropDown.vue';
-import Modal from '@/Components/Modal.vue';
 import { IconPlus, IconEdit, IconTrash, IconX } from '@tabler/icons-vue';
 import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
@@ -138,7 +137,7 @@ async function destroy(part) {
         </DataTable>
 
         <!-- Modal Tambah / Edit -->
-        <Modal :show="showModal" @close="closeModal" max-width="2xl" scrollable>
+        <BaseModal :show="showModal" @close="closeModal" max-width="2xl" scrollable>
             <div class="p-8">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-headline-md font-bold text-primary">{{ creating ? 'Tambah Part' : 'Edit Part' }}</h2>
@@ -192,6 +191,6 @@ async function destroy(part) {
                     </div>
                 </form>
             </div>
-        </Modal>
+        </BaseModal>
     </DashboardLayout>
 </template>
