@@ -36,23 +36,29 @@ class ExamService
         return DB::transaction(function () use ($data) {
             $exam = $this->examRepo->create($data);
 
-            foreach (SkillCode::cases() as $index => $skill) {
-                $section = $this->sectionRepo->create([
-                    'exam_id' => $exam->id,
-                    'skill' => $skill,
-                    'title' => $skill->label(),
-                    'order' => $index + 1,
-                ]);
+            $order = 1;
+            foreach (SkillCode::cases() as $skill) {
+                $banks = $this->questionRepo->banksWithApprovedBySkillAndExamType($skill->value, $exam->exam_type_id);
 
-                foreach ($this->skillParts->allActiveOrderedBySkill() as $part) {
-                    if ($part->skill !== $skill) {
-                        continue;
+                foreach ($banks as $bank) {
+                    $section = $this->sectionRepo->create([
+                        'exam_id' => $exam->id,
+                        'question_bank_id' => $bank->id,
+                        'skill' => $skill,
+                        'title' => "{$skill->label()} — {$bank->name}",
+                        'order' => $order++,
+                    ]);
+
+                    foreach ($this->skillParts->allActiveByBank($bank->id) as $part) {
+                        if ($part->skill !== $skill) {
+                            continue;
+                        }
+
+                        $this->sectionRepo->updateOrCreatePartPivot($section->id, $part->id, $part->order);
                     }
 
-                    $this->sectionRepo->updateOrCreatePartPivot($section->id, $part->id, $part->order);
+                    $this->attachApprovedQuestions($exam, $section, $skill);
                 }
-
-                $this->attachApprovedQuestions($exam, $section, $skill);
             }
 
             return $exam;
@@ -77,7 +83,7 @@ class ExamService
         return [
             'exam' => $exam,
             'skillOptions' => SkillCode::options(),
-            'parts' => $this->skillParts->allActiveOrderedBySkill(),
+            'parts' => $this->skillParts->allActiveOrdered(),
             'sectionQuestions' => $this->sectionRepo->questionsGroupedBySection($sectionIds),
             'sectionParts' => $this->sectionRepo->partsGroupedBySection($sectionIds),
         ];
@@ -85,9 +91,20 @@ class ExamService
 
     public function createData(): array
     {
+        $banksBySkill = [];
+
+        foreach (SkillCode::cases() as $skill) {
+            $banksBySkill[] = [
+                'skill' => $skill->value,
+                'label' => $skill->label(),
+                'banks' => $this->questionRepo->banksWithApprovedBySkillAndExamType($skill->value, null),
+            ];
+        }
+
         return [
             'skillOptions' => SkillCode::options(),
-            'parts' => $this->skillParts->allActiveOrderedBySkill(),
+            'parts' => $this->skillParts->allActiveOrdered(),
+            'banksBySkill' => $banksBySkill,
         ];
     }
 
@@ -100,7 +117,7 @@ class ExamService
 
     public function attachApprovedQuestions(Exam $exam, ExamSection $section, SkillCode $skill): int
     {
-        $approved = $this->questionRepo->approvedBySkillForExamType($skill->value, $exam->exam_type_id);
+        $approved = $this->questionRepo->approvedBySkillForExamType($skill->value, $exam->exam_type_id, $section->question_bank_id);
 
         $number = 1;
         foreach ($approved as $question) {

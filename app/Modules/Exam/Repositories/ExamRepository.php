@@ -16,7 +16,7 @@ class ExamRepository implements ExamRepositoryInterface
 
     public function findWithRelations(int $id): ?Exam
     {
-        return Exam::with('sections')->find($id);
+        return Exam::with('sections.questionBank')->find($id);
     }
 
     public function create(array $data): Exam

@@ -46,7 +46,10 @@ const quickQuestionForm = useForm({
 const quickIsAudio = computed(() => materialOfSkill(quickQuestionForm.skill) === 'audio');
 
 function quickParts() {
-    return props.parts.filter(p => String(p.skill) === String(quickQuestionForm.skill));
+    return props.parts.filter(p =>
+        String(p.skill) === String(quickQuestionForm.skill) &&
+        String(p.question_bank_id) === String(quickQuestionForm.question_bank_id),
+    );
 }
 
 const form = useForm({

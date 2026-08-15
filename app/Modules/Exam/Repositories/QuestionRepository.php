@@ -3,6 +3,7 @@
 namespace App\Modules\Exam\Repositories;
 
 use App\Models\Question;
+use App\Models\QuestionBank;
 use App\Modules\Exam\Repositories\Contracts\QuestionRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -87,10 +88,11 @@ class QuestionRepository implements QuestionRepositoryInterface
             ->get();
     }
 
-    public function approvedBySkillForExamType(string $skill, ?int $examTypeId): Collection
+    public function approvedBySkillForExamType(string $skill, ?int $examTypeId, ?int $bankId = null): Collection
     {
         return Question::where('skill', $skill)
             ->where('status', 'approved')
+            ->when($bankId, fn ($q) => $q->where('question_bank_id', $bankId))
             ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId))
             ->orderBy('id')
             ->get();
@@ -99,11 +101,12 @@ class QuestionRepository implements QuestionRepositoryInterface
     /**
      * @return array<int>
      */
-    public function approvedIdsWhereIn(array $ids, string $skill, ?int $examTypeId): array
+    public function approvedIdsWhereIn(array $ids, string $skill, ?int $examTypeId, ?int $bankId = null): array
     {
         return Question::whereIn('id', $ids)
             ->where('status', 'approved')
             ->where('skill', $skill)
+            ->when($bankId, fn ($q) => $q->where('question_bank_id', $bankId))
             ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId))
             ->pluck('id')
             ->all();
@@ -117,14 +120,27 @@ class QuestionRepository implements QuestionRepositoryInterface
             ->get();
     }
 
-    public function fallbackApprovedBySkills(array $skills, ?int $examTypeId, array $excludeIds): Collection
+    public function fallbackApprovedBySkills(array $skills, ?int $examTypeId, ?int $bankId, array $excludeIds): Collection
     {
         return Question::with('passage')
             ->whereIn('skill', $skills)
             ->where('status', 'approved')
+            ->when($bankId, fn ($q) => $q->where('question_bank_id', $bankId))
             ->when($examTypeId, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId)))
             ->whereNotIn('id', $excludeIds)
             ->get();
+    }
+
+    public function banksWithApprovedBySkillAndExamType(string $skill, ?int $examTypeId): Collection
+    {
+        $bankIds = Question::where('skill', $skill)
+            ->where('status', 'approved')
+            ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId))
+            ->distinct()
+            ->pluck('question_bank_id')
+            ->all();
+
+        return QuestionBank::whereIn('id', $bankIds)->orderBy('name')->get();
     }
 
     public function count(): int

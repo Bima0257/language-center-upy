@@ -37,9 +37,13 @@ class ExamRuntimeService
         $emptySections = $sections->filter(fn ($s) => ! $pivotRows->where('exam_section_id', $s->id)->count());
 
         if ($emptySections->isNotEmpty()) {
+            $skills = $emptySections->pluck('skill')->map(fn ($skill) => $skill->value)->unique()->all();
+            $bankIds = $emptySections->pluck('question_bank_id')->filter()->unique()->all();
+
             $fallback = $this->questions->fallbackApprovedBySkills(
-                $emptySections->pluck('skill')->map(fn ($skill) => $skill->value)->all(),
+                $skills,
                 $exam?->exam_type_id,
+                count($bankIds) === 1 ? $bankIds[0] : null,
                 $pivotQuestionIds->all(),
             );
 

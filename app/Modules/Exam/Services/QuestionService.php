@@ -46,7 +46,7 @@ class QuestionService
         return [
             'questionBanks' => $this->questionBanks->allActiveOrdered(),
             'skillOptions' => SkillCode::options(),
-            'parts' => $this->skillParts->allActiveOrderedBySkill(),
+            'parts' => $this->skillParts->allActiveOrdered(),
             'preselectedBankId' => $preselectedBankId > 0 && $this->questionBanks->existsActive($preselectedBankId)
                 ? $preselectedBankId
                 : null,
@@ -60,7 +60,7 @@ class QuestionService
             'question' => $this->questions->findWithRelations($question->id),
             'questionBanks' => $this->questionBanks->allActiveOrdered(),
             'skillOptions' => SkillCode::options(),
-            'parts' => $this->skillParts->allActiveOrderedBySkill(),
+            'parts' => $this->skillParts->allActiveOrdered(),
             'passages' => $this->passages->allOrdered(),
         ];
     }
@@ -78,7 +78,7 @@ class QuestionService
             'examTypes' => $this->examTypes->allActiveOrdered(),
             'questionBanks' => $this->questionBanks->allActiveWithExamTypeOrdered(),
             'skillOptions' => SkillCode::options(),
-            'parts' => $this->skillParts->allActiveOrderedBySkill(),
+            'parts' => $this->skillParts->allActiveOrdered(),
             'passages' => $this->passages->allOrdered(),
             'statuses' => self::STATUSES,
             'selectedPassage' => isset($filters['passage_id']) ? $this->passages->find($filters['passage_id']) : null,
@@ -105,7 +105,12 @@ class QuestionService
 
                 $rows = [];
                 foreach ($validated['questions'] as $q) {
-                    $this->assertQuestionSkillMatchesPart($q['skill'], $q['skill_part_id'], 'questions');
+                    $this->assertQuestionSkillMatchesPart(
+                        $validated['question_bank_id'],
+                        $q['skill'],
+                        $q['skill_part_id'],
+                        'questions',
+                    );
                     $this->assertQuestionCompatibleWithPassage($q['skill'], $passage, $q, 'questions');
 
                     $rows[] = [
@@ -160,7 +165,12 @@ class QuestionService
 
     public function updateLibrary(Question $question, array $validated): void
     {
-        $this->assertQuestionSkillMatchesPart($validated['skill'], $validated['skill_part_id'], 'skill_part_id');
+        $this->assertQuestionSkillMatchesPart(
+            $validated['question_bank_id'],
+            $validated['skill'],
+            $validated['skill_part_id'],
+            'skill_part_id',
+        );
 
         $passage = null;
         if (isset($validated['passage_id']) && $validated['passage_id']) {
@@ -274,12 +284,12 @@ class QuestionService
         ]);
     }
 
-    private function assertQuestionSkillMatchesPart(string $skill, int $skillPartId, string $errorKey): void
+    private function assertQuestionSkillMatchesPart(int $questionBankId, string $skill, int $skillPartId, string $errorKey): void
     {
         $part = $this->skillParts->find($skillPartId);
 
-        if ($part === null || $part->skill->value !== $skill) {
-            throw ValidationException::withMessages([$errorKey => 'Part harus milik skill yang sama dengan soal.']);
+        if ($part === null || $part->skill->value !== $skill || $part->question_bank_id !== $questionBankId) {
+            throw ValidationException::withMessages([$errorKey => 'Part harus milik bank soal dan skill yang sama dengan soal.']);
         }
     }
 

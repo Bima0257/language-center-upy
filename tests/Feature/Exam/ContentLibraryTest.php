@@ -44,7 +44,16 @@ class ContentLibraryTest extends TestCase
 
     private function readingPart(): SkillPart
     {
-        return SkillPart::where('skill', SkillCode::READING)->first();
+        return SkillPart::where('question_bank_id', $this->bank()->id)
+            ->where('skill', SkillCode::READING)
+            ->first();
+    }
+
+    private function listeningPart(): SkillPart
+    {
+        return SkillPart::where('question_bank_id', $this->bank()->id)
+            ->where('skill', SkillCode::LISTENING)
+            ->first();
     }
 
     public function test_guest_is_redirected_to_login(): void
@@ -108,7 +117,7 @@ class ContentLibraryTest extends TestCase
             'questions' => [
                 [
                     'skill' => 'listening',
-                    'skill_part_id' => SkillPart::where('skill', SkillCode::LISTENING)->first()->id,
+                    'skill_part_id' => $this->listeningPart()->id,
                     'question_text' => 'What is the lecture about?',
                     'option_a' => 'A',
                     'option_b' => 'B',
@@ -121,6 +130,45 @@ class ContentLibraryTest extends TestCase
 
         $this->assertDatabaseMissing('questions', [
             'question_text' => 'What is the lecture about?',
+        ]);
+    }
+
+    public function test_question_cannot_use_part_from_other_bank(): void
+    {
+        $this->loginAs('instructor');
+
+        $otherBank = QuestionBank::create([
+            'name' => 'Bank Soal Lain',
+            'exam_type_id' => ExamType::first()->id,
+            'is_active' => true,
+        ]);
+
+        $foreignPart = SkillPart::create([
+            'question_bank_id' => $otherBank->id,
+            'skill' => SkillCode::READING,
+            'name' => 'Part 1',
+            'order' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->post('/content-library', [
+            'question_bank_id' => $this->bank()->id,
+            'questions' => [
+                [
+                    'skill' => 'reading',
+                    'skill_part_id' => $foreignPart->id,
+                    'question_text' => 'Soal memakai part bank lain',
+                    'option_a' => 'A',
+                    'option_b' => 'B',
+                    'option_c' => 'C',
+                    'option_d' => 'D',
+                    'correct_answer' => 'A',
+                ],
+            ],
+        ])->assertSessionHasErrors('questions');
+
+        $this->assertDatabaseMissing('questions', [
+            'question_text' => 'Soal memakai part bank lain',
         ]);
     }
 

@@ -74,6 +74,13 @@ const filteredBanks = computed(() => {
     );
 });
 
+const filteredPartOptions = computed(() =>
+    props.parts.filter((p) =>
+        (!selectedBankId.value || String(p.question_bank_id) === String(selectedBankId.value)) &&
+        (!selectedSkill.value || String(p.skill) === String(selectedSkill.value)),
+    ),
+);
+
 function onTypeChange(value) {
     selectedTypeId.value = value;
     selectedBankId.value = "";
@@ -126,7 +133,9 @@ const quickIsAudio = computed(
 
 function quickParts() {
     return props.parts.filter(
-        (p) => String(p.skill) === String(quickQuestionForm.skill),
+        (p) =>
+            String(p.skill) === String(quickQuestionForm.skill) &&
+            String(p.question_bank_id) === String(quickQuestionForm.question_bank_id),
     );
 }
 
@@ -446,7 +455,7 @@ async function bulkReview(status) {
                 :selected-part-id="selectedPartId"
                 :selected-status="selectedStatus"
                 :skill-options="skillOptions"
-                :parts="parts"
+                :parts="filteredPartOptions"
                 :statuses="statuses"
                 :status-labels="statusLabels"
                 @update:searchQuery="searchQuery = $event"

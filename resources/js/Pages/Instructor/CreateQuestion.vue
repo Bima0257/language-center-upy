@@ -32,7 +32,10 @@ const globalPart = ref('');
 const perQuestionSkill = ref(false);
 
 function partsForSkill(skill) {
-    return props.parts.filter(p => String(p.skill) === String(skill));
+    return props.parts.filter(p =>
+        String(p.skill) === String(skill) &&
+        String(p.question_bank_id) === String(form.question_bank_id),
+    );
 }
 
 function globalParts() {
@@ -94,6 +97,25 @@ watch(globalSkill, (skill) => {
     if (materialOfSkill(skill) === 'audio') {
         passageType.value = 'audio';
         form.new_passage_type = 'audio';
+    }
+});
+
+// Ganti bank soal → reset skill & part (part milik bank tertentu)
+watch(() => form.question_bank_id, () => {
+    globalSkill.value = '';
+    globalPart.value = '';
+    for (const q of form.questions) {
+        q.skill = '';
+        q.skill_part_id = '';
+    }
+    if (form.new_passage_title) {
+        form.new_passage_title = '';
+        form.new_passage_content_text = '';
+        form.new_passage_audio_file = null;
+        form.new_passage_image_file = null;
+        form.new_passage_type = 'text';
+        passageType.value = 'text';
+        passageMode.value = 'none';
     }
 });
 

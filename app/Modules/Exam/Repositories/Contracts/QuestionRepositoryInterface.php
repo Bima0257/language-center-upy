@@ -3,6 +3,7 @@
 namespace App\Modules\Exam\Repositories\Contracts;
 
 use App\Models\Question;
+use App\Models\QuestionBank;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -36,12 +37,12 @@ interface QuestionRepositoryInterface
     /**
      * @return Collection<int, Question>
      */
-    public function approvedBySkillForExamType(string $skill, ?int $examTypeId): Collection;
+    public function approvedBySkillForExamType(string $skill, ?int $examTypeId, ?int $bankId = null): Collection;
 
     /**
      * @return array<int>
      */
-    public function approvedIdsWhereIn(array $ids, string $skill, ?int $examTypeId): array;
+    public function approvedIdsWhereIn(array $ids, string $skill, ?int $examTypeId, ?int $bankId = null): array;
 
     /**
      * @return Collection<int, Question>
@@ -51,7 +52,12 @@ interface QuestionRepositoryInterface
     /**
      * @return Collection<int, Question>
      */
-    public function fallbackApprovedBySkills(array $skills, ?int $examTypeId, array $excludeIds): Collection;
+    public function fallbackApprovedBySkills(array $skills, ?int $examTypeId, ?int $bankId, array $excludeIds): Collection;
+
+    /**
+     * @return Collection<int, QuestionBank>
+     */
+    public function banksWithApprovedBySkillAndExamType(string $skill, ?int $examTypeId): Collection;
 
     public function count(): int;
 

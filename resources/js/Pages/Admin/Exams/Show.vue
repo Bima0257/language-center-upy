@@ -216,7 +216,7 @@ function questionPreview(q) {
                                 <div>
                                     <p class="font-semibold text-primary">{{ section.title }}</p>
                                     <p class="text-text-muted text-label-md">
-                                        {{ skillName(section.skill) }} — {{ (sectionQuestions[section.id] || []).length }} soal terpasang
+                                        {{ skillName(section.skill) }}<span v-if="section.question_bank"> — {{ section.question_bank.name }}</span> — {{ (sectionQuestions[section.id] || []).length }} soal terpasang
                                     </p>
                                 </div>
                             </div>

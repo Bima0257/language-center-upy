@@ -38,7 +38,10 @@ const selectedPassage = computed(() =>
 );
 
 const partsForSelectedSkill = computed(() =>
-    props.parts.filter((p) => String(p.skill) === String(form.skill)),
+    props.parts.filter((p) =>
+        String(p.skill) === String(form.skill) &&
+        String(p.question_bank_id) === String(form.question_bank_id),
+    ),
 );
 
 function onSkillChange() {

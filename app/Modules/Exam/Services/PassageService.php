@@ -29,7 +29,7 @@ class PassageService
             'passages' => $this->passages->paginateWithCounts(),
             'questionBanks' => $this->questionBanks->allActiveWithExamTypeOrdered(),
             'skillOptions' => SkillCode::options(),
-            'parts' => $this->skillParts->allActiveOrderedBySkill(),
+            'parts' => $this->skillParts->allActiveOrdered(),
         ];
     }
 
