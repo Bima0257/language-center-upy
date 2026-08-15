@@ -11,7 +11,7 @@ class ExamRepository implements ExamRepositoryInterface
 {
     public function paginateWithSections(int $perPage = 15): LengthAwarePaginator
     {
-        return Exam::withCount('sections')->paginate($perPage);
+        return Exam::withCount('sections')->withExists('schedules')->paginate($perPage);
     }
 
     public function findWithRelations(int $id): ?Exam
@@ -34,6 +34,11 @@ class ExamRepository implements ExamRepositoryInterface
     public function delete(Exam $exam): void
     {
         $exam->delete();
+    }
+
+    public function hasSchedules(Exam $exam): bool
+    {
+        return $exam->schedules()->exists();
     }
 
     public function all(): Collection

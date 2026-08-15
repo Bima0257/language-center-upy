@@ -18,6 +18,8 @@ interface ExamRepositoryInterface
 
     public function delete(Exam $exam): void;
 
+    public function hasSchedules(Exam $exam): bool;
+
     public function all(): Collection;
 
     public function count(): int;

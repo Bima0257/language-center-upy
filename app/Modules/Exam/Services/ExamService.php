@@ -74,6 +74,10 @@ class ExamService
 
     public function delete(Exam $exam): void
     {
+        if ($this->examRepo->hasSchedules($exam)) {
+            throw new \RuntimeException('Ujian tidak bisa dihapus karena sudah memiliki jadwal.');
+        }
+
         $this->examRepo->delete($exam);
     }
 

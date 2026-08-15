@@ -62,7 +62,11 @@ class ExamController extends Controller
 
     public function destroy(Exam $exam): RedirectResponse
     {
-        $this->examService->delete($exam);
+        try {
+            $this->examService->delete($exam);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return to_route('admin.exams.index')
             ->with('success', 'Ujian dihapus.');

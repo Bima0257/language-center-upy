@@ -3,6 +3,7 @@
 namespace Tests\Feature\Exam;
 
 use App\Models\Exam;
+use App\Models\ExamSchedule;
 use App\Models\ExamSection;
 use App\Models\ExamSectionQuestion;
 use App\Models\ExamType;
@@ -219,5 +220,52 @@ class ExamsTest extends TestCase
             'exam_section_id' => $section->id,
             'question_id' => $question->id,
         ]);
+    }
+
+    public function test_admin_can_delete_exam_without_schedule(): void
+    {
+        $this->loginAs('admin');
+
+        $examType = ExamType::where('name', 'TOEFL iBT')->first();
+
+        $exam = Exam::create([
+            'exam_type_id' => $examType->id,
+            'title' => 'Ujian Tanpa Jadwal',
+            'mode' => 'tryout',
+            'duration_minutes' => 60,
+            'is_active' => true,
+        ]);
+
+        $this->delete("/admin/exams/{$exam->id}")->assertRedirect();
+
+        $this->assertDatabaseMissing('exams', ['id' => $exam->id]);
+    }
+
+    public function test_admin_cannot_delete_exam_with_schedule(): void
+    {
+        $this->loginAs('admin');
+
+        $examType = ExamType::where('name', 'TOEFL iBT')->first();
+
+        $exam = Exam::create([
+            'exam_type_id' => $examType->id,
+            'title' => 'Ujian Terjadwal',
+            'mode' => 'tryout',
+            'duration_minutes' => 60,
+            'is_active' => true,
+        ]);
+
+        ExamSchedule::create([
+            'exam_id' => $exam->id,
+            'title' => 'Jadwal Demo',
+            'scheduled_start' => now()->subHour(),
+            'scheduled_end' => now()->addHours(2),
+            'max_participants' => 30,
+            'is_active' => true,
+        ]);
+
+        $this->delete("/admin/exams/{$exam->id}")->assertRedirect();
+
+        $this->assertDatabaseHas('exams', ['id' => $exam->id]);
     }
 }

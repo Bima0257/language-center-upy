@@ -1,12 +1,21 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3'
+import { Head, Link, router } from '@inertiajs/vue3'
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue'
 import DataTable from '@/Components/Shared/DataTable.vue'
-import { IconPlus, IconEye } from '@tabler/icons-vue'
+import { IconPlus, IconEye, IconTrash } from '@tabler/icons-vue'
+import { useConfirm } from '@/Composables/useConfirm'
 
 defineProps({
     exams: { type: Object, default: () => ({ data: [], links: [], meta: {} }) },
 })
+
+const confirm = useConfirm()
+
+async function destroy(exam) {
+    if (exam.schedules_exists) return
+    if (!await confirm.confirm(`Hapus ujian "${exam.title}"? Tindakan ini tidak bisa dibatalkan.`)) return
+    router.delete(route('admin.exams.destroy', exam.id), { preserveScroll: true })
+}
 
 const columns = [
     { key: 'title', label: 'Judul Ujian', sortable: true, className: 'font-medium text-primary' },
@@ -38,10 +47,23 @@ const columns = [
             :meta="exams.meta"
         >
             <template #actions="{ row }">
-                <Link :href="route('admin.exams.show', row.id)"
-                      class="p-2 text-text-muted hover:text-secondary transition-colors" title="Detail">
-                    <IconEye :size="18" />
-                </Link>
+                <div class="flex items-center gap-2">
+                    <Link :href="route('admin.exams.show', row.id)"
+                          class="p-2 text-text-muted hover:text-secondary transition-colors" title="Detail">
+                        <IconEye :size="18" />
+                    </Link>
+                    <button
+                        @click="destroy(row)"
+                        :disabled="row.schedules_exists"
+                        :title="row.schedules_exists ? 'Tidak bisa dihapus — sudah terjadwal' : 'Hapus ujian'"
+                        class="p-2 transition-colors"
+                        :class="row.schedules_exists
+                            ? 'text-outline-variant cursor-not-allowed'
+                            : 'text-text-muted hover:text-error-red'"
+                    >
+                        <IconTrash :size="18" />
+                    </button>
+                </div>
             </template>
         </DataTable>
     </DashboardLayout>
