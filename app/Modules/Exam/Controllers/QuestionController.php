@@ -6,57 +6,41 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Exam\BulkImportFileRequest;
 use App\Http\Requests\Exam\BulkImportQuestionsRequest;
 use App\Http\Requests\Exam\StoreQuestionRequest;
-use App\Imports\QuestionsImport;
 use App\Models\Question;
+use App\Modules\Exam\Services\QuestionService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Facades\Excel;
 
 class QuestionController extends Controller
 {
+    public function __construct(
+        private QuestionService $questionService,
+    ) {}
+
     public function store(StoreQuestionRequest $request): RedirectResponse
     {
-        Question::create(array_merge(
-            $request->validated(),
-            ['type' => 'multiple_choice', 'created_by' => auth()->id()]
-        ));
+        $this->questionService->store($request->validated());
 
         return back()->with('success', 'Soal berhasil ditambahkan.');
     }
 
     public function bulkStore(BulkImportQuestionsRequest $request): RedirectResponse
     {
-        $imported = DB::transaction(function () use ($request) {
-            $imported = 0;
-
-            foreach ($request->validated('questions') as $question) {
-                Question::create(array_merge(
-                    $question,
-                    ['type' => 'multiple_choice', 'created_by' => auth()->id()]
-                ));
-                $imported++;
-            }
-
-            return $imported;
-        });
+        $imported = $this->questionService->bulkStore($request->validated('questions'));
 
         return back()->with('success', "{$imported} soal berhasil diimpor.");
     }
 
     public function update(StoreQuestionRequest $request, Question $question): RedirectResponse
     {
-        $question->update(array_merge(
-            $request->validated(),
-            ['updated_by' => auth()->id()]
-        ));
+        $this->questionService->update($question, $request->validated());
 
         return back()->with('success', 'Soal diperbarui.');
     }
 
     public function destroy(Question $question): RedirectResponse
     {
-        $question->delete();
+        $this->questionService->delete($question);
 
         return back()->with('success', 'Soal dihapus.');
     }
@@ -64,7 +48,7 @@ class QuestionController extends Controller
     public function importFile(BulkImportFileRequest $request): RedirectResponse
     {
         try {
-            Excel::import(new QuestionsImport, $request->file('file'));
+            $this->questionService->importFile($request->file('file'));
         } catch (\Throwable $e) {
             Log::warning('Import soal dari file gagal', ['error' => $e->getMessage()]);
 

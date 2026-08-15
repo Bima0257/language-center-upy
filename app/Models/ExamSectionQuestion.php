@@ -5,6 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $exam_section_id
+ * @property int $question_id
+ * @property int $order
+ * @property-read ExamSection $examSection
+ * @property-read Question $question
+ */
 class ExamSectionQuestion extends Model
 {
     public $timestamps = false;

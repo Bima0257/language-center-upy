@@ -66,4 +66,23 @@ class ExamSessionRepository implements ExamSessionRepositoryInterface
             ->where('status', SessionStatus::IN_PROGRESS)
             ->get();
     }
+
+    public function recentForUser(int $userId, int $limit = 3): Collection
+    {
+        return ExamSession::with('schedule.exam')
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->take($limit)
+            ->get();
+    }
+
+    public function countActive(): int
+    {
+        return ExamSession::where('status', SessionStatus::IN_PROGRESS)->count();
+    }
+
+    public function countFlaggedPendingReview(): int
+    {
+        return ExamSession::where('is_flagged', true)->whereNull('reviewed_at')->count();
+    }
 }

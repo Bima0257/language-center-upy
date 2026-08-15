@@ -40,4 +40,9 @@ class ExamRepository implements ExamRepositoryInterface
     {
         return Exam::with('sections')->get();
     }
+
+    public function count(): int
+    {
+        return Exam::count();
+    }
 }

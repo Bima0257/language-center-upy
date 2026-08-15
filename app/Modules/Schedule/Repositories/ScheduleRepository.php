@@ -68,4 +68,12 @@ class ScheduleRepository implements ScheduleRepositoryInterface
             ->get()
             ->filter(fn ($s) => $s->isAvailable());
     }
+
+    public function countAvailableNow(): int
+    {
+        return ExamSchedule::where('is_active', true)
+            ->where('scheduled_start', '<=', now())
+            ->where('scheduled_end', '>=', now())
+            ->count();
+    }
 }

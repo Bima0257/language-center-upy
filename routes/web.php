@@ -4,14 +4,9 @@ use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\MasterDataController;
 use App\Http\Controllers\Admin\ScoreInterpretationController;
 use App\Http\Controllers\Admin\VerificationController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
-use App\Models\Exam;
-use App\Models\ExamSchedule;
-use App\Models\ExamSession;
-use App\Models\Passage;
-use App\Models\Question;
-use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -31,59 +26,7 @@ Route::middleware('auth')->prefix('onboarding')->name('onboarding.')->group(func
 });
 
 Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        $data = [];
-
-        if ($user->hasRole('student')) {
-            $data['recentSessions'] = ExamSession::with('schedule.exam')
-                ->where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->take(3)
-                ->get();
-            $data['availableExamsCount'] = ExamSchedule::where('is_active', true)
-                ->where('scheduled_start', '<=', now())
-                ->where('scheduled_end', '>=', now())
-                ->count();
-        }
-
-        if ($user->hasRole('admin') || $user->hasRole('superadmin')) {
-            $data['totalUsers'] = User::count();
-            $data['totalExams'] = Exam::count();
-            $data['activeSessionsCount'] = ExamSession::where('status', 'in_progress')->count();
-            $data['flaggedSessionsCount'] = ExamSession::where('is_flagged', true)->whereNull('reviewed_at')->count();
-            $data['pendingReviewCount'] = Question::where('status', 'draft')->count();
-            $data['pendingQuestions'] = Question::with(['passage', 'questionBank', 'skill', 'creator'])
-                ->where('status', 'draft')
-                ->latest()
-                ->take(10)
-                ->get();
-        }
-
-        if ($user->hasRole('instructor')) {
-            $data['totalQuestions'] = Question::count();
-            $data['totalPassages'] = Passage::count();
-
-            $data['questionsBySkill'] = Question::selectRaw('skill as label, COUNT(*) as count')
-                ->whereNotNull('skill')
-                ->groupBy('skill')
-                ->orderByDesc('count')
-                ->get();
-
-            $data['questionsByStatus'] = Question::selectRaw('status, COUNT(*) as count')
-                ->groupBy('status')
-                ->orderByDesc('count')
-                ->get();
-
-            $data['questionsByBank'] = Question::selectRaw('question_banks.name as label, COUNT(*) as count')
-                ->leftJoin('question_banks', 'question_banks.id', '=', 'questions.question_bank_id')
-                ->groupBy('question_banks.name')
-                ->orderByDesc('count')
-                ->get();
-        }
-
-        return Inertia::render('Dashboard', $data);
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::middleware('role:admin,superadmin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/verify-users', [VerificationController::class, 'index'])->name('verify-users');

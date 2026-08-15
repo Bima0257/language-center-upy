@@ -3,65 +3,42 @@
 namespace App\Modules\Exam\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\ExamType;
+use App\Http\Requests\Exam\StoreQuestionBankRequest;
+use App\Http\Requests\Exam\UpdateQuestionBankRequest;
 use App\Models\QuestionBank;
+use App\Modules\Exam\Services\QuestionBankService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Mews\Purifier\Facades\Purifier;
 
 class QuestionBankController extends Controller
 {
+    public function __construct(
+        private QuestionBankService $questionBankService,
+    ) {}
+
     public function index(): Response
     {
-        return Inertia::render('Instructor/QuestionBankManager', [
-            'questionBanks' => QuestionBank::with('examType')->withCount('questions')->orderBy('name')->get(),
-            'examTypes' => ExamType::where('is_active', true)->orderBy('name')->get(),
-        ]);
+        return Inertia::render('Instructor/QuestionBankManager', $this->questionBankService->indexData());
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreQuestionBankRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'exam_type_id' => ['required', 'exists:exam_types,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'is_active' => ['boolean'],
-        ]);
-
-        $validated['description'] = $validated['description'] ?? null;
-        if ($validated['description']) {
-            $validated['description'] = Purifier::clean($validated['description']);
-        }
-
-        QuestionBank::create($validated);
+        $this->questionBankService->store($request->validated());
 
         return back()->with('success', 'Bank soal berhasil dibuat.');
     }
 
-    public function update(Request $request, QuestionBank $questionBank): RedirectResponse
+    public function update(UpdateQuestionBankRequest $request, QuestionBank $questionBank): RedirectResponse
     {
-        $validated = $request->validate([
-            'exam_type_id' => ['required', 'exists:exam_types,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'is_active' => ['boolean'],
-        ]);
-
-        $validated['description'] = $validated['description'] ?? null;
-        if ($validated['description']) {
-            $validated['description'] = Purifier::clean($validated['description']);
-        }
-
-        $questionBank->update($validated);
+        $this->questionBankService->update($questionBank, $request->validated());
 
         return back()->with('success', 'Bank soal berhasil diperbarui.');
     }
 
     public function destroy(QuestionBank $questionBank): RedirectResponse
     {
-        $questionBank->delete();
+        $this->questionBankService->destroy($questionBank);
 
         return back()->with('success', 'Bank soal berhasil dihapus.');
     }

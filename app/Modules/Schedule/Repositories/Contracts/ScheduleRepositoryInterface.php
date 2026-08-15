@@ -23,4 +23,6 @@ interface ScheduleRepositoryInterface
     public function hasOverlap(array $data, ?int $excludeId = null): bool;
 
     public function getAvailableSchedules(): Collection;
+
+    public function countAvailableNow(): int;
 }

@@ -5,9 +5,7 @@ namespace App\Modules\Session\Controllers;
 use App\Enums\ViolationType;
 use App\Http\Controllers\Controller;
 use App\Models\ExamSchedule;
-use App\Models\ExamSectionQuestion;
 use App\Models\ExamSession;
-use App\Models\Question;
 use App\Modules\Schedule\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Modules\Security\Actions\LogViolation;
 use App\Modules\Session\Actions\CompleteSection;
@@ -15,6 +13,7 @@ use App\Modules\Session\Actions\Heartbeat;
 use App\Modules\Session\Actions\SaveAnswer;
 use App\Modules\Session\Actions\StartExamSession;
 use App\Modules\Session\Actions\SubmitExam;
+use App\Modules\Session\Services\ExamRuntimeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,6 +31,7 @@ class ExamSessionController extends Controller
         private Heartbeat $heartbeat,
         private LogViolation $logViolation,
         private ScheduleRepositoryInterface $scheduleRepo,
+        private ExamRuntimeService $runtime,
     ) {}
 
     public function available(): Response
@@ -70,48 +70,9 @@ class ExamSessionController extends Controller
             'currentSection',
         ]);
 
-        $exam = $session->schedule?->exam;
-        $sections = $exam !== null ? $exam->sections : collect();
-        $sectionSkills = $sections->pluck('skill');
-
-        // Load bank questions matching exam section skills, scoped by exam category
-        $pivotRows = ExamSectionQuestion::whereIn('exam_section_id', $sections->pluck('id'))->get();
-        $pivotQuestionIds = $pivotRows->pluck('question_id');
-
-        $questions = collect();
-
-        if ($pivotRows->isNotEmpty()) {
-            $questions = Question::with('passage')
-                ->whereIn('id', $pivotQuestionIds)
-                ->where('status', 'approved')
-                ->get()
-                ->each(function ($q) use ($pivotRows) {
-                    $row = $pivotRows->firstWhere('question_id', $q->id);
-                    $q->order = $row ? $row->order : $q->order;
-                })
-                ->sortBy('order')
-                ->values();
-        }
-
-        // Section tanpa susunan soal → fallback semua soal approved by skill
-        $emptySections = $sections->filter(fn ($s) => ! $pivotRows->where('exam_section_id', $s->id)->count());
-
-        if ($emptySections->isNotEmpty()) {
-            $fallback = Question::with('passage')
-                ->whereIn('skill', $emptySections->pluck('skill'))
-                ->where('status', 'approved')
-                ->when($exam?->exam_type_id, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $exam->exam_type_id)))
-                ->whereNotIn('id', $pivotQuestionIds)
-                ->get();
-
-            $questions = $questions->merge($fallback);
-        }
-
-        $bankQuestions = $questions;
-
         return Inertia::render('Exam/Take', [
             'session' => $session,
-            'bankQuestions' => $bankQuestions,
+            'bankQuestions' => $this->runtime->questionsForSession($session),
         ]);
     }
 

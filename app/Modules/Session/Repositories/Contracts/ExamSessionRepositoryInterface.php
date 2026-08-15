@@ -22,4 +22,10 @@ interface ExamSessionRepositoryInterface
     public function getFlaggedSessions(bool $includeReviewed = false): Collection;
 
     public function getActiveSessions(): Collection;
+
+    public function recentForUser(int $userId, int $limit = 3): Collection;
+
+    public function countActive(): int;
+
+    public function countFlaggedPendingReview(): int;
 }
