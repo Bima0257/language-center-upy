@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('question_bank_id')->constrained()->cascadeOnDelete();
             $table->foreignId('passage_id')->nullable()->constrained()->nullOnDelete();
             $table->enum('type', ['multiple_choice'])->default('multiple_choice');
-            $table->foreignId('skill_id')->nullable()->constrained()->nullOnDelete();
+            $table->enum('skill', ['reading', 'listening']);
             $table->foreignId('skill_part_id')->nullable()->constrained()->nullOnDelete();
             $table->text('question_text');
             $table->text('option_a');
@@ -21,8 +21,6 @@ return new class extends Migration
             $table->text('option_c');
             $table->text('option_d');
             $table->char('correct_answer', 1);
-            $table->string('audio_url')->nullable();
-            $table->string('image_url')->nullable();
             $table->integer('order');
             $table->enum('status', ['draft', 'approved', 'rejected'])->default('draft');
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
@@ -31,6 +29,7 @@ return new class extends Migration
             $table->timestamp('reviewed_at')->nullable();
             $table->text('review_note')->nullable();
             $table->timestamps();
+            $table->index('skill');
         });
     }
 

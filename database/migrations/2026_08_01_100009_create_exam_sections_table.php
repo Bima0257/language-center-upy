@@ -11,7 +11,8 @@ return new class extends Migration
         Schema::create('exam_sections', function (Blueprint $table) {
             $table->id();
             $table->foreignId('exam_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('skill_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('question_bank_id')->nullable()->constrained()->nullOnDelete();
+            $table->enum('skill', ['reading', 'listening']);
             $table->string('title');
             $table->integer('order');
             $table->integer('total_questions')->default(0);

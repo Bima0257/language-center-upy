@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('title');
             $table->dateTime('scheduled_start');
             $table->dateTime('scheduled_end');
+            $table->integer('late_tolerance_minutes')->default(15);
             $table->integer('max_participants')->default(30);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

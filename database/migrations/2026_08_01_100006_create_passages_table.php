@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('passages', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('type', 50)->default('text');
+            $table->enum('type', ['text', 'audio', 'image'])->default('text');
             $table->longText('content_text')->nullable();
             $table->string('audio_url')->nullable();
             $table->string('image_url')->nullable();
