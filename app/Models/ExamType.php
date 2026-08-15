@@ -17,7 +17,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Exam> $exams
  * @property-read Collection<int, QuestionBank> $questionBanks
- * @property-read Collection<int, Skill> $skills
  * @property-read Collection<int, ScoringRule> $scoringRules
  * @property-read Collection<int, ScoreInterpretation> $scoreInterpretations
  */
@@ -46,11 +45,6 @@ class ExamType extends Model
     public function questionBanks(): HasMany
     {
         return $this->hasMany(QuestionBank::class);
-    }
-
-    public function skills(): HasMany
-    {
-        return $this->hasMany(Skill::class);
     }
 
     public function scoringRules(): HasMany

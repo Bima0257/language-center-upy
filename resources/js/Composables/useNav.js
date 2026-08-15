@@ -6,7 +6,6 @@ import {
     IconEyeCheck,
     IconUsers,
     IconReport,
-    IconDatabase,
     IconCertificate,
     IconFolders,
     IconCategory,
@@ -53,7 +52,6 @@ export function getNav(roles) {
                 children: [
                     { label: "Jenis Tes", icon: IconCategory, route: "admin.master-data.exam-types.index" },
                     { label: "Bank Soal Manager", icon: IconFolders, route: "content-library.question-banks.index" },
-                    { label: "Master Skill", icon: IconDatabase, route: "admin.master-data.skills.index" },
                     { label: "Part Soal", icon: IconListDetails, route: "admin.master-data.parts.index" },
                     { label: "Materi Soal", icon: IconFileDescription, route: "content-library.passages.index" },
                     { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },

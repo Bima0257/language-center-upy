@@ -2,10 +2,10 @@
 
 namespace App\Modules\Exam\Controllers;
 
+use App\Enums\SkillCode;
 use App\Http\Controllers\Controller;
 use App\Models\Passage;
 use App\Models\QuestionBank;
-use App\Models\Skill;
 use App\Models\SkillPart;
 use App\Services\AudioCompressionService;
 use App\Services\ImageCompressionService;
@@ -33,8 +33,8 @@ class PassageController extends Controller
         return Inertia::render('Instructor/PassageView', [
             'passages' => $passages,
             'questionBanks' => QuestionBank::with('examType')->where('is_active', true)->orderBy('name')->get(),
-            'skills' => Skill::with('examType')->where('is_active', true)->orderBy('name')->get(),
-            'parts' => SkillPart::where('is_active', true)->orderBy('skill_id')->orderBy('order')->get(),
+            'skillOptions' => SkillCode::options(),
+            'parts' => SkillPart::where('is_active', true)->orderBy('skill')->orderBy('order')->get(),
         ]);
     }
 
@@ -42,7 +42,7 @@ class PassageController extends Controller
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'in:text,audio,image,prompt'],
+            'type' => ['required', 'in:text,audio,image'],
             'content_text' => ['nullable', 'string'],
             'audio_file' => ['nullable', 'file', 'mimes:mp3,wav,ogg,m4a', 'max:51200'],
             'image_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
@@ -68,6 +68,18 @@ class PassageController extends Controller
 
         unset($validated['audio_file'], $validated['image_file']);
 
+        if ($validated['type'] === 'audio' && empty($validated['audio_url'])) {
+            return back()->with('error', 'Passage tipe audio wajib memiliki file audio.');
+        }
+
+        if ($validated['type'] === 'image' && empty($validated['image_url'])) {
+            return back()->with('error', 'Passage tipe gambar wajib memiliki file gambar.');
+        }
+
+        if ($validated['type'] === 'text' && empty($validated['content_text'])) {
+            return back()->with('error', 'Passage tipe teks wajib memiliki isi teks.');
+        }
+
         Passage::create($validated);
 
         return back()->with('success', 'Passage berhasil dibuat.');
@@ -77,7 +89,7 @@ class PassageController extends Controller
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'in:text,audio,image,prompt'],
+            'type' => ['required', 'in:text,audio,image'],
             'content_text' => ['nullable', 'string'],
             'audio_file' => ['nullable', 'file', 'mimes:mp3,wav,ogg,m4a', 'max:51200'],
             'image_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
@@ -104,6 +116,18 @@ class PassageController extends Controller
         }
 
         unset($validated['audio_file'], $validated['image_file']);
+
+        if ($validated['type'] === 'audio' && empty($validated['audio_url']) && empty($passage->audio_url)) {
+            return back()->with('error', 'Passage tipe audio wajib memiliki file audio.');
+        }
+
+        if ($validated['type'] === 'image' && empty($validated['image_url']) && empty($passage->image_url)) {
+            return back()->with('error', 'Passage tipe gambar wajib memiliki file gambar.');
+        }
+
+        if ($validated['type'] === 'text' && empty($validated['content_text'])) {
+            return back()->with('error', 'Passage tipe teks wajib memiliki isi teks.');
+        }
 
         $passage->update($validated);
 

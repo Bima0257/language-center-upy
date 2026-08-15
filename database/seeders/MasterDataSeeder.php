@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Enums\SkillCode;
 use App\Models\Department;
 use App\Models\ExamType;
 use App\Models\Faculty;
 use App\Models\QuestionBank;
 use App\Models\ScoreInterpretation;
 use App\Models\ScoringRule;
-use App\Models\Skill;
 use App\Models\SkillPart;
 use Illuminate\Database\Seeder;
 
@@ -24,38 +24,24 @@ class MasterDataSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        $reading = Skill::firstOrCreate(['code' => 'reading'], [
-            'exam_type_id' => $toefl->id,
-            'name' => 'Reading',
-            'is_active' => true,
-        ]);
-        $reading->update(['exam_type_id' => $toefl->id]);
-
-        $listening = Skill::firstOrCreate(['code' => 'listening'], [
-            'exam_type_id' => $toefl->id,
-            'name' => 'Listening',
-            'is_active' => true,
-        ]);
-        $listening->update(['exam_type_id' => $toefl->id]);
-
         SkillPart::firstOrCreate(
-            ['skill_id' => $reading->id, 'name' => 'Part 1'],
+            ['skill' => SkillCode::READING, 'name' => 'Part 1'],
             ['order' => 1, 'directions' => 'Read each passage carefully. Answer questions based on the information given in the passage.', 'is_active' => true],
         );
         SkillPart::firstOrCreate(
-            ['skill_id' => $reading->id, 'name' => 'Part 2'],
+            ['skill' => SkillCode::READING, 'name' => 'Part 2'],
             ['order' => 2, 'directions' => 'A word or phrase is missing in each of the sentences below. Select the best answer to complete the sentence.', 'is_active' => true],
         );
         SkillPart::firstOrCreate(
-            ['skill_id' => $listening->id, 'name' => 'Part 1'],
+            ['skill' => SkillCode::LISTENING, 'name' => 'Part 1'],
             ['order' => 1, 'directions' => 'Listen to each short conversation and question. Select the best answer to each question based on what is stated or implied by the speakers.', 'is_active' => true],
         );
         SkillPart::firstOrCreate(
-            ['skill_id' => $listening->id, 'name' => 'Part 2'],
+            ['skill' => SkillCode::LISTENING, 'name' => 'Part 2'],
             ['order' => 2, 'directions' => 'Listen to each longer conversation or talk. Answer the questions based on the information you hear.', 'is_active' => true],
         );
         SkillPart::firstOrCreate(
-            ['skill_id' => $listening->id, 'name' => 'Part 3'],
+            ['skill' => SkillCode::LISTENING, 'name' => 'Part 3'],
             ['order' => 3, 'directions' => 'Listen to each lecture. Answer the questions based on the information presented in the lecture.', 'is_active' => true],
         );
 

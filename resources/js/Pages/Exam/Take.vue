@@ -11,20 +11,20 @@ import { useExamTimer } from '@/Modules/ExamModule/Composables/useExamTimer.js';
 import { useExamSecurity } from '@/Modules/ExamModule/Composables/useExamSecurity.js';
 import { useAutoSave } from '@/Modules/ExamModule/Composables/useAutoSave.js';
 import axios from 'axios';
+import { materialOfSkill } from '@/constants/skills';
 
 const props = defineProps({
     session: { type: Object, required: true },
     bankQuestions: { type: Array, default: () => [] },
-    skills: { type: Object, default: () => ({}) },
 });
 
 const currentSection = computed(() => props.session.current_section);
 
 const currentQuestions = computed(() => {
-    const skillId = currentSection.value?.skill_id;
-    if (!skillId) return [];
+    const skill = currentSection.value?.skill;
+    if (!skill) return [];
     return props.bankQuestions
-        .filter(q => q.skill_id === skillId)
+        .filter(q => q.skill === skill)
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 });
 
@@ -87,12 +87,12 @@ const currentViolation = ref(null);
 const showSubmitConfirm = ref(false);
 
 const currentAudioSrc = computed(() => {
-    const path = currentQuestion.value?.audio_url || currentQuestion.value?.passage?.audio_url;
+    const path = currentQuestion.value?.passage?.audio_url;
     return path ? '/storage/' + path : null;
 });
 
 const currentImageSrc = computed(() => {
-    const path = currentQuestion.value?.image_url || currentQuestion.value?.passage?.image_url;
+    const path = currentQuestion.value?.passage?.image_url;
     return path ? '/storage/' + path : null;
 });
 
@@ -154,7 +154,7 @@ onUnmounted(() => {
     <ExamLayout :session="session" :remaining-seconds="remaining" :minutes="minutes" :seconds="seconds"
                 :is-warning="isWarning" :is-danger="isDanger">
         <div class="flex h-full">
-            <div v-if="currentQuestion?.material_type === 'text'" class="flex-1 flex">
+            <div v-if="materialOfSkill(currentQuestion?.skill) === 'text'" class="flex-1 flex">
                 <div class="w-1/2 p-6 overflow-y-auto border-r border-outline-variant/30">
                     <PassageViewer v-if="currentQuestion?.passage" :passage="currentQuestion.passage" />
                 </div>
@@ -198,7 +198,7 @@ onUnmounted(() => {
                 </div>
             </div>
 
-            <div v-else-if="currentQuestion?.material_type === 'audio'" class="flex-1 p-6 overflow-y-auto">
+            <div v-else-if="materialOfSkill(currentQuestion?.skill) === 'audio'" class="flex-1 p-6 overflow-y-auto">
                 <div class="mb-6">
                     <p class="text-label-md text-text-muted mb-2">Putar audio sebelum menjawab soal</p>
                     <div v-if="currentAudioSrc || currentImageSrc" class="bg-surface-container-low rounded-2xl border border-surface-variant overflow-hidden">

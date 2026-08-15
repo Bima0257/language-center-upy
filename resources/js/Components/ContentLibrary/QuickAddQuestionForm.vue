@@ -20,7 +20,7 @@ defineEmits(['save', 'cancel', 'skill-change']);
     <div class="px-5 py-4 bg-pastel-blue/10 border-b border-outline-variant/30">
         <p class="text-label-md font-semibold text-primary mb-3">Tambah Soal ke "{{ passageTitle }}"</p>
         <form @submit.prevent="$emit('save')" class="space-y-3">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div>
                     <DropDown
                         v-model="form.question_bank_id"
@@ -35,12 +35,12 @@ defineEmits(['save', 'cancel', 'skill-change']);
                 </div>
                 <div>
                     <DropDown
-                        v-model="form.skill_id"
+                        v-model="form.skill"
                         :options="availableQuickSkills"
                         label="Skill *"
                         placeholder="Pilih Skill"
-                        option-label="name"
-                        option-value="id"
+                        option-label="label"
+                        option-value="value"
                         size="sm"
                         @change="$emit('skill-change')"
                     />
@@ -54,21 +54,7 @@ defineEmits(['save', 'cancel', 'skill-change']);
                         option-label="name"
                         option-value="id"
                         size="sm"
-                        :disabled="!form.skill_id"
-                    />
-                </div>
-                <div>
-                    <DropDown
-                        v-model="form.material_type"
-                        :options="[
-                            { id: 'text', name: 'Teks (Reading)' },
-                            { id: 'audio', name: 'Audio + Gambar' },
-                        ]"
-                        label="Tipe Materi *"
-                        placeholder="Pilih tipe"
-                        option-label="name"
-                        option-value="id"
-                        size="sm"
+                        :disabled="!form.skill"
                     />
                 </div>
                 <div>
@@ -86,7 +72,7 @@ defineEmits(['save', 'cancel', 'skill-change']);
             <template v-if="quickIsAudio">
                 <p class="flex items-center gap-1.5 text-label-md text-text-muted bg-pastel-purple/10 border border-pastel-purple/40 rounded-xl px-4 py-3">
                     <IconHeadphones :size="16" class="text-secondary shrink-0" />
-                    Soal tipe audio memakai audio passage ini — tanpa teks soal dan pilihan jawaban.
+                    Soal listening memakai audio passage ini — tanpa teks soal dan pilihan jawaban.
                 </p>
             </template>
             <template v-else>

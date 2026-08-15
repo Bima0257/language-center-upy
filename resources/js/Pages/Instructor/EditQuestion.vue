@@ -1,85 +1,54 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
-import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
 import DropDown from '@/Components/Shared/DropDown.vue';
-import FileUpload from '@/Components/Shared/FileUpload.vue';
 import OptionsInput from '@/Components/ContentLibrary/OptionsInput.vue';
 import AnswerKeyPicker from '@/Components/ContentLibrary/AnswerKeyPicker.vue';
-import { useUploadProgress } from '@/Composables/useUploadProgress';
 import { IconInfoCircle } from '@tabler/icons-vue';
 import { computed } from 'vue';
+import { SKILL_OPTIONS, skillLabel, materialOfSkill } from '@/constants/skills';
 
 const props = defineProps({
     question: { type: Object, required: true },
     questionBanks: { type: Array, default: () => [] },
-    skills: { type: Array, default: () => [] },
+    skillOptions: { type: Array, default: () => [] },
     parts: { type: Array, default: () => [] },
     passages: { type: Array, default: () => [] },
 });
 
 const optionKeys = ['A', 'B', 'C', 'D'];
 
-const materialTypeOptions = [
-    { id: 'text', name: 'Teks (Reading)' },
-    { id: 'audio', name: 'Audio + Gambar' },
-];
-
 const form = useForm({
     question_bank_id: props.question.question_bank_id || '',
-    skill_id: props.question.skill_id || '',
+    skill: props.question.skill || '',
     skill_part_id: props.question.skill_part_id || '',
     passage_id: props.question.passage_id || null,
-    material_type: props.question.material_type || 'text',
     question_text: props.question.question_text || '',
     option_a: props.question.option_a || '',
     option_b: props.question.option_b || '',
     option_c: props.question.option_c || '',
     option_d: props.question.option_d || '',
     correct_answer: props.question.correct_answer || '',
-    audio_file: null,
-    image_file: null,
 });
 
-const selectedBank = computed(() =>
-    props.questionBanks.find(b => String(b.id) === String(form.question_bank_id)) || null,
+const isMaterialAudio = computed(() => materialOfSkill(form.skill) === 'audio');
+
+const selectedPassage = computed(() =>
+    props.passages.find((p) => String(p.id) === String(form.passage_id)) || null,
 );
-
-const availableSkills = computed(() => {
-    if (!selectedBank.value) return props.skills;
-    return props.skills.filter(s => String(s.exam_type_id) === String(selectedBank.value.exam_type_id));
-});
-
-const isMaterialAudio = computed(() => (form.material_type || 'text') === 'audio');
 
 const partsForSelectedSkill = computed(() =>
-    props.parts.filter(p => String(p.skill_id) === String(form.skill_id)),
+    props.parts.filter((p) => String(p.skill) === String(form.skill)),
 );
-
-function skillName(id) {
-    return props.skills.find(s => String(s.id) === String(id))?.name || '';
-}
 
 function onSkillChange() {
     form.skill_part_id = '';
 }
 
-const storedAudioUrl = computed(() => {
-    const path = props.question.audio_url || props.question.passage?.audio_url;
-    return path ? '/storage/' + path : null;
-});
-
-const storedImageUrl = computed(() => {
-    const path = props.question.image_url || props.question.passage?.image_url;
-    return path ? '/storage/' + path : null;
-});
-
 const indexUrl = computed(() => route('content-library.index', {
     question_bank_id: props.question.question_bank_id,
-    skill_id: props.question.skill_id,
+    skill: props.question.skill,
 }));
-
-const { showUploadProgress, uploadLabel, mediaType } = useUploadProgress(form);
 
 function submit() {
     form.put(route('content-library.update', props.question.id));
@@ -94,10 +63,10 @@ function submit() {
             <div class="bg-surface-white rounded-3xl p-8 shadow-soft border border-outline-variant/30">
                 <div class="mb-6">
                     <h2 class="text-headline-md font-bold text-primary">Edit Soal</h2>
-                    <p class="text-text-muted text-text-body text-body-md mt-1">Pilihan Ganda — {{ skillName(question.skill_id) }}</p>
+                    <p class="text-text-muted text-text-body text-body-md mt-1">Pilihan Ganda — {{ skillLabel(question.skill) }}</p>
                 </div>
-                <form @submit.prevent="submit" class="space-y-6" enctype="multipart/form-data">
-                    <div class="grid grid-cols-3 gap-4">
+                <form @submit.prevent="submit" class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
                             <DropDown
                                 v-model="form.question_bank_id"
@@ -110,23 +79,13 @@ function submit() {
                         </div>
                         <div>
                             <DropDown
-                                v-model="form.skill_id"
-                                :options="availableSkills"
+                                v-model="form.skill"
+                                :options="SKILL_OPTIONS"
                                 label="Skill *"
                                 placeholder="Pilih Skill"
-                                option-label="name"
-                                option-value="id"
+                                option-label="label"
+                                option-value="value"
                                 @change="onSkillChange"
-                            />
-                        </div>
-                        <div>
-                            <DropDown
-                                v-model="form.material_type"
-                                :options="materialTypeOptions"
-                                label="Tipe Materi *"
-                                placeholder="Pilih tipe materi"
-                                option-label="name"
-                                option-value="id"
                             />
                         </div>
                     </div>
@@ -139,15 +98,15 @@ function submit() {
                                 placeholder="Pilih part"
                                 option-label="name"
                                 option-value="id"
-                                :disabled="!form.skill_id"
+                                :disabled="!form.skill"
                             />
                         </div>
                         <div>
                             <DropDown
                                 v-model="form.passage_id"
                                 :options="passages"
-                                label="Materi Soal (opsional)"
-                                placeholder="Tanpa Materi Soal"
+                                label="Materi Soal"
+                                :placeholder="isMaterialAudio ? 'Pilih passage audio (wajib)' : 'Tanpa Materi Soal'"
                                 option-label="title"
                                 option-value="id"
                                 clearable
@@ -161,35 +120,19 @@ function submit() {
 
                     <hr class="border-outline-variant/50" />
 
-                    <!-- MODE AUDIO + GAMBAR -->
+                    <!-- MODE LISTENING: audio dari passage -->
                     <template v-if="isMaterialAudio">
                         <div class="bg-pastel-purple/10 border border-pastel-purple/40 rounded-2xl p-5 space-y-4">
                             <p class="flex items-center gap-1.5 text-label-md text-text-muted">
                                 <IconInfoCircle :size="16" class="text-secondary shrink-0" />
-                                Soal, materi, dan pilihan jawaban berada di audio. Peserta hanya memilih A/B/C/D.
+                                Soal, materi, dan pilihan jawaban berada di audio passage. Peserta hanya memilih A/B/C/D.
                             </p>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FileUpload
-                                    v-model="form.audio_file"
-                                    label="Ganti Audio (opsional, max 50MB)"
-                                    placeholder="Klik untuk upload audio"
-                                    accept=".mp3,.wav,.ogg,.m4a"
-                                    media-type="audio"
-                                    :preview-url="storedAudioUrl"
-                                    :error="form.errors.audio_file"
-                                />
-                                <FileUpload
-                                    v-model="form.image_file"
-                                    label="Ganti Gambar (opsional)"
-                                    placeholder="Klik untuk upload gambar"
-                                    accept=".jpg,.jpeg,.png,.webp"
-                                    media-type="image"
-                                    :preview-url="storedImageUrl"
-                                    :error="form.errors.image_file"
-                                />
-                            </div>
-
+                            <p v-if="!selectedPassage?.audio_url" class="text-label-md text-error-red">
+                                Soal listening wajib memakai passage yang memiliki audio.
+                            </p>
+                            <p v-else class="text-label-md text-text-body">
+                                Audio: {{ selectedPassage.title }}
+                            </p>
                             <AnswerKeyPicker v-model="form.correct_answer" :option-keys="optionKeys" />
                         </div>
                     </template>
@@ -221,6 +164,5 @@ function submit() {
                 </form>
             </div>
         </div>
-        <UploadProgressBar :show="showUploadProgress" :label="uploadLabel" :media-type="mediaType" />
     </DashboardLayout>
 </template>

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Exam\Controllers;
 
+use App\Enums\SkillCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Exam\StoreExamRequest;
 use App\Http\Requests\Exam\UpdateExamRequest;
@@ -11,7 +12,6 @@ use App\Models\ExamSectionPart;
 use App\Models\ExamSectionQuestion;
 use App\Models\ExamType;
 use App\Models\Question;
-use App\Models\Skill;
 use App\Models\SkillPart;
 use App\Modules\Exam\Services\ExamService;
 use Illuminate\Http\RedirectResponse;
@@ -36,7 +36,8 @@ class ExamController extends Controller
     {
         return Inertia::render('Admin/Exams/Create', [
             'examTypes' => ExamType::where('is_active', true)->orderBy('name')->get(),
-            'skills' => Skill::with('skillParts')->where('is_active', true)->orderBy('name')->get(),
+            'skillOptions' => SkillCode::options(),
+            'parts' => SkillPart::where('is_active', true)->orderBy('skill')->orderBy('order')->get(),
         ]);
     }
 
@@ -45,22 +46,17 @@ class ExamController extends Controller
         $exam = DB::transaction(function () use ($request) {
             $exam = $this->examService->create($request->validated());
 
-            // Auto-create sections dari skills exam_type + auto-fill approved questions
-            $skills = Skill::where('exam_type_id', $exam->exam_type_id)
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->get();
-
-            foreach ($skills as $index => $skill) {
+            // Auto-create sections dari semua skill + auto-fill approved questions
+            foreach (SkillCode::cases() as $index => $skill) {
                 $section = ExamSection::create([
                     'exam_id' => $exam->id,
-                    'skill_id' => $skill->id,
-                    'title' => $skill->name,
+                    'skill' => $skill,
+                    'title' => $skill->label(),
                     'order' => $index + 1,
                 ]);
 
                 // Populate urutan part dari skill_parts (unik per skill/section)
-                foreach (SkillPart::where('skill_id', $skill->id)->where('is_active', true)->get() as $part) {
+                foreach (SkillPart::where('skill', $skill)->where('is_active', true)->get() as $part) {
                     ExamSectionPart::create([
                         'exam_section_id' => $section->id,
                         'skill_part_id' => $part->id,
@@ -69,7 +65,7 @@ class ExamController extends Controller
                 }
 
                 $number = 1;
-                $approved = Question::where('skill_id', $skill->id)
+                $approved = Question::where('skill', $skill)
                     ->where('status', 'approved')
                     ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $exam->exam_type_id))
                     ->orderBy('id')
@@ -99,12 +95,9 @@ class ExamController extends Controller
 
         return Inertia::render('Admin/Exams/Show', [
             'exam' => $exam,
-            'skills' => Skill::where('exam_type_id', $exam->exam_type_id)
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->get(),
-            'parts' => SkillPart::with('skill')->where('is_active', true)->orderBy('skill_id')->orderBy('order')->get(),
-            'sectionQuestions' => ExamSectionQuestion::with(['question.passage', 'question.skill', 'question.skillPart'])
+            'skillOptions' => SkillCode::options(),
+            'parts' => SkillPart::where('is_active', true)->orderBy('skill')->orderBy('order')->get(),
+            'sectionQuestions' => ExamSectionQuestion::with(['question.passage', 'question.skillPart'])
                 ->whereIn('exam_section_id', $sectionIds)
                 ->get()
                 ->groupBy('exam_section_id'),

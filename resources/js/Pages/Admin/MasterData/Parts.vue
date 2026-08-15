@@ -8,16 +8,17 @@ import Modal from '@/Components/Modal.vue';
 import { IconPlus, IconEdit, IconTrash, IconX } from '@tabler/icons-vue';
 import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
+import { skillLabel } from '@/constants/skills';
 
 const props = defineProps({
     parts: { type: Array, default: () => [] },
-    skills: { type: Array, default: () => [] },
+    skillOptions: { type: Array, default: () => [] },
 });
 
 const confirm = useConfirm();
 
 const form = useForm({
-    skill_id: '',
+    skill: '',
     name: '',
     order: 1,
     directions: '',
@@ -25,7 +26,7 @@ const form = useForm({
 });
 
 const editForm = useForm({
-    skill_id: '',
+    skill: '',
     name: '',
     order: 1,
     directions: '',
@@ -42,12 +43,12 @@ const skillFilter = ref('');
 
 const filteredParts = computed(() => {
     if (!skillFilter.value) return props.parts;
-    return props.parts.filter(p => String(p.skill_id) === String(skillFilter.value));
+    return props.parts.filter(p => String(p.skill) === String(skillFilter.value));
 });
 
 const columns = [
     { key: 'name', label: 'Nama', sortable: true, className: 'font-medium text-primary' },
-    { key: 'skill', label: 'Skill', render: (val) => val?.name || '-' },
+    { key: 'skill', label: 'Skill', render: (val) => skillLabel(val) || '-' },
     { key: 'order', label: 'Urutan', sortable: true, render: (val) => val ?? 1 },
     { key: 'questions_count', label: 'Soal', render: (val) => val ?? 0 },
     { key: 'is_active', label: 'Status', badge: true, render: (val) => val ? 'Aktif' : 'Nonaktif' },
@@ -59,9 +60,9 @@ function openCreate() {
     editingPart.value = null;
     form.clearErrors();
     form.reset();
-    form.skill_id = skillFilter.value || '';
-    if (props.skills.length === 1) {
-        form.skill_id = String(props.skills[0].id);
+    form.skill = skillFilter.value || '';
+    if (props.skillOptions.length === 1) {
+        form.skill = props.skillOptions[0].value;
     }
     showModal.value = true;
 }
@@ -81,7 +82,7 @@ function startEdit(part) {
     editingPart.value = part;
     editForm.clearErrors();
     editForm.reset();
-    editForm.skill_id = String(part.skill_id);
+    editForm.skill = String(part.skill);
     editForm.name = part.name;
     editForm.order = part.order ?? 1;
     editForm.directions = part.directions || '';
@@ -116,10 +117,10 @@ async function destroy(part) {
             <div class="w-72">
                 <DropDown
                     v-model="skillFilter"
-                    :options="skills"
+                    :options="skillOptions"
                     placeholder="Semua Skill"
-                    :option-label="(s) => s.name + ' (' + (s.exam_type?.name || '-') + ')'"
-                    option-value="id"
+                    option-label="label"
+                    option-value="value"
                 />
             </div>
             <BaseButton @click="openCreate">
@@ -149,14 +150,14 @@ async function destroy(part) {
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <DropDown
-                                v-model="modalForm.skill_id"
-                                :options="skills"
+                                v-model="modalForm.skill"
+                                :options="skillOptions"
                                 label="Skill *"
                                 placeholder="Pilih skill"
-                                :option-label="(s) => s.name + ' (' + (s.exam_type?.name || '-') + ')'"
-                                option-value="id"
+                                option-label="label"
+                                option-value="value"
                             />
-                            <p v-if="modalForm.errors.skill_id" class="text-error-red text-xs mt-1">{{ modalForm.errors.skill_id }}</p>
+                            <p v-if="modalForm.errors.skill" class="text-error-red text-xs mt-1">{{ modalForm.errors.skill }}</p>
                         </div>
                         <div>
                             <label class="text-label-md font-medium text-primary block mb-1.5">Urutan *</label>

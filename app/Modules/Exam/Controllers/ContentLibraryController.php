@@ -2,6 +2,7 @@
 
 namespace App\Modules\Exam\Controllers;
 
+use App\Enums\SkillCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Exam\ReviewQuestionRequest;
 use App\Http\Requests\Exam\StoreLibraryQuestionRequest;
@@ -9,15 +10,14 @@ use App\Models\ExamType;
 use App\Models\Passage;
 use App\Models\Question;
 use App\Models\QuestionBank;
-use App\Models\Skill;
 use App\Models\SkillPart;
 use App\Services\AudioCompressionService;
 use App\Services\ImageCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,8 +38,8 @@ class ContentLibraryController extends Controller
 
         return Inertia::render('Instructor/CreateQuestion', [
             'questionBanks' => QuestionBank::where('is_active', true)->orderBy('name')->get(),
-            'skills' => Skill::with('examType')->where('is_active', true)->orderBy('name')->get(),
-            'parts' => SkillPart::where('is_active', true)->orderBy('skill_id')->orderBy('order')->get(),
+            'skillOptions' => SkillCode::options(),
+            'parts' => SkillPart::where('is_active', true)->orderBy('skill')->orderBy('order')->get(),
             'preselectedBankId' => $preselectedBankId
                 && QuestionBank::whereKey($preselectedBankId)->where('is_active', true)->exists()
                     ? (int) $preselectedBankId
@@ -51,17 +51,17 @@ class ContentLibraryController extends Controller
     public function edit(Question $question): Response
     {
         return Inertia::render('Instructor/EditQuestion', [
-            'question' => $question->load(['passage', 'questionBank', 'skill', 'skillPart', 'creator', 'updater', 'reviewer']),
+            'question' => $question->load(['passage', 'questionBank', 'skillPart', 'creator', 'updater', 'reviewer']),
             'questionBanks' => QuestionBank::where('is_active', true)->orderBy('name')->get(),
-            'skills' => Skill::with('examType')->where('is_active', true)->orderBy('name')->get(),
-            'parts' => SkillPart::where('is_active', true)->orderBy('skill_id')->orderBy('order')->get(),
+            'skillOptions' => SkillCode::options(),
+            'parts' => SkillPart::where('is_active', true)->orderBy('skill')->orderBy('order')->get(),
             'passages' => Passage::orderBy('title')->get(),
         ]);
     }
 
     public function index(Request $request): Response
     {
-        $skillId = $request->input('skill_id');
+        $skill = $request->input('skill');
         $questionBankId = $request->input('question_bank_id');
         $status = $request->input('status');
         $search = $request->input('search');
@@ -70,8 +70,8 @@ class ContentLibraryController extends Controller
 
         // Soal hanya dimuat setelah bank soal dipilih
         $questions = $questionBankId
-            ? Question::with(['passage', 'questionBank', 'skill', 'skillPart', 'creator', 'reviewer'])
-                ->when($skillId, fn ($q) => $q->where('skill_id', $skillId))
+            ? Question::with(['passage', 'questionBank', 'skillPart', 'creator', 'reviewer'])
+                ->when($skill, fn ($q) => $q->where('skill', $skill))
                 ->when($questionBankId, fn ($q) => $q->where('question_bank_id', $questionBankId))
                 ->when($status, fn ($q) => $q->where('status', $status))
                 ->when($passageId, fn ($q) => $q->where('passage_id', $passageId))
@@ -91,13 +91,13 @@ class ContentLibraryController extends Controller
             'questions' => $questions,
             'examTypes' => ExamType::where('is_active', true)->orderBy('name')->get(),
             'questionBanks' => QuestionBank::with('examType')->where('is_active', true)->orderBy('name')->get(),
-            'skills' => Skill::with('examType')->where('is_active', true)->orderBy('name')->get(),
-            'parts' => SkillPart::with('skill')->where('is_active', true)->orderBy('skill_id')->orderBy('order')->get(),
+            'skillOptions' => SkillCode::options(),
+            'parts' => SkillPart::where('is_active', true)->orderBy('skill')->orderBy('order')->get(),
             'passages' => Passage::orderBy('title')->get(),
             'statuses' => self::STATUSES,
             'selectedPassage' => $selectedPassage,
             'filters' => [
-                'skill_id' => $skillId,
+                'skill' => $skill,
                 'question_bank_id' => $questionBankId,
                 'status' => $status,
                 'passage_id' => $passageId,
@@ -147,7 +147,6 @@ class ContentLibraryController extends Controller
                 }
 
                 $passage = $passageId ? Passage::find($passageId) : null;
-                $bank = QuestionBank::with('examType')->findOrFail($request->question_bank_id);
 
                 // Order starts at max(order) + 1 when attaching to an existing passage
                 $order = 1;
@@ -156,44 +155,21 @@ class ContentLibraryController extends Controller
                 }
 
                 foreach ($request->input('questions', []) as $q) {
-                    $skill = Skill::find($q['skill_id'] ?? null);
+                    $skill = SkillCode::tryFrom($q['skill'] ?? '');
                     if (! $skill) {
                         throw ValidationException::withMessages(['questions' => 'Skill tidak valid.']);
                     }
 
                     $part = SkillPart::find($q['skill_part_id'] ?? null);
-                    if (! $part || $part->skill_id !== $skill->id) {
+                    if (! $part || $part->skill !== $skill) {
                         throw ValidationException::withMessages(['questions' => 'Part harus milik skill yang sama dengan soal.']);
                     }
 
-                    if ($skill->exam_type_id !== $bank->exam_type_id) {
-                        throw ValidationException::withMessages(['questions' => 'Skill harus se-kategori dengan bank soal yang dipilih.']);
-                    }
-
-                    $isAudio = ($q['material_type'] ?? 'text') === 'audio';
-
-                    $audioUrl = null;
-                    $imageUrl = null;
-
-                    if (! empty($q['audio_file']) && $q['audio_file'] instanceof UploadedFile) {
-                        $audioPath = $q['audio_file']->store('questions/audio', 'public');
-                        $audioUrl = $this->audioCompression->compress('public', $audioPath) ?? $audioPath;
-                        $storedFiles[] = $audioUrl;
-                    }
-
-                    if (! empty($q['image_file']) && $q['image_file'] instanceof UploadedFile) {
-                        $imagePath = $q['image_file']->store('questions/images', 'public');
-                        $imageUrl = $this->imageCompression->compress('public', $imagePath) ?? $imagePath;
-                        $storedFiles[] = $imageUrl;
-                    }
+                    $isAudio = $skill === SkillCode::LISTENING;
 
                     if ($isAudio) {
-                        if (! $audioUrl && ! ($passage && $passage->audio_url)) {
-                            throw ValidationException::withMessages(['questions' => 'Soal dengan tipe audio wajib memiliki audio, baik di soal maupun di passage.']);
-                        }
-
-                        if ($passageId && $passage && ! $passage->audio_url && ! $passage->image_url) {
-                            throw ValidationException::withMessages(['questions' => 'Passage untuk soal tipe audio wajib memiliki audio atau gambar.']);
+                        if (! $passageId || ! $passage || ! $passage->audio_url) {
+                            throw ValidationException::withMessages(['questions' => 'Soal listening wajib menggunakan passage yang memiliki audio.']);
                         }
                     } else {
                         $optionEmpty = collect(['option_a', 'option_b', 'option_c', 'option_d'])
@@ -206,19 +182,16 @@ class ContentLibraryController extends Controller
 
                     Question::create([
                         'question_bank_id' => $request->question_bank_id,
-                        'skill_id' => $skill->id,
+                        'skill' => $skill,
                         'skill_part_id' => $part->id,
                         'passage_id' => $passageId,
                         'type' => 'multiple_choice',
-                        'material_type' => $q['material_type'] ?? 'text',
                         'question_text' => $q['question_text'] ?? '',
                         'option_a' => $q['option_a'] ?? '',
                         'option_b' => $q['option_b'] ?? '',
                         'option_c' => $q['option_c'] ?? '',
                         'option_d' => $q['option_d'] ?? '',
                         'correct_answer' => $q['correct_answer'],
-                        'audio_url' => $audioUrl,
-                        'image_url' => $imageUrl,
                         'order' => $order++,
                         'status' => 'draft',
                         'created_by' => auth()->id(),
@@ -237,7 +210,7 @@ class ContentLibraryController extends Controller
 
         $filters = array_filter([
             'question_bank_id' => $request->input('question_bank_id'),
-            'skill_id' => $request->input('_return_skill_id') ?: $request->input('questions.0.skill_id'),
+            'skill' => $request->input('_return_skill') ?: $request->input('questions.0.skill'),
             'part_id' => $request->input('_return_part_id'),
             'status' => $request->input('_return_status'),
             'search' => $request->input('_return_search'),
@@ -249,10 +222,10 @@ class ContentLibraryController extends Controller
 
     public function preview(Question $question): Response
     {
-        $question->load(['passage', 'skill', 'skillPart', 'questionBank']);
+        $question->load(['passage', 'skillPart', 'questionBank']);
 
         $questions = $question->passage_id
-            ? Question::with(['passage', 'skill', 'skillPart'])
+            ? Question::with(['passage', 'skillPart'])
                 ->where('passage_id', $question->passage_id)
                 ->orderBy('order')
                 ->get()
@@ -271,56 +244,29 @@ class ContentLibraryController extends Controller
     {
         $validated = $request->validate([
             'question_bank_id' => ['required', 'exists:question_banks,id'],
-            'skill_id' => ['required', 'exists:skills,id'],
+            'skill' => ['required', Rule::enum(SkillCode::class)],
             'skill_part_id' => ['required', 'exists:skill_parts,id'],
             'passage_id' => ['nullable', 'exists:passages,id'],
-            'material_type' => ['required', 'string', 'in:text,audio'],
             'question_text' => ['nullable', 'string'],
             'option_a' => ['nullable', 'string'],
             'option_b' => ['nullable', 'string'],
             'option_c' => ['nullable', 'string'],
             'option_d' => ['nullable', 'string'],
             'correct_answer' => ['required', 'string', 'max:1', 'in:A,B,C,D'],
-            'audio_file' => ['nullable', 'file', 'mimes:mp3,wav,ogg,m4a', 'max:51200'],
-            'image_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
         ]);
 
-        $skill = Skill::find($validated['skill_id']);
+        $skill = SkillCode::tryFrom($validated['skill']);
         $part = SkillPart::find($validated['skill_part_id']);
-        $bank = QuestionBank::with('examType')->findOrFail($validated['question_bank_id']);
 
-        if (! $skill || ! $part || $part->skill_id !== $skill->id) {
+        if (! $skill || ! $part || $part->skill !== $skill) {
             throw ValidationException::withMessages(['skill_part_id' => 'Part harus milik skill yang sama dengan soal.']);
         }
 
-        if ($skill->exam_type_id !== $bank->exam_type_id) {
-            throw ValidationException::withMessages(['skill_id' => 'Skill harus se-kategori dengan bank soal yang dipilih.']);
-        }
+        if ($skill === SkillCode::LISTENING) {
+            $passage = $validated['passage_id'] ? Passage::find($validated['passage_id']) : null;
 
-        $isAudio = ($validated['material_type'] ?? 'text') === 'audio';
-
-        if ($request->hasFile('audio_file')) {
-            if ($question->audio_url && ! Question::where('audio_url', $question->audio_url)->whereKeyNot($question->id)->exists()) {
-                Storage::disk('public')->delete($question->audio_url);
-            }
-            $audioPath = $request->file('audio_file')->store('questions/audio', 'public');
-            $validated['audio_url'] = $this->audioCompression->compress('public', $audioPath) ?? $audioPath;
-        }
-
-        if ($request->hasFile('image_file')) {
-            if ($question->image_url && ! Question::where('image_url', $question->image_url)->whereKeyNot($question->id)->exists()) {
-                Storage::disk('public')->delete($question->image_url);
-            }
-            $imagePath = $request->file('image_file')->store('questions/images', 'public');
-            $validated['image_url'] = $this->imageCompression->compress('public', $imagePath) ?? $imagePath;
-        }
-
-        if ($isAudio) {
-            $hasAudio = ! empty($validated['audio_url']) || $question->audio_url
-                || ($question->passage && $question->passage->audio_url);
-
-            if (! $hasAudio) {
-                throw ValidationException::withMessages(['audio_file' => 'Soal tipe audio wajib memiliki audio, baik di soal maupun di passage.']);
+            if (! $passage || ! $passage->audio_url) {
+                throw ValidationException::withMessages(['passage_id' => 'Soal listening wajib menggunakan passage yang memiliki audio.']);
             }
         } else {
             $optionEmpty = collect(['option_a', 'option_b', 'option_c', 'option_d'])
@@ -338,19 +284,12 @@ class ContentLibraryController extends Controller
 
         return to_route('content-library.index', [
             'question_bank_id' => $question->question_bank_id,
-            'skill_id' => $question->skill_id,
+            'skill' => $question->skill->value,
         ])->with('success', 'Soal berhasil diperbarui.');
     }
 
     public function destroy(Question $question): RedirectResponse
     {
-        if ($question->audio_url && ! Question::where('audio_url', $question->audio_url)->whereKeyNot($question->id)->exists()) {
-            Storage::disk('public')->delete($question->audio_url);
-        }
-        if ($question->image_url && ! Question::where('image_url', $question->image_url)->whereKeyNot($question->id)->exists()) {
-            Storage::disk('public')->delete($question->image_url);
-        }
-
         $question->delete();
 
         return back()->with('success', 'Soal berhasil dihapus.');
@@ -394,7 +333,7 @@ class ContentLibraryController extends Controller
     private function filterQuery(Request $request): array
     {
         return array_filter(
-            $request->only(['question_bank_id', 'skill_id', 'part_id', 'status', 'search']),
+            $request->only(['question_bank_id', 'skill', 'part_id', 'status', 'search']),
             fn ($value) => $value !== null && $value !== ''
         );
     }

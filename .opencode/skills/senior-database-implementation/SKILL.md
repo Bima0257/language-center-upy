@@ -55,6 +55,8 @@ You MUST know the current state. Read:
 | Foreign keys | `$table->foreignId('{table}_id')->constrained()->cascadeOnDelete()/nullOnDelete()/restrictOnDelete()` — explicit `onDelete` |
 | Tables | snake_case, plural |
 | Migration location | `database/migrations/{timestamp}_create_{table}_table.php` — ALL tables |
+| Skill | `VARCHAR` string + cast ke `App\Enums\SkillCode` (`reading`/`listening`) — TIDAK ada tabel master skills; tambah skill baru = tambah enum case |
+| Question media | audio/image HANYA di `passages` (`audio_url`, `image_url`, `content_text`); `passages.type` = `text`/`audio`/`image` — listening wajib `type='audio'` + `audio_url` |
 | Status/type columns | existing migrations use `$table->enum(...)`; model MUST cast to a PHP enum in `app/Enums/` |
 | Models | `app/Models/`, extend `Illuminate\Database\Eloquent\Model`, `#[Fillable([...])]` attribute + `casts()` method + typed relations (`BelongsTo`, `HasMany`, ...) |
 | Enums | PHP enums in `app/Enums/` |

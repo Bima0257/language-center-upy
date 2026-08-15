@@ -5,12 +5,13 @@ import draggable from 'vuedraggable';
 import { IconEdit, IconChevronDown, IconChevronRight, IconFileDescription, IconCheck, IconGripVertical } from '@tabler/icons-vue';
 import { ref } from 'vue';
 import { useToast } from '@/Composables/useToast';
+import { skillLabel } from '@/constants/skills';
 
 const toast = useToast();
 
 const props = defineProps({
     exam: { type: Object, required: true },
-    skills: { type: Array, default: () => [] },
+    skillOptions: { type: Array, default: () => [] },
     parts: { type: Array, default: () => [] },
     sectionQuestions: { type: Object, default: () => ({}) },
 });
@@ -135,8 +136,8 @@ function cancelArrangement(section) {
     dirtySections.value[section.id] = false;
 }
 
-function skillName(id) {
-    return props.skills.find(s => s.id === id)?.name || '';
+function skillName(skill) {
+    return skillLabel(skill);
 }
 
 function sectionOffset(section) {
@@ -215,7 +216,7 @@ function questionPreview(q) {
                                 <div>
                                     <p class="font-semibold text-primary">{{ section.title }}</p>
                                     <p class="text-text-muted text-label-md">
-                                        {{ skillName(section.skill_id) }} — {{ (sectionQuestions[section.id] || []).length }} soal terpasang
+                                        {{ skillName(section.skill) }} — {{ (sectionQuestions[section.id] || []).length }} soal terpasang
                                     </p>
                                 </div>
                             </div>
@@ -267,7 +268,7 @@ function questionPreview(q) {
                                                 <p class="text-body-md text-primary font-medium truncate">{{ questionPreview(element.row.question) }}</p>
                                                 <p v-if="element.row.question.passage" class="text-label-md text-text-muted truncate">📄 {{ element.row.question.passage.title }}</p>
                                             </div>
-                                            <span v-if="element.row.question.audio_url || element.row.question.passage?.audio_url"
+                                            <span v-if="element.row.question.passage?.audio_url"
                                                   class="text-label-md text-text-muted shrink-0">🎧</span>
                                         </div>
                                     </div>

@@ -36,7 +36,7 @@ defineEmits(['toggle', 'review', 'delete']);
                                class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
                     </td>
                     <td class="px-5 py-4 min-w-[260px] max-w-md">
-                        <span v-if="q.audio_url || q.passage?.audio_url"
+                        <span v-if="q.passage?.audio_url"
                               class="inline-flex items-center gap-1 bg-pastel-purple/30 text-primary px-2 py-0.5 rounded-full text-label-md font-medium mb-1">
                             <IconHeadphones :size="12" /> Audio
                         </span>
@@ -49,9 +49,9 @@ defineEmits(['toggle', 'review', 'delete']);
                         </span>
                     </td>
                     <td class="px-5 py-4">
-                        <span v-if="q.skill_id"
+                        <span v-if="q.skill"
                               class="inline-block bg-pastel-blue/50 text-blue-700 dark:text-blue-300 px-2.5 py-0.5 rounded-full text-label-md font-medium">
-                            {{ skillNameFn(q.skill_id) }}
+                            {{ skillNameFn(q.skill) }}
                         </span>
                     </td>
                     <td class="px-5 py-4">

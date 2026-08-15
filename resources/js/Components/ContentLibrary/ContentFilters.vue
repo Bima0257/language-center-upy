@@ -1,13 +1,14 @@
 <script setup>
 import DropDown from '@/Components/Shared/DropDown.vue';
 import { IconSearch } from '@tabler/icons-vue';
+import { skillLabel } from '@/constants/skills';
 
 defineProps({
     searchQuery: { type: String, default: '' },
-    selectedSkillId: { type: String, default: '' },
+    selectedSkill: { type: String, default: '' },
     selectedPartId: { type: String, default: '' },
     selectedStatus: { type: String, default: '' },
-    skills: { type: Array, default: () => [] },
+    skillOptions: { type: Array, default: () => [] },
     parts: { type: Array, default: () => [] },
     statuses: { type: Array, default: () => [] },
     statusLabels: { type: Object, default: () => ({}) },
@@ -15,7 +16,7 @@ defineProps({
 
 defineEmits([
     'update:searchQuery',
-    'update:selectedSkillId',
+    'update:selectedSkill',
     'update:selectedPartId',
     'update:selectedStatus',
     'search',
@@ -41,13 +42,13 @@ defineEmits([
             </div>
             <div class="w-36">
                 <DropDown
-                    :model-value="selectedSkillId"
-                    :options="skills"
+                    :model-value="selectedSkill"
+                    :options="skillOptions"
                     label="Skill"
                     placeholder="Semua"
-                    option-label="name"
-                    option-value="id"
-                    @change="$emit('update:selectedSkillId', $event); $emit('filter-change')"
+                    option-label="label"
+                    option-value="value"
+                    @change="$emit('update:selectedSkill', $event); $emit('filter-change')"
                 />
             </div>
             <div class="w-36">
@@ -56,7 +57,7 @@ defineEmits([
                     :options="parts"
                     label="Part"
                     placeholder="Semua"
-                    :option-label="(p) => p.name + (p.skill ? ' (' + p.skill.name + ')' : '')"
+                    :option-label="(p) => p.name + (p.skill ? ' (' + skillLabel(p.skill) + ')' : '')"
                     option-value="id"
                     @change="$emit('update:selectedPartId', $event); $emit('filter-change')"
                 />

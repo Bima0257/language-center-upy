@@ -13,6 +13,7 @@ import { ref, computed } from "vue";
 import { useConfirm } from "@/Composables/useConfirm";
 import { useToast } from "@/Composables/useToast";
 import { useUploadProgress } from "@/Composables/useUploadProgress";
+import { SKILL_OPTIONS, skillLabel, materialOfSkill } from "@/constants/skills";
 
 const page = usePage();
 const confirm = useConfirm();
@@ -22,7 +23,7 @@ const props = defineProps({
     questions: { type: Object, default: () => ({ data: [] }) },
     examTypes: { type: Array, default: () => [] },
     questionBanks: { type: Array, default: () => [] },
-    skills: { type: Array, default: () => [] },
+    skillOptions: { type: Array, default: () => [] },
     parts: { type: Array, default: () => [] },
     statuses: { type: Array, default: () => ["draft", "approved", "rejected"] },
     filters: { type: Object, default: () => ({}) },
@@ -34,7 +35,7 @@ const canReview = computed(() => {
 });
 
 const searchQuery = ref(props.filters.search || "");
-const selectedSkillId = ref(props.filters.skill_id || "");
+const selectedSkill = ref(props.filters.skill || "");
 const selectedBankId = ref(props.filters.question_bank_id || "");
 const selectedStatus = ref(props.filters.status || "");
 const selectedPartId = ref(props.filters.part_id || "");
@@ -43,7 +44,7 @@ const selectedTypeId = ref("");
 const createParams = computed(() => {
     const p = {};
     if (selectedBankId.value) p.question_bank_id = selectedBankId.value;
-    if (selectedSkillId.value) p.skill_id = selectedSkillId.value;
+    if (selectedSkill.value) p.skill = selectedSkill.value;
     if (selectedPartId.value) p.part_id = selectedPartId.value;
     if (selectedStatus.value) p.status = selectedStatus.value;
     if (searchQuery.value) p.search = searchQuery.value;
@@ -76,7 +77,7 @@ const filteredBanks = computed(() => {
 function onTypeChange(value) {
     selectedTypeId.value = value;
     selectedBankId.value = "";
-    selectedSkillId.value = "";
+    selectedSkill.value = "";
     selectedPartId.value = "";
     selectedStatus.value = "";
     searchQuery.value = "";
@@ -85,7 +86,7 @@ function onTypeChange(value) {
 
 function onBankChange(value) {
     selectedBankId.value = value;
-    selectedSkillId.value = "";
+    selectedSkill.value = "";
     selectedPartId.value = "";
     applyFilters();
 }
@@ -107,9 +108,8 @@ const passageForm = useForm({
 const quickQuestionForm = useForm({
     passage_id: null,
     question_bank_id: "",
-    skill_id: "",
+    skill: "",
     skill_part_id: "",
-    material_type: "text",
     question_text: "",
     option_a: "",
     option_b: "",
@@ -120,29 +120,13 @@ const quickQuestionForm = useForm({
 
 const optionKeys = ["A", "B", "C", "D"];
 
-const quickSelectedBank = computed(
-    () =>
-        props.questionBanks.find(
-            (b) => String(b.id) === String(quickQuestionForm.question_bank_id),
-        ) || null,
-);
-
-const availableQuickSkills = computed(() => {
-    if (!quickSelectedBank.value) return props.skills;
-    return props.skills.filter(
-        (s) =>
-            String(s.exam_type_id) ===
-            String(quickSelectedBank.value.exam_type_id),
-    );
-});
-
 const quickIsAudio = computed(
-    () => (quickQuestionForm.material_type || "text") === "audio",
+    () => materialOfSkill(quickQuestionForm.skill) === "audio",
 );
 
 function quickParts() {
     return props.parts.filter(
-        (p) => String(p.skill_id) === String(quickQuestionForm.skill_id),
+        (p) => String(p.skill) === String(quickQuestionForm.skill),
     );
 }
 
@@ -160,12 +144,7 @@ const passageTypeLabels = {
     text: "Teks",
     audio: "Audio",
     image: "Gambar",
-    prompt: "Prompt",
 };
-
-function skillName(id) {
-    return props.skills.find((s) => s.id === id)?.name || "";
-}
 
 function bankName(id) {
     return props.questionBanks.find((b) => b.id === id)?.name || "";
@@ -220,8 +199,7 @@ function openQuickAdd(passage) {
     quickQuestionForm.clearErrors();
     quickQuestionForm.reset();
     quickQuestionForm.passage_id = passage.id;
-    quickQuestionForm.material_type =
-        passage.audio_url || passage.type === "audio" ? "audio" : "text";
+    quickQuestionForm.skill = passage.type === "audio" ? "listening" : "reading";
     if (props.questionBanks.length === 1) {
         quickQuestionForm.question_bank_id = props.questionBanks[0].id;
     }
@@ -239,9 +217,8 @@ function saveQuickQuestion() {
             question_bank_id: data.question_bank_id,
             questions: [
                 {
-                    skill_id: data.skill_id,
+                    skill: data.skill,
                     skill_part_id: data.skill_part_id,
-                    material_type: data.material_type,
                     question_text: data.question_text,
                     option_a: data.option_a,
                     option_b: data.option_b,
@@ -282,9 +259,9 @@ const skillGroups = computed(() => {
     const skillMap = new Map();
 
     for (const q of props.questions.data) {
-        const sid = q.skill_id;
+        const sid = q.skill || "none";
         if (!skillMap.has(sid)) {
-            skillMap.set(sid, { skill: q.skill || null, parts: new Map() });
+            skillMap.set(sid, { skill: sid, parts: new Map() });
         }
         const bucket = skillMap.get(sid);
 
@@ -322,9 +299,7 @@ const skillGroups = computed(() => {
                 }))
                 .sort((a, b) => (a.part?.order ?? 99) - (b.part?.order ?? 99)),
         }))
-        .sort((a, b) =>
-            (a.skill?.name || "").localeCompare(b.skill?.name || ""),
-        );
+        .sort((a, b) => skillLabel(a.skill).localeCompare(skillLabel(b.skill)));
 });
 
 function partGroupTotal(partGroup) {
@@ -342,7 +317,7 @@ let debounceTimer = null;
 
 function applyFilters() {
     const p = {};
-    if (selectedSkillId.value) p.skill_id = selectedSkillId.value;
+    if (selectedSkill.value) p.skill = selectedSkill.value;
     if (selectedBankId.value) p.question_bank_id = selectedBankId.value;
     if (selectedStatus.value) p.status = selectedStatus.value;
     if (selectedPartId.value) p.part_id = selectedPartId.value;
@@ -356,7 +331,7 @@ function onSearchInput() {
 }
 function resetFilters() {
     searchQuery.value = "";
-    selectedSkillId.value = "";
+    selectedSkill.value = "";
     selectedBankId.value = "";
     selectedStatus.value = "";
     selectedPartId.value = "";
@@ -471,16 +446,16 @@ async function bulkReview(status) {
 
             <ContentFilters
                 :search-query="searchQuery"
-                :selected-skill-id="selectedSkillId"
+                :selected-skill="selectedSkill"
                 :selected-part-id="selectedPartId"
                 :selected-status="selectedStatus"
-                :skills="skills"
+                :skill-options="skillOptions"
                 :parts="parts"
                 :statuses="statuses"
                 :status-labels="statusLabels"
                 @update:searchQuery="searchQuery = $event"
                 @search="onSearchInput"
-                @update:selectedSkillId="selectedSkillId = $event"
+                @update:selectedSkill="selectedSkill = $event"
                 @update:selectedPartId="selectedPartId = $event"
                 @update:selectedStatus="selectedStatus = $event"
                 @filter-change="applyFilters"
@@ -495,11 +470,11 @@ async function bulkReview(status) {
             <div v-else class="space-y-8">
                 <template
                     v-for="skillGroup in skillGroups"
-                    :key="skillGroup.skill?.id || 'no-skill'"
+                    :key="skillGroup.skill || 'no-skill'"
                 >
                     <div class="flex items-center gap-3">
                         <BaseBadge variant="primary"
-                            >{{ skillGroup.skill?.name || "Tanpa Skill" }}</BaseBadge
+                            >{{ skillLabel(skillGroup.skill) || "Tanpa Skill" }}</BaseBadge
                         >
                         <span class="text-label-md text-text-muted"
                             >{{ skillGroupTotal(skillGroup) }} soal</span
@@ -532,13 +507,13 @@ async function bulkReview(status) {
                                     :editing-passage-id="editingPassageId"
                                     :passage-edit-type="passageEditType"
                                     :selected-ids="selectedIds"
-                                    :skill-name-fn="skillName"
+                                    :skill-name-fn="skillLabel"
                                     :bank-name-fn="bankName"
                                     :option-keys="optionKeys"
                                     :quick-form="quickQuestionForm"
                                     :question-banks="questionBanks"
                                     :adding-passage-id="addingPassageId"
-                                    :quick-skills="availableQuickSkills"
+                                    :quick-skills="SKILL_OPTIONS"
                                     :quick-parts-fn="quickParts"
                                     :quick-is-audio="quickIsAudio"
                                     :is-passage-selected-fn="isPassageSelected"
@@ -580,7 +555,7 @@ async function bulkReview(status) {
                                         <QuestionTable
                                             :questions="partGroup.standalone"
                                             :can-review="canReview"
-                                            :skill-name-fn="skillName"
+                                            :skill-name-fn="skillLabel"
                                             :bank-name-fn="bankName"
                                             :selected-ids="selectedIds"
                                             @toggle="toggleSelect"

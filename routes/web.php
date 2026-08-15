@@ -64,10 +64,9 @@ Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
             $data['totalQuestions'] = Question::count();
             $data['totalPassages'] = Passage::count();
 
-            $data['questionsBySkill'] = Question::selectRaw('skills.name as label, COUNT(*) as count')
-                ->leftJoin('skills', 'skills.id', '=', 'questions.skill_id')
-                ->whereNotNull('questions.skill_id')
-                ->groupBy('skills.name')
+            $data['questionsBySkill'] = Question::selectRaw('skill as label, COUNT(*) as count')
+                ->whereNotNull('skill')
+                ->groupBy('skill')
                 ->orderByDesc('count')
                 ->get();
 
@@ -91,11 +90,6 @@ Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
         Route::post('/verify-users/{user}/approve', [VerificationController::class, 'approve'])->name('verify-users.approve');
         Route::post('/verify-users/{user}/reject', [VerificationController::class, 'reject'])->name('verify-users.reject');
         Route::post('/verify-users/{user}/revert', [VerificationController::class, 'revert'])->name('verify-users.revert');
-
-        Route::get('/master-data/skills', [MasterDataController::class, 'skillsIndex'])->name('master-data.skills.index');
-        Route::post('/master-data/skills', [MasterDataController::class, 'skillStore'])->name('master-data.skills.store');
-        Route::put('/master-data/skills/{skill}', [MasterDataController::class, 'skillUpdate'])->name('master-data.skills.update');
-        Route::delete('/master-data/skills/{skill}', [MasterDataController::class, 'skillDestroy'])->name('master-data.skills.destroy');
 
         Route::get('/master-data/exam-types', [MasterDataController::class, 'examTypesIndex'])->name('master-data.exam-types.index');
         Route::post('/master-data/exam-types', [MasterDataController::class, 'examTypeStore'])->name('master-data.exam-types.store');

@@ -49,7 +49,6 @@ const passageTypeOptions = [
     { id: 'text', name: 'Teks' },
     { id: 'audio', name: 'Audio' },
     { id: 'image', name: 'Gambar' },
-    { id: 'prompt', name: 'Prompt' },
 ];
 </script>
 
@@ -121,7 +120,7 @@ const passageTypeOptions = [
                     </div>
                 </div>
 
-                <div v-if="passageEditType === 'text' || passageEditType === 'prompt'" class="mt-3">
+                <div v-if="passageEditType === 'text'" class="mt-3">
                     <label class="text-label-md font-medium text-primary block mb-1">Konten Teks</label>
                     <RichTextEditor v-model="passageForm.content_text" placeholder="Isi teks passage..." />
                 </div>

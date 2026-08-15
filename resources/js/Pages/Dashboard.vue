@@ -21,6 +21,7 @@ import BarChart from "@/Components/Charts/BarChart.vue";
 import DoughnutChart from "@/Components/Charts/DoughnutChart.vue";
 import { useConfirm } from "@/Composables/useConfirm";
 import { useToast } from "@/Composables/useToast";
+import { skillLabel } from "@/constants/skills";
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -58,7 +59,7 @@ const statusLabels = {
     archived: "Arsip",
 };
 
-const skillChartLabels = computed(() => props.questionsBySkill.map((i) => i.label));
+const skillChartLabels = computed(() => props.questionsBySkill.map((i) => skillLabel(i.label)));
 const skillChartData = computed(() => props.questionsBySkill.map((i) => i.count));
 
 const statusChartLabels = computed(() =>

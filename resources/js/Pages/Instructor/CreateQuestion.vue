@@ -11,10 +11,11 @@ import AnswerKeyPicker from '@/Components/ContentLibrary/AnswerKeyPicker.vue';
 import { useUploadProgress } from '@/Composables/useUploadProgress';
 import { IconPlus, IconTrash, IconFileDescription, IconInfoCircle, IconHeadphones, IconBooks } from '@tabler/icons-vue';
 import { computed, nextTick, ref, watch } from 'vue';
+import { materialOfSkill } from '@/constants/skills';
 
 const props = defineProps({
     questionBanks: { type: Array, default: () => [] },
-    skills: { type: Array, default: () => [] },
+    skillOptions: { type: Array, default: () => [] },
     parts: { type: Array, default: () => [] },
     preselectedBankId: { type: Number, default: null },
     returnFilters: { type: Object, default: () => ({}) },
@@ -22,37 +23,34 @@ const props = defineProps({
 
 const optionKeys = ['A', 'B', 'C', 'D'];
 
-const materialTypeOptions = [
-    { id: 'text', name: 'Teks (Reading)' },
-    { id: 'audio', name: 'Audio + Gambar' },
-];
-
 const passageMode = ref('none');
 const passageType = ref('text');
 const questionRefs = ref([]);
 
-const globalSkillId = ref('');
-const globalPartId = ref('');
-const globalMaterialType = ref('text');
+const globalSkill = ref('');
+const globalPart = ref('');
 const perQuestionSkill = ref(false);
 
-if (props.skills.length === 1) {
-    globalSkillId.value = String(props.skills[0].id);
+function partsForSkill(skill) {
+    return props.parts.filter(p => String(p.skill) === String(skill));
 }
+
+function globalParts() {
+    return partsForSkill(globalSkill.value);
+}
+
+const isGlobalAudio = computed(() => materialOfSkill(globalSkill.value) === 'audio');
 
 function newQuestion() {
     return {
-        skill_id: globalSkillId.value,
-        skill_part_id: globalPartId.value,
-        material_type: globalMaterialType.value,
+        skill: globalSkill.value,
+        skill_part_id: globalPart.value,
         question_text: '',
         option_a: '',
         option_b: '',
         option_c: '',
         option_d: '',
         correct_answer: '',
-        audio_file: null,
-        image_file: null,
     };
 }
 
@@ -63,7 +61,7 @@ const form = useForm({
     new_passage_content_text: '',
     new_passage_audio_file: null,
     new_passage_image_file: null,
-    _return_skill_id: props.returnFilters?.skill_id || '',
+    _return_skill: props.returnFilters?.skill || '',
     _return_part_id: props.returnFilters?.part_id || '',
     _return_status: props.returnFilters?.status || '',
     _return_search: props.returnFilters?.search || '',
@@ -74,61 +72,36 @@ const selectedBank = computed(() =>
     props.questionBanks.find(b => String(b.id) === String(form.question_bank_id)) || null,
 );
 
-const availableSkills = computed(() => {
-    if (!selectedBank.value) return props.skills;
-    return props.skills.filter(s => String(s.exam_type_id) === String(selectedBank.value.exam_type_id));
-});
-
 const passageTypeOptions = [
     { id: 'text', name: 'Teks' },
-    { id: 'audio', name: 'Audio' },
     { id: 'image', name: 'Gambar' },
-    { id: 'prompt', name: 'Prompt' },
 ];
 
-function partsForSkill(skillId) {
-    return props.parts.filter(p => String(p.skill_id) === String(skillId));
-}
-
-function globalParts() {
-    return partsForSkill(globalSkillId.value);
-}
-
-watch(globalSkillId, (value) => {
+watch(globalSkill, (skill) => {
     if (perQuestionSkill.value) return;
-    globalPartId.value = '';
+    globalPart.value = '';
     for (const q of form.questions) {
-        q.skill_id = value;
+        q.skill = skill;
         q.skill_part_id = '';
+    }
+
+    if (materialOfSkill(skill) === 'audio') {
+        passageType.value = 'audio';
+        form.new_passage_type = 'audio';
     }
 });
 
-watch(globalPartId, (value) => {
+watch(globalPart, (value) => {
     if (perQuestionSkill.value) return;
     for (const q of form.questions) {
         q.skill_part_id = value;
     }
 });
 
-watch(globalMaterialType, (type) => {
-    if (perQuestionSkill.value) return;
-    for (const q of form.questions) {
-        q.material_type = type;
-    }
-});
-
-watch(selectedBank, (bank) => {
-    if (!bank) return;
-    if (!availableSkills.value.some(s => String(s.id) === String(globalSkillId.value))) {
-        globalSkillId.value = '';
-    }
-    if (perQuestionSkill.value) {
-        for (const q of form.questions) {
-            if (!props.skills.some(s => String(s.id) === String(q.skill_id) && String(s.exam_type_id) === String(bank.exam_type_id))) {
-                q.skill_id = '';
-                q.skill_part_id = '';
-            }
-        }
+watch(passageMode, (mode) => {
+    if (mode === 'new' && materialOfSkill(globalSkill.value) === 'audio') {
+        passageType.value = 'audio';
+        form.new_passage_type = 'audio';
     }
 });
 
@@ -138,10 +111,10 @@ function setPerQuestionMode() {
 
 function setGlobalMode() {
     perQuestionSkill.value = false;
-    if (globalSkillId.value) {
+    if (globalSkill.value) {
         for (const q of form.questions) {
-            q.skill_id = globalSkillId.value;
-            q.skill_part_id = globalPartId.value;
+            q.skill = globalSkill.value;
+            q.skill_part_id = globalPart.value;
         }
     }
 }
@@ -149,13 +122,6 @@ function setGlobalMode() {
 function onQuestionSkillChange(q) {
     q.skill_part_id = '';
 }
-
-watch(passageMode, (mode) => {
-    if (mode === 'new' && globalMaterialType.value === 'audio') {
-        passageType.value = 'audio';
-        form.new_passage_type = 'audio';
-    }
-});
 
 async function addQuestion() {
     form.questions.push(newQuestion());
@@ -170,17 +136,22 @@ function removeQuestion(index) {
     }
 }
 
+const isAudioQuestion = (q) => materialOfSkill(q.skill) === 'audio';
+
 const canSubmit = computed(() => {
     if (!form.question_bank_id) return false;
     if (form.questions.length === 0) return false;
     if (passageMode.value === 'new' && !form.new_passage_title.trim()) return false;
-    if (!perQuestionSkill.value && !globalSkillId.value) return false;
-    if (!perQuestionSkill.value && !globalPartId.value) return false;
-    if (passageMode.value === 'new' && globalMaterialType.value === 'audio' && !form.new_passage_audio_file) return false;
+    if (!perQuestionSkill.value && !globalSkill.value) return false;
+    if (!perQuestionSkill.value && !globalPart.value) return false;
+
     return form.questions.every(q => {
-        if (!q.skill_id || !q.skill_part_id || !q.correct_answer) return false;
-        if (q.material_type === 'audio') {
-            return !!(q.audio_file || (passageMode.value === 'new' && form.new_passage_audio_file && form.new_passage_type === 'audio'));
+        if (!q.skill || !q.skill_part_id || !q.correct_answer) return false;
+
+        if (isAudioQuestion(q)) {
+            // Listening wajib passage audio — media hanya di passage
+            if (passageMode.value !== 'new') return false;
+            return !!form.new_passage_audio_file;
         }
         return q.question_text.trim() &&
             q.option_a.trim() && q.option_b.trim() &&
@@ -200,7 +171,7 @@ const { showUploadProgress, uploadLabel, mediaType } = useUploadProgress(form, {
 const indexUrl = computed(() => {
     const p = {};
     if (form.question_bank_id) p.question_bank_id = form.question_bank_id;
-    if (form._return_skill_id) p.skill_id = form._return_skill_id;
+    if (form._return_skill) p.skill = form._return_skill;
     if (form._return_part_id) p.part_id = form._return_part_id;
     if (form._return_status) p.status = form._return_status;
     if (form._return_search) p.search = form._return_search;
@@ -219,16 +190,15 @@ const indexUrl = computed(() => {
                     <UserGuide
                         title="Panduan Tambah Soal"
                         :steps="[
-                            { title: 'Pilih Bank Soal', desc: 'Bank menentukan kategori tes dan filter skill.' },
-                            { title: 'Pilih Skill & Part', desc: 'Skill & part sebagai kategori soal, tidak menentukan tipe materi.' },
-                            { title: 'Pilih Tipe Materi', desc: 'Teks (Reading) atau Audio + Gambar — dipilih manual.' },
-                            { title: 'Isi Materi (opsional)', desc: 'Materi soal bisa teks, audio, gambar, atau tanpa materi.' },
+                            { title: 'Pilih Bank Soal', desc: 'Bank menentukan kategori tes.' },
+                            { title: 'Pilih Skill & Part', desc: 'Listening wajib menggunakan passage audio; Reading memakai passage teks/gambar.' },
+                            { title: 'Buat Materi Soal', desc: 'Listening: upload audio (wajib) + gambar (opsional). Reading: teks atau gambar.' },
                             { title: 'Isi Soal & Kunci', desc: 'Soal standalone langsung diisi; kunci jawaban di bawah soal.' },
                         ]"
                         :rules="[
                             'Soal baru berstatus Draf dan direview admin.',
-                            'Audio + Gambar: materi, soal & pilihan ada di audio — audio wajib.',
-                            'Teks: teks soal + 4 pilihan jawaban wajib diisi.',
+                            'Listening: materi, soal & pilihan ada di audio — passage audio wajib.',
+                            'Reading: teks soal + 4 pilihan jawaban wajib diisi.',
                         ]"
                     />
                 </div>
@@ -264,46 +234,36 @@ const indexUrl = computed(() => {
                         Soal baru akan direview oleh admin sebelum bisa dipakai.
                     </p>
 
-                    <!-- PENGATURAN SKILL, PART & TIPE MATERI BATCH -->
+                    <!-- PENGATURAN SKILL & PART BATCH -->
                     <div v-if="!perQuestionSkill" class="bg-pastel-blue/10 border border-pastel-blue/40 rounded-2xl p-5 space-y-3">
                         <div class="flex items-start justify-between gap-4">
-                            <div class="grid grid-cols-3 gap-4 flex-1">
+                            <div class="grid grid-cols-2 gap-4 flex-1">
                                 <div>
                                     <DropDown
-                                        v-model="globalSkillId"
-                                        :options="availableSkills"
+                                        v-model="globalSkill"
+                                        :options="skillOptions"
                                         label="Skill untuk semua soal *"
                                         placeholder="Pilih skill"
-                                        option-label="name"
-                                        option-value="id"
+                                        option-label="label"
+                                        option-value="value"
                                     />
                                 </div>
                                 <div>
                                     <DropDown
-                                        v-model="globalPartId"
+                                        v-model="globalPart"
                                         :options="globalParts()"
                                         label="Part *"
                                         placeholder="Pilih part"
                                         option-label="name"
                                         option-value="id"
-                                        :disabled="!globalSkillId"
-                                    />
-                                </div>
-                                <div>
-                                    <DropDown
-                                        v-model="globalMaterialType"
-                                        :options="materialTypeOptions"
-                                        label="Tipe Materi *"
-                                        placeholder="Pilih tipe materi"
-                                        option-label="name"
-                                        option-value="id"
+                                        :disabled="!globalSkill"
                                     />
                                 </div>
                             </div>
                             <button type="button" @click="setPerQuestionMode"
                                     class="shrink-0 text-secondary text-label-md font-medium hover:underline">Atur skill per soal</button>
                         </div>
-                        <p class="text-label-md text-text-muted">Skill, part, dan tipe materi ini otomatis diterapkan ke semua soal di bawah.</p>
+                        <p class="text-label-md text-text-muted">Skill & part ini otomatis diterapkan ke semua soal di bawah. Listening otomatis memakai materi audio.</p>
                     </div>
                     <div v-else class="flex justify-end">
                         <button type="button" @click="setGlobalMode"
@@ -314,7 +274,7 @@ const indexUrl = computed(() => {
 
                     <!-- MODE PASSAGE -->
                     <div>
-                        <p class="text-label-md font-medium text-primary mb-2">Materi Soal <span class="text-text-muted">(opsional — bisa tanpa materi soal)</span></p>
+                        <p class="text-label-md font-medium text-primary mb-2">Materi Soal <span class="text-text-muted">(Listening wajib; Reading opsional)</span></p>
                         <div class="flex gap-3">
                             <label class="flex items-center gap-2 px-4 py-2.5 rounded-full border cursor-pointer transition-all"
                                    :class="passageMode === 'none' ? 'bg-surface-container-low border-secondary' : 'border-outline-variant hover:border-secondary'">
@@ -340,7 +300,7 @@ const indexUrl = computed(() => {
                                 <input type="text" v-model="form.new_passage_title" required placeholder="Judul bacaan"
                                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                                 <p v-if="form.errors.new_passage_title" class="text-error-red text-xs mt-1">{{ form.errors.new_passage_title }}</p></div>
-                            <div v-if="globalMaterialType !== 'audio'">
+                            <div v-if="!isGlobalAudio">
                                 <DropDown
                                     v-model="passageType"
                                     :options="passageTypeOptions"
@@ -352,7 +312,7 @@ const indexUrl = computed(() => {
                             </div>
                         </div>
 
-                        <template v-if="globalMaterialType === 'audio'">
+                        <template v-if="isGlobalAudio">
                             <FileUpload
                                 v-model="form.new_passage_audio_file"
                                 label="File Audio (mp3/wav/m4a, max 50MB)"
@@ -373,20 +333,9 @@ const indexUrl = computed(() => {
                         </template>
 
                         <template v-else>
-                            <div v-if="passageType === 'text' || passageType === 'prompt'">
+                            <div v-if="passageType === 'text'">
                                 <label class="text-label-md font-medium text-primary block mb-1.5">Konten Teks</label>
                                 <RichTextEditor v-model="form.new_passage_content_text" placeholder="Tulis isi teks bacaan di sini..." />
-                            </div>
-
-                            <div v-else-if="passageType === 'audio'">
-                                <FileUpload
-                                    v-model="form.new_passage_audio_file"
-                                    label="File Audio (mp3/wav/m4a, max 50MB)"
-                                    placeholder="Klik untuk upload audio"
-                                    accept=".mp3,.wav,.ogg,.m4a"
-                                    media-type="audio"
-                                    :error="form.errors.new_passage_audio_file"
-                                />
                             </div>
 
                             <div v-else-if="passageType === 'image'">
@@ -417,7 +366,7 @@ const indexUrl = computed(() => {
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <p class="text-label-md font-semibold text-primary">Soal {{ qi + 1 }}</p>
-                                <span v-if="q.material_type === 'audio'" class="inline-flex items-center gap-1 bg-pastel-purple/30 text-primary px-2.5 py-0.5 rounded-full text-label-md font-medium">
+                                <span v-if="isAudioQuestion(q)" class="inline-flex items-center gap-1 bg-pastel-purple/30 text-primary px-2.5 py-0.5 rounded-full text-label-md font-medium">
                                     <IconHeadphones :size="14" /> Audio
                                 </span>
                             </div>
@@ -427,69 +376,42 @@ const indexUrl = computed(() => {
                             </button>
                         </div>
 
-                        <!-- SKILL, PART & TIPE MATERI (hanya mode per-soal) -->
-                        <div v-if="perQuestionSkill" class="grid grid-cols-3 gap-4">
+                        <!-- SKILL & PART (hanya mode per-soal) -->
+                        <div v-if="perQuestionSkill" class="grid grid-cols-2 gap-4">
                             <div>
                                 <DropDown
-                                    v-model="q.skill_id"
-                                    :options="availableSkills"
+                                    v-model="q.skill"
+                                    :options="skillOptions"
                                     label="Skill *"
                                     placeholder="Pilih Skill"
-                                    option-label="name"
-                                    option-value="id"
+                                    option-label="label"
+                                    option-value="value"
                                     @change="onQuestionSkillChange(q)"
                                 />
                             </div>
                             <div>
                                 <DropDown
                                     v-model="q.skill_part_id"
-                                    :options="partsForSkill(q.skill_id)"
+                                    :options="partsForSkill(q.skill)"
                                     label="Part *"
                                     placeholder="Pilih part"
                                     option-label="name"
                                     option-value="id"
-                                    :disabled="!q.skill_id"
-                                />
-                            </div>
-                            <div>
-                                <DropDown
-                                    v-model="q.material_type"
-                                    :options="materialTypeOptions"
-                                    label="Tipe Materi *"
-                                    placeholder="Pilih tipe materi"
-                                    option-label="name"
-                                    option-value="id"
+                                    :disabled="!q.skill"
                                 />
                             </div>
                         </div>
 
-                        <!-- MODE AUDIO + GAMBAR: tanpa teks soal/opsi -->
-                        <template v-if="q.material_type === 'audio'">
+                        <!-- MODE LISTENING: materi dari passage, peserta pilih A/B/C/D -->
+                        <template v-if="isAudioQuestion(q)">
                             <div class="bg-pastel-purple/10 border border-pastel-purple/40 rounded-2xl p-4 space-y-4">
                                 <p class="flex items-center gap-1.5 text-label-md text-text-muted">
                                     <IconInfoCircle :size="16" class="text-secondary shrink-0" />
-                                    Soal, materi, dan pilihan jawaban berada di audio. Peserta hanya memilih A/B/C/D.
+                                    Soal, materi, dan pilihan jawaban berada di audio passage. Peserta hanya memilih A/B/C/D.
                                 </p>
-                                <div v-if="!passageMode || passageMode === 'none'" class="grid grid-cols-2 gap-4">
-                                    <FileUpload
-                                        v-model="q.audio_file"
-                                        label="File Audio (max 50MB)"
-                                        placeholder="Klik untuk upload audio"
-                                        accept=".mp3,.wav,.ogg,.m4a"
-                                        media-type="audio"
-                                        :required="true"
-                                    />
-                                    <FileUpload
-                                        v-model="q.image_file"
-                                        label="Gambar (opsional)"
-                                        placeholder="Klik untuk upload gambar"
-                                        accept=".jpg,.jpeg,.png,.webp"
-                                        media-type="image"
-                                    />
-                                </div>
-                                <div v-else class="flex items-center gap-2 text-label-md text-text-muted">
-                                    <IconHeadphones :size="16" class="text-secondary shrink-0" />
-                                    Audio diambil dari passage di atas — sub-soal tidak perlu upload audio sendiri.
+                                <div v-if="passageMode === 'none'" class="flex items-center gap-2 text-label-md text-error-red">
+                                    <IconHeadphones :size="16" class="shrink-0" />
+                                    Soal listening wajib memakai passage audio — pilih "Buat Materi Soal Baru" di atas.
                                 </div>
                                 <AnswerKeyPicker v-model="q.correct_answer" :option-keys="optionKeys" label="Pilihan Jawaban" />
                             </div>

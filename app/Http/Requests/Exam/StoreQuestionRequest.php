@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Exam;
 
+use App\Enums\SkillCode;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreQuestionRequest extends FormRequest
 {
@@ -10,7 +12,8 @@ class StoreQuestionRequest extends FormRequest
     {
         return [
             'question_bank_id' => ['required', 'exists:question_banks,id'],
-            'skill_id' => ['required', 'exists:skills,id'],
+            'skill' => ['required', Rule::enum(SkillCode::class)],
+            'skill_part_id' => ['required', 'exists:skill_parts,id'],
             'passage_id' => ['nullable', 'exists:passages,id'],
             'question_text' => ['nullable', 'string'],
             'option_a' => ['nullable', 'string'],
@@ -19,8 +22,6 @@ class StoreQuestionRequest extends FormRequest
             'option_d' => ['nullable', 'string'],
             'correct_answer' => ['required', 'string', 'max:1', 'in:A,B,C,D'],
             'order' => ['required', 'integer', 'min:1'],
-            'audio_file' => ['nullable', 'file', 'mimes:mp3,wav,ogg,m4a', 'max:51200'],
-            'image_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
         ];
     }
 

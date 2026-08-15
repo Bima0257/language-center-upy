@@ -11,16 +11,17 @@ import Modal from '@/Components/Modal.vue';
 import QuickAddQuestionForm from '@/Components/ContentLibrary/QuickAddQuestionForm.vue';
 import PassageMediaViewer from '@/Components/ContentLibrary/PassageMediaViewer.vue';
 import { useUploadProgress } from '@/Composables/useUploadProgress';
-import { IconPlus, IconEdit, IconTrash, IconFileDescription, IconHeadphones, IconPhoto, IconBook, IconX, IconBooks } from '@tabler/icons-vue';
+import { IconPlus, IconEdit, IconTrash, IconHeadphones, IconPhoto, IconBook, IconX, IconBooks } from '@tabler/icons-vue';
 import { computed, ref, watch } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
+import { SKILL_OPTIONS, materialOfSkill } from '@/constants/skills';
 
 const confirm = useConfirm();
 
 const props = defineProps({
     passages: { type: Object, default: () => ({ data: [] }) },
     questionBanks: { type: Array, default: () => [] },
-    skills: { type: Array, default: () => [] },
+    skillOptions: { type: Array, default: () => [] },
     parts: { type: Array, default: () => [] },
 });
 
@@ -33,9 +34,8 @@ const optionKeys = ['A', 'B', 'C', 'D'];
 const quickQuestionForm = useForm({
     passage_id: null,
     question_bank_id: '',
-    skill_id: '',
+    skill: '',
     skill_part_id: '',
-    material_type: 'text',
     question_text: '',
     option_a: '',
     option_b: '',
@@ -44,19 +44,10 @@ const quickQuestionForm = useForm({
     correct_answer: '',
 });
 
-const quickSelectedBank = computed(() =>
-    props.questionBanks.find(b => String(b.id) === String(quickQuestionForm.question_bank_id)) || null,
-);
-
-const availableQuickSkills = computed(() => {
-    if (!quickSelectedBank.value) return props.skills;
-    return props.skills.filter(s => String(s.exam_type_id) === String(quickSelectedBank.value.exam_type_id));
-});
-
-const quickIsAudio = computed(() => (quickQuestionForm.material_type || 'text') === 'audio');
+const quickIsAudio = computed(() => materialOfSkill(quickQuestionForm.skill) === 'audio');
 
 function quickParts() {
-    return props.parts.filter(p => String(p.skill_id) === String(quickQuestionForm.skill_id));
+    return props.parts.filter(p => String(p.skill) === String(quickQuestionForm.skill));
 }
 
 function onQuickSkillChange() {
@@ -72,7 +63,7 @@ const form = useForm({
 });
 
 const typeLabels = {
-    text: 'Teks (Reading)', audio: 'Audio (Listening)', image: 'Gambar (Photo)', prompt: 'Prompt (Speaking/Writing)',
+    text: 'Teks (Reading)', audio: 'Audio (Listening)', image: 'Gambar',
 };
 
 function openCreate() {
@@ -139,8 +130,7 @@ function openQuickAdd(passage) {
     quickQuestionForm.clearErrors();
     quickQuestionForm.reset();
     quickQuestionForm.passage_id = passage.id;
-    quickQuestionForm.material_type =
-        passage.audio_url || passage.type === 'audio' ? 'audio' : 'text';
+    quickQuestionForm.skill = passage.type === 'audio' ? 'listening' : 'reading';
     if (props.questionBanks.length === 1) {
         quickQuestionForm.question_bank_id = props.questionBanks[0].id;
     }
@@ -157,9 +147,8 @@ function saveQuickQuestion() {
             passage_id: data.passage_id,
             question_bank_id: data.question_bank_id,
             questions: [{
-                skill_id: data.skill_id,
+                skill: data.skill,
                 skill_part_id: data.skill_part_id,
-                material_type: data.material_type,
                 question_text: data.question_text,
                 option_a: data.option_a,
                 option_b: data.option_b,
@@ -186,7 +175,6 @@ async function deletePassage(id, title) {
 function getMediaIcon(passage) {
     if (passage.type === 'audio' || passage.audio_url) return 'audio';
     if (passage.type === 'image' || passage.image_url) return 'image';
-    if (passage.type === 'prompt') return 'prompt';
     return 'text';
 }
 </script>
@@ -224,10 +212,9 @@ function getMediaIcon(passage) {
                 <div class="flex items-start justify-between gap-4">
                     <div class="flex items-start gap-3 min-w-0">
                         <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl shrink-0 mt-1"
-                              :class="getMediaIcon(p) === 'audio' ? 'bg-pastel-purple/30' : getMediaIcon(p) === 'image' ? 'bg-pastel-peach/30' : getMediaIcon(p) === 'prompt' ? 'bg-pastel-blue/30' : 'bg-surface-container-low'">
+                              :class="getMediaIcon(p) === 'audio' ? 'bg-pastel-purple/30' : getMediaIcon(p) === 'image' ? 'bg-pastel-peach/30' : 'bg-surface-container-low'">
                             <IconHeadphones v-if="getMediaIcon(p) === 'audio'" :size="18" class="text-primary" />
                             <IconPhoto v-else-if="getMediaIcon(p) === 'image'" :size="18" class="text-primary" />
-                            <IconFileDescription v-else-if="getMediaIcon(p) === 'prompt'" :size="18" class="text-primary" />
                             <IconBook v-else :size="18" class="text-text-muted" />
                         </span>
                         <div class="flex-1 min-w-0">
@@ -268,7 +255,7 @@ function getMediaIcon(passage) {
                     :form="quickQuestionForm"
                     :passage-title="p.title"
                     :question-banks="questionBanks"
-                    :available-quick-skills="availableQuickSkills"
+                    :available-quick-skills="SKILL_OPTIONS"
                     :quick-parts-fn="quickParts"
                     :quick-is-audio="quickIsAudio"
                     :option-keys="optionKeys"
@@ -314,14 +301,13 @@ function getMediaIcon(passage) {
                         />
                     </div>
 
-                    <!-- TEXT / PROMPT: content_text -->
-                    <div v-if="form.type === 'text' || form.type === 'prompt'">
+                    <!-- TEXT: content_text -->
+                    <div v-if="form.type === 'text'">
                         <label class="text-label-md font-medium text-primary block mb-1.5">
-                            {{ form.type === 'prompt' ? 'Teks Prompt' : 'Teks Bacaan' }}
-                            <span class="text-text-muted">{{ form.type === 'prompt' ? '(Speaking/Writing)' : '(Reading)' }}</span>
+                            Teks Bacaan <span class="text-text-muted">(Reading)</span>
                         </label>
                         <RichTextEditor v-model="form.content_text"
-                                        :placeholder="form.type === 'prompt' ? 'Tulis instruksi atau prompt...' : 'Tulis isi bacaan lengkap di sini...'" />
+                                        placeholder="Tulis isi bacaan lengkap di sini..." />
                         <p v-if="form.errors.content_text" class="text-error-red text-xs mt-1">{{ form.errors.content_text }}</p>
                     </div>
 

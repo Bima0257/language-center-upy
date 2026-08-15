@@ -5,6 +5,7 @@ import AudioPlayer from '@/Components/Exam/AudioPlayer.vue';
 import { useMediaLoad } from '@/Composables/useMediaLoad';
 import { IconArrowLeft, IconArrowRight, IconCheck, IconEye } from '@tabler/icons-vue';
 import { computed, ref } from 'vue';
+import { skillLabel, materialOfSkill } from '@/constants/skills';
 
 const props = defineProps({
     questions: { type: Array, default: () => [] },
@@ -16,20 +17,20 @@ const showKey = ref(false);
 const currentIndex = ref(props.index);
 
 const current = computed(() => props.questions[currentIndex.value] || null);
-const isMaterialAudio = computed(() => (current.value?.material_type || 'text') === 'audio');
+const isMaterialAudio = computed(() => materialOfSkill(current.value?.skill) === 'audio');
 const passage = computed(() => current.value?.passage || null);
 const audioSrc = computed(() => {
-    const path = current.value?.audio_url || passage.value?.audio_url;
+    const path = passage.value?.audio_url;
     return path ? '/storage/' + path : null;
 });
 const imageSrc = computed(() => {
-    const path = current.value?.image_url || passage.value?.image_url;
+    const path = passage.value?.image_url;
     return path ? '/storage/' + path : null;
 });
 
 const imageLoading = useMediaLoad(imageSrc);
 
-const partLabel = computed(() => current.value?.skillPart?.name || current.value?.skill?.name || '');
+const partLabel = computed(() => current.value?.skillPart?.name || skillLabel(current.value?.skill) || '');
 
 function optionText(key) {
     return current.value ? (current.value['option_' + key.toLowerCase()] || '') : '';

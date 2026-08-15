@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\SkillCode;
 use App\Models\Exam;
 use App\Models\ExamSchedule;
 use App\Models\ExamSection;
@@ -10,7 +11,6 @@ use App\Models\ExamType;
 use App\Models\Passage;
 use App\Models\Question;
 use App\Models\QuestionBank;
-use App\Models\Skill;
 use App\Models\SkillPart;
 use App\Models\User;
 use App\Models\ViolationLog;
@@ -43,15 +43,12 @@ class ExamSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        $readingSkill = Skill::where('code', 'reading')->firstOrFail();
-        $listeningSkill = Skill::where('code', 'listening')->firstOrFail();
-
-        $readingPart = SkillPart::where('skill_id', $readingSkill->id)->orderBy('order')->first();
-        $listeningPart = SkillPart::where('skill_id', $listeningSkill->id)->orderBy('order')->first();
+        $readingPart = SkillPart::where('skill', SkillCode::READING)->orderBy('order')->first();
+        $listeningPart = SkillPart::where('skill', SkillCode::LISTENING)->orderBy('order')->first();
 
         $reading = ExamSection::create([
             'exam_id' => $exam->id,
-            'skill_id' => $readingSkill->id,
+            'skill' => SkillCode::READING,
             'title' => 'Reading Section',
             'order' => 1,
             'total_questions' => 4,
@@ -59,7 +56,7 @@ class ExamSeeder extends Seeder
 
         $listening = ExamSection::create([
             'exam_id' => $exam->id,
-            'skill_id' => $listeningSkill->id,
+            'skill' => SkillCode::LISTENING,
             'title' => 'Listening Section',
             'order' => 2,
             'total_questions' => 4,
@@ -157,7 +154,7 @@ class ExamSeeder extends Seeder
             Question::create([
                 'question_bank_id' => $bank->id,
                 'passage_id' => $readingPassage->id,
-                'skill_id' => $readingSkill->id,
+                'skill' => SkillCode::READING,
                 'skill_part_id' => $readingPart?->id,
                 'type' => 'multiple_choice',
                 'question_text' => $q['question_text'],
@@ -175,7 +172,7 @@ class ExamSeeder extends Seeder
             Question::create([
                 'question_bank_id' => $bank->id,
                 'passage_id' => $listeningPassage->id,
-                'skill_id' => $listeningSkill->id,
+                'skill' => SkillCode::LISTENING,
                 'skill_part_id' => $listeningPart?->id,
                 'type' => 'multiple_choice',
                 'question_text' => $q['question_text'],

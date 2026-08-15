@@ -4,10 +4,12 @@ import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import DropDown from '@/Components/Shared/DropDown.vue';
 import { IconInfoCircle, IconBooks, IconListDetails } from '@tabler/icons-vue';
 import { computed } from 'vue';
+import { SKILL_OPTIONS } from '@/constants/skills';
 
 const props = defineProps({
     examTypes: { type: Array, default: () => [] },
-    skills: { type: Array, default: () => [] },
+    skillOptions: { type: Array, default: () => [] },
+    parts: { type: Array, default: () => [] },
 });
 
 const form = useForm({
@@ -18,9 +20,10 @@ const form = useForm({
     duration_minutes: 160,
 });
 
-const typeSkills = computed(() =>
-    props.skills.filter(s => String(s.exam_type_id) === String(form.exam_type_id)),
-);
+const typeSkills = computed(() => SKILL_OPTIONS.map((s) => ({
+    ...s,
+    skill_parts: props.parts.filter((p) => String(p.skill) === String(s.value)),
+})));
 
 function submit() {
     form.post(route('admin.exams.store'));
@@ -45,28 +48,25 @@ function submit() {
                         <p v-if="form.errors.exam_type_id" class="text-error-red text-xs mt-1">{{ form.errors.exam_type_id }}</p>
                     </div>
 
-                    <div v-if="typeSkills.length" class="bg-pastel-blue/10 border border-pastel-blue/40 rounded-2xl p-5">
+                    <div v-if="form.exam_type_id" class="bg-pastel-blue/10 border border-pastel-blue/40 rounded-2xl p-5">
                         <p class="flex items-center gap-1.5 text-label-md font-semibold text-primary mb-3">
                             <IconInfoCircle :size="16" class="text-secondary shrink-0" />
                             Section otomatis akan dibuat dari skill:
                         </p>
                         <div class="space-y-2">
-                            <div v-for="s in typeSkills" :key="s.id"
+                            <div v-for="s in typeSkills" :key="s.value"
                                  class="flex items-center gap-3 bg-surface-white rounded-xl px-4 py-3 border border-outline-variant/40">
                                 <IconBooks :size="18" class="text-secondary shrink-0" />
                                 <div class="flex-1">
-                                    <p class="text-body-md font-semibold text-primary">{{ s.name }}</p>
+                                    <p class="text-body-md font-semibold text-primary">{{ s.label }}</p>
                                     <p class="text-label-md text-text-muted">
-                                        {{ s.skill_parts?.length || 0 }} part:
-                                        {{ (s.skill_parts || []).map(p => p.name).join(', ') || '-' }}
+                                        {{ s.skill_parts.length || 0 }} part:
+                                        {{ s.skill_parts.map(p => p.name).join(', ') || '-' }}
                                     </p>
                                 </div>
                                 <IconListDetails :size="18" class="text-text-muted shrink-0" />
                             </div>
                         </div>
-                    </div>
-                    <div v-else-if="form.exam_type_id" class="bg-surface-container-low rounded-2xl p-5 text-center">
-                        <p class="text-text-muted text-body-md">Belum ada skill aktif untuk jenis tes ini.</p>
                     </div>
 
                     <div>

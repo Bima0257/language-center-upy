@@ -2,6 +2,7 @@
 
 namespace App\Modules\Exam\Controllers;
 
+use App\Enums\SkillCode;
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\ExamSection;
@@ -13,6 +14,7 @@ use App\Modules\Exam\Services\ExamSectionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class ExamSectionController extends Controller
@@ -24,7 +26,7 @@ class ExamSectionController extends Controller
     public function store(Request $request, Exam $exam): RedirectResponse
     {
         $validated = $request->validate([
-            'skill_id' => ['required', 'exists:skills,id'],
+            'skill' => ['required', Rule::enum(SkillCode::class)],
             'title' => ['required', 'string', 'max:255'],
             'order' => ['required', 'integer'],
             'total_questions' => ['nullable', 'integer'],
@@ -34,7 +36,7 @@ class ExamSectionController extends Controller
             $section = $this->sectionService->create($exam, $validated);
 
             // Auto-fill: semua approved soal skill tsb dari bank kategori exam langsung terpasang
-            $approvedQuestions = Question::where('skill_id', $validated['skill_id'])
+            $approvedQuestions = Question::where('skill', $validated['skill'])
                 ->where('status', 'approved')
                 ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $exam->exam_type_id))
                 ->orderBy('id')
@@ -57,7 +59,7 @@ class ExamSectionController extends Controller
     public function update(Request $request, Exam $exam, ExamSection $section): RedirectResponse
     {
         $validated = $request->validate([
-            'skill_id' => ['exists:skills,id'],
+            'skill' => [Rule::enum(SkillCode::class)],
             'title' => ['string', 'max:255'],
             'order' => ['integer'],
             'total_questions' => ['nullable', 'integer'],
@@ -85,7 +87,7 @@ class ExamSectionController extends Controller
         $attached = DB::transaction(function () use ($validated, $exam, $section) {
             $allowed = Question::whereIn('id', $validated['question_ids'])
                 ->where('status', 'approved')
-                ->where('skill_id', $section->skill_id)
+                ->where('skill', $section->skill)
                 ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $exam->exam_type_id))
                 ->pluck('id');
 
@@ -134,7 +136,7 @@ class ExamSectionController extends Controller
                     'part_order.*.order' => ['required', 'integer', 'min:1'],
                 ]);
 
-                $skillPartIds = SkillPart::where('skill_id', $section->skill_id)->pluck('id');
+                $skillPartIds = SkillPart::where('skill', $section->skill)->pluck('id');
 
                 foreach ($validated['part_order'] as $part) {
                     if (! $skillPartIds->contains($part['skill_part_id'])) {
@@ -223,7 +225,7 @@ class ExamSectionController extends Controller
             'order.*.order' => ['required', 'integer', 'min:1'],
         ]);
 
-        $skillPartIds = SkillPart::where('skill_id', $section->skill_id)->pluck('id');
+        $skillPartIds = SkillPart::where('skill', $section->skill)->pluck('id');
 
         foreach ($validated['order'] as $part) {
             if (! $skillPartIds->contains($part['skill_part_id'])) {
@@ -252,7 +254,7 @@ class ExamSectionController extends Controller
             ->pluck('skill_part_id')
             ->toArray();
 
-        $defaultPartIds = SkillPart::where('skill_id', $section->skill_id)
+        $defaultPartIds = SkillPart::where('skill', $section->skill)
             ->orderBy('order')
             ->pluck('id')
             ->toArray();

@@ -21,7 +21,8 @@ class QuestionsImport implements ToModel, WithHeadingRow
 
         return new Question([
             'question_bank_id' => $row['question_bank_id'] ?? null,
-            'skill_id' => $row['skill_id'] ?? null,
+            'skill' => $row['skill'] ?? null,
+            'skill_part_id' => $row['skill_part_id'] ?? null,
             'passage_id' => $row['passage_id'] ?? null,
             'type' => 'multiple_choice',
             'question_text' => $row['question_text'] ?? '',
@@ -30,8 +31,6 @@ class QuestionsImport implements ToModel, WithHeadingRow
             'option_c' => $row['option_c'] ?? '',
             'option_d' => $row['option_d'] ?? '',
             'correct_answer' => $row['correct_answer'] ?? null,
-            'audio_url' => $row['audio_url'] ?? null,
-            'image_url' => $row['image_url'] ?? null,
             'order' => $this->order,
         ]);
     }

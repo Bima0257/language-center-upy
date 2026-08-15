@@ -8,7 +8,6 @@ use App\Models\ExamSchedule;
 use App\Models\ExamSectionQuestion;
 use App\Models\ExamSession;
 use App\Models\Question;
-use App\Models\Skill;
 use App\Modules\Schedule\Repositories\Contracts\ScheduleRepositoryInterface;
 use App\Modules\Security\Actions\LogViolation;
 use App\Modules\Session\Actions\CompleteSection;
@@ -73,7 +72,7 @@ class ExamSessionController extends Controller
 
         $exam = $session->schedule?->exam;
         $sections = $exam !== null ? $exam->sections : collect();
-        $sectionSkillIds = $sections->pluck('skill_id');
+        $sectionSkills = $sections->pluck('skill');
 
         // Load bank questions matching exam section skills, scoped by exam category
         $pivotRows = ExamSectionQuestion::whereIn('exam_section_id', $sections->pluck('id'))->get();
@@ -99,7 +98,7 @@ class ExamSessionController extends Controller
 
         if ($emptySections->isNotEmpty()) {
             $fallback = Question::with('passage')
-                ->whereIn('skill_id', $emptySections->pluck('skill_id'))
+                ->whereIn('skill', $emptySections->pluck('skill'))
                 ->where('status', 'approved')
                 ->when($exam?->exam_type_id, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $exam->exam_type_id)))
                 ->whereNotIn('id', $pivotQuestionIds)
@@ -113,7 +112,6 @@ class ExamSessionController extends Controller
         return Inertia::render('Exam/Take', [
             'session' => $session,
             'bankQuestions' => $bankQuestions,
-            'skills' => Skill::whereIn('id', $sectionSkillIds)->pluck('name', 'id'),
         ]);
     }
 
