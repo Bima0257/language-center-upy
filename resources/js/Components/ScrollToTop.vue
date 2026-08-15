@@ -2,26 +2,27 @@
 import { IconArrowUp } from '@tabler/icons-vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 
-defineProps({
+const props = defineProps({
     inline: { type: Boolean, default: false },
+    container: { type: String, default: '' },
+    threshold: { type: Number, default: 200 },
 });
 
 const visible = ref(false);
 const isDesktop = ref(false);
-let isWindowMode = true;
-let container = null;
+let containerEl = null;
 
 function onScroll() {
-    visible.value = isWindowMode
-        ? window.scrollY > 200
-        : container && container.scrollTop > 200;
+    visible.value = containerEl
+        ? containerEl.scrollTop > props.threshold
+        : window.scrollY > props.threshold;
 }
 
 function scrollToTop() {
-    if (isWindowMode) {
+    if (containerEl) {
+        containerEl.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (container) {
-        container.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
@@ -30,17 +31,16 @@ onMounted(() => {
     checkDesktop();
     window.addEventListener('resize', checkDesktop);
 
-    container = document.querySelector('.landing-scroll-area');
-    if (container && window.innerWidth >= 768) {
-        isWindowMode = false;
-        container.addEventListener('scroll', onScroll);
+    containerEl = props.container ? document.querySelector(props.container) : null;
+    if (containerEl) {
+        containerEl.addEventListener('scroll', onScroll);
     } else {
         window.addEventListener('scroll', onScroll);
     }
 });
 
 onUnmounted(() => {
-    if (container) container.removeEventListener('scroll', onScroll);
+    if (containerEl) containerEl.removeEventListener('scroll', onScroll);
     else window.removeEventListener('scroll', onScroll);
 });
 </script>
@@ -50,7 +50,9 @@ onUnmounted(() => {
         <button v-if="visible" @click="scrollToTop"
                 :class="inline && isDesktop
                     ? 'absolute bottom-6 right-20 w-11 h-11 bg-primary-container text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary transition-colors z-40'
-                    : 'fixed bottom-24 right-6 md:right-10 w-11 h-11 bg-primary-container text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary transition-colors z-40'">
+                    : container
+                        ? 'absolute bottom-6 right-6 w-11 h-11 bg-primary-container text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary transition-colors z-40'
+                        : 'fixed bottom-24 right-6 md:right-10 w-11 h-11 bg-primary-container text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary transition-colors z-40'">
             <IconArrowUp :size="22" stroke="2" />
         </button>
     </Transition>

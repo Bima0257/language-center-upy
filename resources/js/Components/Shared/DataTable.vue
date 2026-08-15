@@ -1,6 +1,6 @@
 <script setup>
 import { useVueTable, getCoreRowModel, getSortedRowModel } from '@tanstack/vue-table'
-import { Link } from '@inertiajs/vue3'
+import Pagination from '@/Components/Shared/Pagination.vue'
 import { IconChevronUp, IconChevronDown, IconSelector, IconLoader2, IconSearch } from '@tabler/icons-vue'
 import { computed, ref } from 'vue'
 
@@ -142,13 +142,7 @@ function cellDisplayValue(cell) {
                 <p class="text-label-md text-text-muted">
                     {{ meta.from }}–{{ meta.to }} dari {{ meta.total }}
                 </p>
-                <div class="flex items-center gap-1">
-                    <Link v-for="(link, i) in links" :key="i"
-                          :href="link.url || '#'"
-                          class="min-w-[36px] h-9 flex items-center justify-center rounded-full text-label-md font-medium transition-colors"
-                          :class="link.active ? 'bg-primary-container text-white' : link.url ? 'text-text-body hover:bg-surface-container-low' : 'text-text-muted cursor-default'"
-                          v-html="link.label" />
-                </div>
+                <Pagination :links="links" :total="meta?.total ?? 0" :per-page="meta?.per_page ?? 0" align="end" marginless />
             </div>
         </BaseCard>
     </div>

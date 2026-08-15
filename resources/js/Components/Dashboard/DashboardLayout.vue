@@ -3,7 +3,7 @@ import { ref } from "vue";
 import Sidebar from "@/Components/Dashboard/Sidebar.vue";
 import TopBar from "@/Components/Dashboard/TopBar.vue";
 import MobileNav from "@/Components/Dashboard/MobileNav.vue";
-import ScrollToTop from "@/Components/Dashboard/ScrollToTop.vue";
+import ScrollToTop from "@/Components/ScrollToTop.vue";
 import ConfirmDialog from "@/Components/ConfirmDialog.vue";
 import Breadcrumb from "@/Components/Dashboard/Breadcrumb.vue";
 import { getBreadcrumbs } from "@/Composables/useNav";
@@ -31,7 +31,7 @@ const sidebarCollapsed = ref(false);
                 <Breadcrumb :items="breadcrumbs" class="mb-6" />
                 <slot />
             </div>
-            <ScrollToTop />
+            <ScrollToTop container=".dashboard-scroll-area" />
         </main>
         <MobileNav />
         <ConfirmDialog />

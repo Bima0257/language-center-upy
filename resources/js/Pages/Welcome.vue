@@ -29,7 +29,7 @@ defineProps({
                 </div>
                 <Footer />
             </div>
-            <ScrollToTop inline />
+            <ScrollToTop inline container=".landing-scroll-area" />
         </main>
 
         <MobileBottomNav />

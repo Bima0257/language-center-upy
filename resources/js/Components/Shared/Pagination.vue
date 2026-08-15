@@ -5,13 +5,16 @@ defineProps({
     links: { type: Array, default: () => [] },
     total: { type: Number, default: 0 },
     perPage: { type: Number, default: 0 },
+    align: { type: String, default: "center" },
+    marginless: { type: Boolean, default: false },
 });
 </script>
 
 <template>
     <div
         v-if="total > perPage"
-        class="flex justify-center mt-6 gap-2"
+        class="flex gap-2"
+        :class="[align === 'end' ? 'justify-end' : 'justify-center', marginless ? '' : 'mt-6']"
     >
         <Link
             v-for="link in links"

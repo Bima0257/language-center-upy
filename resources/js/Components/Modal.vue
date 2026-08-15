@@ -101,7 +101,7 @@ const maxWidthClass = computed(() => {
                     @click="close"
                 >
                     <div
-                        class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"
+                        class="absolute inset-0 bg-black/40 backdrop-blur-sm"
                     />
                 </div>
             </Transition>
@@ -116,7 +116,7 @@ const maxWidthClass = computed(() => {
             >
                 <div
                     v-show="show"
-                    class="mb-6 transform rounded-lg bg-white shadow-xl transition-all sm:mx-auto sm:w-full"
+                    class="mb-6 transform rounded-3xl bg-white shadow-soft transition-all sm:mx-auto sm:w-full"
                     :class="[
                         maxWidthClass,
                         scrollable

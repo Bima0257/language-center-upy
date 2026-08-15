@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue'
+import Pagination from '@/Components/Shared/Pagination.vue'
 import { IconPlus, IconTrash, IconEdit } from '@tabler/icons-vue'
 import { useConfirm } from '@/Composables/useConfirm'
 
@@ -58,13 +59,6 @@ async function deleteSchedule(id) {
             </BaseCard>
         </div>
 
-        <div v-if="schedules.links && schedules.meta?.last_page > 1"
-             class="flex justify-center mt-6 gap-1">
-            <Link v-for="(link, i) in schedules.links" :key="i"
-                  :href="link.url || '#'"
-                  class="min-w-[36px] h-9 flex items-center justify-center rounded-full text-label-md font-medium transition-colors"
-                  :class="link.active ? 'bg-primary-container text-white' : link.url ? 'text-text-body hover:bg-surface-container-low border border-outline-variant' : 'text-text-muted cursor-default'"
-                  v-html="link.label" />
-        </div>
+        <Pagination :links="schedules.links" :total="schedules.meta?.total ?? 0" :per-page="schedules.meta?.per_page ?? 0" />
     </DashboardLayout>
 </template>
