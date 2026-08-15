@@ -50,6 +50,14 @@ interface QuestionRepositoryInterface
     public function findByIdsWithPassage(array $ids): Collection;
 
     /**
+     * Soal approved milik bank+skill tertentu yang belum terpasang di section.
+     *
+     * @param  array<int>  $excludeIds
+     * @return Collection<int, Question>
+     */
+    public function approvedByBankAndSkillNotIn(int $bankId, string $skill, array $excludeIds): Collection;
+
+    /**
      * @return Collection<int, Question>
      */
     public function fallbackApprovedBySkills(array $skills, ?int $examTypeId, ?int $bankId, array $excludeIds): Collection;

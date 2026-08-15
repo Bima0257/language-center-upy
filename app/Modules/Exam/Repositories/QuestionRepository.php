@@ -93,7 +93,7 @@ class QuestionRepository implements QuestionRepositoryInterface
         return Question::where('skill', $skill)
             ->where('status', 'approved')
             ->when($bankId, fn ($q) => $q->where('question_bank_id', $bankId))
-            ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId))
+            ->when($examTypeId, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId)))
             ->orderBy('id')
             ->get();
     }
@@ -107,7 +107,7 @@ class QuestionRepository implements QuestionRepositoryInterface
             ->where('status', 'approved')
             ->where('skill', $skill)
             ->when($bankId, fn ($q) => $q->where('question_bank_id', $bankId))
-            ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId))
+            ->when($examTypeId, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId)))
             ->pluck('id')
             ->all();
     }
@@ -117,6 +117,17 @@ class QuestionRepository implements QuestionRepositoryInterface
         return Question::with('passage')
             ->whereIn('id', $ids)
             ->where('status', 'approved')
+            ->get();
+    }
+
+    public function approvedByBankAndSkillNotIn(int $bankId, string $skill, array $excludeIds): Collection
+    {
+        return Question::with(['passage', 'questionBank'])
+            ->where('question_bank_id', $bankId)
+            ->where('skill', $skill)
+            ->where('status', 'approved')
+            ->whereNotIn('id', $excludeIds)
+            ->orderBy('id')
             ->get();
     }
 
@@ -135,7 +146,7 @@ class QuestionRepository implements QuestionRepositoryInterface
     {
         $bankIds = Question::where('skill', $skill)
             ->where('status', 'approved')
-            ->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId))
+            ->when($examTypeId, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId)))
             ->distinct()
             ->pluck('question_bank_id')
             ->all();
