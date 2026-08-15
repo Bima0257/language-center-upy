@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\SkillCode;
 use App\Models\Exam;
 use App\Models\ExamSchedule;
+use App\Models\ExamScheduleSlot;
 use App\Models\ExamSection;
 use App\Models\ExamSession;
 use App\Models\ExamType;
@@ -208,15 +209,25 @@ class ExamSeeder extends Seeder
         if ($student) {
             $schedule = ExamSchedule::create([
                 'exam_id' => $exam->id,
-                'title' => 'Demo Session — 10 Juli 2026',
-                'scheduled_start' => now()->subHour(),
-                'scheduled_end' => now()->addHours(2),
+                'title' => 'Gelombang Demo — Agustus 2026',
+                'start_date' => now()->subDay(),
+                'end_date' => now()->addDay(),
+                'is_active' => true,
+            ]);
+
+            $slot = ExamScheduleSlot::create([
+                'exam_schedule_id' => $schedule->id,
+                'date' => now()->toDateString(),
+                'start_time' => now()->subHour()->format('H:i'),
+                'end_time' => now()->addHours(2)->format('H:i'),
+                'late_tolerance_minutes' => 15,
                 'max_participants' => 30,
                 'is_active' => true,
             ]);
 
             $activeSession = ExamSession::create([
                 'exam_schedule_id' => $schedule->id,
+                'exam_schedule_slot_id' => $slot->id,
                 'user_id' => $student->id,
                 'status' => 'in_progress',
                 'started_at' => now()->subMinutes(25),
@@ -234,15 +245,25 @@ class ExamSeeder extends Seeder
 
             $schedule2 = ExamSchedule::create([
                 'exam_id' => $exam->id,
-                'title' => 'Flagged Demo — 9 Juli 2026',
-                'scheduled_start' => now()->subDay(),
-                'scheduled_end' => now()->addDay(),
+                'title' => 'Gelombang Flagged — Agustus 2026',
+                'start_date' => now()->subDays(2),
+                'end_date' => now(),
+                'is_active' => true,
+            ]);
+
+            $slot2 = ExamScheduleSlot::create([
+                'exam_schedule_id' => $schedule2->id,
+                'date' => now()->subDay()->toDateString(),
+                'start_time' => '08:00',
+                'end_time' => '10:00',
+                'late_tolerance_minutes' => 15,
                 'max_participants' => 30,
                 'is_active' => true,
             ]);
 
             $flaggedSession = ExamSession::create([
                 'exam_schedule_id' => $schedule2->id,
+                'exam_schedule_slot_id' => $slot2->id,
                 'user_id' => $student->id,
                 'status' => 'terminated',
                 'started_at' => now()->subHours(2),
@@ -279,15 +300,25 @@ class ExamSeeder extends Seeder
 
             $schedule3 = ExamSchedule::create([
                 'exam_id' => $exam->id,
-                'title' => 'Submitted Demo — 9 Juli 2026',
-                'scheduled_start' => now()->subDays(2),
-                'scheduled_end' => now()->subDay(),
-                'max_participants' => 30,
+                'title' => 'Gelombang Submitted — Agustus 2026',
+                'start_date' => now()->subDays(3),
+                'end_date' => now()->subDays(2),
                 'is_active' => false,
+            ]);
+
+            $slot3 = ExamScheduleSlot::create([
+                'exam_schedule_id' => $schedule3->id,
+                'date' => now()->subDays(2)->toDateString(),
+                'start_time' => '08:00',
+                'end_time' => '10:00',
+                'late_tolerance_minutes' => 15,
+                'max_participants' => 30,
+                'is_active' => true,
             ]);
 
             ExamSession::create([
                 'exam_schedule_id' => $schedule3->id,
+                'exam_schedule_slot_id' => $slot3->id,
                 'user_id' => $student->id,
                 'status' => 'submitted',
                 'started_at' => now()->subDays(1),

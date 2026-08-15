@@ -4,9 +4,9 @@ namespace App\Modules\Session\Controllers;
 
 use App\Enums\ViolationType;
 use App\Http\Controllers\Controller;
-use App\Models\ExamSchedule;
+use App\Models\ExamScheduleSlot;
 use App\Models\ExamSession;
-use App\Modules\Schedule\Repositories\Contracts\ScheduleRepositoryInterface;
+use App\Modules\Schedule\Repositories\Contracts\SlotRepositoryInterface;
 use App\Modules\Security\Actions\LogViolation;
 use App\Modules\Session\Actions\CompleteSection;
 use App\Modules\Session\Actions\Heartbeat;
@@ -30,30 +30,30 @@ class ExamSessionController extends Controller
         private SubmitExam $submitExam,
         private Heartbeat $heartbeat,
         private LogViolation $logViolation,
-        private ScheduleRepositoryInterface $scheduleRepo,
+        private SlotRepositoryInterface $slotRepo,
         private ExamRuntimeService $runtime,
     ) {}
 
     public function available(): Response
     {
         return Inertia::render('Exam/Available', [
-            'schedules' => $this->scheduleRepo->getAvailableSchedules(),
+            'slots' => $this->slotRepo->availableSlots(),
         ]);
     }
 
-    public function preCheck(ExamSchedule $examSchedule): Response
+    public function preCheck(ExamScheduleSlot $slot): Response
     {
         return Inertia::render('Exam/PreCheck', [
-            'schedule' => $examSchedule->load('exam'),
+            'slot' => $slot->load('schedule.exam'),
         ]);
     }
 
-    public function start(ExamSchedule $examSchedule): RedirectResponse
+    public function start(ExamScheduleSlot $slot): RedirectResponse
     {
         try {
             $result = $this->startExamSession->execute(
                 userId: auth()->id(),
-                scheduleId: $examSchedule->id,
+                slotId: $slot->id,
             );
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());

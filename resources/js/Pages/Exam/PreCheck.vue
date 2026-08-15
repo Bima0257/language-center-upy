@@ -5,7 +5,7 @@ import { IconCamera, IconMicrophone, IconWifi, IconCheck, IconX } from '@tabler/
 import { ref, computed } from 'vue';
 
 const props = defineProps({
-    schedule: { type: Object, required: true },
+    slot: { type: Object, required: true },
 });
 
 const cameraOk = ref(false);
@@ -17,7 +17,7 @@ const allChecked = computed(() => cameraOk.value && micOk.value && connectionOk.
 const form = useForm({});
 
 function startExam() {
-    form.post(route('exam.start', props.schedule.id));
+    form.post(route('exam.start', props.slot.id));
 }
 
 function checkCamera() {
@@ -39,8 +39,8 @@ function checkMic() {
         <div class="max-w-2xl mx-auto">
             <BaseCard padding="p-8" class="space-y-6">
                 <div>
-                    <h2 class="text-headline-md font-bold text-primary mb-2">{{ schedule.exam?.title }}</h2>
-                    <p class="text-text-body text-body-md">{{ schedule.title }}</p>
+                    <h2 class="text-headline-md font-bold text-primary mb-2">{{ slot.schedule?.exam?.title }}</h2>
+                    <p class="text-text-body text-body-md">{{ slot.schedule?.title }} — Sesi {{ slot.start_time?.substring(0, 5) }}–{{ slot.end_time?.substring(0, 5) }} WIB</p>
                 </div>
                 <div class="space-y-4">
                     <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-2xl">

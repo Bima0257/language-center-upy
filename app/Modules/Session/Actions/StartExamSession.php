@@ -3,7 +3,7 @@
 namespace App\Modules\Session\Actions;
 
 use App\Enums\SessionStatus;
-use App\Modules\Schedule\Repositories\Contracts\ScheduleRepositoryInterface;
+use App\Modules\Schedule\Repositories\Contracts\SlotRepositoryInterface;
 use App\Modules\Security\Services\SecurityService;
 use App\Modules\Session\DTOs\SessionStartedResult;
 use App\Modules\Session\Repositories\Contracts\ExamSessionRepositoryInterface;
@@ -12,32 +12,31 @@ class StartExamSession
 {
     public function __construct(
         private ExamSessionRepositoryInterface $sessionRepo,
-        private ScheduleRepositoryInterface $scheduleRepo,
+        private SlotRepositoryInterface $slotRepo,
         private SecurityService $security,
     ) {}
 
-    public function execute(int $userId, int $scheduleId): SessionStartedResult
+    public function execute(int $userId, int $slotId): SessionStartedResult
     {
-        $schedule = $this->scheduleRepo->findOrFail($scheduleId);
+        $slot = $this->slotRepo->findOrFail($slotId);
 
-        $lateDeadline = $schedule->scheduled_start->copy()->addMinutes($schedule->late_tolerance_minutes);
-
-        if (now()->gt($lateDeadline)) {
-            throw new \RuntimeException('Batas toleransi keterlambatan sudah lewat, ujian tidak dapat dimulai.');
+        if (! $slot->isAvailable()) {
+            throw new \RuntimeException('Sesi ujian tidak tersedia atau sudah penuh.');
         }
 
-        if (! $schedule->isAvailable()) {
-            throw new \RuntimeException('Sesi ujian tidak tersedia atau sudah penuh.');
+        if ($this->sessionRepo->hasSessionForSchedule($userId, $slot->exam_schedule_id)) {
+            throw new \RuntimeException('Anda sudah mengikuti ujian pada periode ini. Satu percobaan per periode.');
         }
 
         if ($this->sessionRepo->hasActiveSession($userId)) {
             throw new \RuntimeException('Anda sudah memiliki sesi ujian yang aktif.');
         }
 
-        $firstSection = $schedule->exam->sections->first();
+        $firstSection = $slot->schedule->exam->sections->first();
 
         $session = $this->sessionRepo->create([
-            'exam_schedule_id' => $schedule->id,
+            'exam_schedule_id' => $slot->exam_schedule_id,
+            'exam_schedule_slot_id' => $slot->id,
             'user_id' => $userId,
             'status' => SessionStatus::IN_PROGRESS,
             'started_at' => now(),

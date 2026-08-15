@@ -18,7 +18,7 @@ class ReportRepository implements ReportRepositoryInterface
     public function findForExport(int $id): ?ExamSession
     {
         return ExamSession::with([
-            'user', 'violationLogs', 'schedule.exam', 'answers.question',
+            'user', 'violationLogs', 'schedule.exam', 'slot', 'answers.question',
         ])->find($id);
     }
 }

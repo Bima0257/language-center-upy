@@ -13,6 +13,7 @@ class CertificateRepository implements CertificateRepositoryInterface
         return Certificate::with([
             'examSession.user',
             'examSession.schedule.exam',
+            'examSession.slot',
         ])->orderBy('issued_at', 'desc')->get();
     }
 

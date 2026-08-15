@@ -8,8 +8,8 @@ Route::middleware(['auth', 'verified', 'role:student'])
     ->name('exam.')
     ->group(function () {
         Route::get('/available', [ExamSessionController::class, 'available'])->name('available');
-        Route::get('/{examSchedule}/pre-check', [ExamSessionController::class, 'preCheck'])->name('pre-check');
-        Route::post('/{examSchedule}/start', [ExamSessionController::class, 'start'])->name('start');
+        Route::get('/slots/{slot}/pre-check', [ExamSessionController::class, 'preCheck'])->name('pre-check');
+        Route::post('/slots/{slot}/start', [ExamSessionController::class, 'start'])->name('start');
 
         Route::middleware('exam.session.active')->group(function () {
             Route::get('/session/{examSession}/{section?}', [ExamSessionController::class, 'take'])->name('take');

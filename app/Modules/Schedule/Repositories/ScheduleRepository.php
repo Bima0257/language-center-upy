@@ -6,22 +6,14 @@ use App\Models\ExamSchedule;
 use App\Modules\Schedule\Repositories\Contracts\ScheduleRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 
 class ScheduleRepository implements ScheduleRepositoryInterface
 {
-    public function paginateByExam(int $examId, int $perPage = 15): LengthAwarePaginator
-    {
-        return ExamSchedule::where('exam_id', $examId)
-            ->withCount('sessions')
-            ->paginate($perPage);
-    }
-
     public function paginateAll(int $perPage = 15): LengthAwarePaginator
     {
         return ExamSchedule::with('exam')
-            ->withCount('sessions')
-            ->latest('scheduled_start')
+            ->withCount('slots')
+            ->latest('start_date')
             ->paginate($perPage);
     }
 
@@ -47,33 +39,17 @@ class ScheduleRepository implements ScheduleRepositoryInterface
         $schedule->delete();
     }
 
-    public function hasOverlap(array $data, ?int $excludeId = null): bool
+    public function hasSlots(ExamSchedule $schedule): bool
     {
-        $start = Carbon::parse($data['scheduled_start']);
-        $end = Carbon::parse($data['scheduled_end']);
+        return $schedule->slots()->exists();
+    }
 
-        return ExamSchedule::where('exam_id', $data['exam_id'])
+    public function hasDateOverlap(int $examId, Carbon $startDate, Carbon $endDate, ?int $excludeId = null): bool
+    {
+        return ExamSchedule::where('exam_id', $examId)
             ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
-            ->where('scheduled_start', '<', $end)
-            ->where('scheduled_end', '>', $start)
+            ->where('start_date', '<=', $endDate->toDateString())
+            ->where('end_date', '>=', $startDate->toDateString())
             ->exists();
-    }
-
-    public function getAvailableSchedules(): Collection
-    {
-        return ExamSchedule::with('exam')
-            ->where('is_active', true)
-            ->where('scheduled_start', '<=', now())
-            ->where('scheduled_end', '>=', now())
-            ->get()
-            ->filter(fn ($s) => $s->isAvailable());
-    }
-
-    public function countAvailableNow(): int
-    {
-        return ExamSchedule::where('is_active', true)
-            ->where('scheduled_start', '<=', now())
-            ->where('scheduled_end', '>=', now())
-            ->count();
     }
 }

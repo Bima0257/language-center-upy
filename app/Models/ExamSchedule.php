@@ -10,29 +10,28 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
+ * Periode ujian — rentang hari pelaksanaan. Sesi per hari ada di ExamScheduleSlot.
+ *
  * @property int $id
  * @property int $exam_id
  * @property string $title
- * @property Carbon $scheduled_start
- * @property Carbon $scheduled_end
- * @property int $late_tolerance_minutes
- * @property int $max_participants
+ * @property Carbon $start_date
+ * @property Carbon $end_date
  * @property bool $is_active
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Exam|null $exam
+ * @property-read Collection<int, ExamScheduleSlot> $slots
  * @property-read Collection<int, ExamSession> $sessions
  */
-#[Fillable(['exam_id', 'title', 'scheduled_start', 'scheduled_end', 'late_tolerance_minutes', 'max_participants', 'is_active'])]
+#[Fillable(['exam_id', 'title', 'start_date', 'end_date', 'is_active'])]
 class ExamSchedule extends Model
 {
     protected function casts(): array
     {
         return [
-            'scheduled_start' => 'datetime',
-            'scheduled_end' => 'datetime',
-            'late_tolerance_minutes' => 'integer',
-            'max_participants' => 'integer',
+            'start_date' => 'date',
+            'end_date' => 'date',
             'is_active' => 'boolean',
         ];
     }
@@ -42,16 +41,20 @@ class ExamSchedule extends Model
         return $this->belongsTo(Exam::class);
     }
 
+    public function slots(): HasMany
+    {
+        return $this->hasMany(ExamScheduleSlot::class)->orderBy('date')->orderBy('start_time');
+    }
+
     public function sessions(): HasMany
     {
         return $this->hasMany(ExamSession::class);
     }
 
-    public function isAvailable(): bool
+    public function isActive(): bool
     {
         return $this->is_active
-            && now()->between($this->scheduled_start, $this->scheduled_end)
-            && now()->lte($this->scheduled_start->copy()->addMinutes($this->late_tolerance_minutes))
-            && $this->sessions()->count() < $this->max_participants;
+            && now()->toDateString() >= $this->start_date->toDateString()
+            && now()->toDateString() <= $this->end_date->toDateString();
     }
 }

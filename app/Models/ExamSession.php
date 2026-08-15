@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $exam_schedule_id
+ * @property int $exam_schedule_slot_id
  * @property int $user_id
  * @property SessionStatus $status
  * @property Carbon|null $started_at
@@ -36,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read ExamSchedule|null $schedule
+ * @property-read ExamScheduleSlot|null $slot
  * @property-read User $user
  * @property-read ExamSection|null $currentSection
  * @property-read User|null $reviewer
@@ -43,7 +45,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, ViolationLog> $violationLogs
  */
 #[Fillable([
-    'exam_schedule_id', 'user_id', 'status', 'started_at', 'submitted_at',
+    'exam_schedule_id', 'exam_schedule_slot_id', 'user_id', 'status', 'started_at', 'submitted_at',
     'terminated_at', 'termination_reason', 'current_section_id',
     'last_heartbeat_at',
     'review_status', 'review_note', 'reviewed_by', 'reviewed_at',
@@ -74,6 +76,11 @@ class ExamSession extends Model
     public function schedule(): BelongsTo
     {
         return $this->belongsTo(ExamSchedule::class, 'exam_schedule_id');
+    }
+
+    public function slot(): BelongsTo
+    {
+        return $this->belongsTo(ExamScheduleSlot::class, 'exam_schedule_slot_id');
     }
 
     public function user(): BelongsTo

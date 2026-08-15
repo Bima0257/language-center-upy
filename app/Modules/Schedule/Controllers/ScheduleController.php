@@ -4,9 +4,12 @@ namespace App\Modules\Schedule\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Schedule\StoreScheduleRequest;
+use App\Http\Requests\Schedule\StoreSlotRequest;
 use App\Http\Requests\Schedule\UpdateScheduleRequest;
+use App\Http\Requests\Schedule\UpdateSlotRequest;
 use App\Models\Exam;
 use App\Models\ExamSchedule;
+use App\Models\ExamScheduleSlot;
 use App\Modules\Schedule\Services\ScheduleService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -17,14 +20,6 @@ class ScheduleController extends Controller
     public function __construct(
         private ScheduleService $scheduleService,
     ) {}
-
-    public function index(Exam $exam): Response
-    {
-        return Inertia::render('Admin/Schedules/Index', [
-            'exam' => $exam,
-            'schedules' => $this->scheduleService->paginatedByExam($exam->id),
-        ]);
-    }
 
     public function all(): Response
     {
@@ -46,19 +41,23 @@ class ScheduleController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return to_route('admin.schedules.index', $exam)
-            ->with('success', 'Jadwal berhasil dibuat.');
+        return to_route('admin.schedules.all')
+            ->with('success', 'Periode ujian berhasil dibuat.');
     }
 
-    public function edit(Exam $exam, ExamSchedule $schedule): Response
+    public function show(ExamSchedule $schedule): Response
+    {
+        return Inertia::render('Admin/Schedules/Show', $this->scheduleService->showData($schedule));
+    }
+
+    public function edit(ExamSchedule $schedule): Response
     {
         return Inertia::render('Admin/Schedules/Edit', [
-            'exam' => $exam,
-            'schedule' => $schedule,
+            'schedule' => $this->scheduleService->showData($schedule)['schedule'],
         ]);
     }
 
-    public function update(UpdateScheduleRequest $request, Exam $exam, ExamSchedule $schedule): RedirectResponse
+    public function update(UpdateScheduleRequest $request, ExamSchedule $schedule): RedirectResponse
     {
         try {
             $this->scheduleService->update($schedule, $request->validated());
@@ -66,13 +65,51 @@ class ScheduleController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return back()->with('success', 'Jadwal diperbarui.');
+        return back()->with('success', 'Periode ujian diperbarui.');
     }
 
-    public function destroy(Exam $exam, ExamSchedule $schedule): RedirectResponse
+    public function destroy(ExamSchedule $schedule): RedirectResponse
     {
-        $this->scheduleService->delete($schedule);
+        try {
+            $this->scheduleService->delete($schedule);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
-        return back()->with('success', 'Jadwal dihapus.');
+        return to_route('admin.schedules.all')
+            ->with('success', 'Periode ujian dihapus.');
+    }
+
+    public function storeSlot(StoreSlotRequest $request, ExamSchedule $schedule): RedirectResponse
+    {
+        try {
+            $this->scheduleService->createSlot($schedule, $request->validated());
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Sesi berhasil ditambahkan.');
+    }
+
+    public function updateSlot(UpdateSlotRequest $request, ExamScheduleSlot $slot): RedirectResponse
+    {
+        try {
+            $this->scheduleService->updateSlot($slot, $request->validated());
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Sesi diperbarui.');
+    }
+
+    public function destroySlot(ExamScheduleSlot $slot): RedirectResponse
+    {
+        try {
+            $this->scheduleService->deleteSlot($slot);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Sesi dihapus.');
     }
 }

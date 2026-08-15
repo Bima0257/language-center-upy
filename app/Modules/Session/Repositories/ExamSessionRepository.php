@@ -11,12 +11,12 @@ class ExamSessionRepository implements ExamSessionRepositoryInterface
 {
     public function findOrFail(int $id): ExamSession
     {
-        return ExamSession::with(['violationLogs', 'schedule.exam', 'currentSection'])->findOrFail($id);
+        return ExamSession::with(['violationLogs', 'schedule.exam', 'slot', 'currentSection'])->findOrFail($id);
     }
 
     public function findWithAnswers(int $id): ?ExamSession
     {
-        return ExamSession::with(['answers', 'schedule.exam.sections'])->find($id);
+        return ExamSession::with(['answers', 'slot.schedule.exam.sections'])->find($id);
     }
 
     public function create(array $data): ExamSession
@@ -39,6 +39,13 @@ class ExamSessionRepository implements ExamSessionRepositoryInterface
             ->exists();
     }
 
+    public function hasSessionForSchedule(int $userId, int $scheduleId): bool
+    {
+        return ExamSession::where('user_id', $userId)
+            ->where('exam_schedule_id', $scheduleId)
+            ->exists();
+    }
+
     public function getActiveSessionsBySchedule(int $scheduleId): Collection
     {
         return ExamSession::with('user')
@@ -49,7 +56,7 @@ class ExamSessionRepository implements ExamSessionRepositoryInterface
 
     public function getFlaggedSessions(bool $includeReviewed = false): Collection
     {
-        $query = ExamSession::with(['user', 'violationLogs', 'schedule.exam'])
+        $query = ExamSession::with(['user', 'violationLogs', 'schedule.exam', 'slot'])
             ->where('is_flagged', true);
 
         if (! $includeReviewed) {
@@ -61,7 +68,7 @@ class ExamSessionRepository implements ExamSessionRepositoryInterface
 
     public function getActiveSessions(): Collection
     {
-        return ExamSession::with(['user', 'schedule.exam'])
+        return ExamSession::with(['user', 'schedule.exam', 'slot'])
             ->withCount('answers')
             ->where('status', SessionStatus::IN_PROGRESS)
             ->get();
@@ -69,7 +76,7 @@ class ExamSessionRepository implements ExamSessionRepositoryInterface
 
     public function recentForUser(int $userId, int $limit = 3): Collection
     {
-        return ExamSession::with('schedule.exam')
+        return ExamSession::with('schedule.exam', 'slot')
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->take($limit)

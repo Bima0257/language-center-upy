@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Modules\Exam\Repositories\Contracts\ExamRepositoryInterface;
 use App\Modules\Exam\Repositories\Contracts\PassageRepositoryInterface;
 use App\Modules\Exam\Repositories\Contracts\QuestionRepositoryInterface;
-use App\Modules\Schedule\Repositories\Contracts\ScheduleRepositoryInterface;
+use App\Modules\Schedule\Repositories\Contracts\SlotRepositoryInterface;
 use App\Modules\Session\Repositories\Contracts\ExamSessionRepositoryInterface;
 use App\Modules\Users\Repositories\Contracts\UserRepositoryInterface;
 
@@ -14,7 +14,7 @@ class DashboardService
 {
     public function __construct(
         private ExamSessionRepositoryInterface $sessions,
-        private ScheduleRepositoryInterface $schedules,
+        private SlotRepositoryInterface $slots,
         private ExamRepositoryInterface $exams,
         private QuestionRepositoryInterface $questions,
         private PassageRepositoryInterface $passages,
@@ -27,7 +27,7 @@ class DashboardService
 
         if ($user->hasRole('student')) {
             $data['recentSessions'] = $this->sessions->recentForUser($user->id);
-            $data['availableExamsCount'] = $this->schedules->countAvailableNow();
+            $data['availableExamsCount'] = $this->slots->availableSlots()->count();
         }
 
         if ($user->hasRole('admin') || $user->hasRole('superadmin')) {

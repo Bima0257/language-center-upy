@@ -4,12 +4,10 @@ namespace App\Modules\Schedule\Repositories\Contracts;
 
 use App\Models\ExamSchedule;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Carbon;
 
 interface ScheduleRepositoryInterface
 {
-    public function paginateByExam(int $examId, int $perPage = 15): LengthAwarePaginator;
-
     public function paginateAll(int $perPage = 15): LengthAwarePaginator;
 
     public function findOrFail(int $id): ExamSchedule;
@@ -20,9 +18,7 @@ interface ScheduleRepositoryInterface
 
     public function delete(ExamSchedule $schedule): void;
 
-    public function hasOverlap(array $data, ?int $excludeId = null): bool;
+    public function hasSlots(ExamSchedule $schedule): bool;
 
-    public function getAvailableSchedules(): Collection;
-
-    public function countAvailableNow(): int;
+    public function hasDateOverlap(int $examId, Carbon $startDate, Carbon $endDate, ?int $excludeId = null): bool;
 }

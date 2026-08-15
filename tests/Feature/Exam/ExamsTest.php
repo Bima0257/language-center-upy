@@ -257,10 +257,9 @@ class ExamsTest extends TestCase
 
         ExamSchedule::create([
             'exam_id' => $exam->id,
-            'title' => 'Jadwal Demo',
-            'scheduled_start' => now()->subHour(),
-            'scheduled_end' => now()->addHours(2),
-            'max_participants' => 30,
+            'title' => 'Periode Demo',
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addDay(),
             'is_active' => true,
         ]);
 
