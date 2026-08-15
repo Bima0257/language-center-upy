@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Modules\Users\Services\GoogleAuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,6 +16,10 @@ use Laravel\Socialite\Facades\Socialite;
 
 class GoogleAuthController extends Controller
 {
+    public function __construct(
+        private GoogleAuthService $auth,
+    ) {}
+
     public function redirect(Request $request): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $action = $request->query('action', 'login');
@@ -46,7 +48,7 @@ class GoogleAuthController extends Controller
         try {
             $googleUser = Socialite::driver('google')->user();
 
-            $user = User::where('email', $googleUser->getEmail())->first();
+            $user = $this->auth->findByEmail($googleUser->getEmail());
 
             if ($action === 'register' && $user) {
                 return redirect()->route('login')
@@ -59,27 +61,14 @@ class GoogleAuthController extends Controller
                         ->with('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.');
                 }
 
-                $user->google_id = $googleUser->getId();
-                $user->google_avatar = $googleUser->getAvatar();
-                if (! $user->email_verified_at) {
-                    $user->email_verified_at = now();
-                }
-                $user->save();
+                $this->auth->syncGoogleIdentity($user, $googleUser->getId(), $googleUser->getAvatar());
             } else {
-                $user = DB::transaction(function () use ($googleUser) {
-                    $user = User::create([
-                        'name' => $googleUser->getName(),
-                        'email' => $googleUser->getEmail(),
-                        'google_id' => $googleUser->getId(),
-                        'google_avatar' => $googleUser->getAvatar(),
-                        'password' => bcrypt(Str::random(32)),
-                    ]);
-                    $user->email_verified_at = now();
-                    $user->save();
-                    $user->assignRole('student');
-
-                    return $user;
-                });
+                $user = $this->auth->createGoogleUser(
+                    $googleUser->getName(),
+                    $googleUser->getEmail(),
+                    $googleUser->getId(),
+                    $googleUser->getAvatar(),
+                );
             }
         } catch (\Throwable $e) {
             Log::warning('Google login gagal', ['error' => $e->getMessage()]);

@@ -34,7 +34,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read StudentProfile|null $studentProfile
  * @property-read Collection<int, ExamSession> $examSessions
  */
-#[Fillable(['name', 'email', 'password', 'phone', 'photo', 'is_active', 'google_id', 'google_avatar'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'photo', 'is_active', 'google_id', 'google_avatar', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
