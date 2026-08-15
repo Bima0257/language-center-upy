@@ -22,5 +22,7 @@ interface ExamRepositoryInterface
 
     public function all(): Collection;
 
+    public function allActiveOrdered(): Collection;
+
     public function count(): int;
 }

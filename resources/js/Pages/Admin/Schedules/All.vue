@@ -1,15 +1,27 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue'
+import DropDown from '@/Components/Shared/DropDown.vue'
 import Pagination from '@/Components/Shared/Pagination.vue'
-import { IconCalendarEvent, IconTrash, IconEdit, IconArrowRight } from '@tabler/icons-vue'
+import { IconCalendarEvent, IconTrash, IconEdit, IconArrowRight, IconPlus } from '@tabler/icons-vue'
+import { computed, ref } from 'vue'
 import { useConfirm } from '@/Composables/useConfirm'
 
 const confirm = useConfirm()
 
 const props = defineProps({
     schedules: { type: Object, default: () => ({ data: [], links: [], meta: {} }) },
+    exams: { type: Array, default: () => [] },
 })
+
+const selectedExamId = ref('')
+
+const canCreate = computed(() => !!selectedExamId.value)
+
+function createSchedule() {
+    if (!selectedExamId.value) return
+    router.get(route('admin.schedules.create', selectedExamId.value))
+}
 
 function formatDate(value) {
     return value ? new Date(value).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'
@@ -25,10 +37,26 @@ async function deleteSchedule(id) {
 <template>
     <Head title="Penjadwalan Ujian" />
     <DashboardLayout title="Penjadwalan Ujian">
+        <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
+            <div class="w-80">
+                <DropDown
+                    v-model="selectedExamId"
+                    :options="exams"
+                    label="Pilih Ujian"
+                    placeholder="Pilih ujian untuk membuat jadwal"
+                    option-label="title"
+                    option-value="id"
+                />
+            </div>
+            <BaseButton @click="createSchedule" :disabled="!canCreate">
+                <IconPlus :size="18" /> Buat Jadwal
+            </BaseButton>
+        </div>
+
         <div v-if="schedules.data.length === 0"
              class="bg-surface-white rounded-2xl p-10 text-center shadow-soft border border-outline-variant/30">
             <h2 class="text-title-lg font-semibold text-primary mb-2">Belum Ada Jadwal</h2>
-            <p class="text-text-body text-body-md">Buat jadwal melalui halaman ujian terkait.</p>
+            <p class="text-text-body text-body-md">Pilih ujian di atas, lalu klik "Buat Jadwal".</p>
         </div>
 
         <div v-else class="space-y-3">

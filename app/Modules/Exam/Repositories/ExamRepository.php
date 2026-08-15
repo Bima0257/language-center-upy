@@ -46,6 +46,11 @@ class ExamRepository implements ExamRepositoryInterface
         return Exam::with('sections')->get();
     }
 
+    public function allActiveOrdered(): Collection
+    {
+        return Exam::where('is_active', true)->orderBy('title')->get();
+    }
+
     public function count(): int
     {
         return Exam::count();

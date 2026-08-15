@@ -3,6 +3,7 @@
 namespace App\Modules\Schedule\Services;
 
 use App\Models\ExamSchedule;
+use App\Modules\Exam\Repositories\Contracts\ExamRepositoryInterface;
 use App\Modules\Schedule\Repositories\Contracts\ScheduleRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -10,11 +11,20 @@ class ScheduleService
 {
     public function __construct(
         private ScheduleRepositoryInterface $scheduleRepo,
+        private ExamRepositoryInterface $exams,
     ) {}
 
     public function paginatedByExam(int $examId, int $perPage = 15): LengthAwarePaginator
     {
         return $this->scheduleRepo->paginateByExam($examId, $perPage);
+    }
+
+    public function allData(int $perPage = 15): array
+    {
+        return [
+            'schedules' => $this->scheduleRepo->paginateAll($perPage),
+            'exams' => $this->exams->allActiveOrdered(),
+        ];
     }
 
     public function paginatedAll(int $perPage = 15): LengthAwarePaginator

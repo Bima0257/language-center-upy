@@ -28,9 +28,7 @@ class ScheduleController extends Controller
 
     public function all(): Response
     {
-        return Inertia::render('Admin/Schedules/All', [
-            'schedules' => $this->scheduleService->paginatedAll(),
-        ]);
+        return Inertia::render('Admin/Schedules/All', $this->scheduleService->allData());
     }
 
     public function create(Exam $exam): Response
