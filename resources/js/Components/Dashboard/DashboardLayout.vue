@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import { usePage } from "@inertiajs/vue3";
 import Sidebar from "@/Components/Dashboard/Sidebar.vue";
 import TopBar from "@/Components/Dashboard/TopBar.vue";
 import MobileNav from "@/Components/Dashboard/MobileNav.vue";
@@ -15,16 +16,19 @@ const props = defineProps({
 const breadcrumbs = getBreadcrumbs(props.title);
 
 const sidebarCollapsed = ref(false);
+
+const page = usePage();
+const appVersion = page.props.app?.version || "";
+const currentYear = new Date().getFullYear();
 </script>
 
 <template>
     <div class="min-h-screen md:h-screen md:overflow-hidden flex">
         <Sidebar
             :collapsed="sidebarCollapsed"
-            @toggle="sidebarCollapsed = !sidebarCollapsed"
         />
         <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-            <TopBar :title="title" />
+            <TopBar :title="title" @toggle-sidebar="sidebarCollapsed = !sidebarCollapsed" />
             <div
                 class="flex-1 overflow-y-auto p-8 scrollbar-hide dashboard-scroll-area bg-surface"
             >
@@ -32,6 +36,12 @@ const sidebarCollapsed = ref(false);
                 <slot />
             </div>
             <ScrollToTop container=".dashboard-scroll-area" />
+            <footer
+                class="shrink-0 px-8 py-3 bg-surface border-t border-outline-variant/30 flex items-center justify-between text-label-md text-text-muted"
+            >
+                <span>© {{ currentYear }} UPY Language Center</span>
+                <span v-if="appVersion">v{{ appVersion }}</span>
+            </footer>
         </main>
         <MobileNav />
         <ConfirmDialog />

@@ -4,7 +4,6 @@ import { ref, watch } from "vue";
 import {
     IconSettings,
     IconLogout,
-    IconMenu2,
     IconChevronDown,
 } from "@tabler/icons-vue";
 import { getNav } from "@/Composables/useNav";
@@ -12,8 +11,6 @@ import { getNav } from "@/Composables/useNav";
 const props = defineProps({
     collapsed: { type: Boolean, default: false },
 });
-
-defineEmits(["toggle"]);
 
 const page = usePage();
 const roles = page.props.auth?.roles || [];
@@ -45,6 +42,17 @@ function itemActiveClass(active) {
         props.collapsed ? "justify-center px-2 py-3" : "gap-3 pl-4 pr-4 py-3",
         active
             ? "text-white font-bold bg-white/15 dark:text-primary dark:bg-surface-container"
+            : "text-white/70 hover:text-white hover:bg-white/10 dark:text-text-body dark:hover:text-text-heading dark:hover:bg-surface-container",
+    ];
+}
+
+// Parent grup: indikasi lembut saat salah satu submenu aktif (tanpa highlight penuh)
+function groupActiveClass(active) {
+    return [
+        "relative flex items-center rounded-lg transition-all duration-200",
+        props.collapsed ? "justify-center px-2 py-3" : "gap-3 pl-4 pr-4 py-3",
+        active
+            ? "text-white dark:text-primary"
             : "text-white/70 hover:text-white hover:bg-white/10 dark:text-text-body dark:hover:text-text-heading dark:hover:bg-surface-container",
     ];
 }
@@ -90,36 +98,25 @@ watch(
     >
         <div
             class="mb-10 flex items-center relative"
-            :class="collapsed ? 'px-1' : 'px-4 gap-3'"
+            :class="collapsed ? 'justify-center' : ''"
         >
-            <img
-                :src="'/assets/image/logo-white.png'"
-                alt="Logo"
-                class="shrink-0 object-contain rounded-xl"
-                :class="collapsed ? 'w-8 h-8' : 'w-10 h-10'"
-            />
-            <h1
-                v-show="!collapsed"
-                class="text-headline-md font-bold text-white dark:text-primary whitespace-nowrap"
+            <div
+                class="flex items-center rounded-xl bg-white/5 dark:bg-surface-container transition-all duration-200"
+                :class="collapsed ? 'justify-center p-2.5' : 'w-full gap-3 px-4 py-3'"
             >
-                UPY
-            </h1>
-            <button
-                v-if="!collapsed"
-                @click="$emit('toggle')"
-                class="absolute -right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-white/70 hover:text-white dark:text-text-body dark:hover:text-text-heading transition-colors z-10"
-                title="Ciutkan sidebar"
-            >
-                <IconMenu2 :size="18" stroke="1.5" />
-            </button>
-            <button
-                v-else
-                @click="$emit('toggle')"
-                class="ml-auto shrink-0 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white dark:text-text-body dark:hover:text-text-heading transition-colors z-10"
-                title="Perluas sidebar"
-            >
-                <IconMenu2 :size="16" stroke="1.5" />
-            </button>
+                <img
+                    :src="'/assets/image/logo-white.png'"
+                    alt="Logo"
+                    class="shrink-0 object-contain rounded-lg"
+                    :class="collapsed ? 'w-8 h-8' : 'w-10 h-10'"
+                />
+                <h1
+                    v-show="!collapsed"
+                    class="text-headline-md font-bold text-white dark:text-primary whitespace-nowrap"
+                >
+                    UPY
+                </h1>
+            </div>
         </div>
 
         <nav class="flex-1 space-y-2">
@@ -128,11 +125,8 @@ watch(
                     <button
                         @click="toggleGroup(item)"
                         class="w-full"
-                        :class="itemActiveClass(isGroupActive(item.children))"
+                        :class="groupActiveClass(isGroupActive(item.children))"
                     >
-                        <span
-                            :class="barClass(isGroupActive(item.children))"
-                        ></span>
                         <component
                             :is="item.icon"
                             :size="22"

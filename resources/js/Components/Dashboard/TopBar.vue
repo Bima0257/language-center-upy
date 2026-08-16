@@ -1,10 +1,12 @@
 <script setup>
-import { IconSearch, IconMail, IconBell, IconSun, IconMoon } from "@tabler/icons-vue";
+import { IconMenu2, IconSearch, IconMail, IconBell, IconSun, IconMoon } from "@tabler/icons-vue";
 import { ref, onMounted } from "vue";
 
 defineProps({
     title: { type: String, default: "Dashboard" },
 });
+
+defineEmits(["toggle-sidebar"]);
 
 const isDark = ref(false);
 
@@ -34,7 +36,16 @@ onMounted(() => {
     <header
         class="relative z-10 flex justify-between items-center w-full px-8 py-6 bg-surface-container-low dark:bg-surface-container-lowest shadow-[0_8px_24px_-8px_rgba(0,0,0,0.3)]"
     >
-        <h2 class="text-headline-md font-bold text-primary dark:text-text-heading">{{ title }}</h2>
+        <div class="flex items-center gap-3">
+            <button
+                @click="$emit('toggle-sidebar')"
+                class="w-10 h-10 flex items-center justify-center text-text-body hover:bg-surface-container-low dark:hover:bg-surface-container rounded-full transition-colors"
+                title="Ciutkan / perluas sidebar"
+            >
+                <IconMenu2 :size="22" stroke="1.5" />
+            </button>
+            <h2 class="text-headline-md font-bold text-primary dark:text-text-heading">{{ title }}</h2>
+        </div>
         <div class="flex items-center gap-6">
             <div class="relative hidden lg:block">
                 <IconSearch
