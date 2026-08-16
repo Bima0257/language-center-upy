@@ -37,12 +37,16 @@ const editForm = useForm({
 
 const modalForm = computed(() => (creating.value ? form : editForm));
 
+// Native input[type=date] butuh format yyyy-mm-dd — Inertia men-serialize Carbon sebagai ISO datetime penuh
+const slotDateMin = computed(() => props.schedule.start_date?.substring(0, 10) || '');
+const slotDateMax = computed(() => props.schedule.end_date?.substring(0, 10) || '');
+
 function openCreate() {
     creating.value = true;
     editingSlot.value = null;
     form.clearErrors();
     form.reset();
-    form.date = props.schedule.start_date;
+    form.date = slotDateMin.value;
     showModal.value = true;
 }
 
@@ -51,7 +55,7 @@ function openEdit(slot) {
     editingSlot.value = slot;
     editForm.clearErrors();
     editForm.reset();
-    editForm.date = slot.date;
+    editForm.date = slot.date?.substring(0, 10) || '';
     editForm.start_time = slot.start_time?.substring(0, 5);
     editForm.end_time = slot.end_time?.substring(0, 5);
     editForm.late_tolerance_minutes = slot.late_tolerance_minutes ?? 15;
@@ -190,9 +194,12 @@ function formatDate(value) {
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-2">Tanggal Sesi</label>
                         <input type="date" v-model="modalForm.date" required
-                               :min="schedule.start_date" :max="schedule.end_date"
+                               :min="slotDateMin" :max="slotDateMax"
                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
                         <p v-if="modalForm.errors.date" class="text-error-red text-xs mt-1">{{ modalForm.errors.date }}</p>
+                        <p class="text-label-md text-text-muted mt-1">
+                            Hanya tanggal dalam periode {{ formatDate(schedule.start_date) }} s/d {{ formatDate(schedule.end_date) }} yang bisa dipilih.
+                        </p>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>

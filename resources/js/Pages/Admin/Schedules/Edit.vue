@@ -8,8 +8,8 @@ const props = defineProps({
 
 const form = useForm({
     title: props.schedule.title,
-    start_date: props.schedule.start_date,
-    end_date: props.schedule.end_date,
+    start_date: props.schedule.start_date?.substring(0, 10) || '',
+    end_date: props.schedule.end_date?.substring(0, 10) || '',
     is_active: props.schedule.is_active,
 });
 
