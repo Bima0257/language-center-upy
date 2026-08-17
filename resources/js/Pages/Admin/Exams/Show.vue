@@ -5,10 +5,7 @@ import DropDown from '@/Components/Shared/DropDown.vue';
 import draggable from 'vuedraggable';
 import { IconEdit, IconChevronDown, IconChevronRight, IconFileDescription, IconCheck, IconGripVertical, IconPlus, IconX, IconTrash } from '@tabler/icons-vue';
 import { computed, ref, watch } from 'vue';
-import { useToast } from '@/Composables/useToast';
 import { skillLabel } from '@/constants/skills';
-
-const toast = useToast();
 
 const props = defineProps({
     exam: { type: Object, required: true },
@@ -56,7 +53,6 @@ function submitSection() {
         preserveScroll: true,
         onSuccess: () => {
             showSectionModal.value = false;
-            toast.success('Section berhasil dibuat.');
         },
     });
 }
@@ -93,7 +89,6 @@ function submitQuestions() {
         onSuccess: () => {
             showQuestionModal.value = false;
             questionForm.reset();
-            toast.success('Soal berhasil ditambahkan ke section.');
         },
     });
 }
@@ -250,7 +245,6 @@ function saveArrangement(section) {
     }, {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success('Susunan section disimpan.');
             initLocalOrders(section.id);
             initItems(section.id);
             dirtySections.value[section.id] = false;

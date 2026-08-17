@@ -81,4 +81,16 @@ class SkillPartRepository implements SkillPartRepositoryInterface
     {
         $skillPart->delete();
     }
+
+    public function nextOrder(int $bankId, string $skill): int
+    {
+        return (SkillPart::where('question_bank_id', $bankId)
+            ->where('skill', $skill)
+            ->max('order') ?? 0) + 1;
+    }
+
+    public function findMany(array $ids): Collection
+    {
+        return SkillPart::whereIn('id', $ids)->get();
+    }
 }

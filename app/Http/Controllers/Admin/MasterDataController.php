@@ -50,7 +50,11 @@ class MasterDataController extends Controller
 
     public function examTypeDestroy(ExamType $examType): RedirectResponse
     {
-        $this->masterData->deleteExamType($examType);
+        try {
+            $this->masterData->deleteExamType($examType);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Jenis tes berhasil dihapus.');
     }
@@ -77,6 +81,18 @@ class MasterDataController extends Controller
         $this->masterData->updateSkillPart($skillPart, $request->validated());
 
         return back()->with('success', 'Part berhasil diperbarui.');
+    }
+
+    public function partReorder(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'parts' => ['required', 'array', 'min:1'],
+            'parts.*' => ['required', 'integer', 'distinct'],
+        ]);
+
+        $this->masterData->reorderSkillParts($validated['parts']);
+
+        return back()->with('success', 'Urutan part disimpan.');
     }
 
     public function partDestroy(SkillPart $skillPart): RedirectResponse

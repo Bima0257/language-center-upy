@@ -72,7 +72,22 @@ class ExamTypesTest extends TestCase
         ])->assertSessionHasErrors('name');
     }
 
-    public function test_admin_can_delete_exam_type(): void
+    public function test_admin_can_delete_unused_exam_type(): void
+    {
+        $this->loginAs('admin');
+
+        $examType = ExamType::create([
+            'name' => 'TOEFL Junior',
+            'max_strikes' => 3,
+            'is_active' => true,
+        ]);
+
+        $this->delete("/admin/master-data/exam-types/{$examType->id}")->assertRedirect();
+
+        $this->assertDatabaseMissing('exam_types', ['id' => $examType->id]);
+    }
+
+    public function test_exam_type_dipakai_bank_soal_tidak_bisa_dihapus(): void
     {
         $this->loginAs('admin');
 
@@ -80,6 +95,7 @@ class ExamTypesTest extends TestCase
 
         $this->delete("/admin/master-data/exam-types/{$examType->id}")->assertRedirect();
 
-        $this->assertDatabaseMissing('exam_types', ['id' => $examType->id]);
+        $this->assertDatabaseHas('exam_types', ['id' => $examType->id]);
+        $this->assertTrue(session()->has('error'));
     }
 }

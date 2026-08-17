@@ -35,7 +35,6 @@ class UpdateSkillPartRequest extends FormRequest
                     })
                     ->ignore($partId),
             ],
-            'order' => ['required', 'integer', 'min:1'],
             'directions' => ['nullable', 'string'],
             'is_active' => ['boolean'],
         ];

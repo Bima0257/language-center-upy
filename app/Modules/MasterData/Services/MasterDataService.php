@@ -49,6 +49,10 @@ class MasterDataService
 
     public function deleteExamType(ExamType $examType): void
     {
+        if ($examType->questionBanks()->exists() || $examType->exams()->exists()) {
+            throw new \RuntimeException('Jenis tes tidak bisa dihapus karena masih dipakai bank soal atau ujian.');
+        }
+
         $this->examTypes->delete($examType);
     }
 
@@ -64,12 +68,48 @@ class MasterDataService
 
     public function createSkillPart(array $data): void
     {
-        $this->skillParts->create($this->sanitizeOptionalText($data));
+        $data = $this->sanitizeOptionalText($data);
+        $data['order'] = $this->skillParts->nextOrder((int) $data['question_bank_id'], (string) $data['skill']);
+
+        $this->skillParts->create($data);
     }
 
     public function updateSkillPart(SkillPart $skillPart, array $data): void
     {
-        $this->skillParts->update($skillPart, $this->sanitizeOptionalText($data));
+        $data = $this->sanitizeOptionalText($data);
+
+        // Pindah bank/skill → urutan otomatis di akhir grup baru (hindari tabrakan urutan)
+        if ((int) ($data['question_bank_id'] ?? $skillPart->question_bank_id) !== $skillPart->question_bank_id
+            || (string) ($data['skill'] ?? $skillPart->skill->value) !== $skillPart->skill->value) {
+            $data['order'] = $this->skillParts->nextOrder((int) $data['question_bank_id'], (string) $data['skill']);
+        }
+
+        $this->skillParts->update($skillPart, $data);
+    }
+
+    /**
+     * Terima daftar id part dalam urutan baru; order dihitung ulang per (bank, skill).
+     *
+     * @param  array<int>  $ids
+     */
+    public function reorderSkillParts(array $ids): void
+    {
+        $parts = $this->skillParts->findMany($ids);
+        $rank = [];
+
+        foreach ($ids as $index => $id) {
+            $part = $parts->firstWhere('id', $id);
+            if (! $part) {
+                continue;
+            }
+
+            $groupKey = $part->question_bank_id.'|'.$part->skill->value;
+            $rank[$groupKey] = ($rank[$groupKey] ?? 0) + 1;
+
+            if ($part->order !== $rank[$groupKey]) {
+                $this->skillParts->update($part, ['order' => $rank[$groupKey]]);
+            }
+        }
     }
 
     public function deleteSkillPart(SkillPart $skillPart): void

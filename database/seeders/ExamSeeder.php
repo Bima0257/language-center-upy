@@ -174,7 +174,6 @@ class ExamSeeder extends Seeder
                 'passage_id' => $readingPassage->id,
                 'skill' => SkillCode::READING,
                 'skill_part_id' => $readingPart?->id,
-                'type' => 'multiple_choice',
                 'question_text' => $q['question_text'],
                 'option_a' => $q['a'],
                 'option_b' => $q['b'],
@@ -192,7 +191,6 @@ class ExamSeeder extends Seeder
                 'passage_id' => $listeningPassage->id,
                 'skill' => SkillCode::LISTENING,
                 'skill_part_id' => $listeningPart?->id,
-                'type' => 'multiple_choice',
                 'question_text' => $q['question_text'],
                 'option_a' => $q['a'],
                 'option_b' => $q['b'],
@@ -226,7 +224,6 @@ class ExamSeeder extends Seeder
             ]);
 
             $activeSession = ExamSession::create([
-                'exam_schedule_id' => $schedule->id,
                 'exam_schedule_slot_id' => $slot->id,
                 'user_id' => $student->id,
                 'status' => 'in_progress',
@@ -262,7 +259,6 @@ class ExamSeeder extends Seeder
             ]);
 
             $flaggedSession = ExamSession::create([
-                'exam_schedule_id' => $schedule2->id,
                 'exam_schedule_slot_id' => $slot2->id,
                 'user_id' => $student->id,
                 'status' => 'terminated',
@@ -317,7 +313,6 @@ class ExamSeeder extends Seeder
             ]);
 
             ExamSession::create([
-                'exam_schedule_id' => $schedule3->id,
                 'exam_schedule_slot_id' => $slot3->id,
                 'user_id' => $student->id,
                 'status' => 'submitted',

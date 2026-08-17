@@ -118,7 +118,6 @@ class QuestionService
                         'skill' => $q['skill'],
                         'skill_part_id' => $q['skill_part_id'],
                         'passage_id' => $passageId,
-                        'type' => 'multiple_choice',
                         'question_text' => $q['question_text'] ?? '',
                         'option_a' => $q['option_a'] ?? '',
                         'option_b' => $q['option_b'] ?? '',
@@ -216,7 +215,7 @@ class QuestionService
     {
         $this->questions->create(array_merge(
             $validated,
-            ['type' => 'multiple_choice', 'created_by' => auth()->id()]
+            ['created_by' => auth()->id()]
         ));
     }
 
@@ -224,7 +223,7 @@ class QuestionService
     {
         return DB::transaction(function () use ($rows) {
             $data = array_map(
-                fn ($row) => array_merge($row, ['type' => 'multiple_choice', 'created_by' => auth()->id()]),
+                fn ($row) => array_merge($row, ['created_by' => auth()->id()]),
                 $rows,
             );
 

@@ -20,11 +20,9 @@ import Leaderboard from "@/Components/Dashboard/Leaderboard.vue";
 import BarChart from "@/Components/Charts/BarChart.vue";
 import DoughnutChart from "@/Components/Charts/DoughnutChart.vue";
 import { useConfirm } from "@/Composables/useConfirm";
-import { useToast } from "@/Composables/useToast";
 import { skillLabel } from "@/constants/skills";
 
 const confirm = useConfirm();
-const toast = useToast();
 
 const props = defineProps({
     recentSessions: { type: Array, default: () => [] },
@@ -85,11 +83,6 @@ async function reviewQuestion(id, status) {
         {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success(
-                    status === "approved"
-                        ? "Soal disetujui."
-                        : "Soal ditolak.",
-                );
                 router.reload({
                     only: ["pendingQuestions", "pendingReviewCount"],
                     preserveState: true,

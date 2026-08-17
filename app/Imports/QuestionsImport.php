@@ -24,7 +24,6 @@ class QuestionsImport implements ToModel, WithHeadingRow
             'skill' => $row['skill'] ?? null,
             'skill_part_id' => $row['skill_part_id'] ?? null,
             'passage_id' => $row['passage_id'] ?? null,
-            'type' => 'multiple_choice',
             'question_text' => $row['question_text'] ?? '',
             'option_a' => $row['option_a'] ?? '',
             'option_b' => $row['option_b'] ?? '',

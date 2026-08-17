@@ -4,10 +4,8 @@ import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
 import { IconArrowLeft, IconPlus, IconTrash, IconEdit, IconX, IconClock } from '@tabler/icons-vue';
 import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
-import { useToast } from '@/Composables/useToast';
 
 const confirm = useConfirm();
-const toast = useToast();
 
 const props = defineProps({
     schedule: { type: Object, required: true },
@@ -68,7 +66,6 @@ function submit() {
     const target = creating.value ? form : editForm;
     const onSuccess = () => {
         showModal.value = false;
-        toast.success(creating.value ? 'Sesi berhasil ditambahkan.' : 'Sesi diperbarui.');
         target.reset();
     };
 

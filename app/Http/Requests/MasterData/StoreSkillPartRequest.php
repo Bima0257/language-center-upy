@@ -31,7 +31,6 @@ class StoreSkillPartRequest extends FormRequest
                         ->where('skill', $this->input('skill'));
                 }),
             ],
-            'order' => ['required', 'integer', 'min:1'],
             'directions' => ['nullable', 'string'],
             'is_active' => ['boolean'],
         ];

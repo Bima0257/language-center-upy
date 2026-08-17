@@ -33,4 +33,14 @@ interface SkillPartRepositoryInterface
     public function update(SkillPart $skillPart, array $data): SkillPart;
 
     public function delete(SkillPart $skillPart): void;
+
+    /**
+     * Urutan berikutnya untuk (bank, skill) — max(order) + 1.
+     */
+    public function nextOrder(int $bankId, string $skill): int;
+
+    /**
+     * @return Collection<int, SkillPart>
+     */
+    public function findMany(array $ids): Collection;
 }

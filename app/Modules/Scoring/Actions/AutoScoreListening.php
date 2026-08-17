@@ -38,7 +38,7 @@ class AutoScoreListening
             }
         }
 
-        $examTypeId = $session->schedule?->exam?->exam_type_id;
+        $examTypeId = $session->slot?->schedule?->exam?->exam_type_id;
 
         return $this->conversionService->convert($examTypeId, 'listening', $correct, $total);
     }

@@ -16,7 +16,7 @@ class ExamRuntimeService
 
     public function questionsForSession(ExamSession $session): Collection
     {
-        $exam = $session->schedule?->exam;
+        $exam = $session->slot?->schedule?->exam;
         $sections = $exam !== null ? $exam->sections : new Collection;
 
         $pivotRows = $this->sections->pivotRowsBySectionIds($sections->pluck('id'));

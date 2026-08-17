@@ -35,7 +35,6 @@ class StartExamSession
         $firstSection = $slot->schedule->exam->sections->first();
 
         $session = $this->sessionRepo->create([
-            'exam_schedule_id' => $slot->exam_schedule_id,
             'exam_schedule_slot_id' => $slot->id,
             'user_id' => $userId,
             'status' => SessionStatus::IN_PROGRESS,

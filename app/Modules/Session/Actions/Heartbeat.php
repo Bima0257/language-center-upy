@@ -25,7 +25,7 @@ class Heartbeat
 
         if ($session->started_at) {
             $elapsedMinutes = now()->diffInMinutes($session->started_at);
-            $exam = $session->schedule?->exam;
+            $exam = $session->slot?->schedule?->exam;
             $durationMinutes = $exam !== null ? $exam->duration_minutes : 160;
 
             if ($elapsedMinutes > $durationMinutes + 1) {

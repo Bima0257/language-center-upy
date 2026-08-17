@@ -12,7 +12,6 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $exam_schedule_id
  * @property int $exam_schedule_slot_id
  * @property int $user_id
  * @property SessionStatus $status
@@ -36,7 +35,6 @@ use Illuminate\Support\Carbon;
  * @property int $violation_strikes
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read ExamSchedule|null $schedule
  * @property-read ExamScheduleSlot|null $slot
  * @property-read User $user
  * @property-read ExamSection|null $currentSection
@@ -45,7 +43,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, ViolationLog> $violationLogs
  */
 #[Fillable([
-    'exam_schedule_id', 'exam_schedule_slot_id', 'user_id', 'status', 'started_at', 'submitted_at',
+    'exam_schedule_slot_id', 'user_id', 'status', 'started_at', 'submitted_at',
     'terminated_at', 'termination_reason', 'current_section_id',
     'last_heartbeat_at',
     'review_status', 'review_note', 'reviewed_by', 'reviewed_at',
@@ -71,11 +69,6 @@ class ExamSession extends Model
             'score_writing' => 'decimal:1',
             'score_total' => 'decimal:1',
         ];
-    }
-
-    public function schedule(): BelongsTo
-    {
-        return $this->belongsTo(ExamSchedule::class, 'exam_schedule_id');
     }
 
     public function slot(): BelongsTo
@@ -110,7 +103,7 @@ class ExamSession extends Model
 
     public function getMaxStrikes(): int
     {
-        $examType = $this->schedule?->exam?->examType;
+        $examType = $this->slot?->schedule?->exam?->examType;
 
         return $examType !== null ? $examType->max_strikes : 3;
     }

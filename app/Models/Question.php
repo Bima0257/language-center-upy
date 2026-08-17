@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\QuestionType;
 use App\Enums\SkillCode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +12,6 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $question_bank_id
  * @property int|null $passage_id
- * @property QuestionType $type
  * @property SkillCode $skill
  * @property int|null $skill_part_id
  * @property string $question_text
@@ -39,7 +37,7 @@ use Illuminate\Support\Carbon;
  * @property-read User|null $reviewer
  */
 #[Fillable([
-    'question_bank_id', 'passage_id', 'type', 'skill', 'skill_part_id',
+    'question_bank_id', 'passage_id', 'skill', 'skill_part_id',
     'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
     'correct_answer', 'order', 'status',
     'created_by', 'updated_by', 'reviewed_by', 'reviewed_at', 'review_note',
@@ -49,7 +47,6 @@ class Question extends Model
     protected function casts(): array
     {
         return [
-            'type' => QuestionType::class,
             'skill' => SkillCode::class,
             'order' => 'integer',
             'reviewed_at' => 'datetime',
