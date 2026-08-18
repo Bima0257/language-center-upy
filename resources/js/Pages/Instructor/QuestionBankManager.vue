@@ -116,7 +116,11 @@ async function destroy(bank) {
             <template #actions="{ row }">
                 <div class="flex items-center gap-2">
                     <button @click="startEdit(row)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit"><IconEdit :size="18" /></button>
-                    <button @click="destroy(row)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus"><IconTrash :size="18" /></button>
+                    <button @click="destroy(row)" :disabled="row.questions_count > 0 || row.exam_sections_count > 0"
+                            class="p-2 text-text-muted hover:text-error-red transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-text-muted"
+                            :title="row.questions_count > 0 || row.exam_sections_count > 0 ? 'Tidak bisa dihapus karena masih memiliki soal atau digunakan di ujian' : 'Hapus'">
+                        <IconTrash :size="18" />
+                    </button>
                 </div>
             </template>
         </DataTable>

@@ -34,6 +34,10 @@ class QuestionBankService
 
     public function destroy(QuestionBank $questionBank): void
     {
+        if ($questionBank->questions()->exists() || $questionBank->examSections()->exists()) {
+            throw new \RuntimeException('Bank soal tidak bisa dihapus karena masih memiliki soal atau digunakan di ujian.');
+        }
+
         $this->questionBanks->delete($questionBank);
     }
 

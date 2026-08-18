@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read ExamType|null $examType
  * @property-read Collection<int, Question> $questions
  * @property-read Collection<int, SkillPart> $skillParts
+ * @property-read Collection<int, ExamSection> $examSections
  */
 class QuestionBank extends Model
 {
@@ -46,5 +47,10 @@ class QuestionBank extends Model
     public function skillParts(): HasMany
     {
         return $this->hasMany(SkillPart::class);
+    }
+
+    public function examSections(): HasMany
+    {
+        return $this->hasMany(ExamSection::class);
     }
 }

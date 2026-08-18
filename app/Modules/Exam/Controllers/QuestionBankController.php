@@ -38,7 +38,11 @@ class QuestionBankController extends Controller
 
     public function destroy(QuestionBank $questionBank): RedirectResponse
     {
-        $this->questionBankService->destroy($questionBank);
+        try {
+            $this->questionBankService->destroy($questionBank);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Bank soal berhasil dihapus.');
     }

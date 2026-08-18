@@ -10,7 +10,7 @@ class ExamTypeRepository implements ExamTypeRepositoryInterface
 {
     public function allWithQuestionBankCounts(): Collection
     {
-        return ExamType::withCount('questionBanks')->orderBy('name')->get();
+        return ExamType::withCount(['questionBanks', 'exams'])->orderBy('name')->get();
     }
 
     public function allOrdered(): Collection

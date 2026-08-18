@@ -10,7 +10,7 @@ class QuestionBankRepository implements QuestionBankRepositoryInterface
 {
     public function allWithExamTypeAndCounts(): Collection
     {
-        return QuestionBank::with('examType')->withCount('questions')->orderBy('name')->get();
+        return QuestionBank::with('examType')->withCount(['questions', 'examSections'])->orderBy('name')->get();
     }
 
     public function allActiveOrdered(): Collection
