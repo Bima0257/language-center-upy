@@ -284,7 +284,7 @@ async function destroy(part) {
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-1.5">Nama Part *</label>
                         <input type="text" v-model="modalForm.name" required placeholder="Part 1"
-                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                         <p v-if="modalForm.errors.name" class="text-error-red text-xs mt-1">{{ modalForm.errors.name }}</p>
                         <p v-if="creating" class="text-label-md text-text-muted mt-1">
                             Urutan otomatis ditambahkan di akhir daftar part — ubah urutan lewat drag &amp; drop di tabel.

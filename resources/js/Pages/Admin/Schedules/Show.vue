@@ -152,7 +152,7 @@ function formatDate(value) {
                                     <p class="text-label-md text-text-muted">
                                         {{ slot.sessions_count || 0 }}/{{ slot.max_participants }} peserta —
                                         toleransi {{ slot.late_tolerance_minutes ?? 15 }} menit —
-                                        <span :class="slot.is_active ? 'text-green-600' : 'text-error-red'">
+                                        <span :class="slot.is_active ? 'text-green-600 dark:text-green-400' : 'text-error-red'">
                                             {{ slot.is_active ? 'Aktif' : 'Nonaktif' }}
                                         </span>
                                     </p>
@@ -192,7 +192,7 @@ function formatDate(value) {
                         <label class="text-label-md font-medium text-primary block mb-2">Tanggal Sesi</label>
                         <input type="date" v-model="modalForm.date" required
                                :min="slotDateMin" :max="slotDateMax"
-                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                         <p v-if="modalForm.errors.date" class="text-error-red text-xs mt-1">{{ modalForm.errors.date }}</p>
                         <p class="text-label-md text-text-muted mt-1">
                             Hanya tanggal dalam periode {{ formatDate(schedule.start_date) }} s/d {{ formatDate(schedule.end_date) }} yang bisa dipilih.
@@ -202,13 +202,13 @@ function formatDate(value) {
                         <div>
                             <label class="text-label-md font-medium text-primary block mb-2">Jam Mulai</label>
                             <input type="time" v-model="modalForm.start_time" required
-                                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                             <p v-if="modalForm.errors.start_time" class="text-error-red text-xs mt-1">{{ modalForm.errors.start_time }}</p>
                         </div>
                         <div>
                             <label class="text-label-md font-medium text-primary block mb-2">Jam Selesai</label>
                             <input type="time" v-model="modalForm.end_time" required
-                                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                             <p v-if="modalForm.errors.end_time" class="text-error-red text-xs mt-1">{{ modalForm.errors.end_time }}</p>
                         </div>
                     </div>
@@ -216,12 +216,12 @@ function formatDate(value) {
                         <div>
                             <label class="text-label-md font-medium text-primary block mb-2">Toleransi (menit)</label>
                             <input type="number" v-model="modalForm.late_tolerance_minutes" min="0"
-                                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                         </div>
                         <div>
                             <label class="text-label-md font-medium text-primary block mb-2">Kuota Peserta</label>
                             <input type="number" v-model="modalForm.max_participants" min="1"
-                                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                         </div>
                     </div>
                     <label v-if="!creating" class="flex items-center gap-2 cursor-pointer">

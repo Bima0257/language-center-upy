@@ -149,7 +149,7 @@ async function destroy(bank) {
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-1.5">Nama Bank Soal *</label>
                         <input type="text" v-model="modalForm.name" required placeholder="Bank Soal 2024"
-                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                         <p v-if="modalForm.errors.name" class="text-error-red text-xs mt-1">{{ modalForm.errors.name }}</p>
                     </div>
                     <div>

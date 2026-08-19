@@ -422,7 +422,7 @@ function questionPreview(q) {
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-1.5">Judul Section</label>
                         <input type="text" v-model="sectionForm.title" placeholder="Judul otomatis dari bank & skill"
-                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                         <p v-if="sectionForm.errors.title" class="text-error-red text-xs mt-1">{{ sectionForm.errors.title }}</p>
                     </div>
                     <p v-if="sectionTitlePreview" class="text-label-md text-text-muted">

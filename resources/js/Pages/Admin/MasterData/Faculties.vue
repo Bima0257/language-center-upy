@@ -120,7 +120,7 @@ async function destroy(faculty) {
                                                     <input type="checkbox" v-model="editForm.is_active" class="w-4 h-4" />
                                                     <span class="text-label-md text-text-body">Aktif</span>
                                                 </label>
-                                                <button @click="saveEdit(faculty)" class="p-2 text-green-600 hover:text-green-800 transition-colors" title="Simpan"><IconCheck :size="18" /></button>
+                                                <button @click="saveEdit(faculty)" class="p-2 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 transition-colors" title="Simpan"><IconCheck :size="18" /></button>
                                                 <button @click="editing = null" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Batal"><IconTrash :size="18" /></button>
                                             </div>
                                         </div>

@@ -53,7 +53,7 @@ onMounted(() => {
                     :size="18"
                 />
                 <input
-                    class="bg-surface-container-low dark:bg-surface-container border-none rounded-full py-2.5 pl-12 pr-6 w-72 text-body-md focus:ring-2 focus:ring-primary/10 placeholder:text-text-muted"
+                    class="bg-surface-container-low dark:bg-surface-container border-none rounded-full py-2.5 pl-12 pr-6 w-72 text-text-body text-body-md focus:ring-2 focus:ring-primary/10 placeholder:text-text-muted"
                     placeholder="Tekan Ctrl + F untuk mencari"
                     type="text"
                 />

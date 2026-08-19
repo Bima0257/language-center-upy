@@ -77,7 +77,7 @@ async function destroy(schedule) {
                     <p class="text-text-muted text-xs mt-1">
                         <span class="inline-flex items-center gap-1"><IconClock :size="14" /> {{ schedule.slots_count || 0 }} sesi</span>
                         —
-                        <span :class="schedule.is_active ? 'text-green-600' : 'text-error-red'">
+                        <span :class="schedule.is_active ? 'text-green-600 dark:text-green-400' : 'text-error-red'">
                             {{ schedule.is_active ? 'Aktif' : 'Nonaktif' }}
                         </span>
                     </p>

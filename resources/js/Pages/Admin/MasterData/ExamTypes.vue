@@ -132,13 +132,13 @@ async function destroy(type) {
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-1.5">Nama Jenis Tes *</label>
                         <input type="text" v-model="modalForm.name" required placeholder="TOEFL iBT"
-                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                         <p v-if="modalForm.errors.name" class="text-error-red text-xs mt-1">{{ modalForm.errors.name }}</p>
                     </div>
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-1.5">Maksimum Strikes</label>
                         <input type="number" v-model="modalForm.max_strikes" min="0" max="10"
-                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                         <p v-if="modalForm.errors.max_strikes" class="text-error-red text-xs mt-1">{{ modalForm.errors.max_strikes }}</p>
                     </div>
                     <div>

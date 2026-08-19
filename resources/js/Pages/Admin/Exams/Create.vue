@@ -94,7 +94,7 @@ function submit() {
                         <label class="text-label-md font-medium text-primary block mb-2">Judul Soal Ujian</label>
                         <input type="text" v-model="form.title" required
                                placeholder="Tes TOEFL 2026"
-                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]" />
+                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]" />
                         <p v-if="form.errors.title" class="text-error-red text-xs mt-1">{{ form.errors.title }}</p>
                     </div>
                     <div>
@@ -118,7 +118,7 @@ function submit() {
                         <div>
                             <label class="text-label-md font-medium text-primary block mb-2">Durasi (menit)</label>
                             <input type="number" v-model="form.duration_minutes" required min="1"
-                                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]" />
+                                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]" />
                         </div>
                     </div>
                     <BaseButton type="submit" :disabled="form.processing" size="xl" class="w-full">
