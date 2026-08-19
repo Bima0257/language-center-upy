@@ -116,7 +116,7 @@ const maxWidthClass = computed(() => {
             >
                 <div
                     v-show="show"
-                    class="mb-6 transform rounded-3xl bg-white shadow-soft transition-all sm:mx-auto sm:w-full"
+                    class="mb-6 transform rounded-3xl bg-surface-white shadow-soft transition-all sm:mx-auto sm:w-full"
                     :class="[
                         maxWidthClass,
                         scrollable

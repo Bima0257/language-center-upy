@@ -127,7 +127,7 @@ async function destroy(bank) {
 
         <!-- Modal Tambah / Edit -->
         <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div class="bg-white rounded-3xl p-8 shadow-soft w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="bg-surface-white rounded-3xl p-8 shadow-soft w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-headline-md font-bold text-primary">{{ creating ? 'Tambah Bank Soal' : 'Edit Bank Soal' }}</h2>
                     <button @click="closeModal" class="p-2 text-text-muted hover:text-primary transition-colors">
