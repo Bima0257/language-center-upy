@@ -8,6 +8,9 @@ Route::middleware(['auth', 'verified', 'role:student'])
     ->name('exam.')
     ->group(function () {
         Route::get('/available', [ExamSessionController::class, 'available'])->name('available');
+        Route::get('/history', [ExamSessionController::class, 'history'])->name('history');
+        Route::get('/schedule', [ExamSessionController::class, 'schedule'])->name('schedule');
+        Route::get('/certificates', [ExamSessionController::class, 'certificates'])->name('certificates');
         Route::get('/slots/{slot}/pre-check', [ExamSessionController::class, 'preCheck'])->name('pre-check');
         Route::post('/slots/{slot}/start', [ExamSessionController::class, 'start'])->name('start');
 

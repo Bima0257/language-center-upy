@@ -4,6 +4,8 @@ namespace App\Modules\Session\Controllers;
 
 use App\Enums\ViolationType;
 use App\Http\Controllers\Controller;
+use App\Models\Certificate;
+use App\Models\ExamSchedule;
 use App\Models\ExamScheduleSlot;
 use App\Models\ExamSession;
 use App\Modules\Schedule\Repositories\Contracts\SlotRepositoryInterface;
@@ -38,6 +40,44 @@ class ExamSessionController extends Controller
     {
         return Inertia::render('Exam/Available', [
             'slots' => $this->slotRepo->availableSlots(),
+        ]);
+    }
+
+    public function history(): Response
+    {
+        $sessions = ExamSession::where('user_id', auth()->id())
+            ->whereIn('status', ['submitted', 'terminated'])
+            ->with('slot.schedule.exam')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return Inertia::render('Profile/ExamHistory', [
+            'sessions' => $sessions,
+        ]);
+    }
+
+    public function schedule(): Response
+    {
+        $schedules = ExamSchedule::where('is_active', true)
+            ->where('end_date', '>=', now()->toDateString())
+            ->with(['exam', 'slots' => fn ($q) => $q->where('is_active', true)->orderBy('date')->orderBy('start_time')])
+            ->orderBy('start_date')
+            ->get();
+
+        return Inertia::render('Exam/Schedule', [
+            'schedules' => $schedules,
+        ]);
+    }
+
+    public function certificates(): Response
+    {
+        $certificates = Certificate::whereHas('examSession', fn ($q) => $q->where('user_id', auth()->id()))
+            ->with('examSession.slot.schedule.exam')
+            ->orderByDesc('issued_at')
+            ->get();
+
+        return Inertia::render('Exam/Certificates', [
+            'certificates' => $certificates,
         ]);
     }
 

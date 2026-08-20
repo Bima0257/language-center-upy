@@ -11,6 +11,7 @@ import {
     IconCategory,
     IconListDetails,
     IconCalendarEvent,
+    IconHistory,
 } from "@tabler/icons-vue";
 
 export function getNav(roles) {
@@ -25,6 +26,9 @@ export function getNav(roles) {
         nav.push(
             { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
             { label: "Tryout", icon: IconClipboardCheck, route: "exam.available" },
+            { label: "Jadwal Ujian", icon: IconCalendarEvent, route: "exam.schedule" },
+            { label: "Riwayat Tryout", icon: IconHistory, route: "exam.history" },
+            { label: "Sertifikat", icon: IconCertificate, route: "exam.certificates" },
         );
     }
 
