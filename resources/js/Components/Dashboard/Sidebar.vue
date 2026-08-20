@@ -119,7 +119,7 @@ watch(
             </div>
         </div>
 
-        <nav class="flex-1 space-y-2 overflow-y-auto">
+        <nav class="flex-1 space-y-2 scrollbar-hide">
             <template v-for="item in nav" :key="item.label">
                 <div v-if="item.children">
                     <button
@@ -263,6 +263,13 @@ watch(
 </template>
 
 <style scoped>
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
 .dropdown-enter-active,
 .dropdown-leave-active {
     transition:
