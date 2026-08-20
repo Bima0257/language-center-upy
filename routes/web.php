@@ -1,8 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\MasterDataController;
 use App\Http\Controllers\Admin\ScoreInterpretationController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VerificationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OnboardingController;
@@ -63,6 +67,18 @@ Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
         Route::get('/certificates', [CertificateController::class, 'index'])->name('certificates.index');
         Route::post('/certificates', [CertificateController::class, 'store'])->name('certificates.store');
         Route::delete('/certificates/{certificate}', [CertificateController::class, 'destroy'])->name('certificates.destroy');
+
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::patch('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
+        Route::patch('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
+
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+
+        Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::patch('/settings', [SettingController::class, 'update'])->name('settings.update');
+
+        Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

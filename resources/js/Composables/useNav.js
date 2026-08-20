@@ -12,6 +12,10 @@ import {
     IconListDetails,
     IconCalendarEvent,
     IconHistory,
+    IconSettings,
+    IconBuilding,
+    IconSchool,
+    IconChartBar,
 } from "@tabler/icons-vue";
 
 export function getNav(roles) {
@@ -59,6 +63,9 @@ export function getNav(roles) {
                     { label: "Part Soal", icon: IconListDetails, route: "admin.master-data.parts.index" },
                     { label: "Materi Soal", icon: IconFileDescription, route: "content-library.passages.index" },
                     { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },
+                    { label: "Fakultas", icon: IconBuilding, route: "admin.master-data.faculties.index" },
+                    { label: "Jurusan", icon: IconSchool, route: "admin.master-data.departments.index" },
+                    { label: "Interpretasi Skor", icon: IconListDetails, route: "admin.master-data.score-interpretations.index" },
                 ],
             },
             {
@@ -72,6 +79,10 @@ export function getNav(roles) {
             { label: "Verifikasi", icon: IconUsers, route: "admin.verify-users" },
             { label: "Sertifikat", icon: IconCertificate, route: "admin.certificates.index" },
             { label: "Dashboard Pengawas", icon: IconEyeCheck, route: "proctor.dashboard" },
+            { label: "Manajemen User", icon: IconUsers, route: "admin.users.index" },
+            { label: "Log Aktivitas", icon: IconHistory, route: "admin.audit-logs.index" },
+            { label: "Analytics", icon: IconChartBar, route: "admin.analytics.index" },
+            { label: "Pengaturan", icon: IconSettings, route: "admin.settings.index" },
             { label: "Laporan", icon: IconReport, route: "admin.reports.integrity" },
         );
     }
