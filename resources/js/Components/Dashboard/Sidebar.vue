@@ -119,7 +119,7 @@ watch(
             </div>
         </div>
 
-        <nav class="flex-1 space-y-2">
+        <nav class="flex-1 space-y-2 overflow-y-auto">
             <template v-for="item in nav" :key="item.label">
                 <div v-if="item.children">
                     <button
