@@ -1,17 +1,14 @@
 <script setup>
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
-import DropDown from '@/Components/Shared/DropDown.vue';
 import draggable from 'vuedraggable';
-import { IconEdit, IconChevronDown, IconChevronRight, IconFileDescription, IconCheck, IconGripVertical, IconPlus, IconX, IconTrash } from '@tabler/icons-vue';
-import { computed, ref, watch } from 'vue';
+import { IconEdit, IconChevronDown, IconChevronRight, IconFileDescription, IconCheck, IconGripVertical, IconPlus, IconX } from '@tabler/icons-vue';
+import { ref } from 'vue';
 import { skillLabel } from '@/constants/skills';
 
 const props = defineProps({
     exam: { type: Object, required: true },
-    skillOptions: { type: Array, default: () => [] },
     parts: { type: Array, default: () => [] },
-    questionBanks: { type: Array, default: () => [] },
     sectionQuestions: { type: Object, default: () => ({}) },
     attachableQuestions: { type: Object, default: () => ({}) },
 });
@@ -20,42 +17,6 @@ const expandedSections = ref({});
 const localOrders = ref({});
 const itemsBySection = ref({});
 const dirtySections = ref({});
-
-// ===== Modal Tambah Section =====
-const showSectionModal = ref(false);
-const sectionForm = useForm({
-    question_bank_id: '',
-    skill: '',
-    title: '',
-    order: 1,
-});
-
-const sectionTitlePreview = computed(() => {
-    if (!sectionForm.skill) return '';
-    const skill = skillLabel(sectionForm.skill) || sectionForm.skill;
-    const bank = props.questionBanks.find((b) => String(b.id) === String(sectionForm.question_bank_id))?.name;
-    return bank ? `${skill} — ${bank}` : skill;
-});
-
-watch([() => sectionForm.question_bank_id, () => sectionForm.skill], () => {
-    sectionForm.title = sectionTitlePreview.value;
-});
-
-function openAddSection() {
-    sectionForm.clearErrors();
-    sectionForm.reset();
-    sectionForm.order = (props.exam.sections?.length || 0) + 1;
-    showSectionModal.value = true;
-}
-
-function submitSection() {
-    sectionForm.post(route('admin.exams.sections.store', props.exam.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            showSectionModal.value = false;
-        },
-    });
-}
 
 // ===== Modal Tambah Soal =====
 const showQuestionModal = ref(false);
@@ -90,12 +51,6 @@ function submitQuestions() {
             showQuestionModal.value = false;
             questionForm.reset();
         },
-    });
-}
-
-function detachQuestion(section, questionId) {
-    router.delete(route('admin.exams.sections.questions.destroy', [props.exam.id, section.id, questionId]), {
-        preserveScroll: true,
     });
 }
 
@@ -280,8 +235,8 @@ function questionPreview(q) {
             <BaseCard>
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-title-lg font-semibold text-primary">Sections &amp; Soal</h2>
-                    <BaseButton size="sm" @click="openAddSection">
-                        <IconPlus :size="16" /> Tambah Section
+                    <BaseButton size="sm" @click="router.post(route('admin.exams.sync-sections', exam.id), {}, { preserveScroll: true })">
+                        <IconPlus :size="16" /> Sinkron Section
                     </BaseButton>
                 </div>
 
@@ -357,12 +312,8 @@ function questionPreview(q) {
                                                 <p class="text-body-md text-primary font-medium truncate">{{ questionPreview(element.row.question) }}</p>
                                                 <p v-if="element.row.question.passage" class="text-label-md text-text-muted truncate">📄 {{ element.row.question.passage.title }}</p>
                                             </div>
-                                            <span v-if="element.row.question.passage?.audio_url"
-                                                  class="text-label-md text-text-muted shrink-0">🎧</span>
-                                            <button @click="detachQuestion(section, element.questionId)"
-                                                    class="p-1.5 text-text-muted hover:text-error-red transition-colors shrink-0" title="Lepas dari section">
-                                                <IconTrash :size="16" />
-                                            </button>
+                                        <span v-if="element.row.question.passage?.audio_url"
+                                              class="text-label-md text-text-muted shrink-0">🎧</span>
                                         </div>
                                     </div>
                                 </template>
@@ -384,61 +335,6 @@ function questionPreview(q) {
                 </div>
             </BaseCard>
         </div>
-
-        <!-- Modal Tambah Section -->
-        <BaseModal :show="showSectionModal" @close="showSectionModal = false" max-width="2xl">
-            <div class="p-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-headline-md font-bold text-primary">Tambah Section</h2>
-                    <button @click="showSectionModal = false" class="p-2 text-text-muted hover:text-primary transition-colors">
-                        <IconX :size="20" />
-                    </button>
-                </div>
-                <form @submit.prevent="submitSection" class="space-y-5">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <DropDown
-                                v-model="sectionForm.question_bank_id"
-                                :options="questionBanks"
-                                label="Bank Soal *"
-                                placeholder="Pilih bank"
-                                option-label="name"
-                                option-value="id"
-                            />
-                            <p v-if="sectionForm.errors.question_bank_id" class="text-error-red text-xs mt-1">{{ sectionForm.errors.question_bank_id }}</p>
-                        </div>
-                        <div>
-                            <DropDown
-                                v-model="sectionForm.skill"
-                                :options="skillOptions"
-                                label="Skill *"
-                                placeholder="Pilih skill"
-                                option-label="label"
-                                option-value="value"
-                            />
-                            <p v-if="sectionForm.errors.skill" class="text-error-red text-xs mt-1">{{ sectionForm.errors.skill }}</p>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-label-md font-medium text-primary block mb-1.5">Judul Section</label>
-                        <input type="text" v-model="sectionForm.title" placeholder="Judul otomatis dari bank & skill"
-                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
-                        <p v-if="sectionForm.errors.title" class="text-error-red text-xs mt-1">{{ sectionForm.errors.title }}</p>
-                    </div>
-                    <p v-if="sectionTitlePreview" class="text-label-md text-text-muted">
-                        Preview: <span class="font-semibold text-primary">{{ sectionTitlePreview }}</span>
-                    </p>
-                    <div class="flex gap-4 pt-2">
-                        <BaseButton type="submit" :disabled="sectionForm.processing" size="xl" class="flex-1">
-                            {{ sectionForm.processing ? 'Menyimpan...' : 'Buat Section' }}
-                        </BaseButton>
-                        <BaseButton type="button" variant="secondary" size="lg" @click="showSectionModal = false">
-                            Batal
-                        </BaseButton>
-                    </div>
-                </form>
-            </div>
-        </BaseModal>
 
         <!-- Modal Tambah Soal -->
         <BaseModal :show="showQuestionModal" @close="showQuestionModal = false" max-width="2xl" scrollable>

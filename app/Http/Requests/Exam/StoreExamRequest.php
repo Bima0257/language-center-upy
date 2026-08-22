@@ -10,6 +10,7 @@ class StoreExamRequest extends FormRequest
     {
         return [
             'exam_type_id' => ['required', 'exists:exam_types,id'],
+            'question_bank_id' => ['required', 'exists:question_banks,id'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'mode' => ['required', 'in:tryout,official'],

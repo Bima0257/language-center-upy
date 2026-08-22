@@ -30,6 +30,7 @@ class ExamController extends Controller
     {
         return Inertia::render('Admin/Exams/Create', $this->examService->createData() + [
             'examTypes' => $this->masterData->activeExamTypes(),
+            'questionBanks' => $this->examService->activeQuestionBanks(),
         ]);
     }
 
@@ -44,6 +45,18 @@ class ExamController extends Controller
     public function show(Exam $exam): Response
     {
         return Inertia::render('Admin/Exams/Show', $this->examService->showData($exam));
+    }
+
+    public function syncSections(Exam $exam): RedirectResponse
+    {
+        $created = $this->examService->syncSections($exam);
+
+        return back()->with(
+            'success',
+            $created
+                ? "{$created} section baru berhasil disinkronkan."
+                : 'Tidak ada section baru yang perlu disinkronkan.',
+        );
     }
 
     public function edit(Exam $exam): Response

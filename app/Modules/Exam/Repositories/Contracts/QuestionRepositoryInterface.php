@@ -65,7 +65,7 @@ interface QuestionRepositoryInterface
     /**
      * @return Collection<int, QuestionBank>
      */
-    public function banksWithApprovedBySkillAndExamType(string $skill, ?int $examTypeId): Collection;
+    public function banksWithApprovedBySkillAndExamType(string $skill, ?int $examTypeId, ?int $bankId = null): Collection;
 
     public function count(): int;
 

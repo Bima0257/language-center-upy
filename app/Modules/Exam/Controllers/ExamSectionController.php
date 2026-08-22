@@ -7,11 +7,9 @@ use App\Http\Requests\Exam\AttachSectionQuestionsRequest;
 use App\Http\Requests\Exam\ReorderPartsRequest;
 use App\Http\Requests\Exam\ReorderQuestionsRequest;
 use App\Http\Requests\Exam\SaveArrangementRequest;
-use App\Http\Requests\Exam\StoreSectionRequest;
 use App\Http\Requests\Exam\UpdateSectionRequest;
 use App\Models\Exam;
 use App\Models\ExamSection;
-use App\Models\Question;
 use App\Modules\Exam\Services\ExamSectionService;
 use Illuminate\Http\RedirectResponse;
 
@@ -20,13 +18,6 @@ class ExamSectionController extends Controller
     public function __construct(
         private ExamSectionService $sectionService,
     ) {}
-
-    public function store(StoreSectionRequest $request, Exam $exam): RedirectResponse
-    {
-        $attached = $this->sectionService->createWithAutoFill($exam, $request->validated());
-
-        return back()->with('success', "Section berhasil dibuat. {$attached} soal approved otomatis terpasang.");
-    }
 
     public function update(UpdateSectionRequest $request, Exam $exam, ExamSection $section): RedirectResponse
     {
@@ -47,13 +38,6 @@ class ExamSectionController extends Controller
         $attached = $this->sectionService->attachQuestions($exam, $section, $request->validated('question_ids'));
 
         return back()->with('success', "{$attached} soal berhasil ditambahkan ke section.");
-    }
-
-    public function detachQuestion(Exam $exam, ExamSection $section, Question $question): RedirectResponse
-    {
-        $this->sectionService->detachQuestion($section, $question);
-
-        return back()->with('success', 'Soal dilepas dari section.');
     }
 
     public function saveArrangement(SaveArrangementRequest $request, Exam $exam, ExamSection $section): RedirectResponse

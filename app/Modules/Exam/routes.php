@@ -47,17 +47,16 @@ Route::middleware(['auth', 'role:admin,superadmin'])
         Route::get('/create', [ExamController::class, 'create'])->name('create');
         Route::post('/', [ExamController::class, 'store'])->name('store');
         Route::get('/{exam}', [ExamController::class, 'show'])->name('show');
+        Route::post('/{exam}/sync-sections', [ExamController::class, 'syncSections'])->name('sync-sections');
         Route::get('/{exam}/edit', [ExamController::class, 'edit'])->name('edit');
         Route::put('/{exam}', [ExamController::class, 'update'])->name('update');
         Route::delete('/{exam}', [ExamController::class, 'destroy'])->name('destroy');
 
-        Route::post('/{exam}/sections', [ExamSectionController::class, 'store'])->name('sections.store');
         Route::put('/{exam}/sections/{section}', [ExamSectionController::class, 'update'])->name('sections.update');
         Route::delete('/{exam}/sections/{section}', [ExamSectionController::class, 'destroy'])->name('sections.destroy');
 
         Route::post('/{exam}/sections/{section}/questions', [ExamSectionController::class, 'attachQuestions'])->name('sections.questions.store');
         Route::patch('/{exam}/sections/{section}/questions/order', [ExamSectionController::class, 'reorderQuestions'])->name('sections.questions.order');
-        Route::delete('/{exam}/sections/{section}/questions/{question}', [ExamSectionController::class, 'detachQuestion'])->name('sections.questions.destroy');
         Route::patch('/{exam}/sections/{section}/parts/order', [ExamSectionController::class, 'reorderParts'])->name('sections.parts.order');
         Route::patch('/{exam}/sections/{section}/arrangement', [ExamSectionController::class, 'saveArrangement'])->name('sections.arrangement');
 

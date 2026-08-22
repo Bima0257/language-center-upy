@@ -84,7 +84,7 @@ class QuestionRepository implements QuestionRepositoryInterface
 
     public function previewByPassage(int $passageId): Collection
     {
-        return Question::with(['passage', 'skillPart'])
+        return Question::with(['passage', 'skill', 'skillPart'])
             ->where('passage_id', $passageId)
             ->orderBy('order')
             ->get();
@@ -144,11 +144,12 @@ class QuestionRepository implements QuestionRepositoryInterface
             ->get();
     }
 
-    public function banksWithApprovedBySkillAndExamType(string $skillCode, ?int $examTypeId): Collection
+    public function banksWithApprovedBySkillAndExamType(string $skillCode, ?int $examTypeId, ?int $bankId = null): Collection
     {
         $bankIds = Question::whereHas('skill', fn ($q) => $q->where('code', $skillCode))
             ->where('status', 'approved')
             ->when($examTypeId, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId)))
+            ->when($bankId, fn ($q) => $q->where('question_bank_id', $bankId))
             ->distinct()
             ->pluck('question_bank_id')
             ->all();

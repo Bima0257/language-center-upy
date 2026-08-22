@@ -5,7 +5,6 @@ namespace Tests\Feature\Exam;
 use App\Models\Exam;
 use App\Models\ExamSchedule;
 use App\Models\ExamSection;
-use App\Models\ExamSectionQuestion;
 use App\Models\ExamType;
 use App\Models\Question;
 use App\Models\QuestionBank;
@@ -62,9 +61,11 @@ class ExamsTest extends TestCase
         $this->loginAs('admin');
 
         $examType = ExamType::where('name', 'TOEFL iBT')->first();
+        $bank = QuestionBank::where('name', 'Bank Soal Demo')->first();
 
         $this->post('/admin/exams', [
             'exam_type_id' => $examType->id,
+            'question_bank_id' => $bank->id,
             'title' => 'Ujian Baru 2026',
             'description' => 'Deskripsi',
             'mode' => 'tryout',
@@ -75,73 +76,12 @@ class ExamsTest extends TestCase
 
         $this->assertNotNull($exam);
 
-        $banks = QuestionBank::where('exam_type_id', $examType->id)->get();
-
         $this->assertGreaterThanOrEqual(1, $exam->sections->count());
 
         foreach ($exam->sections as $section) {
             $this->assertNotNull($section->question_bank_id);
-            $this->assertTrue(
-                $banks->contains('id', $section->question_bank_id),
-                'Section harus terikat bank yang sejenis dengan exam.',
-            );
+            $this->assertEquals($bank->id, $section->question_bank_id);
         }
-    }
-
-    public function test_admin_can_create_section_for_bank(): void
-    {
-        $this->loginAs('admin');
-
-        $examType = ExamType::where('name', 'TOEFL iBT')->first();
-        $bank = QuestionBank::where('name', 'Bank Soal 2022')->first();
-        $skill = Skill::where('code', 'reading')->first();
-
-        $exam = Exam::create([
-            'exam_type_id' => $examType->id,
-            'title' => 'Ujian Section Manual',
-            'mode' => 'tryout',
-            'duration_minutes' => 60,
-            'is_active' => true,
-        ]);
-
-        $this->post("/admin/exams/{$exam->id}/sections", [
-            'question_bank_id' => $bank->id,
-            'skill_id' => $skill->id,
-            'title' => 'Reading Manual',
-            'order' => 1,
-        ])->assertRedirect();
-
-        $this->assertDatabaseHas('exam_sections', [
-            'exam_id' => $exam->id,
-            'question_bank_id' => $bank->id,
-            'title' => 'Reading Manual',
-        ]);
-    }
-
-    public function test_creating_section_requires_bank(): void
-    {
-        $this->loginAs('admin');
-
-        $examType = ExamType::where('name', 'TOEFL iBT')->first();
-        $skill = Skill::where('code', 'reading')->first();
-
-        $exam = Exam::create([
-            'exam_type_id' => $examType->id,
-            'title' => 'Ujian Tanpa Bank',
-            'mode' => 'tryout',
-            'duration_minutes' => 60,
-            'is_active' => true,
-        ]);
-
-        $this->post("/admin/exams/{$exam->id}/sections", [
-            'skill_id' => $skill->id,
-            'title' => 'Reading Tanpa Bank',
-            'order' => 1,
-        ])->assertSessionHasErrors('question_bank_id');
-
-        $this->assertDatabaseMissing('exam_sections', [
-            'title' => 'Reading Tanpa Bank',
-        ]);
     }
 
     public function test_admin_can_attach_approved_questions_to_section(): void
@@ -198,33 +138,6 @@ class ExamsTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_detach_question_from_section(): void
-    {
-        $this->loginAs('admin');
-
-        $section = ExamSection::where('title', 'Reading Section')->first();
-        $bank = QuestionBank::find($section->question_bank_id);
-
-        $question = Question::where('question_bank_id', $bank->id)
-            ->where('skill_id', $section->skill_id)
-            ->where('status', 'approved')
-            ->first();
-
-        ExamSectionQuestion::create([
-            'exam_section_id' => $section->id,
-            'question_id' => $question->id,
-            'order' => 1,
-        ]);
-
-        $this->delete("/admin/exams/{$section->exam_id}/sections/{$section->id}/questions/{$question->id}")
-            ->assertRedirect();
-
-        $this->assertDatabaseMissing('exam_section_questions', [
-            'exam_section_id' => $section->id,
-            'question_id' => $question->id,
-        ]);
-    }
-
     public function test_admin_can_delete_exam_without_schedule(): void
     {
         $this->loginAs('admin');
@@ -269,5 +182,46 @@ class ExamsTest extends TestCase
         $this->delete("/admin/exams/{$exam->id}")->assertRedirect();
 
         $this->assertDatabaseHas('exams', ['id' => $exam->id]);
+    }
+
+    public function test_sync_sections_creates_missing_skill_section_and_attaches_questions(): void
+    {
+        $this->loginAs('admin');
+
+        $exam = Exam::whereHas('sections')->first();
+        $readingSkill = Skill::where('code', 'reading')->first();
+
+        // Hapus section reading agar mirip ujian yang dibuat sebelum soal reading tersedia
+        $exam->sections()->where('skill_id', $readingSkill->id)->delete();
+        $this->assertFalse($exam->fresh()->sections()->where('skill_id', $readingSkill->id)->exists());
+
+        $bankId = $exam->sections()->first()->question_bank_id;
+        $approvedReading = Question::where('question_bank_id', $bankId)
+            ->where('skill_id', $readingSkill->id)
+            ->where('status', 'approved')
+            ->first();
+        $this->assertNotNull($approvedReading);
+
+        $this->post("/admin/exams/{$exam->id}/sync-sections")->assertRedirect();
+
+        $newSection = $exam->fresh()->sections()->where('skill_id', $readingSkill->id)->first();
+        $this->assertNotNull($newSection);
+        $this->assertDatabaseHas('exam_section_questions', [
+            'exam_section_id' => $newSection->id,
+            'question_id' => $approvedReading->id,
+        ]);
+    }
+
+    public function test_sync_sections_is_idempotent_when_all_sections_exist(): void
+    {
+        $this->loginAs('admin');
+
+        $exam = Exam::whereHas('sections')->first();
+
+        $before = $exam->sections()->count();
+
+        $this->post("/admin/exams/{$exam->id}/sync-sections")->assertRedirect();
+
+        $this->assertEquals($before, $exam->fresh()->sections()->count());
     }
 }

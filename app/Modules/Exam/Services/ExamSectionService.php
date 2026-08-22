@@ -4,7 +4,6 @@ namespace App\Modules\Exam\Services;
 
 use App\Models\Exam;
 use App\Models\ExamSection;
-use App\Models\Question;
 use App\Modules\Exam\Repositories\Contracts\ExamSectionRepositoryInterface;
 use App\Modules\Exam\Repositories\Contracts\QuestionRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\SkillPartRepositoryInterface;
@@ -69,11 +68,6 @@ class ExamSectionService
 
             return $attached;
         });
-    }
-
-    public function detachQuestion(ExamSection $section, Question $question): void
-    {
-        $this->sections->deleteQuestionPivot($section->id, $question->id);
     }
 
     public function saveArrangement(ExamSection $section, array $partOrders, array $questionOrders): void
