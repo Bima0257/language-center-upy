@@ -71,6 +71,7 @@ async function destroy(dept) {
                             placeholder="Pilih fakultas"
                             option-label="name"
                             option-value="id"
+                            empty-message="Belum ada data fakultas."
                         />
                         <p v-if="form.errors.faculty_id" class="text-error-red text-xs mt-1">{{ form.errors.faculty_id }}</p>
                     </div>
@@ -136,6 +137,7 @@ async function destroy(dept) {
                                                 option-label="name"
                                                 option-value="id"
                                                 size="sm"
+                                                empty-message="Belum ada data fakultas."
                                             />
                                             <input type="text" v-model="editForm.name" class="px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                                             <input type="text" v-model="editForm.code" class="px-4 py-2.5 bg-surface-white border border-outline-variant rounded-xl text-text-body text-body-md focus:outline-none focus:border-secondary" />

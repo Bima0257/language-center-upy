@@ -276,6 +276,7 @@ async function destroy(part) {
                                 placeholder="Pilih skill"
                                 option-label="label"
                                 option-value="value"
+                                empty-message="Belum ada data skill."
                             />
                             <p v-if="modalForm.errors.skill_id" class="text-error-red text-xs mt-1">{{ modalForm.errors.skill_id }}</p>
                         </div>
