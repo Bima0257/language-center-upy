@@ -45,6 +45,7 @@ Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
 
         Route::get('/master-data/skills', [MasterDataController::class, 'skillsIndex'])->name('master-data.skills.index');
         Route::post('/master-data/skills', [MasterDataController::class, 'skillStore'])->name('master-data.skills.store');
+        Route::post('/master-data/skills/reorder', [MasterDataController::class, 'skillReorder'])->name('master-data.skills.reorder');
         Route::put('/master-data/skills/{skill}', [MasterDataController::class, 'skillUpdate'])->name('master-data.skills.update');
         Route::delete('/master-data/skills/{skill}', [MasterDataController::class, 'skillDestroy'])->name('master-data.skills.destroy');
 

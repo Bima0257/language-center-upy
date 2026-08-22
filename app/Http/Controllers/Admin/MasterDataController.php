@@ -61,6 +61,18 @@ class MasterDataController extends Controller
         return back()->with('success', 'Skill berhasil dihapus.');
     }
 
+    public function skillReorder(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'skills' => ['required', 'array', 'min:1'],
+            'skills.*' => ['required', 'integer', 'distinct'],
+        ]);
+
+        $this->masterData->reorderSkills($validated['skills']);
+
+        return back()->with('success', 'Urutan skill disimpan.');
+    }
+
     // ===== Exam Types =====
     public function examTypesIndex(): Response
     {

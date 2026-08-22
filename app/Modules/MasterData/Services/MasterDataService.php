@@ -65,6 +65,28 @@ class MasterDataService
         $this->skills->delete($skill);
     }
 
+    /**
+     * Terima daftar id skill dalam urutan baru; order dihitung ulang berdasarkan posisi.
+     *
+     * @param  array<int>  $ids
+     */
+    public function reorderSkills(array $ids): void
+    {
+        $skills = $this->skills->findMany($ids);
+
+        foreach ($ids as $index => $id) {
+            $skill = $skills->firstWhere('id', $id);
+            if (! $skill) {
+                continue;
+            }
+
+            $newOrder = $index + 1;
+            if ($skill->order !== $newOrder) {
+                $this->skills->update($skill, ['order' => $newOrder]);
+            }
+        }
+    }
+
     // ===== Exam Types =====
     public function examTypesIndexData(): array
     {

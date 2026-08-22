@@ -28,4 +28,9 @@ interface SkillRepositoryInterface
     public function delete(Skill $skill): void;
 
     public function nextOrder(): int;
+
+    /**
+     * @return Collection<int, Skill>
+     */
+    public function findMany(array $ids): Collection;
 }

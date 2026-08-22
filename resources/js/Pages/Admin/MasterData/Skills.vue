@@ -1,23 +1,24 @@
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
-import DataTable from '@/Components/Shared/DataTable.vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
-import { IconPlus, IconEdit, IconTrash, IconX } from '@tabler/icons-vue';
-import { computed, ref } from 'vue';
+import { IconPlus, IconEdit, IconTrash, IconX, IconGripVertical } from '@tabler/icons-vue';
+import { computed, ref, watch } from 'vue';
+import draggable from 'vuedraggable';
 import { useConfirm } from '@/Composables/useConfirm';
+import { useToast } from '@/Composables/useToast';
 
-defineProps({
+const props = defineProps({
     skills: { type: Array, default: () => [] },
 });
 
 const confirm = useConfirm();
+const toast = useToast();
 
 const form = useForm({
     code: '',
     name: '',
     description: '',
-    order: 1,
     is_active: true,
 });
 
@@ -25,7 +26,6 @@ const editForm = useForm({
     code: '',
     name: '',
     description: '',
-    order: 1,
     is_active: true,
 });
 
@@ -35,20 +35,42 @@ const editingSkill = ref(null);
 
 const modalForm = computed(() => creating.value ? form : editForm);
 
+// ===== Drag & drop reorder =====
+const reordering = ref(false);
+const originalOrder = ref('');
+
+watch(() => props.skills, (list) => {
+    originalOrder.value = list.map((s) => s.id).join(',');
+}, { immediate: true });
+
+function onReorder(evt) {
+    if (reordering.value) return;
+
+    const prev = originalOrder.value.split(',').filter(Boolean).map(Number);
+    if (prev.length === 0 || typeof evt.oldIndex !== 'number' || typeof evt.newIndex !== 'number') return;
+
+    const ids = [...prev];
+    const [moved] = ids.splice(evt.oldIndex, 1);
+    ids.splice(evt.newIndex, 0, moved);
+
+    if (ids.join(',') === prev.join(',')) return;
+
+    reordering.value = true;
+    router.post(route('admin.master-data.skills.reorder'), { skills: ids }, {
+        preserveScroll: true,
+        onError: () => {
+            toast.error('Gagal menyimpan urutan.');
+            router.reload({ only: ['skills'] });
+        },
+        onFinish: () => { reordering.value = false; },
+    });
+}
+
 function stripHtml(html) {
     const div = document.createElement('div');
     div.innerHTML = html || '';
     return div.textContent || '';
 }
-
-const columns = [
-    { key: 'code', label: 'Kode', sortable: true, className: 'font-medium text-primary' },
-    { key: 'name', label: 'Nama', sortable: true },
-    { key: 'description', label: 'Deskripsi', render: (val) => { const text = stripHtml(val); return text ? (text.length > 60 ? text.substring(0, 60) + '…' : text) : '-'; } },
-    { key: 'order', label: 'Urutan', render: (val) => val ?? 1 },
-    { key: 'is_active', label: 'Status', badge: true, render: (val) => val ? 'Aktif' : 'Nonaktif' },
-    { key: 'id', label: 'Aksi', slot: 'actions' },
-];
 
 function openCreate() {
     creating.value = true;
@@ -76,7 +98,6 @@ function startEdit(skill) {
     editForm.code = skill.code;
     editForm.name = skill.name;
     editForm.description = skill.description || '';
-    editForm.order = skill.order ?? 1;
     editForm.is_active = !!skill.is_active;
     showModal.value = true;
 }
@@ -104,24 +125,70 @@ async function destroy(skill) {
 <template>
     <Head title="Master Data - Skill" />
     <DashboardLayout title="Master Data Skill">
-        <div class="flex justify-end mb-6">
+        <div class="flex items-center justify-between mb-6">
+            <span v-if="skills.length" class="text-label-md text-text-muted">
+                Seret ikon ⠿ untuk mengubah urutan
+            </span>
             <BaseButton @click="openCreate">
                 <IconPlus :size="18" /> Tambah Skill
             </BaseButton>
         </div>
 
-        <DataTable :data="skills" :columns="columns">
-            <template #actions="{ row }">
-                <div class="flex items-center gap-2">
-                    <button @click="startEdit(row)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit"><IconEdit :size="18" /></button>
-                    <button @click="destroy(row)" :disabled="row.skill_parts_count > 0 || row.questions_count > 0"
-                            class="p-2 text-text-muted hover:text-error-red transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-text-muted"
-                            :title="(row.skill_parts_count > 0 || row.questions_count > 0) ? 'Tidak bisa dihapus karena masih digunakan' : 'Hapus'">
-                        <IconTrash :size="18" />
-                    </button>
-                </div>
-            </template>
-        </DataTable>
+        <BaseCard :padding="false" class="overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-outline-variant/30 bg-surface-container-low">
+                            <th class="w-12 px-4 py-3"></th>
+                            <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-3">Kode</th>
+                            <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-3">Nama</th>
+                            <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-3">Deskripsi</th>
+                            <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-3">Status</th>
+                            <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-3">Aksi</th>
+                        </tr>
+                    </thead>
+                    <draggable
+                        tag="tbody"
+                        :list="props.skills"
+                        item-key="id"
+                        handle=".drag-handle"
+                        :disabled="reordering"
+                        @end="onReorder"
+                    >
+                        <template #item="{ element }">
+                            <tr class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50 transition-colors">
+                                <td class="px-4 py-3.5">
+                                    <IconGripVertical
+                                        :size="18"
+                                        class="drag-handle cursor-grab text-text-muted hover:text-secondary transition-colors"
+                                    />
+                                </td>
+                                <td class="px-5 py-3.5 font-medium text-primary">{{ element.code }}</td>
+                                <td class="px-5 py-3.5 font-medium text-primary">{{ element.name }}</td>
+                                <td class="px-5 py-3.5 text-body-md text-text-body">
+                                    {{ (() => { const t = stripHtml(element.description); return t ? (t.length > 60 ? t.substring(0, 60) + '…' : t) : '-'; })() }}
+                                </td>
+                                <td class="px-5 py-3.5">
+                                    <BaseBadge :variant="element.is_active ? 'success' : 'neutral'">
+                                        {{ element.is_active ? 'Aktif' : 'Nonaktif' }}
+                                    </BaseBadge>
+                                </td>
+                                <td class="px-5 py-3.5">
+                                    <div class="flex items-center gap-2">
+                                        <button @click="startEdit(element)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Edit"><IconEdit :size="18" /></button>
+                                        <button @click="destroy(element)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus"><IconTrash :size="18" /></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </draggable>
+                </table>
+            </div>
+
+            <div v-if="!skills.length" class="px-5 py-10 text-center">
+                <p class="text-text-muted text-body-md">Belum ada data skill.</p>
+            </div>
+        </BaseCard>
 
         <!-- Modal Tambah / Edit -->
         <BaseModal :show="showModal" @close="closeModal" max-width="2xl" scrollable>
@@ -151,20 +218,10 @@ async function destroy(skill) {
                         <RichTextEditor v-model="modalForm.description" placeholder="Jelaskan skill ini..." :min-height="'120px'" />
                         <p v-if="modalForm.errors.description" class="text-error-red text-xs mt-1">{{ modalForm.errors.description }}</p>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-label-md font-medium text-primary block mb-1.5">Urutan</label>
-                            <input type="number" v-model="modalForm.order" min="1"
-                                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
-                            <p v-if="modalForm.errors.order" class="text-error-red text-xs mt-1">{{ modalForm.errors.order }}</p>
-                        </div>
-                        <div class="flex items-end pb-2">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" v-model="modalForm.is_active" class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
-                                <span class="text-label-md text-text-body">Aktif</span>
-                            </label>
-                        </div>
-                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" v-model="modalForm.is_active" class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
+                        <span class="text-label-md text-text-body">Aktif</span>
+                    </label>
                     <hr class="border-outline-variant/50" />
                     <div class="flex gap-4">
                         <BaseButton type="submit" :disabled="modalForm.processing" size="xl" class="flex-1">

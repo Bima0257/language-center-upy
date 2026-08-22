@@ -55,4 +55,9 @@ class SkillRepository implements SkillRepositoryInterface
     {
         return (Skill::max('order') ?? 0) + 1;
     }
+
+    public function findMany(array $ids): Collection
+    {
+        return Skill::whereIn('id', $ids)->get();
+    }
 }
