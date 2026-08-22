@@ -2,6 +2,7 @@
 
 namespace App\Modules\Session\Controllers;
 
+use App\Enums\ExamMode;
 use App\Enums\ViolationType;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
@@ -60,6 +61,7 @@ class ExamSessionController extends Controller
     {
         $schedules = ExamSchedule::where('is_active', true)
             ->where('end_date', '>=', now()->toDateString())
+            ->whereHas('exam', fn ($q) => $q->where('mode', ExamMode::OFFICIAL))
             ->with(['exam', 'slots' => fn ($q) => $q->where('is_active', true)->orderBy('date')->orderBy('start_time')])
             ->orderBy('start_date')
             ->get();

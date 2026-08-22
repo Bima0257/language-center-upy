@@ -1,7 +1,7 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Components/Dashboard/DashboardLayout.vue';
-import { IconCalendarEvent, IconClock, IconUsers } from '@tabler/icons-vue';
+import { IconCalendarEvent, IconClock, IconClipboardCheck, IconUsers } from '@tabler/icons-vue';
 
 defineProps({
     schedules: { type: Array, default: () => [] },
@@ -38,8 +38,8 @@ function slotStatusLabel(slot) {
 </script>
 
 <template>
-    <Head title="Jadwal Ujian" />
-    <DashboardLayout title="Jadwal Ujian">
+    <Head title="Ujian" />
+    <DashboardLayout title="Ujian">
         <div v-if="schedules.length === 0" class="text-center py-16">
             <IconCalendarEvent class="mx-auto text-text-muted mb-4" :size="48" stroke="1.5" />
             <p class="text-text-muted text-body-md">Belum ada jadwal ujian yang tersedia.</p>
@@ -93,6 +93,13 @@ function slotStatusLabel(slot) {
                             >
                                 {{ slotStatusLabel(slot) }}
                             </span>
+                            <BaseButton
+                                v-if="slotStatus(slot) === 'active'"
+                                :href="route('exam.pre-check', slot.id)"
+                                size="sm"
+                            >
+                                <IconClipboardCheck :size="16" /> Ikuti Ujian
+                            </BaseButton>
                         </div>
                     </div>
                 </div>

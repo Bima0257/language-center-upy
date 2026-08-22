@@ -2,6 +2,7 @@
 
 namespace App\Modules\Schedule\Repositories;
 
+use App\Enums\ExamMode;
 use App\Models\ExamScheduleSlot;
 use App\Modules\Schedule\Repositories\Contracts\SlotRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
@@ -62,6 +63,7 @@ class SlotRepository implements SlotRepositoryInterface
         return ExamScheduleSlot::with('schedule.exam')
             ->where('is_active', true)
             ->whereDate('date', $today)
+            ->whereHas('schedule.exam', fn ($q) => $q->where('mode', ExamMode::TRYOUT))
             ->get()
             ->filter(fn ($slot) => $slot->isAvailable());
     }
