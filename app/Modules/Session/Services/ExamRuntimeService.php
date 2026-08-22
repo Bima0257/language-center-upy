@@ -50,6 +50,6 @@ class ExamRuntimeService
             $questions = $questions->merge($fallback);
         }
 
-        return $questions;
+        return $questions->each->makeHidden('correct_answer');
     }
 }

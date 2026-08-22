@@ -116,7 +116,7 @@ class QuestionRepository implements QuestionRepositoryInterface
 
     public function findByIdsWithPassage(array $ids): Collection
     {
-        return Question::with('passage')
+        return Question::with(['passage', 'skill', 'skillPart'])
             ->whereIn('id', $ids)
             ->where('status', 'approved')
             ->get();
@@ -135,7 +135,7 @@ class QuestionRepository implements QuestionRepositoryInterface
 
     public function fallbackApprovedBySkills(array $skillCodes, ?int $examTypeId, ?int $bankId, array $excludeIds): Collection
     {
-        return Question::with('passage')
+        return Question::with(['passage', 'skill', 'skillPart'])
             ->whereHas('skill', fn ($q) => $q->whereIn('code', $skillCodes))
             ->where('status', 'approved')
             ->when($bankId, fn ($q) => $q->where('question_bank_id', $bankId))

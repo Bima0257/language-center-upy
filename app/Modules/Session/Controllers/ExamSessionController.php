@@ -107,10 +107,16 @@ class ExamSessionController extends Controller
     public function take(ExamSession $examSession): Response
     {
         $session = $examSession->load([
-            'schedule.exam.sections',
+            'slot.schedule.exam.sections',
             'answers.question',
-            'currentSection',
+            'currentSection.skill',
         ]);
+
+        $session->answers->each(function ($answer) {
+            if ($answer->question) {
+                $answer->question->makeHidden('correct_answer');
+            }
+        });
 
         return Inertia::render('Exam/Take', [
             'session' => $session,
