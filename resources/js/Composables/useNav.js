@@ -59,6 +59,7 @@ export function getNav(roles) {
                 icon: IconBooks,
                 children: [
                     { label: "Jenis Tes", icon: IconCategory, route: "admin.master-data.exam-types.index" },
+                    { label: "Skill", icon: IconListDetails, route: "admin.master-data.skills.index" },
                     { label: "Bank Soal Manager", icon: IconFolders, route: "content-library.question-banks.index" },
                     { label: "Part Soal", icon: IconListDetails, route: "admin.master-data.parts.index" },
                     { label: "Materi Soal", icon: IconFileDescription, route: "content-library.passages.index" },

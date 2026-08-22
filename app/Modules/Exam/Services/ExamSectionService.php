@@ -48,7 +48,7 @@ class ExamSectionService
         return DB::transaction(function () use ($exam, $section, $questionIds) {
             $allowed = $this->questions->approvedIdsWhereIn(
                 $questionIds,
-                $section->skill->value,
+                $section->skill->code,
                 $exam->exam_type_id,
                 $section->question_bank_id,
             );
@@ -80,7 +80,7 @@ class ExamSectionService
     {
         DB::transaction(function () use ($section, $partOrders, $questionOrders) {
             if (! empty($partOrders)) {
-                $skillPartIds = $this->skillParts->idsByBankAndSkill($section->question_bank_id, $section->skill->value);
+                $skillPartIds = $this->skillParts->idsByBankAndSkill($section->question_bank_id, $section->skill_id);
 
                 foreach ($partOrders as $part) {
                     if (! in_array($part['skill_part_id'], $skillPartIds, true)) {
@@ -118,7 +118,7 @@ class ExamSectionService
 
     public function reorderParts(ExamSection $section, array $orders): void
     {
-        $skillPartIds = $this->skillParts->idsByBankAndSkill($section->question_bank_id, $section->skill->value);
+        $skillPartIds = $this->skillParts->idsByBankAndSkill($section->question_bank_id, $section->skill_id);
 
         foreach ($orders as $part) {
             if (! in_array($part['skill_part_id'], $skillPartIds, true)) {
@@ -137,7 +137,7 @@ class ExamSectionService
 
     private function attachApprovedQuestions(Exam $exam, ExamSection $section): int
     {
-        $approved = $this->questions->approvedBySkillForExamType($section->skill->value, $exam->exam_type_id, $section->question_bank_id);
+        $approved = $this->questions->approvedBySkillForExamType($section->skill->code, $exam->exam_type_id, $section->question_bank_id);
 
         $number = 1;
         foreach ($approved as $question) {
@@ -169,7 +169,7 @@ class ExamSectionService
     private function renumberSection(ExamSection $section): void
     {
         $sectionPartIds = $this->sections->partIdsInSectionOrdered($section->id);
-        $defaultPartIds = $this->skillParts->orderedIdsByBankAndSkill($section->question_bank_id, $section->skill->value);
+        $defaultPartIds = $this->skillParts->orderedIdsByBankAndSkill($section->question_bank_id, $section->skill_id);
 
         $partSequence = array_values(array_unique(array_merge($sectionPartIds, $defaultPartIds)));
 

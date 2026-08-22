@@ -15,29 +15,30 @@ class SkillPartRepository implements SkillPartRepositoryInterface
 
     public function allWithQuestionCounts(): Collection
     {
-        return SkillPart::with('questionBank')
+        return SkillPart::with(['questionBank', 'skill'])
             ->withCount('questions')
             ->orderBy('question_bank_id')
-            ->orderBy('skill')
+            ->orderBy('skill_id')
             ->orderBy('order')
             ->get();
     }
 
     public function allActiveOrdered(): Collection
     {
-        return SkillPart::with('questionBank')
+        return SkillPart::with(['questionBank', 'skill'])
             ->where('is_active', true)
             ->orderBy('question_bank_id')
-            ->orderBy('skill')
+            ->orderBy('skill_id')
             ->orderBy('order')
             ->get();
     }
 
     public function allActiveByBank(int $bankId): Collection
     {
-        return SkillPart::where('question_bank_id', $bankId)
+        return SkillPart::with('skill')
+            ->where('question_bank_id', $bankId)
             ->where('is_active', true)
-            ->orderBy('skill')
+            ->orderBy('skill_id')
             ->orderBy('order')
             ->get();
     }
@@ -45,10 +46,10 @@ class SkillPartRepository implements SkillPartRepositoryInterface
     /**
      * @return array<int>
      */
-    public function idsByBankAndSkill(int $bankId, string $skill): array
+    public function idsByBankAndSkill(int $bankId, int $skillId): array
     {
         return SkillPart::where('question_bank_id', $bankId)
-            ->where('skill', $skill)
+            ->where('skill_id', $skillId)
             ->pluck('id')
             ->all();
     }
@@ -56,10 +57,10 @@ class SkillPartRepository implements SkillPartRepositoryInterface
     /**
      * @return array<int>
      */
-    public function orderedIdsByBankAndSkill(int $bankId, string $skill): array
+    public function orderedIdsByBankAndSkill(int $bankId, int $skillId): array
     {
         return SkillPart::where('question_bank_id', $bankId)
-            ->where('skill', $skill)
+            ->where('skill_id', $skillId)
             ->orderBy('order')
             ->pluck('id')
             ->all();
@@ -82,10 +83,10 @@ class SkillPartRepository implements SkillPartRepositoryInterface
         $skillPart->delete();
     }
 
-    public function nextOrder(int $bankId, string $skill): int
+    public function nextOrder(int $bankId, int $skillId): int
     {
         return (SkillPart::where('question_bank_id', $bankId)
-            ->where('skill', $skill)
+            ->where('skill_id', $skillId)
             ->max('order') ?? 0) + 1;
     }
 

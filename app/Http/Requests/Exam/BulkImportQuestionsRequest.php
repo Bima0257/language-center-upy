@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests\Exam;
 
-use App\Enums\SkillCode;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class BulkImportQuestionsRequest extends FormRequest
 {
@@ -13,7 +11,7 @@ class BulkImportQuestionsRequest extends FormRequest
         return [
             'questions' => ['required', 'array', 'min:1', 'max:500'],
             'questions.*.question_bank_id' => ['required', 'exists:question_banks,id'],
-            'questions.*.skill' => ['required', Rule::enum(SkillCode::class)],
+            'questions.*.skill_id' => ['required', 'exists:skills,id'],
             'questions.*.skill_part_id' => ['nullable', 'exists:skill_parts,id'],
             'questions.*.passage_id' => ['nullable', 'exists:passages,id'],
             'questions.*.question_text' => ['nullable', 'string'],

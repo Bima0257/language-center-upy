@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\MasterData;
 
-use App\Enums\SkillCode;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -22,7 +21,7 @@ class UpdateSkillPartRequest extends FormRequest
 
         return [
             'question_bank_id' => ['required', 'exists:question_banks,id'],
-            'skill' => ['required', Rule::enum(SkillCode::class)],
+            'skill_id' => ['required', 'exists:skills,id'],
             'name' => [
                 'required',
                 'string',
@@ -31,7 +30,7 @@ class UpdateSkillPartRequest extends FormRequest
                     ->where(function ($query) {
                         return $query
                             ->where('question_bank_id', $this->input('question_bank_id'))
-                            ->where('skill', $this->input('skill'));
+                            ->where('skill_id', $this->input('skill_id'));
                     })
                     ->ignore($partId),
             ],

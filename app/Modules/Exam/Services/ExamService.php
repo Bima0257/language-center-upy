@@ -2,14 +2,15 @@
 
 namespace App\Modules\Exam\Services;
 
-use App\Enums\SkillCode;
 use App\Models\Exam;
 use App\Models\ExamSection;
+use App\Models\Skill;
 use App\Modules\Exam\Repositories\Contracts\ExamRepositoryInterface;
 use App\Modules\Exam\Repositories\Contracts\ExamSectionRepositoryInterface;
 use App\Modules\Exam\Repositories\Contracts\QuestionBankRepositoryInterface;
 use App\Modules\Exam\Repositories\Contracts\QuestionRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\SkillPartRepositoryInterface;
+use App\Modules\MasterData\Repositories\Contracts\SkillRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -20,6 +21,7 @@ class ExamService
         private ExamSectionRepositoryInterface $sectionRepo,
         private QuestionRepositoryInterface $questionRepo,
         private QuestionBankRepositoryInterface $questionBanks,
+        private SkillRepositoryInterface $skills,
         private SkillPartRepositoryInterface $skillParts,
     ) {}
 
@@ -39,20 +41,20 @@ class ExamService
             $exam = $this->examRepo->create($data);
 
             $order = 1;
-            foreach (SkillCode::cases() as $skill) {
-                $banks = $this->questionRepo->banksWithApprovedBySkillAndExamType($skill->value, $exam->exam_type_id);
+            foreach ($this->skills->allActiveOrdered() as $skill) {
+                $banks = $this->questionRepo->banksWithApprovedBySkillAndExamType($skill->code, $exam->exam_type_id);
 
                 foreach ($banks as $bank) {
                     $section = $this->sectionRepo->create([
                         'exam_id' => $exam->id,
                         'question_bank_id' => $bank->id,
-                        'skill' => $skill,
-                        'title' => "{$skill->label()} — {$bank->name}",
+                        'skill_id' => $skill->id,
+                        'title' => "{$skill->name} — {$bank->name}",
                         'order' => $order++,
                     ]);
 
                     foreach ($this->skillParts->allActiveByBank($bank->id) as $part) {
-                        if ($part->skill !== $skill) {
+                        if ($part->skill_id !== $skill->id) {
                             continue;
                         }
 
@@ -99,14 +101,14 @@ class ExamService
             $excludeIds = $this->sectionRepo->questionIdsInSection($section->id);
             $attachable[$section->id] = $this->questionRepo->approvedByBankAndSkillNotIn(
                 $bankId,
-                $section->skill->value,
+                $section->skill->code,
                 $excludeIds,
             );
         }
 
         return [
             'exam' => $exam,
-            'skillOptions' => SkillCode::options(),
+            'skillOptions' => $this->skills->allActiveOrdered()->map(fn (Skill $skill) => ['value' => $skill->id, 'label' => $skill->name])->toArray(),
             'parts' => $this->skillParts->allActiveOrdered(),
             'questionBanks' => $this->questionBanks->allActiveOrdered(),
             'sectionQuestions' => $this->sectionRepo->questionsGroupedBySection($sectionIds),
@@ -119,16 +121,16 @@ class ExamService
     {
         $banksBySkill = [];
 
-        foreach (SkillCode::cases() as $skill) {
+        foreach ($this->skills->allActiveOrdered() as $skill) {
             $banksBySkill[] = [
-                'skill' => $skill->value,
-                'label' => $skill->label(),
-                'banks' => $this->questionRepo->banksWithApprovedBySkillAndExamType($skill->value, null),
+                'skill_id' => $skill->id,
+                'label' => $skill->name,
+                'banks' => $this->questionRepo->banksWithApprovedBySkillAndExamType($skill->code, null),
             ];
         }
 
         return [
-            'skillOptions' => SkillCode::options(),
+            'skillOptions' => $this->skills->allActiveOrdered()->map(fn (Skill $skill) => ['value' => $skill->id, 'label' => $skill->name])->toArray(),
             'parts' => $this->skillParts->allActiveOrdered(),
             'banksBySkill' => $banksBySkill,
         ];
@@ -141,9 +143,9 @@ class ExamService
         ];
     }
 
-    public function attachApprovedQuestions(Exam $exam, ExamSection $section, SkillCode $skill): int
+    public function attachApprovedQuestions(Exam $exam, ExamSection $section, Skill $skill): int
     {
-        $approved = $this->questionRepo->approvedBySkillForExamType($skill->value, $exam->exam_type_id, $section->question_bank_id);
+        $approved = $this->questionRepo->approvedBySkillForExamType($skill->code, $exam->exam_type_id, $section->question_bank_id);
 
         $number = 1;
         foreach ($approved as $question) {

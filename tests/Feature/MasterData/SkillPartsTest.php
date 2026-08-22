@@ -4,6 +4,7 @@ namespace Tests\Feature\MasterData;
 
 use App\Models\ExamType;
 use App\Models\QuestionBank;
+use App\Models\Skill;
 use App\Models\SkillPart;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -64,8 +65,10 @@ class SkillPartsTest extends TestCase
     {
         $this->loginAs('admin');
 
+        $skill = Skill::where('code', 'reading')->first();
+
         $this->post('/admin/master-data/parts', [
-            'skill' => 'reading',
+            'skill_id' => $skill->id,
             'name' => 'Part X',
             'order' => 1,
         ])->assertSessionHasErrors('question_bank_id');
@@ -76,17 +79,18 @@ class SkillPartsTest extends TestCase
         $this->loginAs('admin');
 
         $bank = QuestionBank::where('name', 'Bank Soal 2022')->first();
+        $skill = Skill::where('code', 'reading')->first();
 
         $this->post('/admin/master-data/parts', [
             'question_bank_id' => $bank->id,
-            'skill' => 'reading',
+            'skill_id' => $skill->id,
             'name' => 'Part Baru',
             'order' => 9,
         ])->assertRedirect();
 
         $this->assertDatabaseHas('skill_parts', [
             'question_bank_id' => $bank->id,
-            'skill' => 'reading',
+            'skill_id' => $skill->id,
             'name' => 'Part Baru',
         ]);
     }
@@ -96,11 +100,12 @@ class SkillPartsTest extends TestCase
         $this->loginAs('admin');
 
         $bank = QuestionBank::where('name', 'Bank Soal 2022')->first();
-        $existing = SkillPart::where('question_bank_id', $bank->id)->where('skill', 'reading')->first();
+        $skill = Skill::where('code', 'reading')->first();
+        $existing = SkillPart::where('question_bank_id', $bank->id)->where('skill_id', $skill->id)->first();
 
         $this->post('/admin/master-data/parts', [
             'question_bank_id' => $bank->id,
-            'skill' => 'reading',
+            'skill_id' => $skill->id,
             'name' => $existing->name,
             'order' => 1,
         ])->assertSessionHasErrors('name');
@@ -111,7 +116,8 @@ class SkillPartsTest extends TestCase
         $this->loginAs('admin');
 
         $bank = QuestionBank::where('name', 'Bank Soal 2022')->first();
-        $existing = SkillPart::where('question_bank_id', $bank->id)->where('skill', 'reading')->first();
+        $skill = Skill::where('code', 'reading')->first();
+        $existing = SkillPart::where('question_bank_id', $bank->id)->where('skill_id', $skill->id)->first();
 
         $otherBank = QuestionBank::create([
             'name' => 'Bank Baru',
@@ -121,7 +127,7 @@ class SkillPartsTest extends TestCase
 
         $this->post('/admin/master-data/parts', [
             'question_bank_id' => $otherBank->id,
-            'skill' => 'reading',
+            'skill_id' => $skill->id,
             'name' => $existing->name,
             'order' => 1,
         ])->assertRedirect();

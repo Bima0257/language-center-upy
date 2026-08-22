@@ -9,6 +9,7 @@ use App\Models\ExamSectionQuestion;
 use App\Models\ExamType;
 use App\Models\Question;
 use App\Models\QuestionBank;
+use App\Models\Skill;
 use App\Models\SkillPart;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -93,6 +94,7 @@ class ExamsTest extends TestCase
 
         $examType = ExamType::where('name', 'TOEFL iBT')->first();
         $bank = QuestionBank::where('name', 'Bank Soal 2022')->first();
+        $skill = Skill::where('code', 'reading')->first();
 
         $exam = Exam::create([
             'exam_type_id' => $examType->id,
@@ -104,7 +106,7 @@ class ExamsTest extends TestCase
 
         $this->post("/admin/exams/{$exam->id}/sections", [
             'question_bank_id' => $bank->id,
-            'skill' => 'reading',
+            'skill_id' => $skill->id,
             'title' => 'Reading Manual',
             'order' => 1,
         ])->assertRedirect();
@@ -121,6 +123,7 @@ class ExamsTest extends TestCase
         $this->loginAs('admin');
 
         $examType = ExamType::where('name', 'TOEFL iBT')->first();
+        $skill = Skill::where('code', 'reading')->first();
 
         $exam = Exam::create([
             'exam_type_id' => $examType->id,
@@ -131,7 +134,7 @@ class ExamsTest extends TestCase
         ]);
 
         $this->post("/admin/exams/{$exam->id}/sections", [
-            'skill' => 'reading',
+            'skill_id' => $skill->id,
             'title' => 'Reading Tanpa Bank',
             'order' => 1,
         ])->assertSessionHasErrors('question_bank_id');
@@ -149,7 +152,7 @@ class ExamsTest extends TestCase
         $bank = QuestionBank::find($section->question_bank_id);
 
         $question = Question::where('question_bank_id', $bank->id)
-            ->where('skill', 'reading')
+            ->where('skill_id', $section->skill_id)
             ->where('status', 'approved')
             ->first();
 
@@ -169,12 +172,12 @@ class ExamsTest extends TestCase
 
         $section = ExamSection::where('title', 'Reading Section')->first();
         $otherBank = QuestionBank::where('name', 'Bank Soal 2022')->first();
+        $skill = Skill::where('code', 'reading')->first();
 
         $foreignQuestion = Question::create([
             'question_bank_id' => $otherBank->id,
-            'skill' => 'reading',
-            'skill_part_id' => SkillPart::where('question_bank_id', $otherBank->id)->where('skill', 'reading')->first()->id,
-            'type' => 'multiple_choice',
+            'skill_id' => $skill->id,
+            'skill_part_id' => SkillPart::where('question_bank_id', $otherBank->id)->where('skill_id', $skill->id)->first()->id,
             'question_text' => 'Soal dari bank lain',
             'option_a' => 'A',
             'option_b' => 'B',
@@ -203,7 +206,7 @@ class ExamsTest extends TestCase
         $bank = QuestionBank::find($section->question_bank_id);
 
         $question = Question::where('question_bank_id', $bank->id)
-            ->where('skill', 'reading')
+            ->where('skill_id', $section->skill_id)
             ->where('status', 'approved')
             ->first();
 

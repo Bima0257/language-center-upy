@@ -4,23 +4,25 @@ namespace App\Modules\Exam\Repositories;
 
 use App\Models\Question;
 use App\Models\QuestionBank;
+use App\Models\Skill;
 use App\Modules\Exam\Repositories\Contracts\QuestionRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class QuestionRepository implements QuestionRepositoryInterface
 {
     public function paginateWithFilters(array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
-        $skill = $filters['skill'] ?? null;
+        $skillId = $filters['skill_id'] ?? null;
         $questionBankId = $filters['question_bank_id'] ?? null;
         $status = $filters['status'] ?? null;
         $search = $filters['search'] ?? null;
         $passageId = $filters['passage_id'] ?? null;
         $partId = $filters['part_id'] ?? null;
 
-        return Question::with(['passage', 'questionBank', 'skillPart', 'creator', 'reviewer'])
-            ->when($skill, fn ($q) => $q->where('skill', $skill))
+        return Question::with(['passage', 'questionBank', 'skill', 'skillPart', 'creator', 'reviewer'])
+            ->when($skillId, fn ($q) => $q->where('skill_id', $skillId))
             ->when($questionBankId, fn ($q) => $q->where('question_bank_id', $questionBankId))
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($passageId, fn ($q) => $q->where('passage_id', $passageId))
@@ -88,9 +90,9 @@ class QuestionRepository implements QuestionRepositoryInterface
             ->get();
     }
 
-    public function approvedBySkillForExamType(string $skill, ?int $examTypeId, ?int $bankId = null): Collection
+    public function approvedBySkillForExamType(string $skillCode, ?int $examTypeId, ?int $bankId = null): Collection
     {
-        return Question::where('skill', $skill)
+        return Question::whereHas('skill', fn ($q) => $q->where('code', $skillCode))
             ->where('status', 'approved')
             ->when($bankId, fn ($q) => $q->where('question_bank_id', $bankId))
             ->when($examTypeId, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId)))
@@ -101,11 +103,11 @@ class QuestionRepository implements QuestionRepositoryInterface
     /**
      * @return array<int>
      */
-    public function approvedIdsWhereIn(array $ids, string $skill, ?int $examTypeId, ?int $bankId = null): array
+    public function approvedIdsWhereIn(array $ids, string $skillCode, ?int $examTypeId, ?int $bankId = null): array
     {
         return Question::whereIn('id', $ids)
             ->where('status', 'approved')
-            ->where('skill', $skill)
+            ->whereHas('skill', fn ($q) => $q->where('code', $skillCode))
             ->when($bankId, fn ($q) => $q->where('question_bank_id', $bankId))
             ->when($examTypeId, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId)))
             ->pluck('id')
@@ -120,21 +122,21 @@ class QuestionRepository implements QuestionRepositoryInterface
             ->get();
     }
 
-    public function approvedByBankAndSkillNotIn(int $bankId, string $skill, array $excludeIds): Collection
+    public function approvedByBankAndSkillNotIn(int $bankId, string $skillCode, array $excludeIds): Collection
     {
         return Question::with(['passage', 'questionBank'])
             ->where('question_bank_id', $bankId)
-            ->where('skill', $skill)
+            ->whereHas('skill', fn ($q) => $q->where('code', $skillCode))
             ->where('status', 'approved')
             ->whereNotIn('id', $excludeIds)
             ->orderBy('id')
             ->get();
     }
 
-    public function fallbackApprovedBySkills(array $skills, ?int $examTypeId, ?int $bankId, array $excludeIds): Collection
+    public function fallbackApprovedBySkills(array $skillCodes, ?int $examTypeId, ?int $bankId, array $excludeIds): Collection
     {
         return Question::with('passage')
-            ->whereIn('skill', $skills)
+            ->whereHas('skill', fn ($q) => $q->whereIn('code', $skillCodes))
             ->where('status', 'approved')
             ->when($bankId, fn ($q) => $q->where('question_bank_id', $bankId))
             ->when($examTypeId, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId)))
@@ -142,9 +144,9 @@ class QuestionRepository implements QuestionRepositoryInterface
             ->get();
     }
 
-    public function banksWithApprovedBySkillAndExamType(string $skill, ?int $examTypeId): Collection
+    public function banksWithApprovedBySkillAndExamType(string $skillCode, ?int $examTypeId): Collection
     {
-        $bankIds = Question::where('skill', $skill)
+        $bankIds = Question::whereHas('skill', fn ($q) => $q->where('code', $skillCode))
             ->where('status', 'approved')
             ->when($examTypeId, fn ($q) => $q->whereHas('questionBank', fn ($b) => $b->where('exam_type_id', $examTypeId)))
             ->distinct()
@@ -173,13 +175,30 @@ class QuestionRepository implements QuestionRepositoryInterface
             ->get();
     }
 
-    public function countBySkill(): Collection
+    public function countBySkill(): \Illuminate\Support\Collection
     {
-        return Question::selectRaw('skill as label, COUNT(*) as count')
-            ->whereNotNull('skill')
-            ->groupBy('skill')
-            ->orderByDesc('count')
-            ->get();
+        $rows = DB::select('
+            SELECT skill_id, COUNT(*) as total
+            FROM questions
+            WHERE skill_id IS NOT NULL
+            GROUP BY skill_id
+            ORDER BY total DESC
+        ');
+
+        $skillIds = array_column($rows, 'skill_id');
+        $skillMap = Skill::whereIn('id', $skillIds)->get()->keyBy('id');
+
+        $result = new \Illuminate\Support\Collection;
+        foreach ($rows as $row) {
+            $skill = $skillMap->get($row->skill_id);
+
+            $result->push([
+                'label' => $skill->name ?? 'Unknown',
+                'count' => (int) $row->total,
+            ]);
+        }
+
+        return $result;
     }
 
     public function countByStatus(): Collection

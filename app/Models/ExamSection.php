@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\SkillCode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +13,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $exam_id
  * @property int|null $question_bank_id
- * @property SkillCode $skill
+ * @property int $skill_id
  * @property string $title
  * @property int $order
  * @property int $total_questions
@@ -22,16 +21,16 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Exam $exam
  * @property-read QuestionBank|null $questionBank
+ * @property-read Skill $skill
  * @property-read Collection<int, ExamSectionQuestion> $examSectionQuestions
  * @property-read Collection<int, ExamSectionPart> $examSectionParts
  */
-#[Fillable(['exam_id', 'question_bank_id', 'skill', 'title', 'order', 'total_questions'])]
+#[Fillable(['exam_id', 'question_bank_id', 'skill_id', 'title', 'order', 'total_questions'])]
 class ExamSection extends Model
 {
     protected function casts(): array
     {
         return [
-            'skill' => SkillCode::class,
             'order' => 'integer',
             'total_questions' => 'integer',
         ];
@@ -45,6 +44,11 @@ class ExamSection extends Model
     public function questionBank(): BelongsTo
     {
         return $this->belongsTo(QuestionBank::class);
+    }
+
+    public function skill(): BelongsTo
+    {
+        return $this->belongsTo(Skill::class);
     }
 
     public function examSectionQuestions(): HasMany

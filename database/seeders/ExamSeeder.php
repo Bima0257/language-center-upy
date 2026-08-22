@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\SkillCode;
 use App\Models\Exam;
 use App\Models\ExamSchedule;
 use App\Models\ExamScheduleSlot;
@@ -12,6 +11,7 @@ use App\Models\ExamType;
 use App\Models\Passage;
 use App\Models\Question;
 use App\Models\QuestionBank;
+use App\Models\Skill;
 use App\Models\SkillPart;
 use App\Models\User;
 use App\Models\ViolationLog;
@@ -50,28 +50,31 @@ class ExamSeeder extends Seeder
         ]);
         $bank->update(['exam_type_id' => $toefl->id]);
 
+        $readingSkill = Skill::firstOrCreate(['code' => 'reading'], ['name' => 'Reading', 'order' => 1, 'is_active' => true]);
+        $listeningSkill = Skill::firstOrCreate(['code' => 'listening'], ['name' => 'Listening', 'order' => 2, 'is_active' => true]);
+
         $partDefinitions = [
-            [SkillCode::READING, 'Part 1', 1],
-            [SkillCode::READING, 'Part 2', 2],
-            [SkillCode::LISTENING, 'Part 1', 1],
-            [SkillCode::LISTENING, 'Part 2', 2],
-            [SkillCode::LISTENING, 'Part 3', 3],
+            [$readingSkill->id, 'Part 1', 1],
+            [$readingSkill->id, 'Part 2', 2],
+            [$listeningSkill->id, 'Part 1', 1],
+            [$listeningSkill->id, 'Part 2', 2],
+            [$listeningSkill->id, 'Part 3', 3],
         ];
 
-        foreach ($partDefinitions as [$skill, $name, $order]) {
+        foreach ($partDefinitions as [$skillId, $name, $order]) {
             SkillPart::firstOrCreate(
-                ['question_bank_id' => $bank->id, 'skill' => $skill, 'name' => $name],
+                ['question_bank_id' => $bank->id, 'skill_id' => $skillId, 'name' => $name],
                 ['order' => $order, 'is_active' => true],
             );
         }
 
-        $readingPart = SkillPart::where('question_bank_id', $bank->id)->where('skill', SkillCode::READING)->orderBy('order')->first();
-        $listeningPart = SkillPart::where('question_bank_id', $bank->id)->where('skill', SkillCode::LISTENING)->orderBy('order')->first();
+        $readingPart = SkillPart::where('question_bank_id', $bank->id)->where('skill_id', $readingSkill->id)->orderBy('order')->first();
+        $listeningPart = SkillPart::where('question_bank_id', $bank->id)->where('skill_id', $listeningSkill->id)->orderBy('order')->first();
 
         $reading = ExamSection::create([
             'exam_id' => $exam->id,
             'question_bank_id' => $bank->id,
-            'skill' => SkillCode::READING,
+            'skill_id' => $readingSkill->id,
             'title' => 'Reading Section',
             'order' => 1,
             'total_questions' => 4,
@@ -80,7 +83,7 @@ class ExamSeeder extends Seeder
         $listening = ExamSection::create([
             'exam_id' => $exam->id,
             'question_bank_id' => $bank->id,
-            'skill' => SkillCode::LISTENING,
+            'skill_id' => $listeningSkill->id,
             'title' => 'Listening Section',
             'order' => 2,
             'total_questions' => 4,
@@ -172,7 +175,7 @@ class ExamSeeder extends Seeder
             Question::create([
                 'question_bank_id' => $bank->id,
                 'passage_id' => $readingPassage->id,
-                'skill' => SkillCode::READING,
+                'skill_id' => $readingSkill->id,
                 'skill_part_id' => $readingPart?->id,
                 'question_text' => $q['question_text'],
                 'option_a' => $q['a'],
@@ -189,7 +192,7 @@ class ExamSeeder extends Seeder
             Question::create([
                 'question_bank_id' => $bank->id,
                 'passage_id' => $listeningPassage->id,
-                'skill' => SkillCode::LISTENING,
+                'skill_id' => $listeningSkill->id,
                 'skill_part_id' => $listeningPart?->id,
                 'question_text' => $q['question_text'],
                 'option_a' => $q['a'],

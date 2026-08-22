@@ -21,12 +21,12 @@ interface SkillPartRepositoryInterface
     /**
      * @return array<int>
      */
-    public function idsByBankAndSkill(int $bankId, string $skill): array;
+    public function idsByBankAndSkill(int $bankId, int $skillId): array;
 
     /**
      * @return array<int>
      */
-    public function orderedIdsByBankAndSkill(int $bankId, string $skill): array;
+    public function orderedIdsByBankAndSkill(int $bankId, int $skillId): array;
 
     public function create(array $data): SkillPart;
 
@@ -37,7 +37,7 @@ interface SkillPartRepositoryInterface
     /**
      * Urutan berikutnya untuk (bank, skill) — max(order) + 1.
      */
-    public function nextOrder(int $bankId, string $skill): int;
+    public function nextOrder(int $bankId, int $skillId): int;
 
     /**
      * @return Collection<int, SkillPart>

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\SkillCode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +11,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $question_bank_id
  * @property int|null $passage_id
- * @property SkillCode $skill
+ * @property int $skill_id
  * @property int|null $skill_part_id
  * @property string $question_text
  * @property string $option_a
@@ -31,13 +30,14 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read QuestionBank $questionBank
  * @property-read Passage|null $passage
+ * @property-read Skill $skill
  * @property-read SkillPart|null $skillPart
  * @property-read User|null $creator
  * @property-read User|null $updater
  * @property-read User|null $reviewer
  */
 #[Fillable([
-    'question_bank_id', 'passage_id', 'skill', 'skill_part_id',
+    'question_bank_id', 'passage_id', 'skill_id', 'skill_part_id',
     'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
     'correct_answer', 'order', 'status',
     'created_by', 'updated_by', 'reviewed_by', 'reviewed_at', 'review_note',
@@ -47,7 +47,6 @@ class Question extends Model
     protected function casts(): array
     {
         return [
-            'skill' => SkillCode::class,
             'order' => 'integer',
             'reviewed_at' => 'datetime',
         ];
@@ -61,6 +60,11 @@ class Question extends Model
     public function passage(): BelongsTo
     {
         return $this->belongsTo(Passage::class);
+    }
+
+    public function skill(): BelongsTo
+    {
+        return $this->belongsTo(Skill::class);
     }
 
     public function skillPart(): BelongsTo

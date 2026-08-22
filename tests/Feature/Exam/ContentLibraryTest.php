@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Exam;
 
-use App\Enums\SkillCode;
 use App\Models\ExamType;
 use App\Models\Passage;
 use App\Models\QuestionBank;
+use App\Models\Skill;
 use App\Models\SkillPart;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -44,15 +44,19 @@ class ContentLibraryTest extends TestCase
 
     private function readingPart(): SkillPart
     {
+        $skill = Skill::where('code', 'reading')->first();
+
         return SkillPart::where('question_bank_id', $this->bank()->id)
-            ->where('skill', SkillCode::READING)
+            ->where('skill_id', $skill->id)
             ->first();
     }
 
     private function listeningPart(): SkillPart
     {
+        $skill = Skill::where('code', 'listening')->first();
+
         return SkillPart::where('question_bank_id', $this->bank()->id)
-            ->where('skill', SkillCode::LISTENING)
+            ->where('skill_id', $skill->id)
             ->first();
     }
 
@@ -80,13 +84,14 @@ class ContentLibraryTest extends TestCase
         $this->loginAs('instructor');
 
         $passage = Passage::where('type', 'text')->first();
+        $skill = Skill::where('code', 'reading')->first();
 
         $this->post('/content-library', [
             'question_bank_id' => $this->bank()->id,
             'passage_id' => $passage->id,
             'questions' => [
                 [
-                    'skill' => 'reading',
+                    'skill_id' => $skill->id,
                     'skill_part_id' => $this->readingPart()->id,
                     'question_text' => 'What is the main topic?',
                     'option_a' => 'A',
@@ -100,7 +105,7 @@ class ContentLibraryTest extends TestCase
 
         $this->assertDatabaseHas('questions', [
             'question_text' => 'What is the main topic?',
-            'skill' => 'reading',
+            'skill_id' => $skill->id,
             'status' => 'draft',
         ]);
     }
@@ -110,13 +115,14 @@ class ContentLibraryTest extends TestCase
         $this->loginAs('instructor');
 
         $textPassage = Passage::where('type', 'text')->first();
+        $skill = Skill::where('code', 'listening')->first();
 
         $this->post('/content-library', [
             'question_bank_id' => $this->bank()->id,
             'passage_id' => $textPassage->id,
             'questions' => [
                 [
-                    'skill' => 'listening',
+                    'skill_id' => $skill->id,
                     'skill_part_id' => $this->listeningPart()->id,
                     'question_text' => 'What is the lecture about?',
                     'option_a' => 'A',
@@ -143,9 +149,11 @@ class ContentLibraryTest extends TestCase
             'is_active' => true,
         ]);
 
+        $skill = Skill::where('code', 'reading')->first();
+
         $foreignPart = SkillPart::create([
             'question_bank_id' => $otherBank->id,
-            'skill' => SkillCode::READING,
+            'skill_id' => $skill->id,
             'name' => 'Part 1',
             'order' => 1,
             'is_active' => true,
@@ -155,7 +163,7 @@ class ContentLibraryTest extends TestCase
             'question_bank_id' => $this->bank()->id,
             'questions' => [
                 [
-                    'skill' => 'reading',
+                    'skill_id' => $skill->id,
                     'skill_part_id' => $foreignPart->id,
                     'question_text' => 'Soal memakai part bank lain',
                     'option_a' => 'A',
@@ -176,11 +184,13 @@ class ContentLibraryTest extends TestCase
     {
         $this->loginAs('instructor');
 
+        $skill = Skill::where('code', 'reading')->first();
+
         $this->post('/content-library', [
             'question_bank_id' => $this->bank()->id,
             'questions' => [
                 [
-                    'skill' => 'reading',
+                    'skill_id' => $skill->id,
                     'skill_part_id' => $this->readingPart()->id,
                     'question_text' => 'Pertanyaan tanpa opsi lengkap',
                     'option_a' => 'A',

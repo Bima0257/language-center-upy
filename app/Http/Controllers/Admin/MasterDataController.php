@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\SkillCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MasterData\StoreDepartmentRequest;
 use App\Http\Requests\MasterData\StoreExamTypeRequest;
 use App\Http\Requests\MasterData\StoreFacultyRequest;
 use App\Http\Requests\MasterData\StoreSkillPartRequest;
+use App\Http\Requests\MasterData\StoreSkillRequest;
 use App\Http\Requests\MasterData\UpdateDepartmentRequest;
 use App\Http\Requests\MasterData\UpdateExamTypeRequest;
 use App\Http\Requests\MasterData\UpdateFacultyRequest;
 use App\Http\Requests\MasterData\UpdateSkillPartRequest;
+use App\Http\Requests\MasterData\UpdateSkillRequest;
 use App\Models\Department;
 use App\Models\ExamType;
 use App\Models\Faculty;
+use App\Models\Skill;
 use App\Models\SkillPart;
 use App\Modules\MasterData\Services\MasterDataService;
 use Illuminate\Http\RedirectResponse;
@@ -27,6 +29,37 @@ class MasterDataController extends Controller
     public function __construct(
         private MasterDataService $masterData,
     ) {}
+
+    // ===== Skills =====
+    public function skillsIndex(): Response
+    {
+        return Inertia::render('Admin/MasterData/Skills', $this->masterData->skillsIndexData());
+    }
+
+    public function skillStore(StoreSkillRequest $request): RedirectResponse
+    {
+        $this->masterData->createSkill($request->validated());
+
+        return back()->with('success', 'Skill berhasil ditambahkan.');
+    }
+
+    public function skillUpdate(UpdateSkillRequest $request, Skill $skill): RedirectResponse
+    {
+        $this->masterData->updateSkill($skill, $request->validated());
+
+        return back()->with('success', 'Skill berhasil diperbarui.');
+    }
+
+    public function skillDestroy(Skill $skill): RedirectResponse
+    {
+        try {
+            $this->masterData->deleteSkill($skill);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Skill berhasil dihapus.');
+    }
 
     // ===== Exam Types =====
     public function examTypesIndex(): Response
@@ -64,9 +97,7 @@ class MasterDataController extends Controller
     {
         $bankId = $request->integer('bank_id') ?: null;
 
-        return Inertia::render('Admin/MasterData/Parts', $this->masterData->skillPartsIndexData($bankId) + [
-            'skillOptions' => SkillCode::options(),
-        ]);
+        return Inertia::render('Admin/MasterData/Parts', $this->masterData->skillPartsIndexData($bankId));
     }
 
     public function partStore(StoreSkillPartRequest $request): RedirectResponse

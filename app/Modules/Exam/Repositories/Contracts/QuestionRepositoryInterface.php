@@ -76,7 +76,7 @@ interface QuestionRepositoryInterface
      */
     public function pendingDrafts(int $limit = 10): Collection;
 
-    public function countBySkill(): Collection;
+    public function countBySkill(): \Illuminate\Support\Collection;
 
     public function countByStatus(): Collection;
 

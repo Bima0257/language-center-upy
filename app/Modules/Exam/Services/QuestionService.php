@@ -6,6 +6,7 @@ use App\Enums\SkillCode;
 use App\Imports\QuestionsImport;
 use App\Models\Passage;
 use App\Models\Question;
+use App\Models\Skill;
 use App\Modules\Exam\Repositories\Contracts\PassageRepositoryInterface;
 use App\Modules\Exam\Repositories\Contracts\QuestionBankRepositoryInterface;
 use App\Modules\Exam\Repositories\Contracts\QuestionRepositoryInterface;
@@ -105,17 +106,18 @@ class QuestionService
 
                 $rows = [];
                 foreach ($validated['questions'] as $q) {
+                    $skillId = $q['skill_id'];
                     $this->assertQuestionSkillMatchesPart(
                         $validated['question_bank_id'],
-                        $q['skill'],
+                        $skillId,
                         $q['skill_part_id'],
                         'questions',
                     );
-                    $this->assertQuestionCompatibleWithPassage($q['skill'], $passage, $q, 'questions');
+                    $this->assertQuestionCompatibleWithPassage($skillId, $passage, $q, 'questions');
 
                     $rows[] = [
                         'question_bank_id' => $validated['question_bank_id'],
-                        'skill' => $q['skill'],
+                        'skill_id' => $skillId,
                         'skill_part_id' => $q['skill_part_id'],
                         'passage_id' => $passageId,
                         'question_text' => $q['question_text'] ?? '',
@@ -166,7 +168,7 @@ class QuestionService
     {
         $this->assertQuestionSkillMatchesPart(
             $validated['question_bank_id'],
-            $validated['skill'],
+            $validated['skill_id'],
             $validated['skill_part_id'],
             'skill_part_id',
         );
@@ -174,7 +176,7 @@ class QuestionService
         $passage = null;
         if (isset($validated['passage_id']) && $validated['passage_id']) {
             $passage = $this->passages->find($validated['passage_id']);
-            $this->assertQuestionCompatibleWithPassage($validated['skill'], $passage, $validated, 'passage_id');
+            $this->assertQuestionCompatibleWithPassage($validated['skill_id'], $passage, $validated, 'passage_id');
         }
 
         $data = $validated;
@@ -283,18 +285,20 @@ class QuestionService
         ]);
     }
 
-    private function assertQuestionSkillMatchesPart(int $questionBankId, string $skill, int $skillPartId, string $errorKey): void
+    private function assertQuestionSkillMatchesPart(int $questionBankId, int $skillId, int $skillPartId, string $errorKey): void
     {
         $part = $this->skillParts->find($skillPartId);
 
-        if ($part === null || $part->skill->value !== $skill || $part->question_bank_id !== $questionBankId) {
+        if ($part === null || $part->skill_id !== $skillId || $part->question_bank_id !== $questionBankId) {
             throw ValidationException::withMessages([$errorKey => 'Part harus milik bank soal dan skill yang sama dengan soal.']);
         }
     }
 
-    private function assertQuestionCompatibleWithPassage(string $skill, ?Passage $passage, array $questionData, string $errorKey): void
+    private function assertQuestionCompatibleWithPassage(int $skillId, ?Passage $passage, array $questionData, string $errorKey): void
     {
-        if ($skill === SkillCode::LISTENING->value) {
+        $skill = Skill::find($skillId);
+
+        if ($skill && $skill->code === 'listening') {
             if ($passage === null || ! $passage->audio_url) {
                 throw ValidationException::withMessages([$errorKey => 'Soal listening wajib menggunakan passage yang memiliki audio.']);
             }

@@ -4,32 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $question_bank_id
- * @property int $skill_id
+ * @property string $code
  * @property string $name
+ * @property string|null $description
  * @property int $order
- * @property string|null $directions
  * @property bool $is_active
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read QuestionBank $questionBank
- * @property-read Skill $skill
+ * @property-read Collection<int, SkillPart> $skillParts
  * @property-read Collection<int, Question> $questions
+ * @property-read Collection<int, ExamSection> $examSections
  */
-class SkillPart extends Model
+class Skill extends Model
 {
     protected $fillable = [
-        'question_bank_id',
-        'skill_id',
+        'code',
         'name',
+        'description',
         'order',
-        'directions',
         'is_active',
     ];
 
@@ -41,18 +38,18 @@ class SkillPart extends Model
         ];
     }
 
-    public function questionBank(): BelongsTo
+    public function skillParts(): HasMany
     {
-        return $this->belongsTo(QuestionBank::class);
-    }
-
-    public function skill(): BelongsTo
-    {
-        return $this->belongsTo(Skill::class);
+        return $this->hasMany(SkillPart::class);
     }
 
     public function questions(): HasMany
     {
         return $this->hasMany(Question::class);
+    }
+
+    public function examSections(): HasMany
+    {
+        return $this->hasMany(ExamSection::class);
     }
 }

@@ -8,7 +8,6 @@ import { computed, ref, watch } from 'vue';
 import draggable from 'vuedraggable';
 import { useConfirm } from '@/Composables/useConfirm';
 import { useToast } from '@/Composables/useToast';
-import { SKILL_OPTIONS, skillLabel } from '@/constants/skills';
 
 const props = defineProps({
     parts: { type: Array, default: () => [] },
@@ -21,7 +20,7 @@ const toast = useToast();
 
 const form = useForm({
     question_bank_id: '',
-    skill: '',
+    skill_id: '',
     name: '',
     directions: '',
     is_active: true,
@@ -29,7 +28,7 @@ const form = useForm({
 
 const editForm = useForm({
     question_bank_id: '',
-    skill: '',
+    skill_id: '',
     name: '',
     directions: '',
     is_active: true,
@@ -58,11 +57,11 @@ function onBankFilterChange(value) {
 }
 
 // ===== Group per skill =====
-const skillGroups = computed(() => SKILL_OPTIONS.map((skill) => ({
+const skillGroups = computed(() => props.skillOptions.map((skill) => ({
     ...skill,
     parts: props.parts
         .filter((p) => !bankFilter.value || String(p.question_bank_id) === String(bankFilter.value))
-        .filter((p) => String(p.skill) === String(skill.value))
+        .filter((p) => String(p.skill_id) === String(skill.value))
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
 })));
 
@@ -76,10 +75,10 @@ watch(skillGroups, (groups) => {
     );
 }, { immediate: true });
 
-function onReorder(skill, evt) {
+function onReorder(skillId, evt) {
     if (reordering.value) return;
 
-    const prev = (originalOrders.value[skill] || '').split(',').filter(Boolean).map(Number);
+    const prev = (originalOrders.value[skillId] || '').split(',').filter(Boolean).map(Number);
     if (prev.length === 0 || typeof evt.oldIndex !== 'number' || typeof evt.newIndex !== 'number') return;
 
     // Hitung urutan baru secara deterministik dari posisi drop (tidak bergantung timing mutasi list)
@@ -108,7 +107,7 @@ function openCreate() {
     form.reset();
     form.question_bank_id = bankFilter.value || '';
     if (props.skillOptions.length === 1) {
-        form.skill = props.skillOptions[0].value;
+        form.skill_id = props.skillOptions[0].value;
     }
     showModal.value = true;
 }
@@ -129,7 +128,7 @@ function startEdit(part) {
     editForm.clearErrors();
     editForm.reset();
     editForm.question_bank_id = String(part.question_bank_id);
-    editForm.skill = String(part.skill);
+    editForm.skill_id = String(part.skill_id);
     editForm.name = part.name;
     editForm.directions = part.directions || '';
     editForm.is_active = !!part.is_active;
@@ -184,7 +183,7 @@ async function destroy(part) {
                 <div class="flex items-center justify-between px-5 py-4 bg-surface-container-low/60 border-b border-outline-variant/30">
                     <div class="flex items-center gap-2">
                         <IconBook :size="18" class="text-secondary" />
-                        <p class="text-label-md font-semibold text-primary">{{ skillLabel(group.value) }}</p>
+                        <p class="text-label-md font-semibold text-primary">{{ group.label }}</p>
                         <span class="text-label-md text-text-muted">{{ group.parts.length }} part</span>
                     </div>
                     <span v-if="group.parts.length" class="text-label-md text-text-muted">
@@ -193,7 +192,7 @@ async function destroy(part) {
                 </div>
 
                 <div v-if="group.parts.length === 0" class="px-5 py-10 text-center">
-                    <p class="text-text-muted text-body-md">Belum ada part untuk {{ skillLabel(group.value) }}.</p>
+                    <p class="text-text-muted text-body-md">Belum ada part untuk {{ group.label }}.</p>
                 </div>
 
                 <div v-else class="overflow-x-auto">
@@ -271,14 +270,14 @@ async function destroy(part) {
                         </div>
                         <div>
                             <DropDown
-                                v-model="modalForm.skill"
+                                v-model="modalForm.skill_id"
                                 :options="skillOptions"
                                 label="Skill *"
                                 placeholder="Pilih skill"
                                 option-label="label"
                                 option-value="value"
                             />
-                            <p v-if="modalForm.errors.skill" class="text-error-red text-xs mt-1">{{ modalForm.errors.skill }}</p>
+                            <p v-if="modalForm.errors.skill_id" class="text-error-red text-xs mt-1">{{ modalForm.errors.skill_id }}</p>
                         </div>
                     </div>
                     <div>

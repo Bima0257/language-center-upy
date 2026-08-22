@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\ExamType;
 use App\Models\Faculty;
 use App\Models\ScoreInterpretation;
+use App\Models\Skill;
 use App\Models\SkillPart;
 use App\Modules\Exam\Repositories\Contracts\QuestionBankRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\CertificateRepositoryInterface;
@@ -15,6 +16,7 @@ use App\Modules\MasterData\Repositories\Contracts\ExamTypeRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\FacultyRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\ScoreInterpretationRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\SkillPartRepositoryInterface;
+use App\Modules\MasterData\Repositories\Contracts\SkillRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Mews\Purifier\Facades\Purifier;
 
@@ -22,6 +24,7 @@ class MasterDataService
 {
     public function __construct(
         private ExamTypeRepositoryInterface $examTypes,
+        private SkillRepositoryInterface $skills,
         private SkillPartRepositoryInterface $skillParts,
         private FacultyRepositoryInterface $faculties,
         private DepartmentRepositoryInterface $departments,
@@ -30,6 +33,39 @@ class MasterDataService
         private QuestionBankRepositoryInterface $questionBanks,
     ) {}
 
+    // ===== Skills =====
+    public function skillsIndexData(): array
+    {
+        return [
+            'skills' => $this->skills->allOrdered(),
+        ];
+    }
+
+    public function createSkill(array $data): void
+    {
+        $data = $this->sanitizeOptionalText($data);
+        $data['order'] = $data['order'] ?? $this->skills->nextOrder();
+
+        $this->skills->create($data);
+    }
+
+    public function updateSkill(Skill $skill, array $data): void
+    {
+        $data = $this->sanitizeOptionalText($data);
+
+        $this->skills->update($skill, $data);
+    }
+
+    public function deleteSkill(Skill $skill): void
+    {
+        if ($skill->skillParts()->exists() || $skill->questions()->exists() || $skill->examSections()->exists()) {
+            throw new \RuntimeException('Skill tidak bisa dihapus karena masih digunakan di part soal, soal, atau section ujian.');
+        }
+
+        $this->skills->delete($skill);
+    }
+
+    // ===== Exam Types =====
     public function examTypesIndexData(): array
     {
         return [
@@ -63,13 +99,14 @@ class MasterDataService
         return [
             'parts' => $bankId !== null ? $parts->where('question_bank_id', $bankId)->values() : $parts,
             'questionBanks' => $this->questionBanks->allActiveOrdered(),
+            'skillOptions' => $this->skills->allActiveOrdered()->map(fn (Skill $skill) => ['value' => $skill->id, 'label' => $skill->name])->toArray(),
         ];
     }
 
     public function createSkillPart(array $data): void
     {
         $data = $this->sanitizeOptionalText($data);
-        $data['order'] = $this->skillParts->nextOrder((int) $data['question_bank_id'], (string) $data['skill']);
+        $data['order'] = $this->skillParts->nextOrder((int) $data['question_bank_id'], (int) $data['skill_id']);
 
         $this->skillParts->create($data);
     }
@@ -80,8 +117,8 @@ class MasterDataService
 
         // Pindah bank/skill → urutan otomatis di akhir grup baru (hindari tabrakan urutan)
         if ((int) ($data['question_bank_id'] ?? $skillPart->question_bank_id) !== $skillPart->question_bank_id
-            || (string) ($data['skill'] ?? $skillPart->skill->value) !== $skillPart->skill->value) {
-            $data['order'] = $this->skillParts->nextOrder((int) $data['question_bank_id'], (string) $data['skill']);
+            || (int) ($data['skill_id'] ?? $skillPart->skill_id) !== $skillPart->skill_id) {
+            $data['order'] = $this->skillParts->nextOrder((int) $data['question_bank_id'], (int) $data['skill_id']);
         }
 
         $this->skillParts->update($skillPart, $data);
@@ -103,7 +140,7 @@ class MasterDataService
                 continue;
             }
 
-            $groupKey = $part->question_bank_id.'|'.$part->skill->value;
+            $groupKey = $part->question_bank_id.'|'.$part->skill_id;
             $rank[$groupKey] = ($rank[$groupKey] ?? 0) + 1;
 
             if ($part->order !== $rank[$groupKey]) {
@@ -215,6 +252,11 @@ class MasterDataService
     public function activeSkillParts(): Collection
     {
         return $this->skillParts->allActiveOrdered();
+    }
+
+    public function activeSkills(): Collection
+    {
+        return $this->skills->allActiveOrdered();
     }
 
     public function activeExamTypes(): Collection

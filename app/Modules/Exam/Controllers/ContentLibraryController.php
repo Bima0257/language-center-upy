@@ -60,7 +60,7 @@ class ContentLibraryController extends Controller
 
         return to_route('content-library.index', [
             'question_bank_id' => $question->question_bank_id,
-            'skill' => $question->skill->value,
+            'skill' => $question->skill->code,
         ])->with('success', 'Soal berhasil diperbarui.');
     }
 

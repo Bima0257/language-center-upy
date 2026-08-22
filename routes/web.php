@@ -43,6 +43,11 @@ Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
         Route::put('/master-data/exam-types/{examType}', [MasterDataController::class, 'examTypeUpdate'])->name('master-data.exam-types.update');
         Route::delete('/master-data/exam-types/{examType}', [MasterDataController::class, 'examTypeDestroy'])->name('master-data.exam-types.destroy');
 
+        Route::get('/master-data/skills', [MasterDataController::class, 'skillsIndex'])->name('master-data.skills.index');
+        Route::post('/master-data/skills', [MasterDataController::class, 'skillStore'])->name('master-data.skills.store');
+        Route::put('/master-data/skills/{skill}', [MasterDataController::class, 'skillUpdate'])->name('master-data.skills.update');
+        Route::delete('/master-data/skills/{skill}', [MasterDataController::class, 'skillDestroy'])->name('master-data.skills.destroy');
+
         Route::get('/master-data/parts', [MasterDataController::class, 'partsIndex'])->name('master-data.parts.index');
         Route::post('/master-data/parts', [MasterDataController::class, 'partStore'])->name('master-data.parts.store');
         Route::post('/master-data/parts/reorder', [MasterDataController::class, 'partReorder'])->name('master-data.parts.reorder');

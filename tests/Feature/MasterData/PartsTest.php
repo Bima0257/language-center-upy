@@ -3,6 +3,7 @@
 namespace Tests\Feature\MasterData;
 
 use App\Models\QuestionBank;
+use App\Models\Skill;
 use App\Models\SkillPart;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,20 +35,21 @@ class PartsTest extends TestCase
         $this->loginAdmin();
 
         $bank = QuestionBank::where('name', 'Bank Soal 2022')->firstOrFail();
+        $skill = Skill::where('code', 'reading')->firstOrFail();
         $lastOrder = SkillPart::where('question_bank_id', $bank->id)
-            ->where('skill', 'reading')
+            ->where('skill_id', $skill->id)
             ->max('order');
 
         $this->post('/admin/master-data/parts', [
             'question_bank_id' => $bank->id,
-            'skill' => 'reading',
+            'skill_id' => $skill->id,
             'name' => 'Part Auto Order',
             'directions' => 'Instruksi test.',
             'is_active' => true,
         ])->assertRedirect();
 
         $part = SkillPart::where('question_bank_id', $bank->id)
-            ->where('skill', 'reading')
+            ->where('skill_id', $skill->id)
             ->where('name', 'Part Auto Order')
             ->firstOrFail();
 
@@ -59,8 +61,9 @@ class PartsTest extends TestCase
         $this->loginAdmin();
 
         $bank = QuestionBank::where('name', 'Bank Soal 2022')->firstOrFail();
+        $skill = Skill::where('code', 'reading')->firstOrFail();
         $parts = SkillPart::where('question_bank_id', $bank->id)
-            ->where('skill', 'reading')
+            ->where('skill_id', $skill->id)
             ->orderBy('order')
             ->get();
 
