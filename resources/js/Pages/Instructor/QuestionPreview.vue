@@ -17,7 +17,8 @@ const showKey = ref(false);
 const currentIndex = ref(props.index);
 
 const current = computed(() => props.questions[currentIndex.value] || null);
-const isMaterialAudio = computed(() => materialOfSkill(current.value?.skill) === 'audio');
+const currentSkillCode = computed(() => current.value?.skill?.code || current.value?.skill || '');
+const isMaterialAudio = computed(() => materialOfSkill(currentSkillCode.value) === 'audio');
 const passage = computed(() => current.value?.passage || null);
 const audioSrc = computed(() => {
     const path = passage.value?.audio_url;
@@ -30,7 +31,7 @@ const imageSrc = computed(() => {
 
 const imageLoading = useMediaLoad(imageSrc);
 
-const partLabel = computed(() => current.value?.skillPart?.name || skillLabel(current.value?.skill) || '');
+const partLabel = computed(() => current.value?.skillPart?.name || skillLabel(currentSkillCode.value) || '');
 
 function optionText(key) {
     return current.value ? (current.value['option_' + key.toLowerCase()] || '') : '';

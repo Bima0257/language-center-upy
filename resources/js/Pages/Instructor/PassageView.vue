@@ -33,7 +33,7 @@ const optionKeys = ['A', 'B', 'C', 'D'];
 const quickQuestionForm = useForm({
     passage_id: null,
     question_bank_id: '',
-    skill: '',
+    skill_id: '',
     skill_part_id: '',
     question_text: '',
     option_a: '',
@@ -43,11 +43,15 @@ const quickQuestionForm = useForm({
     correct_answer: '',
 });
 
-const quickIsAudio = computed(() => materialOfSkill(quickQuestionForm.skill) === 'audio');
+function skillCodeById(skillId) {
+    return props.skillOptions.find(s => String(s.value) === String(skillId))?.code || '';
+}
+
+const quickIsAudio = computed(() => materialOfSkill(skillCodeById(quickQuestionForm.skill_id)) === 'audio');
 
 function quickParts() {
     return props.parts.filter(p =>
-        String(p.skill) === String(quickQuestionForm.skill) &&
+        String(p.skill_id) === String(quickQuestionForm.skill_id) &&
         String(p.question_bank_id) === String(quickQuestionForm.question_bank_id),
     );
 }
@@ -128,7 +132,9 @@ function openQuickAdd(passage) {
     quickQuestionForm.clearErrors();
     quickQuestionForm.reset();
     quickQuestionForm.passage_id = passage.id;
-    quickQuestionForm.skill = passage.type === 'audio' ? 'listening' : 'reading';
+    const code = passage.type === 'audio' ? 'listening' : 'reading';
+    const skill = props.skillOptions.find(s => s.code === code);
+    quickQuestionForm.skill_id = skill ? skill.value : '';
     if (props.questionBanks.length === 1) {
         quickQuestionForm.question_bank_id = props.questionBanks[0].id;
     }
@@ -145,7 +151,7 @@ function saveQuickQuestion() {
             passage_id: data.passage_id,
             question_bank_id: data.question_bank_id,
             questions: [{
-                skill: data.skill,
+                skill_id: data.skill_id,
                 skill_part_id: data.skill_part_id,
                 question_text: data.question_text,
                 option_a: data.option_a,

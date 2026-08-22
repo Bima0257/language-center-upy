@@ -46,7 +46,7 @@ function skillCodeById(skillId) {
     return props.skillOptions.find(s => String(s.value) === String(skillId))?.code || '';
 }
 
-const isAudioQuestion = (q) => materialOfSkill(skillCodeById(q.skill)) === 'audio';
+const isAudioQuestion = (q) => materialOfSkill(skillCodeById(q.skill_id)) === 'audio';
 
 // Passage otomatis audio jika ada soal listening (mode global via globalSkill, mode per-soal via soal)
 const hasListeningQuestion = computed(() => {
@@ -56,7 +56,7 @@ const hasListeningQuestion = computed(() => {
 
 function newQuestion() {
     return {
-        skill: globalSkill.value,
+        skill_id: globalSkill.value,
         skill_part_id: globalPart.value,
         question_text: '',
         option_a: '',
@@ -94,7 +94,7 @@ watch(globalSkill, (skill) => {
     if (perQuestionSkill.value) return;
     globalPart.value = '';
     for (const q of form.questions) {
-        q.skill = skill;
+        q.skill_id = skill;
         q.skill_part_id = '';
     }
 
@@ -109,7 +109,7 @@ watch(() => form.question_bank_id, () => {
     globalSkill.value = '';
     globalPart.value = '';
     for (const q of form.questions) {
-        q.skill = '';
+        q.skill_id = '';
         q.skill_part_id = '';
     }
     if (form.new_passage_title) {
@@ -153,7 +153,7 @@ function setGlobalMode() {
     perQuestionSkill.value = false;
     if (globalSkill.value) {
         for (const q of form.questions) {
-            q.skill = globalSkill.value;
+            q.skill_id = globalSkill.value;
             q.skill_part_id = globalPart.value;
         }
     }
@@ -184,7 +184,7 @@ const canSubmit = computed(() => {
     if (!perQuestionSkill.value && !globalPart.value) return false;
 
     return form.questions.every(q => {
-        if (!q.skill || !q.skill_part_id || !q.correct_answer) return false;
+        if (!q.skill_id || !q.skill_part_id || !q.correct_answer) return false;
 
         if (isAudioQuestion(q)) {
             // Listening wajib passage audio — media hanya di passage
@@ -418,7 +418,7 @@ const indexUrl = computed(() => {
                         <div v-if="perQuestionSkill" class="grid grid-cols-2 gap-4">
                             <div>
                                 <DropDown
-                                    v-model="q.skill"
+                                    v-model="q.skill_id"
                                     :options="skillOptions"
                                     label="Skill *"
                                     placeholder="Pilih Skill"
@@ -430,12 +430,12 @@ const indexUrl = computed(() => {
                             <div>
                                 <DropDown
                                     v-model="q.skill_part_id"
-                                    :options="partsForSkill(q.skill)"
+                                    :options="partsForSkill(q.skill_id)"
                                     label="Part *"
                                     placeholder="Pilih part"
                                     option-label="name"
                                     option-value="id"
-                                    :disabled="!q.skill"
+                                    :disabled="!q.skill_id"
                                 />
                             </div>
                         </div>

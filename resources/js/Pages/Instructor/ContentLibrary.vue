@@ -77,7 +77,7 @@ const filteredBanks = computed(() => {
 const filteredPartOptions = computed(() =>
     props.parts.filter((p) =>
         (!selectedBankId.value || String(p.question_bank_id) === String(selectedBankId.value)) &&
-        (!selectedSkill.value || String(p.skill) === String(selectedSkill.value)),
+        (!selectedSkill.value || String(p.skill_id) === String(selectedSkill.value)),
     ),
 );
 
@@ -115,7 +115,7 @@ const passageForm = useForm({
 const quickQuestionForm = useForm({
     passage_id: null,
     question_bank_id: "",
-    skill: "",
+    skill_id: "",
     skill_part_id: "",
     question_text: "",
     option_a: "",
@@ -127,14 +127,18 @@ const quickQuestionForm = useForm({
 
 const optionKeys = ["A", "B", "C", "D"];
 
+function skillCodeById(skillId) {
+    return props.skillOptions.find(s => String(s.value) === String(skillId))?.code || '';
+}
+
 const quickIsAudio = computed(
-    () => materialOfSkill(quickQuestionForm.skill) === "audio",
+    () => materialOfSkill(skillCodeById(quickQuestionForm.skill_id)) === "audio",
 );
 
 function quickParts() {
     return props.parts.filter(
         (p) =>
-            String(p.skill) === String(quickQuestionForm.skill) &&
+            String(p.skill_id) === String(quickQuestionForm.skill_id) &&
             String(p.question_bank_id) === String(quickQuestionForm.question_bank_id),
     );
 }
@@ -204,7 +208,9 @@ function openQuickAdd(passage) {
     quickQuestionForm.clearErrors();
     quickQuestionForm.reset();
     quickQuestionForm.passage_id = passage.id;
-    quickQuestionForm.skill = passage.type === "audio" ? "listening" : "reading";
+    const code = passage.type === "audio" ? "listening" : "reading";
+    const skill = props.skillOptions.find(s => s.code === code);
+    quickQuestionForm.skill_id = skill ? skill.value : "";
     if (props.questionBanks.length === 1) {
         quickQuestionForm.question_bank_id = props.questionBanks[0].id;
     }
@@ -222,7 +228,7 @@ function saveQuickQuestion() {
             question_bank_id: data.question_bank_id,
             questions: [
                 {
-                    skill: data.skill,
+                    skill_id: data.skill_id,
                     skill_part_id: data.skill_part_id,
                     question_text: data.question_text,
                     option_a: data.option_a,
@@ -264,9 +270,9 @@ const skillGroups = computed(() => {
     const skillMap = new Map();
 
     for (const q of props.questions.data) {
-        const sid = q.skill || "none";
+        const sid = q.skill_id || "none";
         if (!skillMap.has(sid)) {
-            skillMap.set(sid, { skill: sid, parts: new Map() });
+            skillMap.set(sid, { skill_id: sid, parts: new Map() });
         }
         const bucket = skillMap.get(sid);
 
@@ -293,9 +299,18 @@ const skillGroups = computed(() => {
         }
     }
 
+    function skillCodeById(skillId) {
+        return props.skillOptions.find(s => String(s.value) === String(skillId))?.code || '';
+    }
+
+    function skillLabelById(skillId) {
+        return skillLabel(skillCodeById(skillId));
+    }
+
     return Array.from(skillMap.values())
         .map((s) => ({
-            skill: s.skill,
+            skill_id: s.skill_id,
+            label: skillLabelById(s.skill_id),
             parts: Array.from(s.parts.values())
                 .map((p) => ({
                     part: p.part,
@@ -304,7 +319,7 @@ const skillGroups = computed(() => {
                 }))
                 .sort((a, b) => (a.part?.order ?? 99) - (b.part?.order ?? 99)),
         }))
-        .sort((a, b) => skillLabel(a.skill).localeCompare(skillLabel(b.skill)));
+        .sort((a, b) => a.label.localeCompare(b.label));
 });
 
 function partGroupTotal(partGroup) {
@@ -475,11 +490,11 @@ async function bulkReview(status) {
             <div v-else class="space-y-8">
                 <template
                     v-for="skillGroup in skillGroups"
-                    :key="skillGroup.skill || 'no-skill'"
+                    :key="skillGroup.skill_id || 'no-skill'"
                 >
                     <div class="flex items-center gap-3">
                         <BaseBadge variant="primary"
-                            >{{ skillLabel(skillGroup.skill) || "Tanpa Skill" }}</BaseBadge
+                            >{{ skillGroup.label || "Tanpa Skill" }}</BaseBadge
                         >
                         <span class="text-label-md text-text-muted"
                             >{{ skillGroupTotal(skillGroup) }} soal</span
