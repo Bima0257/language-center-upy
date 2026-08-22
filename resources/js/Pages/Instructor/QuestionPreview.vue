@@ -208,10 +208,9 @@ function goBack() {
 
             <!-- FOOTER CONTROLS -->
             <footer class="h-14 border-t border-outline-variant px-6 flex justify-between items-center bg-surface-container-low shrink-0">
-                <button @click="goTo(-1)" :disabled="currentIndex === 0"
-                        class="flex items-center gap-2 px-4 py-2 text-text-body font-bold hover:text-primary transition-colors group disabled:opacity-30 disabled:cursor-not-allowed">
+                <BaseButton @click="goTo(-1)" :disabled="currentIndex === 0" class="px-6">
                     <IconArrowLeft :size="16" class="transition-transform group-hover:-translate-x-1" /> Sebelumnya
-                </button>
+                </BaseButton>
                 <div v-if="questions.length > 1" class="flex gap-2">
                     <div v-for="(q, i) in questions" :key="q.id"
                          class="w-2 h-2 rounded-full transition-all"

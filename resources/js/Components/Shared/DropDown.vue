@@ -14,6 +14,7 @@ const props = defineProps({
     size: { type: String, default: 'md' },
     buttonClass: { type: String, default: '' },
     clearable: { type: Boolean, default: false },
+    emptyMessage: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
@@ -86,7 +87,11 @@ const sizeClasses = {
                     <ListboxOptions
                         class="absolute z-50 mt-1.5 w-full max-h-60 overflow-auto rounded-2xl bg-surface-white border border-outline-variant shadow-soft py-1.5 focus:outline-none"
                     >
-                        <ListboxOption v-slot="{ active, selected: isSelected }" v-for="o in options" :key="valueOf(o)" :value="o">
+                        <div v-if="options.length === 0 && emptyMessage"
+                             class="px-3.5 py-4 text-center text-text-muted text-body-md">
+                            {{ emptyMessage }}
+                        </div>
+                        <ListboxOption v-else v-slot="{ active, selected: isSelected }" v-for="o in options" :key="valueOf(o)" :value="o">
                             <div
                                 class="flex items-center gap-2 px-3.5 py-2.5 cursor-pointer text-body-md transition-colors"
                                 :class="active ? 'bg-secondary/10 text-primary' : 'text-text-body'"

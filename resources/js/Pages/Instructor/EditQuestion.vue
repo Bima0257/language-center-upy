@@ -85,40 +85,42 @@ function submit() {
                             />
                         </div>
                         <div>
-                            <DropDown
-                                v-model="form.skill_id"
-                                :options="skillOptions"
-                                label="Skill *"
-                                placeholder="Pilih Skill"
-                                option-label="label"
-                                option-value="value"
-                                @change="onSkillChange"
-                            />
+                            <p class="text-label-md font-medium text-primary mb-2">Skill *</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label v-for="skill in skillOptions" :key="skill.value"
+                                       class="flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer transition-all"
+                                       :class="form.skill_id === skill.value ? 'border-secondary bg-secondary/10' : 'border-outline-variant bg-surface-container-lowest hover:border-secondary/50'">
+                                    <input type="radio" name="skill" :value="skill.value" v-model="form.skill_id"
+                                           @change="onSkillChange"
+                                           class="w-4 h-4 border-outline-variant text-secondary focus:ring-secondary" />
+                                    <span class="font-semibold" :class="form.skill_id === skill.value ? 'text-secondary' : 'text-primary'">{{ skill.label }}</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <DropDown
-                                v-model="form.skill_part_id"
-                                :options="partsForSelectedSkill"
-                                label="Part *"
-                                placeholder="Pilih part"
-                                option-label="name"
-                                option-value="id"
-                                :disabled="!form.skill"
-                            />
+                    <div>
+                        <p class="text-label-md font-medium text-primary mb-2">Part *</p>
+                        <div v-if="partsForSelectedSkill.length" class="flex flex-wrap gap-3">
+                            <label v-for="part in partsForSelectedSkill" :key="part.id"
+                                   class="flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer transition-all"
+                                   :class="form.skill_part_id === part.id ? 'border-secondary bg-secondary/10' : 'border-outline-variant bg-surface-container-lowest hover:border-secondary/50'">
+                                <input type="radio" name="part" :value="part.id" v-model="form.skill_part_id"
+                                       class="w-4 h-4 border-outline-variant text-secondary focus:ring-secondary" />
+                                <span class="font-semibold" :class="form.skill_part_id === part.id ? 'text-secondary' : 'text-primary'">{{ part.name }}</span>
+                            </label>
                         </div>
-                        <div>
-                            <DropDown
-                                v-model="form.passage_id"
-                                :options="passages"
-                                label="Materi Soal"
-                                :placeholder="isMaterialAudio ? 'Pilih passage audio (wajib)' : 'Tanpa Materi Soal'"
-                                option-label="title"
-                                option-value="id"
-                                clearable
-                            />
-                        </div>
+                        <p v-else class="text-label-md text-text-muted">Belum ada part untuk skill ini.</p>
+                    </div>
+                    <div>
+                        <DropDown
+                            v-model="form.passage_id"
+                            :options="passages"
+                            label="Materi Soal"
+                            :placeholder="isMaterialAudio ? 'Pilih passage audio (wajib)' : 'Tanpa Materi Soal'"
+                            option-label="title"
+                            option-value="id"
+                            clearable
+                        />
                     </div>
                     <p class="flex items-center gap-1.5 text-label-md text-text-muted">
                         <IconInfoCircle :size="16" class="text-secondary shrink-0" />
@@ -151,16 +153,7 @@ function submit() {
 
                         <OptionsInput :form="form" :option-keys="optionKeys" />
 
-                        <div>
-                            <DropDown
-                                v-model="form.correct_answer"
-                                :options="optionKeys.map(k => ({ id: k, name: k }))"
-                                label="Kunci Jawaban *"
-                                placeholder="Pilih jawaban benar (A/B/C/D)"
-                                option-label="name"
-                                option-value="id"
-                            />
-                        </div>
+                        <AnswerKeyPicker v-model="form.correct_answer" :option-keys="optionKeys" />
                     </template>
 
                     <hr class="border-outline-variant/50" />
