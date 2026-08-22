@@ -6,7 +6,7 @@ import OptionsInput from '@/Components/ContentLibrary/OptionsInput.vue';
 import AnswerKeyPicker from '@/Components/ContentLibrary/AnswerKeyPicker.vue';
 import { IconInfoCircle } from '@tabler/icons-vue';
 import { computed } from 'vue';
-import { SKILL_OPTIONS, skillLabel, materialOfSkill } from '@/constants/skills';
+import { materialOfSkill } from '@/constants/skills';
 
 const props = defineProps({
     question: { type: Object, required: true },
@@ -20,7 +20,7 @@ const optionKeys = ['A', 'B', 'C', 'D'];
 
 const form = useForm({
     question_bank_id: props.question.question_bank_id || '',
-    skill: props.question.skill || '',
+    skill_id: props.question.skill_id || '',
     skill_part_id: props.question.skill_part_id || '',
     passage_id: props.question.passage_id || null,
     question_text: props.question.question_text || '',
@@ -31,7 +31,11 @@ const form = useForm({
     correct_answer: props.question.correct_answer || '',
 });
 
-const isMaterialAudio = computed(() => materialOfSkill(form.skill) === 'audio');
+function skillCodeById(skillId) {
+    return props.skillOptions.find(s => String(s.value) === String(skillId))?.code || '';
+}
+
+const isMaterialAudio = computed(() => materialOfSkill(skillCodeById(form.skill_id)) === 'audio');
 
 const selectedPassage = computed(() =>
     props.passages.find((p) => String(p.id) === String(form.passage_id)) || null,
@@ -39,7 +43,7 @@ const selectedPassage = computed(() =>
 
 const partsForSelectedSkill = computed(() =>
     props.parts.filter((p) =>
-        String(p.skill) === String(form.skill) &&
+        String(p.skill_id) === String(form.skill_id) &&
         String(p.question_bank_id) === String(form.question_bank_id),
     ),
 );
@@ -50,7 +54,7 @@ function onSkillChange() {
 
 const indexUrl = computed(() => route('content-library.index', {
     question_bank_id: props.question.question_bank_id,
-    skill: props.question.skill,
+    skill_id: props.question.skill_id,
 }));
 
 function submit() {
@@ -66,7 +70,7 @@ function submit() {
             <div class="bg-surface-white rounded-3xl p-8 shadow-soft border border-outline-variant/30">
                 <div class="mb-6">
                     <h2 class="text-headline-md font-bold text-primary">Edit Soal</h2>
-                    <p class="text-text-muted text-text-body text-body-md mt-1">Pilihan Ganda — {{ skillLabel(question.skill) }}</p>
+                    <p class="text-text-muted text-text-body text-body-md mt-1">Pilihan Ganda — {{ skillCodeById(form.skill_id) || 'Unknown' }}</p>
                 </div>
                 <form @submit.prevent="submit" class="space-y-6">
                     <div class="grid grid-cols-2 gap-4">
@@ -82,8 +86,8 @@ function submit() {
                         </div>
                         <div>
                             <DropDown
-                                v-model="form.skill"
-                                :options="SKILL_OPTIONS"
+                                v-model="form.skill_id"
+                                :options="skillOptions"
                                 label="Skill *"
                                 placeholder="Pilih Skill"
                                 option-label="label"

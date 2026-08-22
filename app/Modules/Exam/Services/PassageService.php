@@ -2,11 +2,12 @@
 
 namespace App\Modules\Exam\Services;
 
-use App\Enums\SkillCode;
 use App\Models\Passage;
+use App\Models\Skill;
 use App\Modules\Exam\Repositories\Contracts\PassageRepositoryInterface;
 use App\Modules\Exam\Repositories\Contracts\QuestionBankRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\SkillPartRepositoryInterface;
+use App\Modules\MasterData\Repositories\Contracts\SkillRepositoryInterface;
 use App\Services\AudioCompressionService;
 use App\Services\ImageCompressionService;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class PassageService
     public function __construct(
         private PassageRepositoryInterface $passages,
         private QuestionBankRepositoryInterface $questionBanks,
+        private SkillRepositoryInterface $skills,
         private SkillPartRepositoryInterface $skillParts,
         private AudioCompressionService $audioCompression,
         private ImageCompressionService $imageCompression,
@@ -28,7 +30,9 @@ class PassageService
         return [
             'passages' => $this->passages->paginateWithCounts(),
             'questionBanks' => $this->questionBanks->allActiveWithExamTypeOrdered(),
-            'skillOptions' => SkillCode::options(),
+            'skillOptions' => $this->skills->allActiveOrdered()
+                ->map(fn (Skill $skill) => ['value' => $skill->id, 'label' => $skill->name, 'code' => $skill->code])
+                ->toArray(),
             'parts' => $this->skillParts->allActiveOrdered(),
         ];
     }

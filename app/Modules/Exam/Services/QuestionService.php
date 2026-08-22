@@ -2,7 +2,6 @@
 
 namespace App\Modules\Exam\Services;
 
-use App\Enums\SkillCode;
 use App\Imports\QuestionsImport;
 use App\Models\Passage;
 use App\Models\Question;
@@ -12,6 +11,7 @@ use App\Modules\Exam\Repositories\Contracts\QuestionBankRepositoryInterface;
 use App\Modules\Exam\Repositories\Contracts\QuestionRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\ExamTypeRepositoryInterface;
 use App\Modules\MasterData\Repositories\Contracts\SkillPartRepositoryInterface;
+use App\Modules\MasterData\Repositories\Contracts\SkillRepositoryInterface;
 use App\Services\AudioCompressionService;
 use App\Services\ImageCompressionService;
 use Illuminate\Database\Eloquent\Collection;
@@ -31,6 +31,7 @@ class QuestionService
         private QuestionRepositoryInterface $questions,
         private QuestionBankRepositoryInterface $questionBanks,
         private PassageRepositoryInterface $passages,
+        private SkillRepositoryInterface $skills,
         private SkillPartRepositoryInterface $skillParts,
         private ExamTypeRepositoryInterface $examTypes,
         private AudioCompressionService $audioCompression,
@@ -42,11 +43,18 @@ class QuestionService
         return self::STATUSES;
     }
 
+    private function skillOptions(): array
+    {
+        return $this->skills->allActiveOrdered()
+            ->map(fn (Skill $skill) => ['value' => $skill->id, 'label' => $skill->name, 'code' => $skill->code])
+            ->toArray();
+    }
+
     public function createData(int $preselectedBankId, array $filters): array
     {
         return [
             'questionBanks' => $this->questionBanks->allActiveOrdered(),
-            'skillOptions' => SkillCode::options(),
+            'skillOptions' => $this->skillOptions(),
             'parts' => $this->skillParts->allActiveOrdered(),
             'preselectedBankId' => $preselectedBankId > 0 && $this->questionBanks->existsActive($preselectedBankId)
                 ? $preselectedBankId
@@ -60,7 +68,7 @@ class QuestionService
         return [
             'question' => $this->questions->findWithRelations($question->id),
             'questionBanks' => $this->questionBanks->allActiveOrdered(),
-            'skillOptions' => SkillCode::options(),
+            'skillOptions' => $this->skillOptions(),
             'parts' => $this->skillParts->allActiveOrdered(),
             'passages' => $this->passages->allOrdered(),
         ];
@@ -78,7 +86,7 @@ class QuestionService
             'questions' => $questions,
             'examTypes' => $this->examTypes->allActiveOrdered(),
             'questionBanks' => $this->questionBanks->allActiveWithExamTypeOrdered(),
-            'skillOptions' => SkillCode::options(),
+            'skillOptions' => $this->skillOptions(),
             'parts' => $this->skillParts->allActiveOrdered(),
             'passages' => $this->passages->allOrdered(),
             'statuses' => self::STATUSES,

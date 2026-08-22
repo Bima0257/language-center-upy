@@ -2,7 +2,6 @@
 
 namespace App\Modules\Scoring\Actions;
 
-use App\Enums\SkillCode;
 use App\Models\ExamSession;
 use App\Models\Question;
 use App\Modules\Scoring\Services\ScoreConversionService;
@@ -20,7 +19,7 @@ class AutoScoreReading
         $answers = $this->answerRepo->getBySession($sessionId);
         $session = ExamSession::findOrFail($sessionId);
 
-        $readingQuestions = Question::where('skill', SkillCode::READING)
+        $readingQuestions = Question::whereHas('skill', fn ($q) => $q->where('code', 'reading'))
             ->whereIn('id', $answers->pluck('question_id'))
             ->get();
 

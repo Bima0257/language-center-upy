@@ -121,7 +121,7 @@ class MasterDataService
         return [
             'parts' => $bankId !== null ? $parts->where('question_bank_id', $bankId)->values() : $parts,
             'questionBanks' => $this->questionBanks->allActiveOrdered(),
-            'skillOptions' => $this->skills->allActiveOrdered()->map(fn (Skill $skill) => ['value' => $skill->id, 'label' => $skill->name])->toArray(),
+            'skillOptions' => $this->skills->allActiveOrdered()->map(fn (Skill $skill) => ['value' => $skill->id, 'label' => $skill->name, 'code' => $skill->code])->toArray(),
         ];
     }
 

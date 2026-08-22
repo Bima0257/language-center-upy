@@ -108,7 +108,7 @@ class ExamService
 
         return [
             'exam' => $exam,
-            'skillOptions' => $this->skills->allActiveOrdered()->map(fn (Skill $skill) => ['value' => $skill->id, 'label' => $skill->name])->toArray(),
+            'skillOptions' => $this->skills->allActiveOrdered()->map(fn (Skill $skill) => ['value' => $skill->id, 'label' => $skill->name, 'code' => $skill->code])->toArray(),
             'parts' => $this->skillParts->allActiveOrdered(),
             'questionBanks' => $this->questionBanks->allActiveOrdered(),
             'sectionQuestions' => $this->sectionRepo->questionsGroupedBySection($sectionIds),
@@ -130,7 +130,7 @@ class ExamService
         }
 
         return [
-            'skillOptions' => $this->skills->allActiveOrdered()->map(fn (Skill $skill) => ['value' => $skill->id, 'label' => $skill->name])->toArray(),
+            'skillOptions' => $this->skills->allActiveOrdered()->map(fn (Skill $skill) => ['value' => $skill->id, 'label' => $skill->name, 'code' => $skill->code])->toArray(),
             'parts' => $this->skillParts->allActiveOrdered(),
             'banksBySkill' => $banksBySkill,
         ];

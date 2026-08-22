@@ -31,9 +31,9 @@ const globalSkill = ref('');
 const globalPart = ref('');
 const perQuestionSkill = ref(false);
 
-function partsForSkill(skill) {
+function partsForSkill(skillId) {
     return props.parts.filter(p =>
-        String(p.skill) === String(skill) &&
+        String(p.skill_id) === String(skillId) &&
         String(p.question_bank_id) === String(form.question_bank_id),
     );
 }
@@ -42,11 +42,15 @@ function globalParts() {
     return partsForSkill(globalSkill.value);
 }
 
-const isAudioQuestion = (q) => materialOfSkill(q.skill) === 'audio';
+function skillCodeById(skillId) {
+    return props.skillOptions.find(s => String(s.value) === String(skillId))?.code || '';
+}
+
+const isAudioQuestion = (q) => materialOfSkill(skillCodeById(q.skill)) === 'audio';
 
 // Passage otomatis audio jika ada soal listening (mode global via globalSkill, mode per-soal via soal)
 const hasListeningQuestion = computed(() => {
-    if (!perQuestionSkill.value) return materialOfSkill(globalSkill.value) === 'audio';
+    if (!perQuestionSkill.value) return materialOfSkill(skillCodeById(globalSkill.value)) === 'audio';
     return form.questions.some(isAudioQuestion);
 });
 
@@ -94,7 +98,7 @@ watch(globalSkill, (skill) => {
         q.skill_part_id = '';
     }
 
-    if (materialOfSkill(skill) === 'audio') {
+    if (materialOfSkill(skillCodeById(skill)) === 'audio') {
         passageType.value = 'audio';
         form.new_passage_type = 'audio';
     }
@@ -127,7 +131,7 @@ watch(globalPart, (value) => {
 });
 
 watch(passageMode, (mode) => {
-    if (mode === 'new' && materialOfSkill(globalSkill.value) === 'audio') {
+    if (mode === 'new' && materialOfSkill(skillCodeById(globalSkill.value)) === 'audio') {
         passageType.value = 'audio';
         form.new_passage_type = 'audio';
     }
