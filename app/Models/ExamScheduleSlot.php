@@ -62,11 +62,12 @@ class ExamScheduleSlot extends Model
         }
 
         $now = now()->format('H:i');
-        $lateDeadline = Carbon::createFromFormat('H:i', $this->start_time)
+        $start = substr((string) $this->start_time, 0, 5);
+        $lateDeadline = Carbon::createFromFormat('H:i', $start)
             ->addMinutes($this->late_tolerance_minutes)
             ->format('H:i');
 
-        if ($now < substr($this->start_time, 0, 5) || $now > $lateDeadline) {
+        if ($now < $start || $now > $lateDeadline) {
             return false;
         }
 
