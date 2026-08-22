@@ -9,11 +9,16 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VerificationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MediaController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+Route::get('/media/{path}', [MediaController::class, 'serve'])
+    ->where('path', '.*')
+    ->name('media.serve');
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [

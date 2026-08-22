@@ -88,12 +88,12 @@ const showSubmitConfirm = ref(false);
 
 const currentAudioSrc = computed(() => {
     const path = currentQuestion.value?.passage?.audio_url;
-    return path ? '/storage/' + path : null;
+    return path ? '/media/' + path : null;
 });
 
 const currentImageSrc = computed(() => {
     const path = currentQuestion.value?.passage?.image_url;
-    return path ? '/storage/' + path : null;
+    return path ? '/media/' + path : null;
 });
 
 const currentImageLoading = useMediaLoad(currentImageSrc);

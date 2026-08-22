@@ -29,7 +29,7 @@ const imageLoading = useMediaLoad(() => props.passage.image_url);
         >
             <audio
                 controls
-                :src="'/storage/' + passage.audio_url"
+                :src="'/media/' + passage.audio_url"
                 class="w-full max-w-md h-9"
                 @load="audioLoading.onLoad()"
                 @error="audioLoading.onError()"
@@ -46,7 +46,7 @@ const imageLoading = useMediaLoad(() => props.passage.image_url);
             skeleton-class="h-44 rounded-xl"
         >
             <img
-                :src="'/storage/' + passage.image_url"
+                :src="'/media/' + passage.image_url"
                 class="max-h-44 rounded-xl border border-outline-variant/30 object-contain"
                 @load="imageLoading.onLoad()"
                 @error="imageLoading.onError()"
@@ -79,7 +79,7 @@ const imageLoading = useMediaLoad(() => props.passage.image_url);
                     skeleton-class="h-8 max-w-xs"
                 >
                     <audio
-                        :src="'/storage/' + passage.audio_url"
+                        :src="'/media/' + passage.audio_url"
                         controls
                         class="h-8 w-full max-w-xs"
                         preload="none"
@@ -98,7 +98,7 @@ const imageLoading = useMediaLoad(() => props.passage.image_url);
                     skeleton-class="h-12 rounded-lg"
                 >
                     <img
-                        :src="'/storage/' + passage.image_url"
+                        :src="'/media/' + passage.image_url"
                         class="h-12 rounded-lg object-cover"
                         :alt="passage.title"
                         @load="imageLoading.onLoad()"

@@ -129,7 +129,7 @@ const passageTypeOptions = [
                         label="File Audio (mp3/wav/m4a, max 50MB)"
                         accept=".mp3,.wav,.ogg,.m4a"
                         media-type="audio"
-                        :preview-url="group.passage.audio_url ? '/storage/' + group.passage.audio_url : null"
+                        :preview-url="group.passage.audio_url ? '/media/' + group.passage.audio_url : null"
                         :error="passageForm.errors.audio_file"
                     />
                 </div>
@@ -140,7 +140,7 @@ const passageTypeOptions = [
                         label="File Gambar (jpg/png/webp, max 20MB, otomatis dikompres)"
                         accept=".jpg,.jpeg,.png,.webp"
                         media-type="image"
-                        :preview-url="group.passage.image_url ? '/storage/' + group.passage.image_url : null"
+                        :preview-url="group.passage.image_url ? '/media/' + group.passage.image_url : null"
                         :error="passageForm.errors.image_file"
                     />
                 </div>

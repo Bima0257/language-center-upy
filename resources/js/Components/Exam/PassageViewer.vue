@@ -19,7 +19,7 @@ const imageLoading = useMediaLoad(() => props.passage.image_url);
                 skeleton-class="h-44 rounded-lg"
             >
                 <img
-                    :src="'/storage/' + passage.image_url"
+                    :src="'/media/' + passage.image_url"
                     class="w-full h-auto rounded-lg"
                     @load="imageLoading.onLoad()"
                     @error="imageLoading.onError()"

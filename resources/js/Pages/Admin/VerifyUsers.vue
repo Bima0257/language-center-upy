@@ -55,14 +55,14 @@ function revert(user) {
                             </td>
                             <td class="px-5 py-4">
                                 <a v-if="user.student_profile?.identity_photo"
-                                   :href="'/storage/' + user.student_profile.identity_photo" target="_blank"
+                                   :href="'/media/' + user.student_profile.identity_photo" target="_blank"
                                    class="block w-16 h-16 bg-surface-container-low rounded-lg overflow-hidden border border-outline-variant hover:opacity-80 transition-opacity">
                                     <BaseMediaLoader
                                         :loading="identityLoading.loading.value"
                                         media-type="image"
                                         skeleton-class="h-16 rounded-none border-0"
                                     >
-                                        <img :src="'/storage/' + user.student_profile.identity_photo"
+                                        <img :src="'/media/' + user.student_profile.identity_photo"
                                              class="w-full h-full object-cover"
                                              @load="identityLoading.onLoad()"
                                              @error="identityLoading.onError()" />
@@ -72,14 +72,14 @@ function revert(user) {
                             </td>
                             <td class="px-5 py-4">
                                 <a v-if="user.photo"
-                                   :href="'/storage/' + user.photo" target="_blank"
+                                   :href="'/media/' + user.photo" target="_blank"
                                    class="block w-16 h-16 bg-surface-container-low rounded-lg overflow-hidden border border-outline-variant hover:opacity-80 transition-opacity">
                                     <BaseMediaLoader
                                         :loading="photoLoading.loading.value"
                                         media-type="image"
                                         skeleton-class="h-16 rounded-none border-0"
                                     >
-                                        <img :src="'/storage/' + user.photo"
+                                        <img :src="'/media/' + user.photo"
                                              class="w-full h-full object-cover"
                                              @load="photoLoading.onLoad()"
                                              @error="photoLoading.onError()" />

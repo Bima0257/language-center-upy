@@ -22,11 +22,11 @@ const isMaterialAudio = computed(() => materialOfSkill(currentSkillCode.value) =
 const passage = computed(() => current.value?.passage || null);
 const audioSrc = computed(() => {
     const path = passage.value?.audio_url;
-    return path ? '/storage/' + path : null;
+    return path ? '/media/' + path : null;
 });
 const imageSrc = computed(() => {
     const path = passage.value?.image_url;
-    return path ? '/storage/' + path : null;
+    return path ? '/media/' + path : null;
 });
 
 const imageLoading = useMediaLoad(imageSrc);
@@ -101,7 +101,7 @@ function goBack() {
                                     skeleton-class="h-44 rounded-lg"
                                 >
                                     <img
-                                        :src="'/storage/' + passage.image_url"
+                                        :src="'/media/' + passage.image_url"
                                         class="w-full h-auto rounded-lg"
                                         @load="imageLoading.onLoad()"
                                         @error="imageLoading.onError()"

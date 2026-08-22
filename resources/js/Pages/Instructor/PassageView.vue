@@ -92,12 +92,12 @@ function closeForm() {
 
 const storedAudioPreview = computed(() => {
     if (form.audio_file) return null;
-    return editingPassage.value?.audio_url ? '/storage/' + editingPassage.value.audio_url : null;
+    return editingPassage.value?.audio_url ? '/media/' + editingPassage.value.audio_url : null;
 });
 
 const storedImagePreview = computed(() => {
     if (form.image_file) return null;
-    return editingPassage.value?.image_url ? '/storage/' + editingPassage.value.image_url : null;
+    return editingPassage.value?.image_url ? '/media/' + editingPassage.value.image_url : null;
 });
 
 watch(() => form.type, () => {
