@@ -55,10 +55,10 @@ function formatProperties(props) {
             <div class="relative flex-1">
                 <IconSearch class="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" :size="18" />
                 <input type="text" v-model="search" @keyup.enter="doSearch" placeholder="Cari aktivitas..."
-                    class="w-full pl-11 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                    class="w-full pl-11 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
             </div>
             <select v-model="eventFilter" @change="doSearch"
-                class="px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
+                class="px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                 <option value="">Semua Event</option>
                 <option v-for="e in events" :key="e" :value="e">{{ eventLabel(e) }}</option>
             </select>

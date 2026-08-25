@@ -92,10 +92,23 @@ class ExamSessionController extends Controller
 
     public function start(ExamScheduleSlot $slot): RedirectResponse
     {
+        $validated = request()->validate([
+            'device_type' => ['required', 'in:desktop,mobile,tablet'],
+            'device_user_agent' => ['required', 'string', 'max:1000'],
+            'selfie' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+        ]);
+
+        if (in_array($validated['device_type'], ['mobile', 'tablet'])) {
+            return back()->with('error', 'Ujian hanya dapat diakses dari laptop atau komputer. HP dan tablet tidak diperbolehkan.');
+        }
+
         try {
             $result = $this->startExamSession->execute(
                 userId: auth()->id(),
                 slotId: $slot->id,
+                deviceType: $validated['device_type'],
+                deviceUserAgent: $validated['device_user_agent'],
+                selfie: request()->file('selfie'),
             );
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());

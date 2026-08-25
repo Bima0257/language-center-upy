@@ -2,17 +2,20 @@
 
 namespace Database\Seeders;
 
+use App\Models\Department;
 use App\Models\Exam;
 use App\Models\ExamSchedule;
 use App\Models\ExamScheduleSlot;
 use App\Models\ExamSection;
 use App\Models\ExamSession;
 use App\Models\ExamType;
+use App\Models\Faculty;
 use App\Models\Passage;
 use App\Models\Question;
 use App\Models\QuestionBank;
 use App\Models\Skill;
 use App\Models\SkillPart;
+use App\Models\StudentProfile;
 use App\Models\User;
 use App\Models\ViolationLog;
 use Illuminate\Database\Seeder;
@@ -205,127 +208,154 @@ class ExamSeeder extends Seeder
             ]);
         }
 
-        $student = User::role('student')->first();
-
-        if ($student) {
-            $schedule = ExamSchedule::create([
-                'exam_id' => $exam->id,
-                'title' => 'Gelombang Demo — Agustus 2026',
-                'start_date' => now()->subDay(),
-                'end_date' => now()->addDay(),
+        $demoStudent = User::firstOrCreate(
+            ['email' => 'demo-peserta@toefl.test'],
+            [
+                'name' => 'Peserta Demo Proktor',
+                'password' => bcrypt('password'),
+                'email_verified_at' => now(),
                 'is_active' => true,
-            ]);
+            ]
+        );
+        $demoStudent->assignRole('student');
 
-            $slot = ExamScheduleSlot::create([
-                'exam_schedule_id' => $schedule->id,
-                'date' => now()->toDateString(),
-                'start_time' => now()->subHour()->format('H:i'),
-                'end_time' => now()->addHours(2)->format('H:i'),
-                'late_tolerance_minutes' => 15,
-                'max_participants' => 30,
-                'is_active' => true,
-            ]);
+        $fkip = Faculty::where('code', 'FKIP')->first();
+        $pbi = Department::where('code', 'PBI')->first();
+        $admin = User::where('email', 'admin@toefl.test')->first();
 
-            $activeSession = ExamSession::create([
-                'exam_schedule_slot_id' => $slot->id,
-                'user_id' => $student->id,
-                'status' => 'in_progress',
-                'started_at' => now()->subMinutes(25),
-                'current_section_id' => $reading->id,
-                'violation_strikes' => 1,
-            ]);
-
-            ViolationLog::create([
-                'exam_session_id' => $activeSession->id,
-                'type' => 'tab_switch',
-                'severity' => 'minor',
-                'description' => 'Peserta pindah tab ke aplikasi lain.',
-                'strike_count' => 1,
-            ]);
-
-            $schedule2 = ExamSchedule::create([
-                'exam_id' => $exam->id,
-                'title' => 'Gelombang Flagged — Agustus 2026',
-                'start_date' => now()->subDays(2),
-                'end_date' => now(),
-                'is_active' => true,
-            ]);
-
-            $slot2 = ExamScheduleSlot::create([
-                'exam_schedule_id' => $schedule2->id,
-                'date' => now()->subDay()->toDateString(),
-                'start_time' => '08:00',
-                'end_time' => '10:00',
-                'late_tolerance_minutes' => 15,
-                'max_participants' => 30,
-                'is_active' => true,
-            ]);
-
-            $flaggedSession = ExamSession::create([
-                'exam_schedule_slot_id' => $slot2->id,
-                'user_id' => $student->id,
-                'status' => 'terminated',
-                'started_at' => now()->subHours(2),
-                'terminated_at' => now()->subHour(),
-                'termination_reason' => '3 strikes violation',
-                'violation_strikes' => 3,
-                'is_flagged' => true,
-                'flag_reason' => 'Pelanggaran mencapai 3 strike.',
-            ]);
-
-            ViolationLog::create([
-                'exam_session_id' => $flaggedSession->id,
-                'type' => 'tab_switch',
-                'severity' => 'minor',
-                'description' => 'Peserta pindah tab — strike 1.',
-                'strike_count' => 1,
-            ]);
-
-            ViolationLog::create([
-                'exam_session_id' => $flaggedSession->id,
-                'type' => 'fullscreen_exit',
-                'severity' => 'minor',
-                'description' => 'Peserta keluar dari mode layar penuh — strike 2.',
-                'strike_count' => 2,
-            ]);
-
-            ViolationLog::create([
-                'exam_session_id' => $flaggedSession->id,
-                'type' => 'tab_switch',
-                'severity' => 'minor',
-                'description' => 'Peserta pindah tab kembali — strike 3. Sesi dihentikan otomatis.',
-                'strike_count' => 3,
-            ]);
-
-            $schedule3 = ExamSchedule::create([
-                'exam_id' => $exam->id,
-                'title' => 'Gelombang Submitted — Agustus 2026',
-                'start_date' => now()->subDays(3),
-                'end_date' => now()->subDays(2),
-                'is_active' => false,
-            ]);
-
-            $slot3 = ExamScheduleSlot::create([
-                'exam_schedule_id' => $schedule3->id,
-                'date' => now()->subDays(2)->toDateString(),
-                'start_time' => '08:00',
-                'end_time' => '10:00',
-                'late_tolerance_minutes' => 15,
-                'max_participants' => 30,
-                'is_active' => true,
-            ]);
-
-            ExamSession::create([
-                'exam_schedule_slot_id' => $slot3->id,
-                'user_id' => $student->id,
-                'status' => 'submitted',
-                'started_at' => now()->subDays(1),
-                'submitted_at' => now()->subDays(1)->addMinutes(35),
-                'violation_strikes' => 0,
-                'score_reading' => 22.5,
-                'score_listening' => 18.0,
-                'score_total' => 40.5,
-            ]);
+        if ($fkip && $pbi && $admin) {
+            StudentProfile::firstOrCreate(
+                ['user_id' => $demoStudent->id],
+                [
+                    'nim' => '2200010099',
+                    'faculty_id' => $fkip->id,
+                    'department_id' => $pbi->id,
+                    'batch_year' => 2022,
+                    'identity_photo' => null,
+                    'is_verified' => true,
+                    'verified_at' => now(),
+                    'verified_by' => $admin->id,
+                ]
+            );
         }
+
+        $schedule = ExamSchedule::create([
+            'exam_id' => $exam->id,
+            'title' => 'Gelombang Demo — Agustus 2026',
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addDay(),
+            'is_active' => true,
+        ]);
+
+        $slot = ExamScheduleSlot::create([
+            'exam_schedule_id' => $schedule->id,
+            'date' => now()->toDateString(),
+            'start_time' => now()->subHour()->format('H:i'),
+            'end_time' => now()->addHours(2)->format('H:i'),
+            'late_tolerance_minutes' => 15,
+            'max_participants' => 30,
+            'is_active' => true,
+        ]);
+
+        $activeSession = ExamSession::create([
+            'exam_schedule_slot_id' => $slot->id,
+            'user_id' => $demoStudent->id,
+            'status' => 'in_progress',
+            'started_at' => now()->subMinutes(25),
+            'current_section_id' => $reading->id,
+            'violation_strikes' => 1,
+        ]);
+
+        ViolationLog::create([
+            'exam_session_id' => $activeSession->id,
+            'type' => 'tab_switch',
+            'severity' => 'minor',
+            'description' => 'Peserta pindah tab ke aplikasi lain.',
+            'strike_count' => 1,
+        ]);
+
+        $schedule2 = ExamSchedule::create([
+            'exam_id' => $exam->id,
+            'title' => 'Gelombang Flagged — Agustus 2026',
+            'start_date' => now()->subDays(2),
+            'end_date' => now(),
+            'is_active' => true,
+        ]);
+
+        $slot2 = ExamScheduleSlot::create([
+            'exam_schedule_id' => $schedule2->id,
+            'date' => now()->subDay()->toDateString(),
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+            'late_tolerance_minutes' => 15,
+            'max_participants' => 30,
+            'is_active' => true,
+        ]);
+
+        $flaggedSession = ExamSession::create([
+            'exam_schedule_slot_id' => $slot2->id,
+            'user_id' => $demoStudent->id,
+            'status' => 'terminated',
+            'started_at' => now()->subHours(2),
+            'terminated_at' => now()->subHour(),
+            'termination_reason' => '3 strikes violation',
+            'violation_strikes' => 3,
+            'is_flagged' => true,
+            'flag_reason' => 'Pelanggaran mencapai 3 strike.',
+        ]);
+
+        ViolationLog::create([
+            'exam_session_id' => $flaggedSession->id,
+            'type' => 'tab_switch',
+            'severity' => 'minor',
+            'description' => 'Peserta pindah tab — strike 1.',
+            'strike_count' => 1,
+        ]);
+
+        ViolationLog::create([
+            'exam_session_id' => $flaggedSession->id,
+            'type' => 'fullscreen_exit',
+            'severity' => 'minor',
+            'description' => 'Peserta keluar dari mode layar penuh — strike 2.',
+            'strike_count' => 2,
+        ]);
+
+        ViolationLog::create([
+            'exam_session_id' => $flaggedSession->id,
+            'type' => 'tab_switch',
+            'severity' => 'minor',
+            'description' => 'Peserta pindah tab kembali — strike 3. Sesi dihentikan otomatis.',
+            'strike_count' => 3,
+        ]);
+
+        $schedule3 = ExamSchedule::create([
+            'exam_id' => $exam->id,
+            'title' => 'Gelombang Submitted — Agustus 2026',
+            'start_date' => now()->subDays(3),
+            'end_date' => now()->subDays(2),
+            'is_active' => false,
+        ]);
+
+        $slot3 = ExamScheduleSlot::create([
+            'exam_schedule_id' => $schedule3->id,
+            'date' => now()->subDays(2)->toDateString(),
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+            'late_tolerance_minutes' => 15,
+            'max_participants' => 30,
+            'is_active' => true,
+        ]);
+
+        ExamSession::create([
+            'exam_schedule_slot_id' => $slot3->id,
+            'user_id' => $demoStudent->id,
+            'status' => 'submitted',
+            'started_at' => now()->subDays(1),
+            'submitted_at' => now()->subDays(1)->addMinutes(35),
+            'violation_strikes' => 0,
+            'score_reading' => 22.5,
+            'score_listening' => 18.0,
+            'score_total' => 40.5,
+        ]);
     }
 }

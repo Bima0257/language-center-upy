@@ -79,15 +79,15 @@ async function resetPassword(user) {
             <div class="relative flex-1">
                 <IconSearch class="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" :size="18" />
                 <input type="text" v-model="search" @keyup.enter="doSearch" placeholder="Cari nama atau email..."
-                    class="w-full pl-11 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary" />
+                    class="w-full pl-11 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
             </div>
             <select v-model="roleFilter" @change="doSearch"
-                class="px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
+                class="px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                 <option value="">Semua Role</option>
                 <option v-for="r in roles" :key="r" :value="r">{{ r.charAt(0).toUpperCase() + r.slice(1) }}</option>
             </select>
             <select v-model="activeFilter" @change="doSearch"
-                class="px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
+                class="px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                 <option value="">Semua Status</option>
                 <option value="1">Aktif</option>
                 <option value="0">Nonaktif</option>
@@ -185,7 +185,7 @@ async function resetPassword(user) {
                     </div>
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-1.5">Role</label>
-                        <select v-model="editForm.role" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary">
+                        <select v-model="editForm.role" class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary">
                             <option v-for="r in roles" :key="r" :value="r">{{ r.charAt(0).toUpperCase() + r.slice(1) }}</option>
                         </select>
                     </div>

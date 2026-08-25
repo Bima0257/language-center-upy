@@ -33,6 +33,10 @@ use Illuminate\Support\Carbon;
  * @property bool $is_flagged
  * @property string|null $flag_reason
  * @property int $violation_strikes
+ * @property string|null $device_type
+ * @property string|null $device_user_agent
+ * @property string|null $selfie_path
+ * @property Carbon|null $selfie_taken_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read ExamScheduleSlot|null $slot
@@ -49,6 +53,7 @@ use Illuminate\Support\Carbon;
     'review_status', 'review_note', 'reviewed_by', 'reviewed_at',
     'score_reading', 'score_listening', 'score_speaking', 'score_writing',
     'score_total', 'is_flagged', 'flag_reason', 'violation_strikes',
+    'device_type', 'device_user_agent', 'selfie_path', 'selfie_taken_at',
 ])]
 class ExamSession extends Model
 {
@@ -63,6 +68,7 @@ class ExamSession extends Model
             'reviewed_at' => 'datetime',
             'is_flagged' => 'boolean',
             'violation_strikes' => 'integer',
+            'selfie_taken_at' => 'datetime',
             'score_reading' => 'decimal:1',
             'score_listening' => 'decimal:1',
             'score_speaking' => 'decimal:1',

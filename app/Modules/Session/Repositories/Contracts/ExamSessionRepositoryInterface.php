@@ -17,6 +17,8 @@ interface ExamSessionRepositoryInterface
 
     public function hasActiveSession(int $userId): bool;
 
+    public function findActiveSession(int $userId): ?ExamSession;
+
     public function hasSessionForSchedule(int $userId, int $scheduleId): bool;
 
     public function getActiveSessionsBySchedule(int $scheduleId): Collection;

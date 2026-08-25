@@ -99,6 +99,26 @@ const reviewStatusColors = {
                             <p class="text-primary">{{ session.submitted_at ? new Date(session.submitted_at).toLocaleString('id-ID') : '-' }}</p>
                         </div>
                     </div>
+
+                    <!-- FOTO SELFIE + INFO PERANGKAT -->
+                    <div v-if="session.selfie_path || session.device_type" class="mt-4 pt-4 border-t border-outline-variant/30">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div v-if="session.device_type">
+                                <p class="text-text-muted text-label-md">Perangkat</p>
+                                <p class="text-primary font-medium capitalize">{{ session.device_type }}</p>
+                            </div>
+                            <div v-if="session.selfie_taken_at">
+                                <p class="text-text-muted text-label-md">Foto Diambil</p>
+                                <p class="text-primary">{{ new Date(session.selfie_taken_at).toLocaleString('id-ID') }}</p>
+                            </div>
+                        </div>
+                        <div v-if="session.selfie_path" class="mt-3">
+                            <p class="text-text-muted text-label-md mb-2">Foto Selfie</p>
+                            <img :src="'/media/' + session.selfie_path"
+                                 class="w-32 h-32 object-cover rounded-2xl border border-outline-variant/30"
+                                 alt="Selfie peserta ujian" />
+                        </div>
+                    </div>
                 </div>
 
                 <BaseCard v-if="session.score_total !== null">

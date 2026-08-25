@@ -39,6 +39,14 @@ class ExamSessionRepository implements ExamSessionRepositoryInterface
             ->exists();
     }
 
+    public function findActiveSession(int $userId): ?ExamSession
+    {
+        return ExamSession::where('user_id', $userId)
+            ->whereIn('status', [SessionStatus::PENDING, SessionStatus::IN_PROGRESS])
+            ->latest('updated_at')
+            ->first();
+    }
+
     public function hasSessionForSchedule(int $userId, int $scheduleId): bool
     {
         return ExamSession::where('user_id', $userId)
