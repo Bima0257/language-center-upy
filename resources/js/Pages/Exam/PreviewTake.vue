@@ -506,6 +506,9 @@ const seconds = ref(37);
                                 <span
                                     class="text-text-muted font-label-md text-label-md uppercase tracking-wider"
                                 >SOAL {{ globalNumber }} DARI {{ totalAllQuestions }}</span>
+                                <span
+                                    class="ml-auto shrink-0 text-label-md text-text-muted"
+                                >Terjawab {{ answeredCount }}/{{ totalAllQuestions }}</span>
                             </div>
                             <h2
                                 class="font-headline-md text-headline-md text-text-heading mb-10 leading-snug"
@@ -513,14 +516,14 @@ const seconds = ref(37);
                                 {{ currentQuestion?.question_text }}
                             </h2>
                             <div
-                                class="space-y-4"
+                                class="space-y-2.5"
                                 v-if="currentQuestion"
                             >
                                 <button
                                     v-for="key in optionKeys"
                                     :key="key"
                                     @click="selectAnswer(key)"
-                                    class="option-card w-full flex items-start gap-4 p-5 border-2 rounded-2xl text-left transition-all duration-200 group cursor-pointer"
+                                    class="option-card w-full flex items-start gap-3 px-4 py-3 border rounded-xl text-left transition-all duration-200 group cursor-pointer"
                                     :class="
                                         answers[currentQuestion.id] === key
                                             ? 'option-selected'
@@ -528,7 +531,7 @@ const seconds = ref(37);
                                     "
                                 >
                                     <div
-                                        class="w-8 h-8 rounded-full border-2 flex-shrink-0 flex items-center justify-center font-bold transition-colors"
+                                        class="w-7 h-7 rounded-full border flex-shrink-0 flex items-center justify-center font-semibold text-[13px] transition-colors"
                                         :class="
                                             answers[currentQuestion.id] === key
                                                 ? 'bg-secondary-container border-secondary text-white'
@@ -539,7 +542,7 @@ const seconds = ref(37);
                                     </div>
                                     <span
                                         v-if="optionText(key)"
-                                        class="font-body-md text-title-lg text-on-surface-variant leading-tight pt-1"
+                                        class="font-body-md text-[15px] text-on-surface-variant leading-relaxed"
                                     >
                                         {{ optionText(key) }}
                                     </span>
@@ -550,66 +553,60 @@ const seconds = ref(37);
 
                     <!-- NAVIGASI PER PART -->
                     <div
-                        class="shrink-0 border-t border-outline-variant bg-surface-container-low/60 px-4 py-3 space-y-2.5"
+                        class="shrink-0 border-t border-outline-variant bg-surface-container-low/60 px-4 py-3.5 min-h-[68px] flex items-center gap-2"
                     >
-                        <div class="flex items-center justify-center gap-1.5">
-                            <button
-                                @click="goToPrev"
-                                :disabled="!canGoPrev()"
-                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                                <IconArrowLeft :size="14" /> Prev
-                            </button>
+                        <button
+                            @click="goToPrev"
+                            :disabled="!canGoPrev()"
+                            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            <IconArrowLeft :size="14" /> Prev
+                        </button>
 
-                            <TransitionGroup
-                                :name="stripAnim"
-                                tag="div"
-                                class="relative flex items-center gap-1 min-h-[28px]"
-                                @before-leave="onBeforeLeaveStrip"
+                        <TransitionGroup
+                            :name="stripAnim"
+                            tag="div"
+                            class="relative flex items-center gap-1 min-h-[28px]"
+                            @before-leave="onBeforeLeaveStrip"
+                        >
+                            <button
+                                v-for="i in visibleNumbers"
+                                :key="currentBlockQuestions[i].id"
+                                @click="subIndex = i"
+                                class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-[12px] font-bold transition-all duration-150 cursor-pointer"
+                                :class="[
+                                    i === subIndex
+                                        ? 'bg-secondary text-white ring-2 ring-secondary/30 scale-105 shadow-sm'
+                                        : answers[currentBlockQuestions[i].id] !== undefined
+                                            ? 'bg-secondary/10 text-secondary border border-secondary/40 hover:bg-secondary/20'
+                                            : 'bg-surface-white text-text-muted border border-outline-variant/60 hover:bg-surface-container-highest'
+                                ]"
                             >
-                                <button
-                                    v-for="i in visibleNumbers"
-                                    :key="currentBlockQuestions[i].id"
-                                    @click="subIndex = i"
-                                    class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-[12px] font-bold transition-all duration-150 cursor-pointer"
-                                    :class="[
-                                        i === subIndex
-                                            ? 'bg-secondary text-white ring-2 ring-secondary/30 scale-105 shadow-sm'
-                                            : answers[currentBlockQuestions[i].id] !== undefined
-                                                ? 'bg-secondary/10 text-secondary border border-secondary/40 hover:bg-secondary/20'
-                                                : 'bg-surface-white text-text-muted border border-outline-variant/60 hover:bg-surface-container-highest'
-                                    ]"
-                                >
-                                    {{ currentBlock.startNumber + i }}
-                                </button>
-                            </TransitionGroup>
+                                {{ currentBlock.startNumber + i }}
+                            </button>
+                        </TransitionGroup>
 
-                            <button
-                                v-if="!isLastStep()"
-                                @click="goToNext"
-                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-primary-container text-white hover:bg-primary transition-all active:scale-95 duration-150"
-                            >
-                                Next <IconArrowRight :size="14" />
-                            </button>
-                            <button
-                                v-else
-                                @click="goToNext"
-                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-secondary text-white hover:bg-secondary/90 transition-all shadow-sm active:scale-95 duration-150"
-                            >
-                                Selesai
-                            </button>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-label-md text-text-muted">
-                                Terjawab {{ answeredCount }}/{{ totalAllQuestions }}
-                            </span>
-                            <button
-                                @click="showGridModal = true"
-                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-label-md font-semibold border border-outline-variant bg-surface-white text-text-heading hover:bg-surface-container-low transition-all"
-                            >
-                                <IconMap :size="14" /> Peta Soal
-                            </button>
-                        </div>
+                        <button
+                            v-if="!isLastStep()"
+                            @click="goToNext"
+                            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-primary-container text-white hover:bg-primary transition-all active:scale-95 duration-150"
+                        >
+                            Next <IconArrowRight :size="14" />
+                        </button>
+                        <button
+                            v-else
+                            @click="goToNext"
+                            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-secondary text-white hover:bg-secondary/90 transition-all active:scale-95 duration-150"
+                        >
+                            Selesai
+                        </button>
+
+                        <button
+                            @click="showGridModal = true"
+                            class="ml-auto shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold border border-outline-variant bg-surface-white text-text-heading hover:bg-surface-container-low transition-all"
+                        >
+                            <IconMap :size="14" /> Peta Soal
+                        </button>
                     </div>
                 </section>
             </template>
@@ -681,6 +678,9 @@ const seconds = ref(37);
                                 <span
                                     class="text-text-muted font-label-md text-label-md uppercase tracking-wider"
                                 >SOAL {{ globalNumber }} DARI {{ totalAllQuestions }}</span>
+                                <span
+                                    class="ml-auto shrink-0 text-label-md text-text-muted"
+                                >Terjawab {{ answeredCount }}/{{ totalAllQuestions }}</span>
                             </div>
                             <h2
                                 v-if="currentQuestion?.question_text"
@@ -689,14 +689,14 @@ const seconds = ref(37);
                                 {{ currentQuestion.question_text }}
                             </h2>
                             <div
-                                class="space-y-4"
+                                class="space-y-2.5"
                                 v-if="currentQuestion"
                             >
                                 <button
                                     v-for="key in optionKeys"
                                     :key="key"
                                     @click="selectAnswer(key)"
-                                    class="option-card w-full flex items-start gap-4 p-5 border-2 rounded-2xl text-left transition-all duration-200 group cursor-pointer"
+                                    class="option-card w-full flex items-start gap-3 px-4 py-3 border rounded-xl text-left transition-all duration-200 group cursor-pointer"
                                     :class="
                                         answers[currentQuestion.id] === key
                                             ? 'option-selected'
@@ -704,7 +704,7 @@ const seconds = ref(37);
                                     "
                                 >
                                     <div
-                                        class="w-8 h-8 rounded-full border-2 flex-shrink-0 flex items-center justify-center font-bold transition-colors"
+                                        class="w-7 h-7 rounded-full border flex-shrink-0 flex items-center justify-center font-semibold text-[13px] transition-colors"
                                         :class="
                                             answers[currentQuestion.id] === key
                                                 ? 'bg-secondary-container border-secondary text-white'
@@ -715,7 +715,7 @@ const seconds = ref(37);
                                     </div>
                                     <span
                                         v-if="optionText(key)"
-                                        class="font-body-md text-title-lg text-on-surface-variant leading-tight pt-1"
+                                        class="font-body-md text-[15px] text-on-surface-variant leading-relaxed"
                                     >
                                         {{ optionText(key) }}
                                     </span>
@@ -726,66 +726,60 @@ const seconds = ref(37);
 
                     <!-- NAVIGASI PER PART -->
                     <div
-                        class="shrink-0 border-t border-outline-variant bg-surface-container-low/60 px-4 py-3 space-y-2.5"
+                        class="shrink-0 border-t border-outline-variant bg-surface-container-low/60 px-4 py-3.5 min-h-[68px] flex items-center gap-2"
                     >
-                        <div class="flex items-center justify-center gap-1.5">
-                            <button
-                                @click="goToPrev"
-                                :disabled="!canGoPrev()"
-                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                                <IconArrowLeft :size="14" /> Prev
-                            </button>
+                        <button
+                            @click="goToPrev"
+                            :disabled="!canGoPrev()"
+                            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            <IconArrowLeft :size="14" /> Prev
+                        </button>
 
-                            <TransitionGroup
-                                :name="stripAnim"
-                                tag="div"
-                                class="relative flex items-center gap-1 min-h-[28px]"
-                                @before-leave="onBeforeLeaveStrip"
+                        <TransitionGroup
+                            :name="stripAnim"
+                            tag="div"
+                            class="relative flex items-center gap-1 min-h-[28px]"
+                            @before-leave="onBeforeLeaveStrip"
+                        >
+                            <button
+                                v-for="i in visibleNumbers"
+                                :key="currentBlockQuestions[i].id"
+                                @click="subIndex = i"
+                                class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-[12px] font-bold transition-all duration-150 cursor-pointer"
+                                :class="[
+                                    i === subIndex
+                                        ? 'bg-secondary text-white ring-2 ring-secondary/30 scale-105 shadow-sm'
+                                        : answers[currentBlockQuestions[i].id] !== undefined
+                                            ? 'bg-secondary/10 text-secondary border border-secondary/40 hover:bg-secondary/20'
+                                            : 'bg-surface-white text-text-muted border border-outline-variant/60 hover:bg-surface-container-highest'
+                                ]"
                             >
-                                <button
-                                    v-for="i in visibleNumbers"
-                                    :key="currentBlockQuestions[i].id"
-                                    @click="subIndex = i"
-                                    class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-[12px] font-bold transition-all duration-150 cursor-pointer"
-                                    :class="[
-                                        i === subIndex
-                                            ? 'bg-secondary text-white ring-2 ring-secondary/30 scale-105 shadow-sm'
-                                            : answers[currentBlockQuestions[i].id] !== undefined
-                                                ? 'bg-secondary/10 text-secondary border border-secondary/40 hover:bg-secondary/20'
-                                                : 'bg-surface-white text-text-muted border border-outline-variant/60 hover:bg-surface-container-highest'
-                                    ]"
-                                >
-                                    {{ currentBlock.startNumber + i }}
-                                </button>
-                            </TransitionGroup>
+                                {{ currentBlock.startNumber + i }}
+                            </button>
+                        </TransitionGroup>
 
-                            <button
-                                v-if="!isLastStep()"
-                                @click="goToNext"
-                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-primary-container text-white hover:bg-primary transition-all active:scale-95 duration-150"
-                            >
-                                Next <IconArrowRight :size="14" />
-                            </button>
-                            <button
-                                v-else
-                                @click="goToNext"
-                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-secondary text-white hover:bg-secondary/90 transition-all shadow-sm active:scale-95 duration-150"
-                            >
-                                Selesai
-                            </button>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-label-md text-text-muted">
-                                Terjawab {{ answeredCount }}/{{ totalAllQuestions }}
-                            </span>
-                            <button
-                                @click="showGridModal = true"
-                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-label-md font-semibold border border-outline-variant bg-surface-white text-text-heading hover:bg-surface-container-low transition-all"
-                            >
-                                <IconMap :size="14" /> Peta Soal
-                            </button>
-                        </div>
+                        <button
+                            v-if="!isLastStep()"
+                            @click="goToNext"
+                            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-primary-container text-white hover:bg-primary transition-all active:scale-95 duration-150"
+                        >
+                            Next <IconArrowRight :size="14" />
+                        </button>
+                        <button
+                            v-else
+                            @click="goToNext"
+                            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-secondary text-white hover:bg-secondary/90 transition-all active:scale-95 duration-150"
+                        >
+                            Selesai
+                        </button>
+
+                        <button
+                            @click="showGridModal = true"
+                            class="ml-auto shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold border border-outline-variant bg-surface-white text-text-heading hover:bg-surface-container-low transition-all"
+                        >
+                            <IconMap :size="14" /> Peta Soal
+                        </button>
                     </div>
                 </section>
             </template>
