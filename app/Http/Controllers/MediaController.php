@@ -15,10 +15,16 @@ class MediaController extends Controller
             abort(404);
         }
 
-        $root = rtrim($disk->path(''), '/\\');
+        $root = rtrim(str_replace('\\', '/', $disk->path('')), '/');
         $full = realpath($disk->path($path));
 
-        if ($full === false || strncmp($full, $root, strlen($root)) !== 0) {
+        if ($full === false) {
+            abort(404);
+        }
+
+        $full = str_replace('\\', '/', $full);
+
+        if (strncmp($full, $root, strlen($root)) !== 0) {
             abort(404);
         }
 
