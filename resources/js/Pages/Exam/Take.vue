@@ -3,7 +3,6 @@ import { Head } from "@inertiajs/vue3";
 import ExamLayout from "@/Layouts/ExamLayout.vue";
 import RichTextViewer from "@/Components/Shared/RichTextViewer.vue";
 import AudioPlayer from "@/Components/Exam/AudioPlayer.vue";
-import QuestionNavigator from "@/Components/Exam/QuestionNavigator.vue";
 import QuestionGridModal from "@/Components/Exam/QuestionGridModal.vue";
 import ViolationModal from "@/Components/Exam/ViolationModal.vue";
 import { useMediaLoad } from "@/Composables/useMediaLoad";
@@ -12,7 +11,7 @@ import { useExamTimer } from "@/Modules/ExamModule/Composables/useExamTimer.js";
 import { useExamSecurity } from "@/Modules/ExamModule/Composables/useExamSecurity.js";
 import { useAutoSave } from "@/Modules/ExamModule/Composables/useAutoSave.js";
 import { materialOfSkill, skillLabel } from "@/constants/skills";
-import { IconArrowLeft, IconArrowRight } from "@tabler/icons-vue";
+import { IconArrowLeft, IconArrowRight, IconMap } from "@tabler/icons-vue";
 import axios from "axios";
 
 const props = defineProps({
@@ -42,15 +41,66 @@ for (const a of sessionAnswers) {
     answers.value[a.question_id] = a.answer_text;
 }
 
-const answeredIds = computed(() => Object.keys(answers.value).map(Number));
-const answeredIndices = computed(() => {
-    return currentQuestions.value
-        .map((q, i) => (answers.value[q.id] !== undefined ? i : -1))
-        .filter((i) => i >= 0);
+const answeredCount = computed(() => Object.keys(answers.value).length);
+
+// ============================================================
+// FOOTER NUMBER STRIP (per section) — sliding window maks 5 nomor
+// ============================================================
+
+const WINDOW_SIZE = 5;
+
+const visibleNumbers = computed(() => {
+    const total = currentQuestions.value.length;
+    if (total <= WINDOW_SIZE) {
+        return Array.from({ length: total }, (_, i) => i);
+    }
+    const start = Math.max(
+        0,
+        Math.min(currentQuestionIndex.value - Math.floor(WINDOW_SIZE / 2), total - WINDOW_SIZE),
+    );
+    return Array.from({ length: WINDOW_SIZE }, (_, k) => start + k);
 });
 
-const answerByIndex = computed(() => {
-    return currentQuestions.value.map((q) => answers.value[q.id] || null);
+// Arah animasi strip: slide-next/prev saat maju/mundur 1 soal,
+// tanpa animasi untuk lompatan besar (mis. via Peta Soal).
+const stripAnim = ref("strip-none");
+const prevQuestionNumber = ref(null);
+
+watch(currentQuestionIndex, (value) => {
+    const prev = prevQuestionNumber.value;
+    prevQuestionNumber.value = value;
+    if (prev === null || Math.abs(value - prev) !== 1) {
+        stripAnim.value = "strip-none";
+        return;
+    }
+    stripAnim.value = value > prev ? "strip-next" : "strip-prev";
+});
+
+// Kunci posisi asli tombol yang keluar, agar tidak teleport
+// saat position:absolute diterapkan pada leave-active.
+function onBeforeLeaveStrip(el) {
+    el.style.left = `${el.offsetLeft}px`;
+    el.style.top = `${el.offsetTop}px`;
+}
+
+const mapGroups = computed(() => {
+    if (!currentQuestions.value.length) return [];
+    const skillName =
+        currentQuestions.value[0]?.skill?.name ||
+        partLabel.value ||
+        "Section";
+    return [
+        {
+            skill: { name: skillName },
+            part: { name: partLabel.value || "Soal" },
+            startNumber: 1,
+            count: currentQuestions.value.length,
+            questions: currentQuestions.value.map((q, i) => ({
+                id: q.id,
+                global_number: i + 1,
+            })),
+        },
+    ];
 });
 
 const elapsedSeconds = props.session.started_at
@@ -222,9 +272,9 @@ onUnmounted(() => {
             <template v-if="!isMaterialAudio">
                 <!-- LEFT PANE: PASSAGE -->
                 <section
-                    class="w-1/2 border-r border-outline-variant overflow-y-auto scroll-hide p-8 bg-surface-bright"
+                    class="w-3/5 border-r border-outline-variant overflow-y-auto scroll-hide p-8 bg-surface-bright"
                 >
-                    <div class="max-w-xl mx-auto">
+                    <div class="max-w-2xl mx-auto">
                         <div class="mb-8">
                             <span
                                 class="bg-pastel-blue text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
@@ -269,7 +319,7 @@ onUnmounted(() => {
                     </div>
                 </section>
                 <!-- RIGHT PANE: QUESTION -->
-                <section class="w-1/2 flex flex-col bg-surface-white">
+                <section class="w-2/5 flex flex-col bg-surface-white">
                     <div class="flex-1 overflow-y-auto p-8 scroll-hide">
                         <div class="max-w-lg mx-auto">
                             <div class="flex items-center gap-2 mb-8">
@@ -324,6 +374,93 @@ onUnmounted(() => {
                             </div>
                         </div>
                     </div>
+
+                    <!-- NAVIGASI PER SECTION -->
+                    <div
+                        class="shrink-0 border-t border-outline-variant bg-surface-container-low/60 px-4 py-3 space-y-2.5"
+                    >
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button
+                                @click="goToQuestion(currentQuestionIndex - 1)"
+                                :disabled="currentQuestionIndex === 0"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <IconArrowLeft :size="14" /> Prev
+                            </button>
+
+                            <TransitionGroup
+                                :name="stripAnim"
+                                tag="div"
+                                class="relative flex items-center gap-1 min-h-[28px]"
+                                @before-leave="onBeforeLeaveStrip"
+                            >
+                                <button
+                                    v-for="i in visibleNumbers"
+                                    :key="currentQuestions[i].id"
+                                    @click="goToQuestion(i)"
+                                    class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-[12px] font-bold transition-all duration-150 cursor-pointer"
+                                    :class="[
+                                        i === currentQuestionIndex
+                                            ? 'bg-secondary text-white ring-2 ring-secondary/30 scale-105 shadow-sm'
+                                            : answers[currentQuestions[i].id] !== undefined
+                                                ? 'bg-secondary/10 text-secondary border border-secondary/40 hover:bg-secondary/20'
+                                                : 'bg-surface-white text-text-muted border border-outline-variant/60 hover:bg-surface-container-highest'
+                                    ]"
+                                >
+                                    {{ i + 1 }}
+                                </button>
+                            </TransitionGroup>
+
+                            <button
+                                v-if="currentQuestionIndex < totalQuestions - 1"
+                                @click="goToQuestion(currentQuestionIndex + 1)"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-primary-container text-white hover:bg-primary transition-all active:scale-95 duration-150"
+                            >
+                                Next <IconArrowRight :size="14" />
+                            </button>
+                            <button
+                                v-else
+                                @click="showSubmitConfirm = true"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-secondary text-white hover:bg-secondary/90 transition-all shadow-sm active:scale-95 duration-150"
+                            >
+                                Kumpulkan
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between gap-2 min-w-0">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="text-label-md text-text-muted shrink-0">
+                                    Terjawab {{ answeredCount }}/{{ totalQuestions }}
+                                </span>
+                                <span
+                                    v-if="strikeCount > 0"
+                                    class="shrink-0 text-label-md"
+                                    :class="
+                                        strikeCount >= 3
+                                            ? 'text-error-red font-bold'
+                                            : 'text-amber-600 dark:text-amber-400'
+                                    "
+                                >
+                                    ⚠ {{ strikeCount }}/3 pelanggaran
+                                </span>
+                                <span
+                                    v-if="isSaving"
+                                    class="shrink-0 text-label-md text-text-muted"
+                                    >Menyimpan...</span
+                                >
+                                <span
+                                    v-else-if="lastSaved"
+                                    class="shrink-0 text-label-md text-green-600 dark:text-green-400"
+                                    >✓ Tersimpan {{ lastSaved }}</span
+                                >
+                            </div>
+                            <button
+                                @click="showGridModal = true"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-label-md font-semibold border border-outline-variant bg-surface-white text-text-heading hover:bg-surface-container-low transition-all"
+                            >
+                                <IconMap :size="14" /> Peta Soal
+                            </button>
+                        </div>
+                    </div>
                 </section>
             </template>
 
@@ -331,69 +468,67 @@ onUnmounted(() => {
             <template v-else>
                 <!-- LEFT PANE: MEDIA -->
                 <section
-                    class="w-1/2 border-r border-outline-variant overflow-y-auto scroll-hide p-8 bg-surface-bright"
+                    class="w-3/5 border-r border-outline-variant bg-surface-bright flex flex-col overflow-hidden"
                 >
-                    <div class="max-w-xl mx-auto">
-                        <div class="mb-8">
-                            <span
-                                class="bg-pastel-purple text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
-                                >{{ partLabel || "Audio" }}</span
-                            >
-                            <h1
-                                v-if="passage"
-                                class="font-serif text-2xl leading-tight text-primary font-bold mb-6"
-                            >
-                                {{ passage.title }}
-                            </h1>
-                            <h1
-                                v-else
-                                class="font-serif text-2xl leading-tight text-primary font-bold mb-6"
-                            >
-                                {{ partLabel || "Audio" }}
-                            </h1>
-                        </div>
-                        <p class="text-label-md text-text-muted mb-4">
-                            Putar audio sebelum menjawab soal
-                        </p>
-                        <div
-                            class="bg-surface-container-low rounded-2xl border border-surface-variant overflow-hidden flex flex-col"
-                        >
+                    <!-- AREA SCROLL: badge, judul, gambar -->
+                    <div class="flex-1 min-h-0 overflow-y-auto scroll-hide p-8">
+                        <div class="max-w-2xl mx-auto">
+                            <div class="mb-8">
+                                <span
+                                    class="bg-pastel-purple text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
+                                    >{{ partLabel || "Audio" }}</span
+                                >
+                                <h1
+                                    v-if="passage"
+                                    class="font-serif text-2xl leading-tight text-primary font-bold mb-6"
+                                >
+                                    {{ passage.title }}
+                                </h1>
+                                <h1
+                                    v-else
+                                    class="font-serif text-2xl leading-tight text-primary font-bold mb-6"
+                                >
+                                    {{ partLabel || "Audio" }}
+                                </h1>
+                            </div>
+                            <p class="text-label-md text-text-muted mb-4">
+                                Putar audio sebelum menjawab soal
+                            </p>
                             <div
                                 v-if="imageSrc"
-                                class="relative w-full min-h-[300px]"
+                                class="rounded-2xl border border-outline-variant/40 bg-surface-white p-3 shadow-standard"
                             >
-                                <BaseMediaLoader
-                                    :loading="imageLoading.loading.value"
-                                    media-type="image"
-                                    skeleton-class="h-full min-h-[300px] rounded-none border-0"
-                                >
-                                    <img
-                                        :src="imageSrc"
-                                        class="absolute inset-0 w-full h-full object-cover"
-                                        @load="imageLoading.onLoad()"
-                                        @error="imageLoading.onError()"
-                                    />
-                                </BaseMediaLoader>
-                                <div class="absolute inset-0 bg-black/5"></div>
+                                <div class="relative w-full min-h-[300px]">
+                                    <BaseMediaLoader
+                                        :loading="imageLoading.loading.value"
+                                        media-type="image"
+                                        skeleton-class="h-full min-h-[300px] rounded-lg"
+                                    >
+                                        <img
+                                            :src="imageSrc"
+                                            class="absolute inset-0 w-full h-full object-cover rounded-lg"
+                                            @load="imageLoading.onLoad()"
+                                            @error="imageLoading.onError()"
+                                        />
+                                    </BaseMediaLoader>
+                                    <div class="absolute inset-0 bg-black/5 rounded-lg"></div>
+                                </div>
                             </div>
-                            <AudioPlayer
-                                v-if="audioSrc"
-                                :src="audioSrc"
-                                strip
-                            />
-                            <div
-                                v-else
-                                class="bg-surface-white p-6 text-center border-t border-surface-variant"
-                            >
-                                <p class="text-text-muted text-body-md">
-                                    Belum ada audio untuk soal ini.
-                                </p>
-                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BAR AUDIO FIXED BAWAH -->
+                    <div class="shrink-0 border-t border-outline-variant bg-surface-white">
+                        <AudioPlayer v-if="audioSrc" :src="audioSrc" bar />
+                        <div v-else class="px-6 py-4 text-center">
+                            <p class="text-text-muted text-body-md">
+                                Belum ada audio untuk soal ini.
+                            </p>
                         </div>
                     </div>
                 </section>
                 <!-- RIGHT PANE: QUESTION -->
-                <section class="w-1/2 flex flex-col bg-surface-white">
+                <section class="w-2/5 flex flex-col bg-surface-white">
                     <div class="flex-1 overflow-y-auto p-8 scroll-hide">
                         <div class="max-w-lg mx-auto">
                             <div class="flex items-center gap-2 mb-8">
@@ -447,77 +582,96 @@ onUnmounted(() => {
                             </div>
                         </div>
                     </div>
+
+                    <!-- NAVIGASI PER SECTION -->
+                    <div
+                        class="shrink-0 border-t border-outline-variant bg-surface-container-low/60 px-4 py-3 space-y-2.5"
+                    >
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button
+                                @click="goToQuestion(currentQuestionIndex - 1)"
+                                :disabled="currentQuestionIndex === 0"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <IconArrowLeft :size="14" /> Prev
+                            </button>
+
+                            <TransitionGroup
+                                :name="stripAnim"
+                                tag="div"
+                                class="relative flex items-center gap-1 min-h-[28px]"
+                                @before-leave="onBeforeLeaveStrip"
+                            >
+                                <button
+                                    v-for="i in visibleNumbers"
+                                    :key="currentQuestions[i].id"
+                                    @click="goToQuestion(i)"
+                                    class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-[12px] font-bold transition-all duration-150 cursor-pointer"
+                                    :class="[
+                                        i === currentQuestionIndex
+                                            ? 'bg-secondary text-white ring-2 ring-secondary/30 scale-105 shadow-sm'
+                                            : answers[currentQuestions[i].id] !== undefined
+                                                ? 'bg-secondary/10 text-secondary border border-secondary/40 hover:bg-secondary/20'
+                                                : 'bg-surface-white text-text-muted border border-outline-variant/60 hover:bg-surface-container-highest'
+                                    ]"
+                                >
+                                    {{ i + 1 }}
+                                </button>
+                            </TransitionGroup>
+
+                            <button
+                                v-if="currentQuestionIndex < totalQuestions - 1"
+                                @click="goToQuestion(currentQuestionIndex + 1)"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-primary-container text-white hover:bg-primary transition-all active:scale-95 duration-150"
+                            >
+                                Next <IconArrowRight :size="14" />
+                            </button>
+                            <button
+                                v-else
+                                @click="showSubmitConfirm = true"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-secondary text-white hover:bg-secondary/90 transition-all shadow-sm active:scale-95 duration-150"
+                            >
+                                Kumpulkan
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between gap-2 min-w-0">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="text-label-md text-text-muted shrink-0">
+                                    Terjawab {{ answeredCount }}/{{ totalQuestions }}
+                                </span>
+                                <span
+                                    v-if="strikeCount > 0"
+                                    class="shrink-0 text-label-md"
+                                    :class="
+                                        strikeCount >= 3
+                                            ? 'text-error-red font-bold'
+                                            : 'text-amber-600 dark:text-amber-400'
+                                    "
+                                >
+                                    ⚠ {{ strikeCount }}/3 pelanggaran
+                                </span>
+                                <span
+                                    v-if="isSaving"
+                                    class="shrink-0 text-label-md text-text-muted"
+                                    >Menyimpan...</span
+                                >
+                                <span
+                                    v-else-if="lastSaved"
+                                    class="shrink-0 text-label-md text-green-600 dark:text-green-400"
+                                    >✓ Tersimpan {{ lastSaved }}</span
+                                >
+                            </div>
+                            <button
+                                @click="showGridModal = true"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-label-md font-semibold border border-outline-variant bg-surface-white text-text-heading hover:bg-surface-container-low transition-all"
+                            >
+                                <IconMap :size="14" /> Peta Soal
+                            </button>
+                        </div>
+                    </div>
                 </section>
             </template>
         </div>
-
-        <template #sidebar>
-            <div class="flex flex-col items-center gap-2">
-                <QuestionNavigator
-                    :total="totalQuestions"
-                    :current-index="currentQuestionIndex"
-                    :answers="answeredIndices"
-                    @navigate="goToQuestion"
-                    @show-grid="showGridModal = true"
-                />
-            </div>
-        </template>
-
-        <template #footer>
-            <div
-                class="h-16 border-t border-outline-variant px-6 flex justify-between items-center bg-surface-container-low shrink-0"
-            >
-                <button
-                    @click="goToQuestion(currentQuestionIndex - 1)"
-                    :disabled="currentQuestionIndex === 0"
-                    class="flex items-center gap-2 px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    <IconArrowLeft :size="16" /> Sebelumnya
-                </button>
-                <div class="flex items-center gap-4">
-                    <span class="text-label-md text-text-muted">
-                        Terjawab {{ answeredIds.length }}/{{ totalQuestions }}
-                    </span>
-                    <span
-                        v-if="strikeCount > 0"
-                        class="text-label-md"
-                        :class="
-                            strikeCount >= 3
-                                ? 'text-error-red font-bold'
-                                : 'text-amber-600 dark:text-amber-400'
-                        "
-                    >
-                        ⚠ {{ strikeCount }}/3 pelanggaran
-                    </span>
-                    <span
-                        v-if="isSaving"
-                        class="text-label-md text-text-muted"
-                        >Menyimpan...</span
-                    >
-                    <span
-                        v-else-if="lastSaved"
-                        class="text-label-md text-green-600 dark:text-green-400"
-                        >✓ Tersimpan {{ lastSaved }}</span
-                    >
-                </div>
-                <div class="flex items-center gap-3">
-                    <button
-                        v-if="currentQuestionIndex < totalQuestions - 1"
-                        @click="goToQuestion(currentQuestionIndex + 1)"
-                        class="flex items-center gap-2 px-5 py-2.5 rounded-full text-label-md font-semibold bg-primary-container text-white hover:bg-primary transition-all shadow-md active:scale-95 duration-150"
-                    >
-                        Selanjutnya <IconArrowRight :size="16" />
-                    </button>
-                    <button
-                        v-else
-                        @click="showSubmitConfirm = true"
-                        class="flex items-center gap-2 px-5 py-2.5 rounded-full text-label-md font-semibold bg-secondary text-white hover:bg-secondary/90 transition-all shadow-md active:scale-95 duration-150"
-                    >
-                        Kumpulkan Ujian
-                    </button>
-                </div>
-            </div>
-        </template>
     </ExamLayout>
 
     <div
@@ -537,7 +691,7 @@ onUnmounted(() => {
                 Yakin ingin mengumpulkan?
             </h2>
             <p class="text-text-body text-body-md mb-1">
-                Soal terjawab: <strong>{{ answeredIds.length }}</strong> dari {{ totalQuestions }}
+                Soal terjawab: <strong>{{ answeredCount }}</strong> dari {{ totalQuestions }}
             </p>
             <p class="text-text-muted text-label-md mb-6">
                 Jawaban tidak bisa diubah setelah dikumpulkan.
@@ -569,11 +723,10 @@ onUnmounted(() => {
 
     <QuestionGridModal
         :show="showGridModal"
-        :total="totalQuestions"
-        :current-index="currentQuestionIndex"
-        :answer-by-index="answerByIndex"
-        :answered-count="answeredIds.length"
-        @navigate="goToQuestion"
+        :groups="mapGroups"
+        :answers="answers"
+        :current-global-number="currentQuestionIndex + 1"
+        @navigate-global="goToQuestion"
         @close="showGridModal = false"
     />
 </template>
@@ -596,5 +749,41 @@ onUnmounted(() => {
 .option-selected {
     border-color: var(--color-secondary) !important;
     background-color: var(--color-pastel-purple) !important;
+}
+
+/* Transisi strip nomor footer */
+.strip-next-move,
+.strip-prev-move {
+    transition: transform 0.25s ease;
+}
+.strip-next-enter-active {
+    transition: all 0.22s ease-out;
+}
+.strip-next-leave-active {
+    transition: all 0.18s ease-in;
+    position: absolute;
+}
+.strip-next-enter-from {
+    opacity: 0;
+    transform: translateX(16px) scale(0.85);
+}
+.strip-next-leave-to {
+    opacity: 0;
+    transform: translateX(-16px) scale(0.85);
+}
+.strip-prev-enter-active {
+    transition: all 0.22s ease-out;
+}
+.strip-prev-leave-active {
+    transition: all 0.18s ease-in;
+    position: absolute;
+}
+.strip-prev-enter-from {
+    opacity: 0;
+    transform: translateX(-16px) scale(0.85);
+}
+.strip-prev-leave-to {
+    opacity: 0;
+    transform: translateX(16px) scale(0.85);
 }
 </style>

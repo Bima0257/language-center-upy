@@ -7,6 +7,7 @@ const props = defineProps({
     src: { type: String, required: true },
     title: { type: String, default: '' },
     strip: { type: Boolean, default: false },
+    bar: { type: Boolean, default: false },
 });
 
 const { loading, onLoad, onError } = useMediaLoad(() => props.src);
@@ -54,7 +55,52 @@ function formatTime(seconds) {
 </script>
 
 <template>
-    <div class="bg-surface-white flex flex-col gap-4"
+    <!-- MODE BAR: horizontal compact untuk fixed bottom -->
+    <div v-if="bar"
+         class="bg-surface-white px-6 py-3.5 flex items-center gap-4">
+        <audio ref="audioRef" :src="src" preload="metadata" class="hidden"
+               @timeupdate="onTimeUpdate"
+               @loadedmetadata="onLoadedMetadata"
+               @error="onError"
+               @play="isPlaying = true"
+               @pause="isPlaying = false"
+               @ended="isPlaying = false"></audio>
+
+        <div v-if="loading" class="flex-1">
+            <BaseMediaLoader
+                media-type="audio"
+                skeleton-class="h-10"
+            />
+        </div>
+
+        <template v-else>
+            <button @click="togglePlay"
+                    class="w-10 h-10 rounded-full bg-pastel-blue flex items-center justify-center text-secondary hover:bg-secondary hover:text-white transition-colors shrink-0">
+                <IconPlayerPlayFilled v-if="!isPlaying" :size="18" />
+                <IconPlayerPauseFilled v-else :size="18" />
+            </button>
+
+            <span class="text-label-md font-mono tabular-nums text-text-heading shrink-0">{{ formatTime(currentTime) }}</span>
+
+            <div ref="barRef" @click="onSeek"
+                 class="relative flex-1 h-[6px] bg-track-neutral rounded-full cursor-pointer group">
+                <div class="absolute top-0 left-0 h-full bg-secondary rounded-full"
+                     :style="{ width: progress + '%' }"></div>
+                <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-white border-2 border-secondary rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                     :style="{ left: progress + '%' }"></div>
+            </div>
+
+            <span class="text-label-md font-mono tabular-nums text-text-muted shrink-0">{{ formatTime(duration) }}</span>
+
+            <button class="text-text-muted hover:text-text-heading transition-colors shrink-0" title="Volume">
+                <IconVolume :size="20" />
+            </button>
+        </template>
+    </div>
+
+    <!-- MODE LAMA: strip (menempel kartu) / kartu vertikal -->
+    <div v-else
+         class="bg-surface-white flex flex-col gap-4"
          :class="strip ? 'p-6 border-t border-surface-variant' : 'p-6 rounded-2xl border border-outline-variant/30'">
         <audio ref="audioRef" :src="src" preload="metadata" class="hidden"
                @timeupdate="onTimeUpdate"

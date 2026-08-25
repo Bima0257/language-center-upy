@@ -54,7 +54,7 @@ defineProps({
                 </div>
                 <aside
                     v-if="$slots.sidebar"
-                    class="w-[72px] bg-white border-l border-outline-variant flex flex-col items-center py-5 gap-2"
+                    class="w-32 bg-white border-l border-outline-variant flex flex-col items-center py-5 px-3 gap-3"
                 >
                     <slot name="sidebar" />
                 </aside>

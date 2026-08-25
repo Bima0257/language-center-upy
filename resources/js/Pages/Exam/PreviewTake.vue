@@ -3,9 +3,8 @@ import { Head } from "@inertiajs/vue3";
 import ExamLayout from "@/Layouts/ExamLayout.vue";
 import RichTextViewer from "@/Components/Shared/RichTextViewer.vue";
 import AudioPlayer from "@/Components/Exam/AudioPlayer.vue";
-import QuestionNavigator from "@/Components/Exam/QuestionNavigator.vue";
 import QuestionGridModal from "@/Components/Exam/QuestionGridModal.vue";
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import {
     IconArrowLeft,
     IconArrowRight,
@@ -13,6 +12,7 @@ import {
     IconHeadphones,
     IconInfoCircle,
     IconCheck,
+    IconMap,
 } from "@tabler/icons-vue";
 
 const props = defineProps({
@@ -117,19 +117,60 @@ function optionText(key) {
         : "";
 }
 
-const answeredIds = computed(() =>
-    Object.keys(answers.value).map(Number),
+const answeredCount = computed(() => Object.keys(answers.value).length);
+
+// ============================================================
+// FOOTER NUMBER STRIP (per part) — sliding window maks 5 nomor
+// ============================================================
+
+const WINDOW_SIZE = 5;
+
+const visibleNumbers = computed(() => {
+    const total = currentBlockQuestions.value.length;
+    if (total <= WINDOW_SIZE) {
+        return Array.from({ length: total }, (_, i) => i);
+    }
+    const start = Math.max(
+        0,
+        Math.min(subIndex.value - Math.floor(WINDOW_SIZE / 2), total - WINDOW_SIZE),
+    );
+    return Array.from({ length: WINDOW_SIZE }, (_, k) => start + k);
+});
+
+// Arah animasi strip: slide-next/prev saat maju/mundur 1 soal,
+// tanpa animasi untuk lompatan besar (mis. via Peta Soal).
+const stripAnim = ref("strip-none");
+const prevGlobalNumber = ref(null);
+
+watch(globalNumber, (value) => {
+    const prev = prevGlobalNumber.value;
+    prevGlobalNumber.value = value;
+    if (prev === null || Math.abs(value - prev) !== 1) {
+        stripAnim.value = "strip-none";
+        return;
+    }
+    stripAnim.value = value > prev ? "strip-next" : "strip-prev";
+});
+
+// Kunci posisi asli tombol yang keluar, agar tidak teleport
+// saat position:absolute diterapkan pada leave-active.
+function onBeforeLeaveStrip(el) {
+    el.style.left = `${el.offsetLeft}px`;
+    el.style.top = `${el.offsetTop}px`;
+}
+
+const mapGroups = computed(() =>
+    props.blocks.map((block) => ({
+        skill: { name: block.skill.name, code: block.skill.code },
+        part: { name: block.part.name },
+        startNumber: block.startNumber,
+        count: block.count,
+        questions: block.questions.map((q, i) => ({
+            id: q.id,
+            global_number: q.global_number ?? block.startNumber + i,
+        })),
+    })),
 );
-
-const answeredIndices = computed(() => {
-    return currentBlockQuestions.value
-        .map((q, i) => (answers.value[q.id] !== undefined ? i : -1))
-        .filter((i) => i >= 0);
-});
-
-const answerByIndex = computed(() => {
-    return currentBlockQuestions.value.map((q) => answers.value[q.id] || null);
-});
 
 // ============================================================
 // NAVIGATION
@@ -167,10 +208,19 @@ function goToPrev() {
     }
 }
 
-function goToQuestion(index) {
-    if (index >= 0 && index < totalInBlock.value) {
-        subIndex.value = index;
+function goToGlobal(number) {
+    for (let idx = 0; idx < steps.value.length; idx++) {
+        const step = steps.value[idx];
+        if (step.kind !== "questions") continue;
+        const block = step.block;
+        const end = block.startNumber + block.questions.length - 1;
+        if (number >= block.startNumber && number <= end) {
+            stepIndex.value = idx;
+            subIndex.value = number - block.startNumber;
+            return true;
+        }
     }
+    return false;
 }
 
 function selectAnswer(key) {
@@ -194,13 +244,6 @@ function hasPrevQuestionsBlock() {
 function isLastStep() {
     return stepIndex.value === steps.value.length - 1;
 }
-
-const nextLabel = computed(() => {
-    if (phase.value === "intro") return "Mulai";
-    if (phase.value === "skill") return "Lanjut";
-    if (phase.value === "part") return "Mulai Mengerjakan";
-    return "Lanjut";
-});
 
 // ============================================================
 // MEDIA
@@ -249,7 +292,7 @@ const seconds = ref(37);
                 v-if="phase === 'intro'"
                 class="bg-surface-white rounded-3xl shadow-standard border border-outline-variant/30 max-w-3xl w-full overflow-hidden"
             >
-                <div class="bg-primary-container px-8 py-7 text-white">
+                <div class="bg-secondary px-8 py-7 text-white">
                     <div class="flex items-center gap-3 mb-2">
                         <IconInfoCircle :size="22" />
                         <span class="text-label-md uppercase tracking-widest opacity-70 font-semibold">Informasi Ujian</span>
@@ -315,7 +358,7 @@ const seconds = ref(37);
                 class="bg-surface-white rounded-3xl shadow-standard border border-outline-variant/30 max-w-3xl w-full overflow-hidden"
             >
                 <div
-                    class="bg-primary-container px-8 py-7 flex items-center gap-4 text-white"
+                    class="bg-secondary px-8 py-7 flex items-center gap-4 text-white"
                 >
                     <div
                         class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
@@ -371,7 +414,7 @@ const seconds = ref(37);
                 v-else-if="phase === 'part'"
                 class="bg-surface-white rounded-3xl shadow-standard border border-outline-variant/30 max-w-3xl w-full overflow-hidden"
             >
-                <div class="bg-primary-container px-8 py-7 text-white flex items-center justify-between">
+                <div class="bg-secondary px-8 py-7 text-white flex items-center justify-between">
                     <div>
                         <span class="text-label-md uppercase tracking-widest opacity-70 font-semibold">{{ currentBlock.skill.name }}</span>
                         <h1 class="text-headline-md font-bold">{{ currentBlock.part.name }}</h1>
@@ -413,9 +456,9 @@ const seconds = ref(37);
             <template v-if="!isMaterialAudio">
                 <!-- LEFT PANE: PASSAGE -->
                 <section
-                    class="w-1/2 border-r border-outline-variant overflow-y-auto scroll-hide p-8 bg-surface-bright"
+                    class="w-3/5 border-r border-outline-variant overflow-y-auto scroll-hide p-8 bg-surface-bright"
                 >
-                    <div class="max-w-xl mx-auto">
+                    <div class="max-w-2xl mx-auto">
                         <div class="mb-8">
                             <span
                                 class="bg-pastel-blue text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
@@ -451,7 +494,7 @@ const seconds = ref(37);
                     </div>
                 </section>
                 <!-- RIGHT PANE: QUESTION -->
-                <section class="w-1/2 flex flex-col bg-surface-white">
+                <section class="w-2/5 flex flex-col bg-surface-white">
                     <div class="flex-1 overflow-y-auto p-8 scroll-hide">
                         <div class="max-w-lg mx-auto">
                             <div class="flex items-center gap-2 mb-8">
@@ -504,6 +547,70 @@ const seconds = ref(37);
                             </div>
                         </div>
                     </div>
+
+                    <!-- NAVIGASI PER PART -->
+                    <div
+                        class="shrink-0 border-t border-outline-variant bg-surface-container-low/60 px-4 py-3 space-y-2.5"
+                    >
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button
+                                @click="goToPrev"
+                                :disabled="!canGoPrev()"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <IconArrowLeft :size="14" /> Prev
+                            </button>
+
+                            <TransitionGroup
+                                :name="stripAnim"
+                                tag="div"
+                                class="relative flex items-center gap-1 min-h-[28px]"
+                                @before-leave="onBeforeLeaveStrip"
+                            >
+                                <button
+                                    v-for="i in visibleNumbers"
+                                    :key="currentBlockQuestions[i].id"
+                                    @click="subIndex = i"
+                                    class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-[12px] font-bold transition-all duration-150 cursor-pointer"
+                                    :class="[
+                                        i === subIndex
+                                            ? 'bg-secondary text-white ring-2 ring-secondary/30 scale-105 shadow-sm'
+                                            : answers[currentBlockQuestions[i].id] !== undefined
+                                                ? 'bg-secondary/10 text-secondary border border-secondary/40 hover:bg-secondary/20'
+                                                : 'bg-surface-white text-text-muted border border-outline-variant/60 hover:bg-surface-container-highest'
+                                    ]"
+                                >
+                                    {{ currentBlock.startNumber + i }}
+                                </button>
+                            </TransitionGroup>
+
+                            <button
+                                v-if="!isLastStep()"
+                                @click="goToNext"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-primary-container text-white hover:bg-primary transition-all active:scale-95 duration-150"
+                            >
+                                Next <IconArrowRight :size="14" />
+                            </button>
+                            <button
+                                v-else
+                                @click="goToNext"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-secondary text-white hover:bg-secondary/90 transition-all shadow-sm active:scale-95 duration-150"
+                            >
+                                Selesai
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-label-md text-text-muted">
+                                Terjawab {{ answeredCount }}/{{ totalAllQuestions }}
+                            </span>
+                            <button
+                                @click="showGridModal = true"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-label-md font-semibold border border-outline-variant bg-surface-white text-text-heading hover:bg-surface-container-low transition-all"
+                            >
+                                <IconMap :size="14" /> Peta Soal
+                            </button>
+                        </div>
+                    </div>
                 </section>
             </template>
 
@@ -511,60 +618,58 @@ const seconds = ref(37);
             <template v-else>
                 <!-- LEFT PANE: MEDIA -->
                 <section
-                    class="w-1/2 border-r border-outline-variant overflow-y-auto scroll-hide p-8 bg-surface-bright"
+                    class="w-3/5 border-r border-outline-variant bg-surface-bright flex flex-col overflow-hidden"
                 >
-                    <div class="max-w-xl mx-auto">
-                        <div class="mb-8">
-                            <span
-                                class="bg-pastel-purple text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
-                            >{{ currentBlock.part.name }}</span>
-                            <h1
-                                v-if="passage"
-                                class="font-serif text-2xl leading-tight text-primary font-bold mb-6"
-                            >
-                                {{ passage.title }}
-                            </h1>
-                            <h1
-                                v-else
-                                class="font-serif text-2xl leading-tight text-primary font-bold mb-6"
-                            >
-                                {{ currentBlock.part.name }}
-                            </h1>
-                        </div>
-                        <p class="text-label-md text-text-muted mb-4">
-                            Putar audio sebelum menjawab soal
-                        </p>
-                        <div
-                            class="bg-surface-container-low rounded-2xl border border-surface-variant overflow-hidden flex flex-col"
-                        >
+                    <!-- AREA SCROLL: badge, judul, gambar -->
+                    <div class="flex-1 min-h-0 overflow-y-auto scroll-hide p-8">
+                        <div class="max-w-2xl mx-auto">
+                            <div class="mb-8">
+                                <span
+                                    class="bg-pastel-purple text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
+                                >{{ currentBlock.part.name }}</span>
+                                <h1
+                                    v-if="passage"
+                                    class="font-serif text-2xl leading-tight text-primary font-bold mb-6"
+                                >
+                                    {{ passage.title }}
+                                </h1>
+                                <h1
+                                    v-else
+                                    class="font-serif text-2xl leading-tight text-primary font-bold mb-6"
+                                >
+                                    {{ currentBlock.part.name }}
+                                </h1>
+                            </div>
+                            <p class="text-label-md text-text-muted mb-4">
+                                Putar audio sebelum menjawab soal
+                            </p>
                             <div
                                 v-if="imageSrc"
-                                class="relative w-full min-h-[300px]"
+                                class="rounded-2xl border border-outline-variant/40 bg-surface-white p-3 shadow-standard"
                             >
-                                <img
-                                    :src="imageSrc"
-                                    class="absolute inset-0 w-full h-full object-cover"
-                                />
-                                <div class="absolute inset-0 bg-black/5"></div>
+                                <div class="relative w-full min-h-[300px]">
+                                    <img
+                                        :src="imageSrc"
+                                        class="absolute inset-0 w-full h-full object-cover rounded-lg"
+                                    />
+                                    <div class="absolute inset-0 bg-black/5 rounded-lg"></div>
+                                </div>
                             </div>
-                            <AudioPlayer
-                                v-if="audioSrc"
-                                :src="audioSrc"
-                                strip
-                            />
-                            <div
-                                v-else
-                                class="bg-surface-white p-6 text-center border-t border-surface-variant"
-                            >
-                                <p class="text-text-muted text-body-md">
-                                    Belum ada audio untuk soal ini.
-                                </p>
-                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BAR AUDIO FIXED BAWAH -->
+                    <div class="shrink-0 border-t border-outline-variant bg-surface-white">
+                        <AudioPlayer v-if="audioSrc" :src="audioSrc" bar />
+                        <div v-else class="px-6 py-4 text-center">
+                            <p class="text-text-muted text-body-md">
+                                Belum ada audio untuk soal ini.
+                            </p>
                         </div>
                     </div>
                 </section>
                 <!-- RIGHT PANE: QUESTION -->
-                <section class="w-1/2 flex flex-col bg-surface-white">
+                <section class="w-2/5 flex flex-col bg-surface-white">
                     <div class="flex-1 overflow-y-auto p-8 scroll-hide">
                         <div class="max-w-lg mx-auto">
                             <div class="flex items-center gap-2 mb-8">
@@ -618,62 +723,81 @@ const seconds = ref(37);
                             </div>
                         </div>
                     </div>
+
+                    <!-- NAVIGASI PER PART -->
+                    <div
+                        class="shrink-0 border-t border-outline-variant bg-surface-container-low/60 px-4 py-3 space-y-2.5"
+                    >
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button
+                                @click="goToPrev"
+                                :disabled="!canGoPrev()"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <IconArrowLeft :size="14" /> Prev
+                            </button>
+
+                            <TransitionGroup
+                                :name="stripAnim"
+                                tag="div"
+                                class="relative flex items-center gap-1 min-h-[28px]"
+                                @before-leave="onBeforeLeaveStrip"
+                            >
+                                <button
+                                    v-for="i in visibleNumbers"
+                                    :key="currentBlockQuestions[i].id"
+                                    @click="subIndex = i"
+                                    class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-[12px] font-bold transition-all duration-150 cursor-pointer"
+                                    :class="[
+                                        i === subIndex
+                                            ? 'bg-secondary text-white ring-2 ring-secondary/30 scale-105 shadow-sm'
+                                            : answers[currentBlockQuestions[i].id] !== undefined
+                                                ? 'bg-secondary/10 text-secondary border border-secondary/40 hover:bg-secondary/20'
+                                                : 'bg-surface-white text-text-muted border border-outline-variant/60 hover:bg-surface-container-highest'
+                                    ]"
+                                >
+                                    {{ currentBlock.startNumber + i }}
+                                </button>
+                            </TransitionGroup>
+
+                            <button
+                                v-if="!isLastStep()"
+                                @click="goToNext"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-primary-container text-white hover:bg-primary transition-all active:scale-95 duration-150"
+                            >
+                                Next <IconArrowRight :size="14" />
+                            </button>
+                            <button
+                                v-else
+                                @click="goToNext"
+                                class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-secondary text-white hover:bg-secondary/90 transition-all shadow-sm active:scale-95 duration-150"
+                            >
+                                Selesai
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-label-md text-text-muted">
+                                Terjawab {{ answeredCount }}/{{ totalAllQuestions }}
+                            </span>
+                            <button
+                                @click="showGridModal = true"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-label-md font-semibold border border-outline-variant bg-surface-white text-text-heading hover:bg-surface-container-low transition-all"
+                            >
+                                <IconMap :size="14" /> Peta Soal
+                            </button>
+                        </div>
+                    </div>
                 </section>
             </template>
         </div>
-
-        <template v-if="isQuestions" #sidebar>
-            <div class="flex flex-col items-center gap-2">
-                <QuestionNavigator
-                    :total="totalInBlock"
-                    :current-index="subIndex"
-                    :answers="answeredIndices"
-                    @navigate="goToQuestion"
-                    @show-grid="showGridModal = true"
-                />
-            </div>
-        </template>
-
-        <template v-if="isQuestions" #footer>
-            <div
-                class="h-16 border-t border-outline-variant px-6 flex justify-between items-center bg-surface-container-low shrink-0"
-            >
-                <button
-                    @click="goToPrev"
-                    :disabled="!canGoPrev()"
-                    class="flex items-center gap-2 px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    <IconArrowLeft :size="16" /> Sebelumnya
-                </button>
-                <div class="flex items-center gap-4">
-                    <span class="text-label-md text-text-muted">
-                        Terjawab {{ answeredIds.length }}/{{ totalAllQuestions }}
-                    </span>
-                </div>
-                <button
-                    v-if="!isLastStep()"
-                    @click="goToNext"
-                    class="flex items-center gap-2 px-5 py-2.5 rounded-full text-label-md font-semibold bg-primary-container text-white hover:bg-primary transition-all shadow-md active:scale-95 duration-150"
-                >
-                    {{ nextLabel }} <IconArrowRight :size="16" />
-                </button>
-                <button
-                    v-else
-                    class="flex items-center gap-2 px-5 py-2.5 rounded-full text-label-md font-semibold bg-secondary text-white hover:bg-secondary/90 transition-all shadow-md active:scale-95 duration-150"
-                >
-                    Selesai
-                </button>
-            </div>
-        </template>
     </ExamLayout>
 
     <QuestionGridModal
         :show="showGridModal"
-        :total="totalInBlock"
-        :current-index="subIndex"
-        :answer-by-index="answerByIndex"
-        :answered-count="answeredIds.length"
-        @navigate="goToQuestion"
+        :groups="mapGroups"
+        :answers="answers"
+        :current-global-number="globalNumber"
+        @navigate-global="goToGlobal"
         @close="showGridModal = false"
     />
 </template>
@@ -696,5 +820,41 @@ const seconds = ref(37);
 .option-selected {
     border-color: var(--color-secondary) !important;
     background-color: var(--color-pastel-purple) !important;
+}
+
+/* Transisi strip nomor footer */
+.strip-next-move,
+.strip-prev-move {
+    transition: transform 0.25s ease;
+}
+.strip-next-enter-active {
+    transition: all 0.22s ease-out;
+}
+.strip-next-leave-active {
+    transition: all 0.18s ease-in;
+    position: absolute;
+}
+.strip-next-enter-from {
+    opacity: 0;
+    transform: translateX(16px) scale(0.85);
+}
+.strip-next-leave-to {
+    opacity: 0;
+    transform: translateX(-16px) scale(0.85);
+}
+.strip-prev-enter-active {
+    transition: all 0.22s ease-out;
+}
+.strip-prev-leave-active {
+    transition: all 0.18s ease-in;
+    position: absolute;
+}
+.strip-prev-enter-from {
+    opacity: 0;
+    transform: translateX(-16px) scale(0.85);
+}
+.strip-prev-leave-to {
+    opacity: 0;
+    transform: translateX(16px) scale(0.85);
 }
 </style>
