@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\VerificationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\PreviewController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,9 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
+
+Route::middleware('auth')->get('/preview/exam-take', [PreviewController::class, 'examTake'])
+    ->name('preview.exam-take');
 
 Route::middleware('auth')->prefix('onboarding')->name('onboarding.')->group(function () {
     Route::get('/verify-identity', [OnboardingController::class, 'verifyIdentity'])->name('verify-identity');

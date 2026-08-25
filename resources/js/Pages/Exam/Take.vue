@@ -4,13 +4,14 @@ import ExamLayout from "@/Layouts/ExamLayout.vue";
 import RichTextViewer from "@/Components/Shared/RichTextViewer.vue";
 import AudioPlayer from "@/Components/Exam/AudioPlayer.vue";
 import QuestionNavigator from "@/Components/Exam/QuestionNavigator.vue";
+import QuestionGridModal from "@/Components/Exam/QuestionGridModal.vue";
 import ViolationModal from "@/Components/Exam/ViolationModal.vue";
 import { useMediaLoad } from "@/Composables/useMediaLoad";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useExamTimer } from "@/Modules/ExamModule/Composables/useExamTimer.js";
 import { useExamSecurity } from "@/Modules/ExamModule/Composables/useExamSecurity.js";
 import { useAutoSave } from "@/Modules/ExamModule/Composables/useAutoSave.js";
-import { materialOfSkill } from "@/constants/skills";
+import { materialOfSkill, skillLabel } from "@/constants/skills";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-vue";
 import axios from "axios";
 
@@ -46,6 +47,10 @@ const answeredIndices = computed(() => {
     return currentQuestions.value
         .map((q, i) => (answers.value[q.id] !== undefined ? i : -1))
         .filter((i) => i >= 0);
+});
+
+const answerByIndex = computed(() => {
+    return currentQuestions.value.map((q) => answers.value[q.id] || null);
 });
 
 const elapsedSeconds = props.session.started_at
@@ -93,6 +98,7 @@ const currentQuestion = computed(
 const showViolationModal = ref(false);
 const currentViolation = ref(null);
 const showSubmitConfirm = ref(false);
+const showGridModal = ref(false);
 
 const currentSkillCode = computed(
     () => currentQuestion.value?.skill?.code || "",
@@ -107,6 +113,22 @@ const partLabel = computed(
         currentSkillCode.value ||
         "",
 );
+
+const headerTitle = computed(() => {
+    const prefix = [
+        skillLabel(currentSkillCode.value),
+        currentQuestion.value?.skillPart?.name,
+    ]
+        .filter(Boolean)
+        .join(' ');
+    return (
+        (prefix ? prefix + ' — ' : '') +
+        'Soal ' +
+        (currentQuestionIndex.value + 1) +
+        ' dari ' +
+        totalQuestions.value
+    );
+});
 
 const audioSrc = computed(() => {
     const path = passage.value?.audio_url;
@@ -188,6 +210,7 @@ onUnmounted(() => {
     <Head title="Ujian" />
     <ExamLayout
         :session="session"
+        :title="headerTitle"
         :remaining-seconds="remaining"
         :minutes="minutes"
         :seconds="seconds"
@@ -435,31 +458,23 @@ onUnmounted(() => {
                     :current-index="currentQuestionIndex"
                     :answers="answeredIndices"
                     @navigate="goToQuestion"
+                    @show-grid="showGridModal = true"
                 />
             </div>
         </template>
 
         <template #footer>
             <div
-                class="fixed bottom-0 inset-x-0 h-16 bg-surface-white border-t border-outline-variant flex items-center px-6 gap-4 z-20"
+                class="h-16 border-t border-outline-variant px-6 flex justify-between items-center bg-surface-container-low shrink-0"
             >
                 <button
                     @click="goToQuestion(currentQuestionIndex - 1)"
                     :disabled="currentQuestionIndex === 0"
-                    class="flex items-center gap-2 px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-30"
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                     <IconArrowLeft :size="16" /> Sebelumnya
                 </button>
-                <button
-                    v-if="currentQuestionIndex < totalQuestions - 1"
-                    @click="goToQuestion(currentQuestionIndex + 1)"
-                    class="flex items-center gap-2 px-5 py-2.5 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all"
-                >
-                    Selanjutnya <IconArrowRight :size="16" />
-                </button>
-                <div
-                    class="flex-1 flex items-center justify-end gap-4"
-                >
+                <div class="flex items-center gap-4">
                     <span class="text-label-md text-text-muted">
                         Terjawab {{ answeredIds.length }}/{{ totalQuestions }}
                     </span>
@@ -484,9 +499,19 @@ onUnmounted(() => {
                         class="text-label-md text-green-600 dark:text-green-400"
                         >✓ Tersimpan {{ lastSaved }}</span
                     >
+                </div>
+                <div class="flex items-center gap-3">
                     <button
+                        v-if="currentQuestionIndex < totalQuestions - 1"
+                        @click="goToQuestion(currentQuestionIndex + 1)"
+                        class="flex items-center gap-2 px-5 py-2.5 rounded-full text-label-md font-semibold bg-primary-container text-white hover:bg-primary transition-all shadow-md active:scale-95 duration-150"
+                    >
+                        Selanjutnya <IconArrowRight :size="16" />
+                    </button>
+                    <button
+                        v-else
                         @click="showSubmitConfirm = true"
-                        class="bg-primary-container text-white px-8 py-2.5 rounded-full text-label-md font-medium hover:bg-primary transition-all active:scale-95"
+                        class="flex items-center gap-2 px-5 py-2.5 rounded-full text-label-md font-semibold bg-secondary text-white hover:bg-secondary/90 transition-all shadow-md active:scale-95 duration-150"
                     >
                         Kumpulkan Ujian
                     </button>
@@ -497,40 +522,39 @@ onUnmounted(() => {
 
     <div
         v-if="showSubmitConfirm"
-        class="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-6"
+        class="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-6 backdrop-blur-sm"
         @click.self="showSubmitConfirm = false"
     >
         <div
             class="bg-surface-white rounded-3xl p-8 shadow-app-frame max-w-md w-full text-center"
         >
+            <div class="w-16 h-16 bg-pastel-purple rounded-full flex items-center justify-center mx-auto mb-5">
+                <span class="text-3xl">📝</span>
+            </div>
             <h2
-                class="text-headline-md font-bold text-primary mb-2"
+                class="text-headline-md font-bold text-text-heading mb-2"
             >
                 Yakin ingin mengumpulkan?
             </h2>
-            <p class="text-text-body text-body-md mb-2">
-                Soal terjawab: {{ answeredIds.length }} dari
-                {{ totalQuestions }}
+            <p class="text-text-body text-body-md mb-1">
+                Soal terjawab: <strong>{{ answeredIds.length }}</strong> dari {{ totalQuestions }}
             </p>
             <p class="text-text-muted text-label-md mb-6">
                 Jawaban tidak bisa diubah setelah dikumpulkan.
             </p>
-            <div class="flex gap-4">
-                <BaseButton
-                    variant="secondary"
-                    size="lg"
-                    class="flex-1"
+            <div class="flex gap-3">
+                <button
                     @click="showSubmitConfirm = false"
+                    class="flex-1 px-5 py-3 rounded-full text-label-md font-semibold border border-outline-variant bg-surface-white text-text-heading hover:bg-surface-container-low transition-all"
                 >
                     Kembali
-                </BaseButton>
-                <BaseButton
-                    size="lg"
-                    class="flex-1"
+                </button>
+                <button
                     @click="submitExam"
+                    class="flex-1 px-5 py-3 rounded-full text-label-md font-semibold bg-secondary text-white hover:bg-secondary/90 transition-all shadow-md active:scale-95 duration-150"
                 >
                     Kumpulkan
-                </BaseButton>
+                </button>
             </div>
         </div>
     </div>
@@ -541,6 +565,16 @@ onUnmounted(() => {
         :strike="strikeCount"
         @back="backToExam"
         @close="backToExam"
+    />
+
+    <QuestionGridModal
+        :show="showGridModal"
+        :total="totalQuestions"
+        :current-index="currentQuestionIndex"
+        :answer-by-index="answerByIndex"
+        :answered-count="answeredIds.length"
+        @navigate="goToQuestion"
+        @close="showGridModal = false"
     />
 </template>
 
@@ -556,11 +590,11 @@ onUnmounted(() => {
     border-radius: 10px;
 }
 .option-card:hover {
-    border-color: #5647c8;
-    background-color: #f3f3f6;
+    border-color: var(--color-secondary);
+    background-color: var(--color-surface-container-low);
 }
 .option-selected {
-    border-color: #5647c8 !important;
-    background-color: #ede9fc !important;
+    border-color: var(--color-secondary) !important;
+    background-color: var(--color-pastel-purple) !important;
 }
 </style>
