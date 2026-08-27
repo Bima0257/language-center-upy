@@ -1,6 +1,6 @@
 ---
 name: functional-testing
-description: "ALWAYS load at session start. Automatically runs functional testing whenever a feature or bugfix task is finished: identifies the touched module, runs the relevant tests, writes missing functional feature tests, forces the full suite green (phpunit + pint + eslint + phpstan/larastan), and reports PASS/FAIL. Functional (HTTP) level only — the dev still does manual UI testing. Re-tests automatically after every fix until green."
+description: "Load on demand when a feature/bugfix task is being finalized (after the work is done). Automatically runs functional testing: identifies the touched module, runs the relevant tests, writes missing functional feature tests, forces the full suite green (phpunit + pint + eslint + phpstan/larastan), and reports PASS/FAIL. Functional (HTTP) level only — the dev still does manual UI testing. Re-tests automatically after every fix until green."
 ---
 
 # Functional Testing
@@ -39,6 +39,8 @@ Before testing, determine exactly what was touched:
 | `app/Modules/Security` | Violations, strikes, session termination |
 | `app/Modules/Proctor` | Session review & decisions |
 | `app/Modules/Report` | Reports & exports |
+| `app/Modules/MasterData` | Master data CRUD (faculties, departments, exam types, skills, certificates, score interpretations) |
+| `app/Modules/Users` | User management (verification, onboarding, Google auth) |
 
 ---
 
@@ -173,13 +175,13 @@ Always report:
 - Full suite: HIJAU / MERAH
 ```
 
-**On failure: STOP. Report the failure with analysis (cause, affected code, suggested fix). Do NOT fix application code without the user's approval** (codebase-guardian: never silently change code). Trivial test-file fixes (wrong assertion, typo in test data) may be fixed directly — report them in the summary.
+**On failure: STOP. Report the failure with analysis (cause, affected code, suggested fix). Do NOT fix application code without the user's approval** (AGENTS.md: jangan ubah kode tak terkait tanpa izin). Trivial test-file fixes (wrong assertion, typo in test data) may be fixed directly — report them in the summary.
 
 ---
 
 ## Phase 6 — Session coordination integration
 
-Update `SESSION-STATUS.md` (see `session-coordination` skill): note `testing fungsional selesai` with timestamp once the full suite is green. If tests are red, note what is blocked.
+Update `SESSION-STATUS.md`: note `testing fungsional selesai` dengan timestamp setelah full suite hijau. Jika merah, catat apa yang blocked.
 
 ---
 
@@ -197,6 +199,6 @@ After the user applies a fix (or approves a fix), the skill MUST automatically:
 
 ## Boundaries
 
-- This skill does NOT commit anything (commit discipline belongs to `commit-message`).
+- This skill does NOT commit anything (commit conventions follow `AGENTS.md` — Konvensi commit).
 - This skill does NOT run browser/manual UI testing — that stays with the dev.
 - This skill does NOT change business logic on its own — only test files, plus reporting (and trivial test fixes).

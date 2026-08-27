@@ -211,7 +211,7 @@ Only then consume it. Never bypass to "just get it done" — that is exactly how
 | Route names | `{area}.{resource}.{action}` — dotted kebab-case (`admin.exams.sections.store`) |
 | Namespaces | `App\Modules\{Module}\{Layer}`; global layers `App\Models`, `App\Services`, `App\Http\...`, `App\Enums` |
 | Models | `app/Models/`, extend `Illuminate\Database\Eloquent\Model` |
-| Enums | `app/Enums/` (ExamMode, QuestionType, SessionStatus, ViolationSeverity, ViolationType) |
+| Enums | `app/Enums/` (ExamMode, PassageType, SessionStatus, SkillCode, ViolationSeverity, ViolationType) |
 | Auth/RBAC | `spatie/laravel-permission`; roles `superadmin`, `admin`, `instructor`, `proctor`, `student`; middleware `role:` |
 | Frontend | Inertia.js + Vue 3 — **NO Blade view files** (only `resources/views/app.blade.php` shell) |
 | Validation | FormRequest classes with `rules()`, `messages()`, `attributes()` |

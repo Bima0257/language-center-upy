@@ -1,21 +1,41 @@
 # Global Rules
 
-## Mandatory skill loading
+## Skill loading
 
-At the start of every session, and before any code-change request, use the `skill` tool to load:
+Load ONCE at the start of every session:
 
-- `codebase-guardian` — full codebase read-before-touch discipline, convention adherence, minimal-diff changes
-- `laravel-modular-monolith` — for every backend change (controllers, models, services, routes, migrations, requests); enforces module structure, thin controllers, repository pattern, and contract-based inter-module communication
+- `laravel-modular-monolith` — for every backend change (controllers, models, services, routes, migrations, requests); enforces module structure, service layer, contract-based inter-module communication, and global helper restrictions
+- `senior-backend` — for every backend change (alongside laravel-modular-monolith); enforces senior-level Laravel engineering quality: query performance (N+1, eager loading, chunking), security (mass assignment, per-record authorization, validation), error handling & logging, PHP 8.3 idioms, and caching only with explicit dev approval (cache driver varies per server: database or Redis)
 - `design-system-frontend` — for any UI, component, or page work in component-based frontend frameworks (Vue, React, Svelte, etc.)
-- `commit-message` — before any git commit/push; enforces conventional commit format `<type>(<scope>): <subject>` in Bahasa Indonesia (solo project — commits go directly on `testing`)
-- `session-coordination` — at every session start, on every branch; lightweight guard for parallel opencode windows on the same branch via per-branch file claims (SESSION-STATUS.md)
-- `functional-testing` — at the end of every feature/bugfix task; runs functional (HTTP-level) tests, writes missing feature tests, forces the full suite green (phpunit + pint + eslint + phpstan) with a re-test loop, and reports PASS/FAIL (manual UI testing stays with the dev)
+
+Loaded skills stay in context — DO NOT reload them during the session; reload only after context compaction (when their content is no longer in context).
+
+Load on demand, when the trigger hits:
+
+- `senior-database-implementation` — when the user provides a database schema or requests schema changes/evolution
+- `functional-testing` — when a feature/bugfix task is being finalized (after the work is done)
 
 Follow their instructions exactly once loaded.
 
+## Konvensi commit (ringkas)
+
+- Branch: kerja langsung di branch aktif (`testing`); untuk task spesifik: `feat/<slug>` atau `fix/<slug>`
+- Subject Bahasa Indonesia, imperative (tambah/perbaiki/hapus), ≤72 char, tanpa titik akhir
+- type: feat|fix|docs|style|refactor|test|chore|perf|ci|build
+- Body commit (jika ada): maksimal 2-3 bullet poin inti perubahan — jangan detail panjang
+
+## Aturan Clean Code & Best Practice (wajib)
+
+- **Minimal diff**: hanya ubah yang diminta task; jangan refactor/rename/reformat kode tak terkait (no drive-by changes).
+- **Jangan ubah kode tak terkait secara diam-diam** — laporkan bug yang ditemukan, jangan perbaiki tanpa izin.
+- **Penamaan deskriptif**: hindari variabel generik (`data`, `result`, `temp`, `item`); ikuti konvensi yang ada (snake_case DB, camelCase method/variable, PascalCase class).
+- **KISS/YAGNI**: tanpa approval user, jangan tambah abstraksi, dependency, atau pola baru yang belum ada di codebase.
+- **Self-review sebelum selesai**: trace logika end-to-end, cek edge case (null/empty/error), pastikan tidak ada call site yang rusak; "trivial change" pun wajib lolos lint/typecheck.
+- **Laporkan risiko**: sebutkan perubahan yang berisiko / perlu dicek manual di laporan akhir.
+
 ## Gate kualitas sebelum push (wajib)
 
-Semua cek HARUS hijau secara lokal sebelum push/merge. Siapkan sekali:
+Pipeline CI memeriksa: `eslint` + `pint` → `larastan` → `phpunit` → `deploy_dev`. Semua cek itu HARUS hijau secara lokal sebelum push/merge. Siapkan sekali:
 
 ```bash
 git config core.hooksPath .githooks   # sudah otomatis via composer setup
@@ -24,8 +44,9 @@ git config core.hooksPath .githooks   # sudah otomatis via composer setup
 Lalu sebelum push jalankan:
 
 ```bash
-npm run lint          # eslint resources/js/
-composer check        # pint --test + phpstan + phpunit
+npm run lint          # eslint resources/js/ (command identik CI)
+npm run build         # build frontend — CI juga build sebelum phpunit
+composer check        # pint --test + phpstan + phpunit (command identik CI)
 ```
 
 `composer check` gagal di langkah pertama tanpa mengecek yang lain (urutan sama seperti CI) — perbaiki lalu ulangi.
@@ -40,15 +61,16 @@ Otomatis di setiap commit: `eslint --fix` untuk file JS/Vue yang di-stage, `pint
 - Jangan `const props = defineProps(...)` jika `props` tidak dipakai — cukup `defineProps(...)`.
 - Model Eloquent baru WAJIB punya docblock `@property` (kolom + relasi + agregat seperti `*_count`) sesuai migrasi, agar larastan lulus.
 - Jangan `try/catch (QueryException)` mengelilingi `delete()` — larastan menandainya dead catch. Gunakan pre-check `$model->relasi()->exists()` untuk blokir hapus, atau langsung `delete()` jika tidak ada relasi yang mereferensikan.
-- Halaman data table baru: tiru pola cell dari file yang sudah lint-clean (mis. `Pages/Admin/MasterData/Skills.vue`), jangan salin dari commit lama yang error.
-- Controller WAJIB tipis — logika bisnis di `Services`/`Actions`, akses data lewat Repository Interface (lihat `laravel-modular-monolith`).
+- Halaman data table baru: tiru pola cell dari file yang sudah lint-clean (mis. `Pages/Admin/MasterData/ProgramStudi/Index.vue`), jangan salin dari commit lama yang error.
 
-## Branch & commit (solo project)
+## Konvensi port dev (shared server admin-rde)
 
-- Kerja langsung di `testing` — tidak ada pola penamaan branch wajib.
-- `main` dilindungi: jangan commit/push langsung tanpa konfirmasi eksplisit dari user.
-- Format commit: `<type>(<scope>): <subject>` — Bahasa Indonesia, imperative mood, tanpa suffix ticket (lihat skill `commit-message`).
+`php artisan serve` membaca `SERVER_PORT` dari `.env`; Vite membaca `VITE_PORT` dari `.env` (default 5180). Karena 1 mesin dipakai banyak dev, setiap dev WAJIB punya port unik di `.env` masing-masing (file lokal, tidak di-commit):
 
-## Konvensi port dev (lokal)
+| Dev | SERVER_PORT | VITE_PORT |
+|---|---|---|
+| dev1 | 8001 | 5181 |
+| dev2 | 8002 | 5182 |
+| dev3 | 8003 | 5183 |
 
-`php artisan serve` membaca `SERVER_PORT` dari `.env`; Vite membaca `VITE_PORT` dari `.env` (default 5180). Jika port 8000/5180 sedang dipakai proses lain, ganti dengan port kosong lain di `.env` (file lokal, tidak di-commit).
+Cek port bebas sebelum menjalankan server: `ss -tlnp | grep -E ':800[0-9]|:518[0-9]'`. Jika port konvensi sedang dipakai instance lama yang belum di-restart, pakai port kosong lain dan laporkan.

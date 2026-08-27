@@ -42,7 +42,7 @@ You MUST know the current state. Read:
 
 1. **`database/migrations/`** — ALL migrations live here (global, not per-module). Read the full list; timestamp order = run order.
 2. **`app/Models/`** — all Eloquent models, plain `Illuminate\Database\Eloquent\Model` (no base model class).
-3. **`app/Enums/`** — existing PHP enums (ExamMode, QuestionType, SessionStatus, ViolationSeverity, ViolationType).
+3. **`app/Enums/`** — existing PHP enums (ExamMode, PassageType, SessionStatus, SkillCode, ViolationSeverity, ViolationType).
 4. **`database/seeders/`** — `DatabaseSeeder.php` + existing seeder pattern (RoleSeeder → MasterDataSeeder → users → ExamSeeder).
 5. **`bootstrap/providers.php`** — module registration (for table → module ownership mapping).
 6. Run `php artisan migrate:status` — know exactly which migrations have run. Do NOT trust memory.
