@@ -78,7 +78,7 @@ const handleGoogleClick = () => {
     <Head title="Masuk" />
 
     <AuthCard
-        title="Tingkatkan skor TOEFL iBT-mu."
+        title="Tingkatkan skor Tes Bahasa Anda."
         subtitle="Bergabunglah dengan ribuan kandidat yang meraih impian mereka melalui lingkungan belajar profesional kami."
     >
         <header class="mb-5">

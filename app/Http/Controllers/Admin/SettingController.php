@@ -14,7 +14,7 @@ class SettingController extends Controller
     private const DEFAULTS = [
         'general' => [
             'app_name' => 'UPY Language Test',
-            'app_tagline' => 'Platform Ujian TOEFL iBT',
+            'app_tagline' => 'Platform Tes Bahasa',
         ],
         'exam' => [
             'default_max_strikes' => '3',

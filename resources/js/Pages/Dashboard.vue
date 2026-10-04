@@ -134,7 +134,7 @@ async function reviewQuestion(id, status) {
                     <p class="text-title-lg font-semibold">Tryout Tersedia</p>
                     <p class="text-white/80 text-body-md">
                         {{ availableExamsCount }} ujian tersedia — Cek kemampuan
-                        TOEFL Anda
+                        Tes Bahasa Anda
                     </p>
                 </div>
                 <IconClipboardCheck :size="32" stroke="1.5" />

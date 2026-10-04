@@ -47,7 +47,7 @@ defineEmits(['type-change', 'bank-change', 'reset']);
             <UserGuide
                 title="Panduan Bank Soal"
                 :steps="[
-                    { title: 'Pilih Jenis Tes', desc: 'Pilih kategori tes (mis. TOEFL) untuk menyaring bank soal.' },
+                    { title: 'Pilih Jenis Tes', desc: 'Pilih kategori tes (mis. Tes Bahasa) untuk menyaring bank soal.' },
                     { title: 'Pilih Bank Soal', desc: 'Daftar bank sesuai jenis tes; soal baru tampil setelah bank dipilih.' },
                     { title: 'Kelola & Filter Soal', desc: 'Gunakan filter Skill, Part, dan Status untuk menemukan soal.' },
                 ]"

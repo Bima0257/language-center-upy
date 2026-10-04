@@ -27,7 +27,7 @@ onUnmounted(() => {
                     <span class="text-title-lg font-bold text-primary">UPY Language Test</span>
                 </div>
                 <p class="text-text-body text-body-md mb-6">
-                    Memberdayakan mahasiswa di seluruh Indonesia dengan persiapan TOEFL iBT dan bimbingan ahli.
+                    Memberdayakan mahasiswa di seluruh Indonesia dengan persiapan Tes Bahasa dan bimbingan ahli.
                 </p>
                 <div class="flex gap-4">
                     <a href="#" class="w-8 h-8 rounded-full bg-surface-white flex items-center justify-center text-primary hover:bg-primary-container hover:text-white transition-colors">

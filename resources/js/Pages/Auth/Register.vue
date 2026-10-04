@@ -76,12 +76,12 @@ const handleGoogleClick = () => {
     <Head title="Daftar" />
 
     <AuthCard
-        title="Mulai Perjalanan TOEFL-mu."
+        title="Mulai Perjalanan Tes Bahasa Anda."
         subtitle="Bergabunglah dengan ribuan peserta yang berhasil meraih skor impian mereka bersama UPY Language Test."
     >
         <header class="mb-5">
             <h1 class="text-primary text-headline-md font-bold mb-2">Buat Akun Baru</h1>
-            <p class="text-text-body text-body-md">Mulai persiapan TOEFL Anda bersama kami.</p>
+            <p class="text-text-body text-body-md">Mulai persiapan Tes Bahasa Anda bersama kami.</p>
         </header>
 
         <div class="bg-surface-container-lowest rounded-2xl p-5 md:p-6">

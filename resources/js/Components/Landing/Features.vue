@@ -5,7 +5,7 @@ import { h } from 'vue';
 const features = [
     {
         title: 'Try Out Lengkap',
-        description: 'Simulasi ujian realistis yang mereplikasi lingkungan tes TOEFL iBT sesungguhnya.',
+        description: 'Simulasi ujian realistis yang menyerupai kondisi Tes Bahasa sebenarnya.',
         icon: h(IconListCheck),
         bgClass: 'bg-pastel-blue',
         iconClass: 'text-icon-pastel',
@@ -56,7 +56,7 @@ const features = [
                     Kenapa UPY Language Test?
                 </h2>
                 <p class="text-text-muted text-body-md">
-                    Alat canggih untuk kesuksesan TOEFL.
+                    Alat canggih untuk membantu Anda meraih skor Tes Bahasa.
                 </p>
             </div>
             <a href="#" class="text-primary font-bold flex items-center gap-1 hover:underline text-sm">

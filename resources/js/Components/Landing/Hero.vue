@@ -8,7 +8,7 @@ import { IconArrowRight, IconBook2, IconMicrophone, IconHeadphones, IconPencil }
         <div class="bg-primary-container rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between overflow-hidden relative">
             <div class="z-10 text-center md:text-left md:max-w-[50%]">
                 <h1 class="text-white text-3xl md:text-4xl font-bold leading-tight mb-4">
-                    Kuasai TOEFL iBT.<br />Raih Masa Depanmu.
+                    Kuasai Tes Bahasa.<br />Raih Masa Depanmu.
                 </h1>
                 <p class="text-on-primary-container text-body-md mb-8 max-w-sm mx-auto md:mx-0">
                     Cara cerdas untuk berlatih dan sukses dengan metodologi berpengalaman.

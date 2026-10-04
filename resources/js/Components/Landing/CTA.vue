@@ -12,7 +12,7 @@ import { Link } from '@inertiajs/vue3';
                     Siap capai skor impianmu?
                 </h2>
                 <p class="text-text-body text-body-md mb-10 max-w-xl mx-auto">
-                    Bergabunglah dengan ribuan mahasiswa yang telah meningkatkan skor TOEFL mereka.
+                    Bergabunglah dengan ribuan mahasiswa yang telah meningkatkan skor Tes Bahasa mereka.
                 </p>
                 <Link :href="route('register')"
                       class="inline-block bg-primary-container text-white px-10 py-4 rounded-full font-bold text-title-lg hover:scale-105 active:scale-95 transition-all">
