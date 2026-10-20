@@ -20,16 +20,16 @@ const PALETTE = [
     '--color-pastel-peach',
 ];
 
-function themeColor(name, fallback) {
+function themeColor(name) {
     const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    return value || fallback;
+    return value;
 }
 
 const chartData = ref(buildData());
 const chartOptions = ref(buildOptions());
 
 function buildData() {
-    const colors = PALETTE.map((c) => themeColor(c, '#5647c8'));
+    const colors = PALETTE.map((c) => themeColor(c));
 
     return {
         labels: props.labels,
@@ -38,7 +38,7 @@ function buildData() {
             backgroundColor: colors,
             hoverOffset: 8,
             borderWidth: 2,
-            borderColor: themeColor('--color-surface-white', '#ffffff'),
+            borderColor: themeColor('--color-surface-white'),
         }],
     };
 }
@@ -52,7 +52,7 @@ function buildOptions() {
             legend: {
                 position: 'bottom',
                 labels: {
-                    color: themeColor('--color-text-body', '#6e6e85'),
+                    color: themeColor('--color-text-body'),
                     boxWidth: 12,
                     padding: 12,
                     font: { size: 12 },
@@ -61,7 +61,7 @@ function buildOptions() {
             title: {
                 display: true,
                 text: props.title,
-                color: themeColor('--color-text-heading', '#161328'),
+                color: themeColor('--color-text-heading'),
                 font: { size: 14, weight: '600' },
                 padding: { bottom: 8 },
             },

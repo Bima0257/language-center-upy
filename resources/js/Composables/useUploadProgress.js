@@ -21,7 +21,7 @@ function mayNeedCompression(file, type) {
 
 export function useUploadProgress(
     form,
-    { audioField = "audio_file", imageField = "image_file" } = {},
+    { audioField = "berkas_audio", imageField = "berkas_gambar" } = {},
 ) {
     const audioMayCompress = computed(() => mayNeedCompression(form[audioField], 'audio'));
     const imageMayCompress = computed(() => mayNeedCompression(form[imageField], 'image'));

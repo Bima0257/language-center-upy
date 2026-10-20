@@ -1,25 +1,25 @@
 <?php
 
-use App\Modules\Exam\Providers\ExamModuleServiceProvider;
-use App\Modules\MasterData\Providers\MasterDataModuleServiceProvider;
-use App\Modules\Proctor\Providers\ProctorModuleServiceProvider;
-use App\Modules\Report\Providers\ReportModuleServiceProvider;
-use App\Modules\Schedule\Providers\ScheduleModuleServiceProvider;
-use App\Modules\Scoring\Providers\ScoringModuleServiceProvider;
-use App\Modules\Security\Providers\SecurityModuleServiceProvider;
-use App\Modules\Session\Providers\SessionModuleServiceProvider;
-use App\Modules\Users\Providers\UsersModuleServiceProvider;
+use App\Modules\DataInduk\Providers\DataIndukModuleServiceProvider;
+use App\Modules\Keamanan\Providers\KeamananModuleServiceProvider;
+use App\Modules\Laporan\Providers\LaporanModuleServiceProvider;
+use App\Modules\PelaksanaanUjian\Providers\PelaksanaanUjianModuleServiceProvider;
+use App\Modules\Pengawasan\Providers\PengawasanModuleServiceProvider;
+use App\Modules\Pengguna\Providers\PenggunaModuleServiceProvider;
+use App\Modules\Penilaian\Providers\PenilaianModuleServiceProvider;
+use App\Modules\Penjadwalan\Providers\PenjadwalanModuleServiceProvider;
+use App\Modules\Ujian\Providers\UjianModuleServiceProvider;
 use App\Providers\AppServiceProvider;
 
 return [
     AppServiceProvider::class,
-    ExamModuleServiceProvider::class,
-    ScheduleModuleServiceProvider::class,
-    SessionModuleServiceProvider::class,
-    SecurityModuleServiceProvider::class,
-    ProctorModuleServiceProvider::class,
-    ScoringModuleServiceProvider::class,
-    ReportModuleServiceProvider::class,
-    MasterDataModuleServiceProvider::class,
-    UsersModuleServiceProvider::class,
+    UjianModuleServiceProvider::class,
+    PenjadwalanModuleServiceProvider::class,
+    PelaksanaanUjianModuleServiceProvider::class,
+    KeamananModuleServiceProvider::class,
+    PengawasanModuleServiceProvider::class,
+    PenilaianModuleServiceProvider::class,
+    LaporanModuleServiceProvider::class,
+    DataIndukModuleServiceProvider::class,
+    PenggunaModuleServiceProvider::class,
 ];

@@ -33,25 +33,17 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        $user = $request->user();
+        $pengguna = $request->user();
 
-        $user->invalidateOtherSessions();
+        $pengguna->batalkanSesiLain();
 
         cookie()->queue(cookie('_logged', '1', config('session.lifetime')));
 
-        if ($user->hasRole('proctor') && ! $user->hasRole('admin') && ! $user->hasRole('superadmin')) {
-            return redirect()->intended(route('proctor.dashboard', absolute: false));
-        }
-
-        if ($user->hasRole('instructor')) {
-            return redirect()->intended(route('content-library.index', absolute: false));
-        }
-
-        if ($user->hasRole('student') && ! $user->hasVerifiedProfile()) {
+        if ($pengguna->hasRole('student') && ! $pengguna->profilTerverifikasi()) {
             return redirect()->route('onboarding.verify-identity');
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended(route('dasbor', absolute: false));
     }
 
     /**

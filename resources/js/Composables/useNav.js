@@ -18,77 +18,82 @@ import {
     IconChartBar,
 } from "@tabler/icons-vue";
 
-export function getNav(roles) {
-    const isStudent = roles.includes("student");
-    const isInstructor = roles.includes("instructor");
+export function getNav(roles, permissions = []) {
+    const isMahasiswa = roles.includes("mahasiswa");
+    const isSuperadmin = roles.includes("superadmin");
     const isAdmin = roles.includes("admin") || roles.includes("superadmin");
-    const isProctorOnly = roles.includes("proctor") && !isAdmin;
+    const can = (permission) => isSuperadmin || permissions.includes(permission);
 
     const nav = [];
 
-    if (isStudent) {
+    if (isMahasiswa) {
         nav.push(
-            { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
-            { label: "Tryout", icon: IconClipboardCheck, route: "exam.available" },
-            { label: "Ujian", icon: IconCalendarEvent, route: "exam.schedule" },
-            { label: "Riwayat Tryout", icon: IconHistory, route: "exam.history" },
-            { label: "Sertifikat", icon: IconCertificate, route: "exam.certificates" },
-        );
-    }
-
-    if (isInstructor) {
-        nav.push(
-            { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
-            { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },
-            { label: "Materi Soal", icon: IconFileDescription, route: "content-library.passages.index" },
-        );
-    }
-
-    if (isProctorOnly) {
-        nav.push(
-            { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
-            { label: "Dashboard Pengawas", icon: IconEyeCheck, route: "proctor.dashboard" },
+            { label: "Dasbor", icon: IconChartPie, route: "dasbor" },
+            { label: "Tryout", icon: IconClipboardCheck, route: "ujian.tersedia", permission: "exam_session.take" },
+            { label: "Ujian", icon: IconCalendarEvent, route: "ujian.jadwal", permission: "exam_session.take" },
+            { label: "Riwayat Tryout", icon: IconHistory, route: "ujian.riwayat", permission: "exam_session.take" },
+            { label: "Sertifikat", icon: IconCertificate, route: "ujian.sertifikat", permission: "exam_session.take" },
         );
     }
 
     if (isAdmin) {
         nav.push(
-            { label: "Dashboard", icon: IconChartPie, route: "dashboard" },
+            { label: "Dasbor", icon: IconChartPie, route: "dasbor" },
             {
                 label: "Soal",
                 icon: IconBooks,
                 children: [
-                    { label: "Jenis Tes", icon: IconCategory, route: "admin.master-data.exam-types.index" },
-                    { label: "Skill", icon: IconListDetails, route: "admin.master-data.skills.index" },
-                    { label: "Bank Soal Manager", icon: IconFolders, route: "content-library.question-banks.index" },
-                    { label: "Part Soal", icon: IconListDetails, route: "admin.master-data.parts.index" },
-                    { label: "Materi Soal", icon: IconFileDescription, route: "content-library.passages.index" },
-                    { label: "Bank Soal", icon: IconBooks, route: "content-library.index" },
-                    { label: "Fakultas", icon: IconBuilding, route: "admin.master-data.faculties.index" },
-                    { label: "Jurusan", icon: IconSchool, route: "admin.master-data.departments.index" },
-                    { label: "Interpretasi Skor", icon: IconListDetails, route: "admin.master-data.score-interpretations.index" },
+                    { label: "Bank Soal Manager", icon: IconFolders, route: "pustaka-soal.bank-soal.daftar", permission: "soal.view" },
+                    { label: "Bagian Soal", icon: IconListDetails, route: "admin.data-induk.bagian-soal.daftar", permission: "master_data.view" },
+                    { label: "Bank Soal", icon: IconBooks, route: "pustaka-soal.daftar", permission: "soal.view" },
+                ],
+            },
+            {
+                label: "Master Data",
+                icon: IconFolders,
+                children: [
+                    { label: "Kategori Tes", icon: IconCategory, route: "admin.data-induk.jenis-tes.daftar", permission: "master_data.view" },
+                    { label: "Keterampilan", icon: IconListDetails, route: "admin.data-induk.keterampilan.daftar", permission: "master_data.view" },
+                    { label: "Fakultas", icon: IconBuilding, route: "admin.data-induk.fakultas.daftar", permission: "master_data.view" },
+                    { label: "Jurusan", icon: IconSchool, route: "admin.data-induk.program-studi.daftar", permission: "master_data.view" },
+                    { label: "Interpretasi Skor", icon: IconListDetails, route: "admin.data-induk.interpretasi-skor.daftar", permission: "master_data.view" },
                 ],
             },
             {
                 label: "Manajemen Ujian",
                 icon: IconFileDescription,
                 children: [
-                    { label: "Daftar Ujian", icon: IconClipboardCheck, route: "admin.exams.index" },
-                    { label: "Penjadwalan", icon: IconCalendarEvent, route: "admin.schedules.all" },
+                    { label: "Daftar Ujian", icon: IconClipboardCheck, route: "admin.ujian.daftar", permission: "exam.manage" },
+                    { label: "Penjadwalan", icon: IconCalendarEvent, route: "admin.periode-ujian.daftar", permission: "periodeUjian.view" },
                 ],
             },
-            { label: "Verifikasi", icon: IconUsers, route: "admin.verify-users" },
-            { label: "Sertifikat", icon: IconCertificate, route: "admin.certificates.index" },
-            { label: "Dashboard Pengawas", icon: IconEyeCheck, route: "proctor.dashboard" },
-            { label: "Manajemen User", icon: IconUsers, route: "admin.users.index" },
-            { label: "Log Aktivitas", icon: IconHistory, route: "admin.audit-logs.index" },
-            { label: "Analytics", icon: IconChartBar, route: "admin.analytics.index" },
-            { label: "Pengaturan", icon: IconSettings, route: "admin.settings.index" },
-            { label: "Laporan", icon: IconReport, route: "admin.reports.integrity" },
+            { label: "Verifikasi", icon: IconUsers, route: "admin.verifikasi-pengguna", permission: "pengguna.view" },
+            { label: "Sertifikat", icon: IconCertificate, route: "admin.sertifikat.daftar", permission: "certificate.view" },
+            { label: "Dasbor Pengawas", icon: IconEyeCheck, route: "pengawas.dasbor", permission: "exam_session.monitor" },
+            { label: "Manajemen Pengguna", icon: IconUsers, route: "admin.pengguna.daftar", permission: "pengguna.view" },
+            { label: "Log Aktivitas", icon: IconHistory, route: "admin.catatan-aktivitas.daftar", permission: "audit_log.view" },
+            { label: "Analitik", icon: IconChartBar, route: "admin.analitik.daftar", permission: "analytics.view" },
+            { label: "Pengaturan", icon: IconSettings, route: "admin.pengaturan.daftar", permission: "settings.manage" },
+            { label: "Pratinjau Komponen", icon: IconCategory, route: "admin.komponen.daftar", permission: "components.view" },
+            { label: "Laporan", icon: IconReport, route: "admin.laporan.sesi", permission: "report.view" },
         );
     }
 
-    return nav;
+    return nav.flatMap((item) => {
+        if (item.permission && !can(item.permission)) {
+            return [];
+        }
+
+        if (!item.children) {
+            return [item];
+        }
+
+        const children = item.children.filter(
+            (child) => !child.permission || can(child.permission),
+        );
+
+        return children.length ? [{ ...item, children }] : [];
+    });
 }
 
 function baseOf(route) {
@@ -103,6 +108,7 @@ function routeMatches(routeName, base) {
 
 export function getBreadcrumbs(title) {
     const roles = window.__inertia_page?.props?.auth?.roles || [];
+    const permissions = window.__inertia_page?.props?.auth?.permissions || [];
 
     let routeName = null;
     try {
@@ -120,16 +126,16 @@ export function getBreadcrumbs(title) {
         return fallback(candidate);
     };
 
-    if (routeName === "dashboard") {
-        return [{ label: "Dasbor", route: "dashboard" }];
+    if (routeName === "dasbor") {
+        return [{ label: "Dasbor", route: "dasbor" }];
     }
 
-    const items = [{ label: "Dasbor", route: "dashboard" }];
+    const items = [{ label: "Dasbor", route: "dasbor" }];
 
     let best = null;
     let bestBase = "";
 
-    for (const item of getNav(roles)) {
+    for (const item of getNav(roles, permissions)) {
         if (item.children) {
             for (const child of item.children) {
                 const childBase = baseOf(child.route);

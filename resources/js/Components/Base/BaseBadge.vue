@@ -6,12 +6,12 @@ const props = defineProps({
 });
 
 const variantClasses = {
-    neutral: "bg-surface-container text-text-body",
-    primary: "bg-primary-container text-white",
+    neutral: "bg-neutral-container text-on-neutral-container",
+    primary: "bg-primary-container text-on-primary-container",
     secondary: "bg-secondary/10 text-secondary",
-    success: "bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300",
-    warning: "bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300",
-    danger: "bg-error-red/10 text-error-red",
+    success: "bg-success-container text-on-success-container",
+    warning: "bg-warning-container text-on-warning-container",
+    danger: "bg-error-container text-on-error-container",
     pastel: "bg-pastel-purple text-primary",
     "pastel-blue": "bg-pastel-blue text-primary",
     "pastel-peach": "bg-pastel-peach text-primary",

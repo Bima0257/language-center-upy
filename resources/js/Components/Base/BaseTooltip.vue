@@ -25,7 +25,7 @@ const positionClasses = {
         <slot />
         <div
             v-if="visible"
-            class="absolute z-50 whitespace-nowrap bg-primary-container text-white text-label-md px-3 py-1.5 rounded-lg shadow-soft pointer-events-none"
+            class="absolute z-50 whitespace-nowrap bg-primary-container text-on-primary-container text-label-md px-3 py-1.5 rounded-lg shadow-soft pointer-events-none"
             :class="positionClasses[position]"
         >
             {{ text }}

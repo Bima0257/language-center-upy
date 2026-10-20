@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Pengguna;
 use App\Rules\Turnstile;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -26,26 +26,26 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'email' => 'required|string|lowercase|email|max:255|unique:'.Pengguna::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'cf-turnstile-response' => [app()->environment('local', 'testing') ? 'sometimes' : 'required', new Turnstile],
         ]);
 
-        $user = DB::transaction(function () use ($request) {
-            $user = User::create([
+        $pengguna = DB::transaction(function () use ($request) {
+            $pengguna = Pengguna::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
             ]);
 
-            $user->assignRole('student');
+            $pengguna->assignRole('student');
 
-            return $user;
+            return $pengguna;
         });
 
-        event(new Registered($user));
+        event(new Registered($pengguna));
 
-        Auth::login($user);
+        Auth::login($pengguna);
 
         return redirect(route('verification.notice', absolute: false));
     }

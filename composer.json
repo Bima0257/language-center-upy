@@ -54,7 +54,7 @@
             "git config core.hooksPath .githooks"
         ],
         "check": [
-            "@pint --test",
+            "@php vendor/bin/pint --test",
             "@phpstan",
             "@test"
         ],

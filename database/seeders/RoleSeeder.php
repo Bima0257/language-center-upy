@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 class RoleSeeder extends Seeder
@@ -13,7 +13,7 @@ class RoleSeeder extends Seeder
     {
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $permissions = [
+        $permissionNames = [
             'user.view',
             'user.create',
             'user.edit',
@@ -23,8 +23,10 @@ class RoleSeeder extends Seeder
             'exam.edit',
             'exam.delete',
             'exam.view',
+            'exam.manage',
 
             'exam_session.view',
+            'exam_session.take',
             'exam_session.monitor',
             'exam_session.terminate',
 
@@ -52,28 +54,53 @@ class RoleSeeder extends Seeder
             'appeal.view',
 
             'settings.manage',
+
+            'master_data.view',
+            'master_data.manage',
+            'certificate.view',
+            'certificate.create',
+            'certificate.delete',
+            'audit_log.view',
+            'analytics.view',
+            'components.view',
         ];
 
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        foreach ($permissionNames as $permissionName) {
+            Permission::firstOrCreate(['name' => $permissionName, 'guard_name' => 'web']);
         }
 
+        $permissions = Permission::query()
+            ->where('guard_name', 'web')
+            ->whereIn('name', $permissionNames)
+            ->get();
+
         $superadmin = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
-        $superadmin->givePermissionTo(Permission::all());
+        $superadmin->syncPermissions($permissions);
 
         $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        $admin->givePermissionTo([
+        $admin->syncPermissions([
             'user.view', 'user.create', 'user.edit',
-            'exam.view', 'exam.create', 'exam.edit',
-            'schedule.view', 'schedule.create', 'schedule.edit', 'schedule.delete',
+            'exam.view', 'exam.manage', 'exam.create', 'exam.edit', 'exam.delete',
             'exam_session.view',
-            'review.violations', 'review.decide',
+            'exam_session.monitor',
+            'exam_session.terminate',
+            'schedule.view', 'schedule.create', 'schedule.edit', 'schedule.delete',
+            'question.view', 'question.create', 'question.edit', 'question.delete',
+            'review.violations',
+            'review.decide',
             'report.view', 'report.export',
+            'speaking_score.create',
+            'writing_score.create',
             'settings.manage',
+            'master_data.view', 'master_data.manage',
+            'certificate.view', 'certificate.create', 'certificate.delete',
+            'audit_log.view',
+            'analytics.view',
+            'components.view',
         ]);
 
         $proctor = Role::firstOrCreate(['name' => 'proctor', 'guard_name' => 'web']);
-        $proctor->givePermissionTo([
+        $proctor->syncPermissions([
             'exam_session.view',
             'exam_session.monitor',
             'exam_session.terminate',
@@ -82,7 +109,7 @@ class RoleSeeder extends Seeder
         ]);
 
         $instructor = Role::firstOrCreate(['name' => 'instructor', 'guard_name' => 'web']);
-        $instructor->givePermissionTo([
+        $instructor->syncPermissions([
             'question.create', 'question.edit', 'question.delete', 'question.view',
             'exam.view',
             'user.view',
@@ -91,9 +118,10 @@ class RoleSeeder extends Seeder
         ]);
 
         $student = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
-        $student->givePermissionTo([
+        $student->syncPermissions([
             'exam.view',
             'exam_session.view',
+            'exam_session.take',
         ]);
     }
 }

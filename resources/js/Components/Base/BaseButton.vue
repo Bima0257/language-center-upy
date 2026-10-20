@@ -11,12 +11,12 @@ const props = defineProps({
 });
 
 const variantClasses = {
-    primary: "bg-primary-container text-white hover:bg-primary",
+    primary: "bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary",
     secondary:
         "border border-outline-variant bg-surface-white text-text-body hover:bg-surface-container-low",
-    danger: "bg-error-red text-white hover:bg-red-700",
-    success: "bg-green-600 text-white hover:bg-green-700",
-    warning: "bg-amber-500 text-white hover:bg-amber-600",
+    danger: "bg-error-red text-on-error hover:bg-error-container hover:text-on-error-container",
+    success: "bg-success text-on-success hover:bg-success-container hover:text-on-success-container",
+    warning: "bg-warning text-on-warning hover:bg-warning-container hover:text-on-warning-container",
     ghost: "text-primary hover:bg-surface-container-low",
 };
 

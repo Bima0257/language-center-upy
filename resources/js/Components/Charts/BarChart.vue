@@ -19,9 +19,9 @@ const props = defineProps({
     title: { type: String, default: '' },
 });
 
-function themeColor(name, fallback) {
+function themeColor(name) {
     const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    return value || fallback;
+    return value;
 }
 
 const chartData = ref(buildData());
@@ -33,7 +33,7 @@ function buildData() {
         datasets: [{
             label: props.title,
             data: props.data,
-            backgroundColor: themeColor('--color-primary', '#191a3b'),
+            backgroundColor: themeColor('--color-primary'),
             borderRadius: 6,
             maxBarThickness: 40,
         }],
@@ -41,7 +41,7 @@ function buildData() {
 }
 
 function buildOptions() {
-    const gridColor = themeColor('--color-outline-variant', '#c8c5cf') + '33';
+    const gridColor = themeColor('--color-outline-variant') + '33';
     return {
         responsive: true,
         maintainAspectRatio: false,
@@ -50,19 +50,19 @@ function buildOptions() {
             title: {
                 display: true,
                 text: props.title,
-                color: themeColor('--color-text-heading', '#161328'),
+                color: themeColor('--color-text-heading'),
                 font: { size: 14, weight: '600' },
                 padding: { bottom: 12 },
             },
         },
         scales: {
             x: {
-                ticks: { color: themeColor('--color-text-body', '#6e6e85') },
+                ticks: { color: themeColor('--color-text-body') },
                 grid: { color: gridColor },
             },
             y: {
                 beginAtZero: true,
-                ticks: { color: themeColor('--color-text-body', '#6e6e85'), precision: 0 },
+                ticks: { color: themeColor('--color-text-body'), precision: 0 },
                 grid: { color: gridColor },
             },
         },

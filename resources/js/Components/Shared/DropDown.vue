@@ -1,7 +1,7 @@
 <script setup>
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 import { IconSelector, IconCheck, IconX } from '@tabler/icons-vue'
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 const props = defineProps({
     modelValue: { default: null },
@@ -13,11 +13,15 @@ const props = defineProps({
     optionValue: { type: [String, Function], default: 'id' },
     size: { type: String, default: 'md' },
     buttonClass: { type: String, default: '' },
+    menuPlacement: { type: String, default: 'bottom' },
     clearable: { type: Boolean, default: false },
     emptyMessage: { type: String, default: '' },
 })
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue', 'change', 'open-change'])
+
+const dropdownRoot = ref(null)
+const menuOpen = ref(false)
 
 function labelOf(option) {
     if (option === null || option === undefined) return ''
@@ -40,9 +44,30 @@ const selected = computed(() =>
 
 function handleUpdate(val) {
     const v = val === null ? '' : valueOf(val)
+    setMenuOpen(false)
     emit('update:modelValue', v)
     emit('change', v)
 }
+
+function setMenuOpen(open) {
+    menuOpen.value = open
+    emit('open-change', open)
+}
+
+function toggleMenu() {
+    setMenuOpen(!menuOpen.value)
+}
+
+function closeMenu() {
+    if (menuOpen.value) setMenuOpen(false)
+}
+
+function closeOnOutsideClick(event) {
+    if (!dropdownRoot.value?.contains(event.target)) closeMenu()
+}
+
+onMounted(() => document.addEventListener('mousedown', closeOnOutsideClick))
+onBeforeUnmount(() => document.removeEventListener('mousedown', closeOnOutsideClick))
 
 const sizeClasses = {
     md: 'px-4 py-3 text-body-md rounded-2xl',
@@ -51,13 +76,15 @@ const sizeClasses = {
 </script>
 
 <template>
-    <div>
+    <div ref="dropdownRoot">
         <label v-if="label" class="text-label-md font-medium text-primary block mb-1.5">{{ label }}</label>
         <Listbox :model-value="selected" @update:model-value="handleUpdate" :disabled="disabled">
             <div class="relative">
                 <ListboxButton
                     class="w-full flex items-center justify-between gap-2 bg-surface-container-lowest border border-outline-variant text-text-body focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     :class="[sizeClasses[size], buttonClass]"
+                    @click="toggleMenu"
+                    @keydown.esc="closeMenu"
                 >
                     <span class="truncate" :class="selected ? 'text-text-body' : 'text-text-muted'">
                         {{ selected ? labelOf(selected) : placeholder }}
@@ -85,7 +112,8 @@ const sizeClasses = {
                     leave-to-class="transform scale-95 opacity-0"
                 >
                     <ListboxOptions
-                        class="absolute z-50 mt-1.5 w-full max-h-60 overflow-auto rounded-2xl bg-surface-white border border-outline-variant shadow-soft py-1.5 focus:outline-none"
+                        class="absolute left-0 z-50 w-full max-h-60 overflow-auto rounded-2xl bg-surface-white border border-outline-variant shadow-soft py-1.5 focus:outline-none"
+                        :class="menuPlacement === 'top' ? 'bottom-full mb-1.5' : 'mt-1.5'"
                     >
                         <div v-if="options.length === 0 && emptyMessage"
                              class="px-3.5 py-4 text-center text-text-muted text-body-md">

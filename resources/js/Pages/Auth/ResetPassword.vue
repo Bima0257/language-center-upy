@@ -1,6 +1,6 @@
 <script setup>
-import AuthCard from '@/Components/Landing/AuthCard.vue';
-import PasswordStrengthCheck from '@/Components/PasswordStrengthCheck.vue';
+import AuthCard from '@/Pages/Auth/Components/AuthCard.vue';
+import PasswordStrengthCheck from '@/Components/Shared/PasswordStrengthCheck.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({

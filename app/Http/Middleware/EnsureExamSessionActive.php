@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\SessionStatus;
+use App\Enums\StatusSesi;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -11,14 +11,14 @@ class EnsureExamSessionActive
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $session = $request->route('examSession');
+        $sesiUjian = $request->route('sesiUjian');
 
-        if (! $session || $session->user_id !== $request->user()->id) {
+        if (! $sesiUjian || $sesiUjian->pengguna_id !== $request->user()->id) {
             abort(403, 'Unauthorized.');
         }
 
-        if ($session->status !== SessionStatus::IN_PROGRESS) {
-            return to_route('dashboard')
+        if ($sesiUjian->status !== StatusSesi::IN_PROGRESS) {
+            return to_route('dasbor')
                 ->with('error', 'Sesi ujian sudah tidak aktif.');
         }
 

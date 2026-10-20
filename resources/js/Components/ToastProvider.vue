@@ -7,7 +7,7 @@ import { usePage } from '@inertiajs/vue3'
 const page = usePage()
 
 const offset = computed(() => {
-    if (page?.component?.startsWith('Exam/')) return 64
+    if (page?.component?.startsWith('Ujian/')) return 64
     if (page?.component?.startsWith('Auth/')) return 16
     return 96
 })

@@ -13,9 +13,9 @@ const defaultLabels = {
     rejected: "Ditolak",
 };
 const defaultColors = {
-    draft: "bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300",
-    approved: "bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-300",
-    rejected: "bg-error-red/10 text-error-red",
+    draft: "bg-warning-container text-on-warning-container",
+    approved: "bg-success-container text-on-success-container",
+    rejected: "bg-error-container text-on-error-container",
 };
 
 const label = computed(
@@ -28,7 +28,7 @@ const colorClass = computed(
     () =>
         props.colors?.[props.status] ??
         defaultColors[props.status] ??
-        "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
+        "bg-neutral-container text-on-neutral-container",
 );
 </script>
 

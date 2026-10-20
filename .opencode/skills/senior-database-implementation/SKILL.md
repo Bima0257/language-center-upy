@@ -274,8 +274,8 @@ Run when tables/columns/models already exist and the update changes them. Detect
 
 - [ ] `php artisan migrate:fresh --seed` (greenfield) or `php artisan migrate` (evolution) — success, no warnings
 - [ ] `php artisan migrate:status` — every new migration shows "Ran"
-- [ ] `composer test` (or targeted tests) — pass; schema changes must not break existing tests
-- [ ] `./vendor/bin/pint --test` — formatting clean; run `./vendor/bin/pint` to fix if not
+- [ ] Targeted tests for the schema change — pass; full PHPUnit runs in merge CI
+- [ ] `./vendor/bin/pint --test <changed PHP files>` — formatting clean; run Pint on those files to fix if not
 - [ ] No new composer/npm packages introduced
 - [ ] If you ran `migrate:fresh`, the DB is now a clean dev DB — say so explicitly in your summary
 
@@ -303,7 +303,7 @@ Schema changes ripple into code. You are NOT allowed to silently update business
 - [ ] Models extend `Illuminate\Database\Eloquent\Model` with `#[Fillable([...])]`/`casts()`/relations matching schema
 - [ ] Seeders idempotent on natural keys, registered in `DatabaseSeeder`
 - [ ] Evolution: impact analysis greps done, breaking changes user-approved
-- [ ] `migrate`/`migrate:fresh --seed` + `composer test` + `pint --test` pass
+- [ ] `migrate`/`migrate:fresh --seed` + targeted tests + scoped Pint pass; full quality gates run in merge CI
 - [ ] Impact handoff report delivered; logic-layer changes delegated to laravel-modular-monolith
 - [ ] Naming matches the convention map (snake_case plural tables, PascalCase classes, camelCase methods)
 

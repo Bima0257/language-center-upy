@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Department;
-use App\Models\Faculty;
-use App\Models\StudentProfile;
-use App\Models\User;
+use App\Models\Fakultas;
+use App\Models\Pengguna;
+use App\Models\ProfilMahasiswa;
+use App\Models\ProgramStudi;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -16,74 +16,75 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(RoleSeeder::class);
-        $this->call(MasterDataSeeder::class);
+        $this->call(DataIndukSeeder::class);
+        $this->call(KebijakanMateriSoalSeeder::class);
 
-        $this->createUsers();
+        $this->buatPengguna();
 
-        $this->call(ExamSeeder::class);
+        $this->call(UjianSeeder::class);
     }
 
-    private function createUsers(): void
+    private function buatPengguna(): void
     {
-        $superadmin = User::create([
+        $superadmin = Pengguna::create([
             'name' => 'Super Admin',
             'email' => 'superadmin@toefl.test',
             'password' => bcrypt('password'),
             'email_verified_at' => now(),
-            'is_active' => true,
+            'aktif' => true,
         ]);
         $superadmin->assignRole('superadmin');
 
-        $admin = User::create([
+        $admin = Pengguna::create([
             'name' => 'Admin Akademik',
             'email' => 'admin@toefl.test',
             'password' => bcrypt('password'),
             'email_verified_at' => now(),
-            'is_active' => true,
+            'aktif' => true,
         ]);
         $admin->assignRole('admin');
 
-        $proctor = User::create([
+        $proctor = Pengguna::create([
             'name' => 'Proctor Ujian',
             'email' => 'proctor@toefl.test',
             'password' => bcrypt('password'),
             'email_verified_at' => now(),
-            'is_active' => true,
+            'aktif' => true,
         ]);
         $proctor->assignRole('proctor');
 
-        $instructor = User::create([
+        $instructor = Pengguna::create([
             'name' => 'Instruktur',
             'email' => 'instructor@toefl.test',
             'password' => bcrypt('password'),
             'email_verified_at' => now(),
-            'is_active' => true,
+            'aktif' => true,
         ]);
         $instructor->assignRole('instructor');
 
-        $student = User::create([
+        $mahasiswa = Pengguna::create([
             'name' => 'Peserta Demo',
             'email' => 'student@toefl.test',
             'password' => bcrypt('password'),
             'email_verified_at' => now(),
-            'is_active' => true,
+            'aktif' => true,
         ]);
-        $student->assignRole('student');
+        $mahasiswa->assignRole('student');
 
-        $fkip = Faculty::where('code', 'FKIP')->first();
-        $pbi = Department::where('code', 'PBI')->first();
+        $fkip = Fakultas::where('kode', 'FKIP')->first();
+        $pbi = ProgramStudi::where('kode', 'PBI')->first();
 
         if ($fkip && $pbi) {
-            StudentProfile::create([
-                'user_id' => $student->id,
+            ProfilMahasiswa::create([
+                'pengguna_id' => $mahasiswa->id,
                 'nim' => '2200010001',
-                'faculty_id' => $fkip->id,
-                'department_id' => $pbi->id,
-                'batch_year' => 2022,
-                'identity_photo' => null,
-                'is_verified' => true,
-                'verified_at' => now(),
-                'verified_by' => $admin->id,
+                'fakultas_id' => $fkip->id,
+                'program_studi_id' => $pbi->id,
+                'tahun_angkatan' => 2022,
+                'foto_identitas' => null,
+                'terverifikasi' => true,
+                'diverifikasi_pada' => now(),
+                'verifikator_id' => $admin->id,
             ]);
         }
     }

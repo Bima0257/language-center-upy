@@ -1,12 +1,12 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
-import Navbar from '@/Components/Landing/Navbar.vue';
-import Hero from '@/Components/Landing/Hero.vue';
-import Features from '@/Components/Landing/Features.vue';
-import CTA from '@/Components/Landing/CTA.vue';
-import Footer from '@/Components/Landing/Footer.vue';
-import MobileBottomNav from '@/Components/Landing/MobileBottomNav.vue';
-import ScrollToTop from '@/Components/ScrollToTop.vue';
+import Navbar from '@/Pages/Welcome/Components/Navbar.vue';
+import Hero from '@/Pages/Welcome/Components/Hero.vue';
+import Features from '@/Pages/Welcome/Components/Features.vue';
+import CTA from '@/Pages/Welcome/Components/CTA.vue';
+import Footer from '@/Pages/Welcome/Components/Footer.vue';
+import MobileBottomNav from '@/Pages/Welcome/Components/MobileBottomNav.vue';
+import ScrollToTop from '@/Components/Shared/ScrollToTop.vue';
 
 defineProps({
     canLogin: Boolean,

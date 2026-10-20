@@ -29,7 +29,7 @@ const trackClass = computed(() =>
             @click="emit('update:modelValue', !modelValue)"
         >
             <span
-                class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform"
+                class="absolute top-0.5 left-0.5 w-5 h-5 bg-surface-white rounded-full shadow-sm transition-transform"
                 :class="modelValue ? 'translate-x-5' : ''"
             />
         </button>

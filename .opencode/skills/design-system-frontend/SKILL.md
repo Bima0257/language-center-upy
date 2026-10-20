@@ -1,6 +1,6 @@
 ---
 name: design-system-frontend
-description: Use this skill ONLY when the user asks to create, add, or build a new UI, page, or component in a component-based frontend framework (Vue, React, Svelte, Solid, Angular, etc). This skill governs how frontend work should be done — it locates the project's existing design system and existing reusable components, treats them as the source of truth, and NEVER creates a new component before checking if one already exists. Trigger this whenever the user asks to build, add, style, or modify any UI, component, or page — even if they never say the words design system. Do not invent visual styles, component patterns, or assume the framework without first checking this skill.
+description: Use this skill ONLY when the user asks to create, add, or build a new UI, page, or component in a component-based frontend framework (Vue, React, Svelte, Solid, Angular, etc). This skill governs how frontend work should be done — it locates the project's existing design system and existing reusable components, treats them as the source of truth, co-locates feature-specific components with their feature, and NEVER creates a new component before checking if one already exists. Trigger this whenever the user asks to build, add, style, or modify any UI, component, or page — even if they never say the words design system. Do not invent visual styles, component patterns, or assume the framework without first checking this skill.
 ---
 
 # Senior Frontend — Component & Design System Implementer
@@ -65,14 +65,56 @@ Do the following checks:
 
 Reusing and extending (via props/variants) beats duplicating — every time.
 
-## Step 5 — Decide where a component belongs (global vs local)
+## Step 5 — Decide where a component belongs (global, domain, or feature-local)
 
-This is a judgment call the project's own structure should guide, not a rule to apply blindly:
+Use the narrowest ownership scope that fits the component. The project's existing structure and real usage should guide the decision, not a rule applied blindly:
 
-- **Global/shared component** (goes in the project's shared components directory — e.g. `components/ui`, `src/shared/components`, `Components/`, `components/common`, whatever the project already calls it): the component is either already used in 2+ places, or you can clearly see it *will* be — e.g. a Button, Input, Card, Modal, Badge.
-- **Page/feature-local component** (stays co-located with the page/feature that uses it — e.g. `pages/checkout/components/`, `features/dashboard/components/`): the component is specific to one page or one feature's business logic, even if it's visually similar to something else.
+| Ownership | Placement | Use when |
+|---|---|---|
+| **Base/global primitive** | The project's base or design-system directory, such as `Components/Base/` | The component is a low-level primitive used throughout the application, such as a button, input, card, modal, or badge. |
+| **Shared/global** | The project's shared directory, such as `Components/Shared/` | The component is genuinely reusable across unrelated features, such as a data table, pagination, or empty state. |
+| **Domain-shared** | A domain directory, such as `Components/Ujian/` or `Components/PustakaSoal/` | The component is reused by multiple pages within the same business domain. |
+| **Feature-local** | The feature's own directory, such as `Pages/Admin/Ujian/Components/` | The component contains UI, state, or business context specific to one feature. |
+
+### Feature-local folder structure
+
+Pages are entry points and should not become containers for every feature component. Keep feature-specific components beside the feature pages using the repository's PascalCase convention:
+
+```text
+resources/js/Pages/<Area>/<Feature>/
+├── Components/       # new/general components local to this feature
+├── Sections/         # optional semantic grouping used by the feature
+├── Partials/         # optional partial forms or page fragments
+└── <Page>.vue
+```
+
+For this project, an example is:
+
+```text
+resources/js/Pages/Admin/Ujian/
+├── Components/
+│   ├── AttachQuestionsModal.vue
+│   ├── QuestionArrangement.vue
+│   └── UjianSummary.vue
+├── Sections/
+├── Daftar.vue
+├── Tambah.vue
+├── Ubah.vue
+└── Detail.vue
+```
+
+Put new, general feature-local components in `Components/`. Keep existing `Sections/` or `Partials/` directories when their semantic grouping is clear; do not create extra subfolders for trivial components. If a feature-local component becomes useful in another feature, promote it to the narrowest appropriate domain or shared directory instead of importing across feature boundaries.
 
 **Do not force-globalize prematurely.** A component that's only used in one place should stay local until a second real use case appears — moving it later is cheap, but a bloated global component library full of one-off single-use components makes the design system harder to trust and navigate. When in doubt, start local.
+
+### Component boundaries and dependency direction
+
+- A page should orchestrate route data, page-level state, submission, and composition of child components.
+- A feature-local component should own one coherent UI or interaction responsibility and receive data through props or slots, emitting changes through events where appropriate.
+- Feature-local components may import base, shared, and domain components.
+- Base, shared, and domain components must not import from `Pages/<Area>/<Feature>/` or otherwise depend on feature-local code.
+- A feature-local component must not import another feature's local component. If two features need it, promote it to a suitable shared or domain scope.
+- Extract a component when it has independent state or interaction, represents a meaningful page section, is repeated, or makes a page materially easier to understand. Do not split trivial markup only to increase the file count.
 
 ## Step 6 — Implement
 
@@ -90,6 +132,8 @@ This is a judgment call the project's own structure should guide, not a rule to 
 - Introducing a new color, spacing value, or font size that isn't in the extracted system.
 - Creating a brand-new component when an existing one could be extended with a prop/variant.
 - Dumping every new component into the global folder "just in case" it's reused later.
+- Keeping a feature page as a large monolithic file when its sections have independent state, interaction, or business context.
+- Importing a local component directly from another feature instead of promoting the shared behavior to the correct scope.
 - Mixing a second styling approach (e.g. adding inline styles or a new CSS-in-JS lib) into a project that already has a consistent one.
 - Proceeding with assumptions when no design system was found at all — this case always requires asking the user first (see Step 1).
 
@@ -102,6 +146,6 @@ This is a judgment call the project's own structure should guide, not a rule to 
 2. Extract tokens (Step 2) — typography, colors, spacing confirmed from the system.
 3. Confirm framework (Step 3) — `package.json` shows Vue 3 + Tailwind. Confirmed before writing anything.
 4. **Check existing components (Step 4)** — search project with glob `**/Modal*` and grep `<Modal`. Found `Components/Modal.vue` already used in 3 places. Read it — supports `title`, `size`, and a default slot. Perfect match.
-5. Decide placement (Step 5) — the delete-specific confirmation (wording, action handler) is only relevant to the settings page → create `Pages/Settings/DeleteConfirm.vue` as a page-local wrapper that uses the global `Modal`.
-6. Implement (Step 6) — reuse existing `Modal` and `Button` (danger variant). No new global components created; one page-local component added.
-7. Summarize: sourced pattern from `design-system/`, confirmed Vue 3 + Tailwind, reused `Modal` (global) and `Button (danger)`, added one page-local component.
+5. Decide placement (Step 5) — the delete-specific confirmation (wording, action handler) is only relevant to the settings feature → create `Pages/Settings/Components/DeleteConfirm.vue` as a feature-local wrapper that uses the global `Modal`.
+6. Implement (Step 6) — reuse existing `Modal` and `Button` (danger variant). No new global components created; one feature-local component added.
+7. Summarize: sourced pattern from `design-system/`, confirmed Vue 3 + Tailwind, reused `Modal` (global) and `Button (danger)`, added one feature-local component.

@@ -1,11 +1,11 @@
 ---
 name: functional-testing
-description: "Load on demand when a feature/bugfix task is being finalized (after the work is done). Automatically runs functional testing: identifies the touched module, runs the relevant tests, writes missing functional feature tests, forces the full suite green (phpunit + pint + eslint + phpstan/larastan), and reports PASS/FAIL. Functional (HTTP) level only — the dev still does manual UI testing. Re-tests automatically after every fix until green."
+description: "Load on demand when a feature/bugfix task is being finalized (after the work is done). Automatically runs targeted functional testing: identifies the touched module, runs the relevant tests, writes missing functional feature tests, runs scoped quality checks, and reports PASS/FAIL. Full lint, Larastan, and PHPUnit checks are deferred to CI when changes enter testing. Functional (HTTP) level only — the dev still does manual UI testing. Re-tests automatically after every fix until green."
 ---
 
 # Functional Testing
 
-Every feature or bugfix must be verified before it is considered done. This skill enforces that automatically: **a task is NOT finished until the functional tests are green.** The dev still does manual testing afterward (UI, browser, edge cases) — this skill only covers functional/HTTP-level verification.
+Every feature or bugfix must be verified before it is considered done. This skill enforces that automatically: **a task is NOT finished until the targeted functional tests are green.** The dev still does manual testing afterward (UI, browser, edge cases) — this skill only covers functional/HTTP-level verification.
 
 ---
 
@@ -142,21 +142,25 @@ Cover per changed flow, at minimum: happy path, validation (if forms change), an
 
 ---
 
-## Phase 3 — Full suite must be green
+## Phase 3 — Full suite is deferred to merge CI
 
-Run `composer test` (clears config, then runs the whole suite). **The full suite must pass before the task is finished.** No exceptions, no "it only failed because of X" — fix X.
+Do not run the full suite during normal task finalization. Full `lint`, Larastan, and PHPUnit checks run in CI when changes are pushed or merged into `testing`.
+
+1. Do NOT run `composer test` or `composer check` here.
+2. The task may be finished when the targeted functional tests and scoped quality checks pass.
+3. Report the full merge gate as `DITUNDA KE CI MERGE TESTING`, not as a local pass or failure.
 
 ---
 
-## Phase 4 — Pint, ESLint & static analysis
+## Phase 4 — Scoped Pint, ESLint & static analysis
 
-The local quality gate checks the exact same gates: `eslint` + `pint` → `larastan` → `phpunit`. A task is not done unless all four pass:
+Run quality checks only for changed files or the touched module. Skip a check when its file type is not part of the change:
 
-1. `./vendor/bin/pint --test` on the whole repo (or at least on any changed/new files; if it fails, run `./vendor/bin/pint` on those files, then re-run the tests).
-2. `npm run lint` (eslint on `resources/js/`). If it fails, run `npx eslint resources/js --fix`, then re-run. Remember the recurring anti-patterns: no `Boolean(...)` in ternary conditions, no unused `const props =`, keep the `vue/*` formatting rules.
-3. `vendor/bin/phpstan analyse --memory-limit=512M` (larastan). Recurring failures: models without `@property` docblocks, `QueryException` "dead catch" around `delete()` (use an explicit `exists()` pre-check instead).
+1. `./vendor/bin/pint --test <changed PHP files>`. If it fails, run Pint on those files, then repeat the scoped checks.
+2. `npx eslint <changed JS/Vue files>`. If it fails, run `npx eslint <changed JS/Vue files> --fix`, then repeat. Remember the recurring anti-patterns: no `Boolean(...)` in ternary conditions, no unused `const props =`, keep the `vue/*` formatting rules.
+3. `vendor/bin/phpstan analyse <changed PHP paths> --memory-limit=512M` (Larastan). Recurring failures: models without `@property` docblocks, `QueryException` "dead catch" around `delete()` (use an explicit `exists()` pre-check instead).
 
-For a single-command local gate use `composer check` (pint + phpstan + phpunit) plus `npm run lint`.
+Do not replace these scoped commands with the full `composer check` or `npm run lint`; those full commands belong to merge CI.
 
 ---
 
@@ -166,32 +170,27 @@ Always report:
 
 ```
 ## Hasil Testing Fungsional
-- Test dijalankan: <list>
+- Test targeted dijalankan: <list>
 - Test ditulis baru: <list>
 - PASS: <n> | FAIL: <n>
-- Pint: LULUS / GAGAL
-- ESLint: LULUS / GAGAL
-- PHPStan: LULUS / GAGAL
-- Full suite: HIJAU / MERAH
+- Pint scoped: LULUS / GAGAL / TIDAK RELEVAN
+- ESLint scoped: LULUS / GAGAL / TIDAK RELEVAN
+- PHPStan scoped: LULUS / GAGAL / TIDAK RELEVAN
+- Full merge gate: DITUNDA KE CI `testing`
 ```
 
 **On failure: STOP. Report the failure with analysis (cause, affected code, suggested fix). Do NOT fix application code without the user's approval** (AGENTS.md: jangan ubah kode tak terkait tanpa izin). Trivial test-file fixes (wrong assertion, typo in test data) may be fixed directly — report them in the summary.
 
 ---
 
-## Phase 6 — Session coordination integration
-
-Update `SESSION-STATUS.md`: note `testing fungsional selesai` dengan timestamp setelah full suite hijau. Jika merah, catat apa yang blocked.
-
----
-
-## Phase 7 — Re-test loop (after fixes)
+## Phase 6 — Re-test loop (after fixes)
 
 After the user applies a fix (or approves a fix), the skill MUST automatically:
 
 1. Re-run the failing tests: `php artisan test --filter=<...>` → confirm the previously failing tests now pass.
-2. Re-run the full suite: `composer test` → confirm nothing else broke.
-3. Loop continues until green; only then present the final report.
+2. Re-run the relevant scoped lint, Pint, or Larastan check when the fix touches that file type.
+3. Do not run the full suite in this loop; CI runs it when changes enter `testing`.
+4. Loop continues until the targeted checks are green; only then present the final report.
 
 **Anti-loop protection:** if the same failure repeats with the same cause after a fix, STOP and escalate to the user — do not keep re-fixing silently.
 

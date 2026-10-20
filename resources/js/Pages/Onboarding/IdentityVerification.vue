@@ -2,23 +2,23 @@
 import { ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { IconCheck, IconRefresh } from '@tabler/icons-vue';
-import OnboardingLayout from '@/Components/Onboarding/OnboardingLayout.vue';
+import OnboardingLayout from '@/Layouts/OnboardingLayout.vue';
 import DropDown from '@/Components/Shared/DropDown.vue';
 
 const props = defineProps({
-    hasUploaded: { type: Boolean, default: false },
+    sudahUnggah: { type: Boolean, default: false },
     profile: { type: Object, default: null },
-    faculties: { type: Array, default: () => [] },
-    departments: { type: Array, default: () => [] },
+    fakultas: { type: Array, default: () => [] },
+    programStudi: { type: Array, default: () => [] },
 });
 
 const form = useForm({
     nim: props.profile?.nim || '',
-    faculty_id: props.profile?.faculty_id || '',
-    department_id: props.profile?.department_id || '',
-    batch_year: props.profile?.batch_year || '',
-    identity_photo: null,
-    photo: null,
+    fakultas_id: props.profile?.fakultas_id || '',
+    program_studi_id: props.profile?.program_studi_id || '',
+    tahun_angkatan: props.profile?.tahun_angkatan || '',
+    foto_identitas: null,
+    foto: null,
 });
 
 const showForm = ref(false);
@@ -32,7 +32,7 @@ function onFileSelect(e, field) {
     form[field] = file;
     const reader = new FileReader();
     reader.onload = (ev) => {
-        if (field === 'identity_photo') identityPreview.value = ev.target.result;
+        if (field === 'foto_identitas') identityPreview.value = ev.target.result;
         else selfiePreview.value = ev.target.result;
     };
     reader.readAsDataURL(file);
@@ -52,9 +52,9 @@ function submit() {
         <div class="max-w-xl mx-auto px-4 py-10">
 
             <!-- STATE: sudah upload, menunggu verifikasi -->
-            <template v-if="hasUploaded && !showForm">
-                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center">
-                    <IconCheck class="mx-auto text-green-500 dark:text-green-400 mb-4" :size="48" stroke="1.5" />
+            <template v-if="sudahUnggah && !showForm">
+                <div class="bg-warning-container border border-warning rounded-2xl p-8 text-center">
+                    <IconCheck class="mx-auto text-success mb-4" :size="48" stroke="1.5" />
                     <h1 class="text-headline-md font-bold text-primary mb-2">Identitas Terkirim</h1>
                     <p class="text-text-body text-body-md mb-6">
                         Foto identitas Anda sudah diunggah dan menunggu verifikasi oleh admin.
@@ -69,7 +69,7 @@ function submit() {
             </template>
 
             <!-- STATE: form upload -->
-            <template v-if="!hasUploaded || showForm">
+            <template v-if="!sudahUnggah || showForm">
                 <h1 class="text-headline-md font-bold text-primary mb-2">Verifikasi Identitas</h1>
                 <p class="text-text-body text-body-md mb-8">Unggah foto identitas dan swafoto untuk verifikasi akun Anda.</p>
 
@@ -83,32 +83,32 @@ function submit() {
                         </div>
                         <div>
                             <DropDown
-                                v-model="form.faculty_id"
-                                :options="faculties"
+                                v-model="form.fakultas_id"
+                                :options="fakultas"
                                 label="Fakultas"
                                 placeholder="Pilih fakultas"
-                                option-label="name"
+                                 option-label="nama"
                                 option-value="id"
                             />
-                            <p v-if="form.errors.faculty_id" class="text-error-red text-xs mt-1">{{ form.errors.faculty_id }}</p>
+                            <p v-if="form.errors.fakultas_id" class="text-error-red text-xs mt-1">{{ form.errors.fakultas_id }}</p>
                         </div>
                         <div>
                             <DropDown
-                                v-model="form.department_id"
-                                :options="departments"
+                                v-model="form.program_studi_id"
+                                :options="programStudi"
                                 label="Program Studi"
                                 placeholder="Pilih program studi"
-                                option-label="name"
+                                 option-label="nama"
                                 option-value="id"
                             />
-                            <p v-if="form.errors.department_id" class="text-error-red text-xs mt-1">{{ form.errors.department_id }}</p>
+                            <p v-if="form.errors.program_studi_id" class="text-error-red text-xs mt-1">{{ form.errors.program_studi_id }}</p>
                         </div>
                         <div>
                             <label class="text-label-md font-medium text-primary block mb-1.5">Tahun Angkatan</label>
-                            <input type="number" v-model="form.batch_year" placeholder="Contoh: 2025"
+                             <input type="number" v-model="form.tahun_angkatan" placeholder="Contoh: 2025"
                                    min="2000" max="2100"
                                    class="w-full border border-outline-variant rounded-xl px-4 py-3 text-body-md text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all" />
-                            <p v-if="form.errors.batch_year" class="text-error-red text-xs mt-1">{{ form.errors.batch_year }}</p>
+                             <p v-if="form.errors.tahun_angkatan" class="text-error-red text-xs mt-1">{{ form.errors.tahun_angkatan }}</p>
                         </div>
                     </BaseCard>
 
@@ -121,9 +121,9 @@ function submit() {
                             <p class="text-text-muted text-label-md mt-1">Maks 5MB, format JPG/PNG</p>
                             <input type="file" accept="image/*"
                                    class="absolute inset-0 opacity-0 cursor-pointer"
-                                   @change="(e) => onFileSelect(e, 'identity_photo')" />
+                                   @change="(e) => onFileSelect(e, 'foto_identitas')" />
                         </div>
-                        <p v-if="form.errors.identity_photo" class="text-error-red text-xs mt-1">{{ form.errors.identity_photo }}</p>
+                        <p v-if="form.errors.foto_identitas" class="text-error-red text-xs mt-1">{{ form.errors.foto_identitas }}</p>
                     </BaseCard>
 
                     <!-- SWAFOTO -->
@@ -135,13 +135,13 @@ function submit() {
                             <p class="text-text-muted text-label-md mt-1">Maks 5MB, format JPG/PNG</p>
                             <input type="file" accept="image/*"
                                    class="absolute inset-0 opacity-0 cursor-pointer"
-                                   @change="(e) => onFileSelect(e, 'photo')" />
+                                   @change="(e) => onFileSelect(e, 'foto')" />
                         </div>
-                        <p v-if="form.errors.photo" class="text-error-red text-xs mt-1">{{ form.errors.photo }}</p>
+                        <p v-if="form.errors.foto" class="text-error-red text-xs mt-1">{{ form.errors.foto }}</p>
                     </BaseCard>
 
                     <BaseButton type="submit"
-                            :disabled="form.processing || !form.nim || !form.faculty_id || !form.department_id || !form.batch_year || !form.identity_photo || !form.photo"
+                            :disabled="form.processing || !form.nim || !form.fakultas_id || !form.program_studi_id || !form.tahun_angkatan || !form.foto_identitas || !form.foto"
                             size="xl" class="w-full shadow-lg shadow-primary-container/10">
                         {{ form.processing ? 'Mengunggah...' : 'Kirim Verifikasi' }}
                     </BaseButton>

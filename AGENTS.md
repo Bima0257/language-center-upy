@@ -30,26 +30,35 @@ Follow their instructions exactly once loaded.
 - **Jangan ubah kode tak terkait secara diam-diam** — laporkan bug yang ditemukan, jangan perbaiki tanpa izin.
 - **Penamaan deskriptif**: hindari variabel generik (`data`, `result`, `temp`, `item`); ikuti konvensi yang ada (snake_case DB, camelCase method/variable, PascalCase class).
 - **KISS/YAGNI**: tanpa approval user, jangan tambah abstraksi, dependency, atau pola baru yang belum ada di codebase.
-- **Self-review sebelum selesai**: trace logika end-to-end, cek edge case (null/empty/error), pastikan tidak ada call site yang rusak; "trivial change" pun wajib lolos lint/typecheck.
+- **Self-review sebelum selesai**: trace logika end-to-end, cek edge case (null/empty/error), pastikan tidak ada call site yang rusak; "trivial change" pun wajib lolos pemeriksaan lint/typecheck yang relevan.
 - **Laporkan risiko**: sebutkan perubahan yang berisiko / perlu dicek manual di laporan akhir.
 
-## Gate kualitas sebelum push (wajib)
+## Gate kualitas lokal dan merge (wajib)
 
-Pipeline CI memeriksa: `eslint` + `pint` → `larastan` → `phpunit` → `deploy_dev`. Semua cek itu HARUS hijau secara lokal sebelum push/merge. Siapkan sekali:
+Pipeline CI memeriksa full: `eslint` + `pint` → `larastan` → `phpunit` → `deploy_dev` ketika perubahan masuk ke branch `testing`. Full gate tidak perlu dijalankan selama pengerjaan task biasa; gunakan pemeriksaan targeted secara lokal. Siapkan sekali:
 
 ```bash
 git config core.hooksPath .githooks   # sudah otomatis via composer setup
 ```
 
-Lalu sebelum push jalankan:
+Selama pengembangan, jalankan hanya pemeriksaan yang relevan dengan file yang berubah:
 
 ```bash
-npm run lint          # eslint resources/js/ (command identik CI)
-npm run build         # build frontend — CI juga build sebelum phpunit
-composer check        # pint --test + phpstan + phpunit (command identik CI)
+npx eslint <changed JS/Vue files>
+./vendor/bin/pint --test <changed PHP files>
+vendor/bin/phpstan analyse <changed PHP paths> --memory-limit=512M
+php artisan test --filter=<Module|Feature|TestClass>
 ```
 
-`composer check` gagal di langkah pertama tanpa mengecek yang lain (urutan sama seperti CI) — perbaiki lalu ulangi.
+Saat merge/push ke `testing`, CI menjalankan full gate berikut:
+
+```bash
+npm run lint          # full ESLint resources/js/
+npm run build         # build frontend
+composer check        # full Pint + Larastan + PHPUnit
+```
+
+`composer check` gagal di langkah pertama tanpa mengecek yang lain (urutan sama seperti CI) — perbaiki lalu ulangi di CI.
 
 ### Pre-commit hook (`.githooks/pre-commit`)
 

@@ -11,13 +11,14 @@ import ToastProvider from './Components/ToastProvider.vue';
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 const baseComponents = import.meta.glob('./Components/Base/*.vue', { eager: true });
+const pageComponents = import.meta.glob('./Pages/**/*.vue');
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.vue`,
-            import.meta.glob('./Pages/**/*.vue'),
+            pageComponents,
         ),
     setup({ el, App, props, plugin }) {
         const app = createApp({
@@ -39,7 +40,7 @@ createInertiaApp({
             .mount(el);
     },
     progress: {
-        color: '#4B5563',
+        color: 'var(--color-secondary)',
     },
 });
 

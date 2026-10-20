@@ -1,0 +1,13 @@
+﻿<script setup>
+defineProps({
+    bagianUjian: { type: Object, required: true },
+});
+</script>
+
+<template>
+    <BaseCard>
+        <h3 class="text-title-lg font-semibold text-primary mb-2">{{ bagianUjian.judul }}</h3>
+        <p class="text-text-muted text-body-md">Speaking — {{ bagianUjian.jumlah_soal }} task</p>
+        <p class="text-text-muted text-label-md mt-2">Fitur speaking tersedia di fase berikutnya.</p>
+    </BaseCard>
+</template>

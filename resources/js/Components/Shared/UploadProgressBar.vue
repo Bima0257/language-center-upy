@@ -23,7 +23,7 @@ const icon = computed(() => {
 
 <template>
     <Teleport to="body">
-        <div v-if="show" class="fixed inset-0 z-[300] bg-black/50 flex items-center justify-center p-6">
+        <div v-if="show" class="fixed inset-0 z-[300] bg-scrim/50 flex items-center justify-center p-6">
             <div class="bg-surface-white rounded-3xl p-8 shadow-app-frame max-w-sm w-full text-center">
                 <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-pastel-purple/50 flex items-center justify-center">
                     <component :is="icon" :size="28" class="text-secondary animate-pulse" />

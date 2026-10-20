@@ -5,7 +5,44 @@ on:
     branches: [testing]
 
 jobs:
+  quality:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_sqlite, intl, gd, zip, bcmath, imagick
+
+      - name: Composer Install
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare Test Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: NPM Install
+        run: npm ci
+
+      - name: Full ESLint
+        run: npm run lint
+
+      - name: Full PHP Quality Gate
+        run: composer check
+
   deploy:
+    needs: quality
     runs-on: ubuntu-latest
     env:
       SSH_PORT: ${{ secrets.SSH_PORT || '65002' }}

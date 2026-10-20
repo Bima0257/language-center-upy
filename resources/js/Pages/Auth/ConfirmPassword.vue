@@ -1,5 +1,5 @@
 <script setup>
-import AuthCard from '@/Components/Landing/AuthCard.vue';
+import AuthCard from '@/Pages/Auth/Components/AuthCard.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
 const form = useForm({

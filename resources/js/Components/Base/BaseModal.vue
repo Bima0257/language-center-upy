@@ -1,5 +1,28 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+
+let bodyScrollLockCount = 0;
+let bodyOverflowBeforeModal = '';
+
+function lockBodyScroll() {
+    if (bodyScrollLockCount === 0) {
+        bodyOverflowBeforeModal = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+    }
+
+    bodyScrollLockCount += 1;
+}
+
+function unlockBodyScroll() {
+    if (bodyScrollLockCount === 0) return;
+
+    bodyScrollLockCount -= 1;
+
+    if (bodyScrollLockCount === 0) {
+        document.body.style.overflow = bodyOverflowBeforeModal;
+        bodyOverflowBeforeModal = '';
+    }
+}
 
 const props = defineProps({
     show: {
@@ -20,51 +43,82 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['close']);
+defineEmits(['close']);
+
 const dialog = ref();
 const showSlot = ref(props.show);
+const closeTimer = ref(null);
+let bodyScrollLocked = false;
+let previouslyFocusedElement = null;
+
+const openDialog = () => {
+    if (closeTimer.value) {
+        clearTimeout(closeTimer.value);
+        closeTimer.value = null;
+    }
+
+    if (!bodyScrollLocked) {
+        previouslyFocusedElement = document.activeElement;
+        lockBodyScroll();
+        bodyScrollLocked = true;
+    }
+
+    showSlot.value = true;
+
+    nextTick(() => {
+        if (!props.show || !dialog.value) return;
+
+        if (!dialog.value.open) {
+            dialog.value.showModal();
+        }
+
+        const firstFocusableElement = dialog.value.querySelector(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+
+        firstFocusableElement?.focus();
+    });
+};
+
+const closeDialog = () => {
+    if (bodyScrollLocked) {
+        unlockBodyScroll();
+        bodyScrollLocked = false;
+    }
+
+    if (closeTimer.value) clearTimeout(closeTimer.value);
+
+    closeTimer.value = setTimeout(() => {
+        if (dialog.value?.open) dialog.value.close();
+        showSlot.value = false;
+        closeTimer.value = null;
+
+        if (previouslyFocusedElement?.isConnected) {
+            previouslyFocusedElement.focus();
+        }
+
+        previouslyFocusedElement = null;
+    }, 200);
+};
 
 watch(
     () => props.show,
-    () => {
-        if (props.show) {
-            document.body.style.overflow = 'hidden';
-            showSlot.value = true;
-
-            dialog.value?.showModal();
-        } else {
-            document.body.style.overflow = '';
-
-            setTimeout(() => {
-                dialog.value?.close();
-                showSlot.value = false;
-            }, 200);
-        }
-    },
+    (visible) => (visible ? openDialog() : closeDialog()),
+    { immediate: true },
 );
 
-const close = () => {
-    if (props.closeable) {
-        emit('close');
-    }
-};
-
-const closeOnEscape = (e) => {
-    if (e.key === 'Escape') {
-        e.preventDefault();
-
-        if (props.show) {
-            close();
-        }
-    }
-};
-
-onMounted(() => document.addEventListener('keydown', closeOnEscape));
+onMounted(() => {
+    if (props.show) openDialog();
+});
 
 onUnmounted(() => {
-    document.removeEventListener('keydown', closeOnEscape);
+    if (closeTimer.value) clearTimeout(closeTimer.value);
+    if (dialog.value?.open) dialog.value.close();
 
-    document.body.style.overflow = '';
+    if (bodyScrollLocked) {
+        unlockBodyScroll();
+        bodyScrollLocked = false;
+    }
 });
 
 const maxWidthClass = computed(() => {
@@ -80,11 +134,13 @@ const maxWidthClass = computed(() => {
 
 <template>
     <dialog
-        class="z-50 m-0 min-h-full min-w-full overflow-y-auto bg-transparent backdrop:bg-transparent"
+        class="z-50 m-0 min-h-full min-w-full overflow-hidden bg-transparent backdrop:bg-transparent"
         ref="dialog"
+        aria-modal="true"
+        @cancel.prevent
     >
         <div
-            class="fixed inset-0 z-50 overflow-y-auto px-4 py-6 sm:px-0"
+            class="fixed inset-0 z-50 flex items-center justify-center overflow-hidden px-4 py-6 sm:px-0"
             scroll-region
         >
             <Transition
@@ -98,10 +154,9 @@ const maxWidthClass = computed(() => {
                 <div
                     v-show="show"
                     class="fixed inset-0 transform transition-all"
-                    @click="close"
                 >
                     <div
-                        class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        class="absolute inset-0 bg-scrim/40 backdrop-blur-sm"
                     />
                 </div>
             </Transition>
@@ -116,11 +171,11 @@ const maxWidthClass = computed(() => {
             >
                 <div
                     v-show="show"
-                    class="mb-6 transform rounded-3xl bg-surface-white shadow-soft transition-all sm:mx-auto sm:w-full"
+                    class="mb-0 max-h-[calc(100dvh-3rem)] transform rounded-3xl bg-surface-white shadow-soft transition-all sm:mx-auto sm:w-full"
                     :class="[
                         maxWidthClass,
                         scrollable
-                            ? 'max-h-[90vh] overflow-y-auto'
+                            ? 'modal-scrollbar overflow-y-auto overscroll-contain'
                             : 'overflow-hidden',
                     ]"
                 >

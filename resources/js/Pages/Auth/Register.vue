@@ -1,8 +1,8 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { IconMail, IconLock, IconEye, IconEyeOff, IconUser } from '@tabler/icons-vue';
-import AuthCard from '@/Components/Landing/AuthCard.vue';
-import PasswordStrengthCheck from '@/Components/PasswordStrengthCheck.vue';
+import AuthCard from '@/Pages/Auth/Components/AuthCard.vue';
+import PasswordStrengthCheck from '@/Components/Shared/PasswordStrengthCheck.vue';
 import { ref, onMounted } from 'vue';
 
 const form = useForm({

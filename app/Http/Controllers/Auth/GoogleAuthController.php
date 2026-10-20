@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Users\Services\GoogleAuthService;
+use App\Modules\Pengguna\Services\LayananAutentikasiGoogle;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +17,7 @@ use Laravel\Socialite\Facades\Socialite;
 class GoogleAuthController extends Controller
 {
     public function __construct(
-        private GoogleAuthService $auth,
+        private LayananAutentikasiGoogle $layananAutentikasiGoogle,
     ) {}
 
     public function redirect(Request $request): \Symfony\Component\HttpFoundation\RedirectResponse
@@ -48,22 +48,22 @@ class GoogleAuthController extends Controller
         try {
             $googleUser = Socialite::driver('google')->user();
 
-            $user = $this->auth->findByEmail($googleUser->getEmail());
+            $pengguna = $this->layananAutentikasiGoogle->temukanDenganEmail($googleUser->getEmail());
 
-            if ($action === 'register' && $user) {
+            if ($action === 'register' && $pengguna) {
                 return redirect()->route('login')
                     ->with('error', 'Akun sudah terdaftar dengan email ini. Silakan login.');
             }
 
-            if ($user) {
-                if (! $user->is_active) {
+            if ($pengguna) {
+                if (! $pengguna->aktif) {
                     return redirect()->route('login')
                         ->with('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.');
                 }
 
-                $this->auth->syncGoogleIdentity($user, $googleUser->getId(), $googleUser->getAvatar());
+                $this->layananAutentikasiGoogle->sinkronkanIdentitasGoogle($pengguna, $googleUser->getId(), $googleUser->getAvatar());
             } else {
-                $user = $this->auth->createGoogleUser(
+                $pengguna = $this->layananAutentikasiGoogle->buatPenggunaGoogle(
                     $googleUser->getName(),
                     $googleUser->getEmail(),
                     $googleUser->getId(),
@@ -77,23 +77,23 @@ class GoogleAuthController extends Controller
                 ->with('error', 'Login dengan Google gagal. Silakan coba lagi.');
         }
 
-        Auth::login($user, $remember);
+        Auth::login($pengguna, $remember);
 
         $request->session()->regenerate();
 
-        $user->invalidateOtherSessions();
+        $pengguna->batalkanSesiLain();
 
         cookie()->queue(cookie('_logged', '1', config('session.lifetime')));
 
-        if ($user->wasRecentlyCreated) {
+        if ($pengguna->wasRecentlyCreated) {
             return redirect()->route('google.set-password');
         }
 
-        if ($user->hasRole('student') && ! $user->hasVerifiedProfile()) {
+        if ($pengguna->hasRole('student') && ! $pengguna->profilTerverifikasi()) {
             return redirect()->route('onboarding.verify-identity');
         }
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(route('dasbor'));
     }
 
     public function showSetPassword(): Response
@@ -107,19 +107,19 @@ class GoogleAuthController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = auth()->user();
-        $user->password = Hash::make($request->password);
-        $user->save();
+        $pengguna = auth()->user();
+        $pengguna->password = Hash::make($request->password);
+        $pengguna->save();
 
-        $user->invalidateOtherSessions();
+        $pengguna->batalkanSesiLain();
 
         cookie()->queue(cookie('_logged', '1', config('session.lifetime')));
 
-        if ($user->hasRole('student') && ! $user->hasVerifiedProfile()) {
+        if ($pengguna->hasRole('student') && ! $pengguna->profilTerverifikasi()) {
             return redirect()->route('onboarding.verify-identity');
         }
 
-        return redirect()->intended(route('dashboard'))
+        return redirect()->intended(route('dasbor'))
             ->with('success', 'Password berhasil dibuat. Sekarang Anda bisa login dengan email dan password.');
     }
 }

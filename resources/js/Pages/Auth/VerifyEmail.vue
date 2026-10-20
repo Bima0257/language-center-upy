@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import AuthCard from '@/Components/Landing/AuthCard.vue';
+import AuthCard from '@/Pages/Auth/Components/AuthCard.vue';
 import { IconMail } from '@tabler/icons-vue';
 
 const props = defineProps({
@@ -32,7 +32,7 @@ const verificationLinkSent = computed(
 
         <div class="flex items-center gap-4 bg-pastel-blue/40 rounded-2xl p-5 mb-6">
             <div class="w-12 h-12 bg-primary-container rounded-xl flex items-center justify-center shrink-0">
-                <IconMail class="text-white" :size="22" stroke="1.5" />
+                <IconMail class="text-on-primary-container" :size="22" stroke="1.5" />
             </div>
             <div>
                 <p class="text-label-md font-medium text-primary">Cek Email Anda</p>
@@ -41,7 +41,7 @@ const verificationLinkSent = computed(
         </div>
 
         <div v-if="verificationLinkSent"
-             class="bg-green-50 text-green-700 text-body-md rounded-2xl px-5 py-4 mb-6">
+             class="bg-success-container text-on-success-container text-body-md rounded-2xl px-5 py-4 mb-6">
             Link verifikasi baru telah dikirim ke email Anda.
         </div>
 
