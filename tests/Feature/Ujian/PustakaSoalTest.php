@@ -106,6 +106,95 @@ class PustakaSoalTest extends TestCase
         $this->get('/pustaka-soal')->assertOk();
     }
 
+    public function test_pustaka_soal_memilih_keterampilan_dan_bagian_pertama_secara_default(): void
+    {
+        $this->masukSebagai('admin');
+
+        $bankSoal = BankSoal::where('nama', 'Bank Soal 2022')->firstOrFail();
+        $keterampilanPertama = Keterampilan::where('jenis_tes_id', $bankSoal->jenis_tes_id)
+            ->where('aktif', true)
+            ->orderBy('urutan')
+            ->firstOrFail();
+        $bagianSoalPertama = BagianSoal::where('bank_soal_id', $bankSoal->id)
+            ->where('keterampilan_id', $keterampilanPertama->id)
+            ->where('aktif', true)
+            ->orderBy('urutan')
+            ->firstOrFail();
+
+        $page = $this->get('/pustaka-soal?bank_soal_id='.$bankSoal->id.'&jenis_tes_id='.$bankSoal->jenis_tes_id)
+            ->assertOk()
+            ->inertiaPage();
+
+        $this->assertSame($keterampilanPertama->id, $page['props']['filter']['keterampilan']);
+        $this->assertSame($bagianSoalPertama->id, $page['props']['filter']['bagian_soal_id']);
+        $this->assertTrue(collect($page['props']['soal']['data'])->every(
+            fn (array $soal): bool => $soal['keterampilan_id'] === $keterampilanPertama->id
+                && $soal['bagian_soal_id'] === $bagianSoalPertama->id,
+        ));
+
+        $keterampilanLain = Keterampilan::where('jenis_tes_id', $bankSoal->jenis_tes_id)
+            ->where('aktif', true)
+            ->where('id', '!=', $keterampilanPertama->id)
+            ->orderBy('urutan')
+            ->firstOrFail();
+        $bagianSoalLain = BagianSoal::where('bank_soal_id', $bankSoal->id)
+            ->where('keterampilan_id', $keterampilanLain->id)
+            ->where('aktif', true)
+            ->orderBy('urutan')
+            ->firstOrFail();
+        $filteredPage = $this->get(
+            '/pustaka-soal?bank_soal_id='.$bankSoal->id
+                .'&jenis_tes_id='.$bankSoal->jenis_tes_id
+                .'&keterampilan='.$keterampilanLain->id
+                .'&bagian_soal_id='.$bagianSoalLain->id,
+        )->assertOk()->inertiaPage();
+
+        $this->assertSame($keterampilanLain->id, $filteredPage['props']['filter']['keterampilan']);
+        $this->assertSame($bagianSoalLain->id, $filteredPage['props']['filter']['bagian_soal_id']);
+    }
+
+    public function test_admin_dapat_menavigasi_hierarki_jenis_tes_dan_bank_soal(): void
+    {
+        $this->masukSebagai('admin');
+
+        $bankSoal = BankSoal::where('nama', 'Bank Soal 2022')->firstOrFail();
+        $jenisTes = $bankSoal->jenisTes;
+        $jenisTesLain = JenisTes::create([
+            'kode' => '010',
+            'nama' => 'Jenis Tes Navigasi Lain',
+            'batas_pelanggaran' => 3,
+            'aktif' => true,
+        ]);
+        $bankSoalLain = BankSoal::create([
+            'jenis_tes_id' => $jenisTesLain->id,
+            'nama' => 'Bank Soal Navigasi Lain',
+            'aktif' => true,
+        ]);
+
+        $root = $this->get('/pustaka-soal')
+            ->assertOk()
+            ->inertiaPage();
+        $bank = $this->get('/pustaka-soal?jenis_tes_id='.$jenisTes->id)
+            ->assertOk()
+            ->inertiaPage();
+        $detail = $this->get('/pustaka-soal?jenis_tes_id='.$jenisTes->id.'&bank_soal_id='.$bankSoal->id)
+            ->assertOk()
+            ->inertiaPage();
+
+        $rootBank = collect($root['props']['bankSoal'])->firstWhere('id', $bankSoal->id);
+        $bankIds = collect($bank['props']['bankSoal'])->pluck('id');
+
+        $this->assertNull($root['props']['jenisTesTerpilihId']);
+        $this->assertNull($root['props']['bankSoalTerpilihId']);
+        $this->assertNotNull($rootBank);
+        $this->assertSame($bankSoal->soal()->count(), (int) $rootBank['soal_count']);
+        $this->assertSame($jenisTes->id, $bank['props']['jenisTesTerpilihId']);
+        $this->assertTrue($bankIds->contains($bankSoal->id));
+        $this->assertFalse($bankIds->contains($bankSoalLain->id));
+        $this->assertSame($jenisTes->id, $detail['props']['jenisTesTerpilihId']);
+        $this->assertSame($bankSoal->id, $detail['props']['bankSoalTerpilihId']);
+    }
+
     public function test_admin_dapat_melihat_bank_soal_hanya_dari_kategori_terpilih(): void
     {
         $this->masukSebagai('admin');
@@ -139,7 +228,7 @@ class PustakaSoalTest extends TestCase
 
         $bankSoalIds = collect($page['props']['bankSoal'])->pluck('id');
 
-        $this->assertSame('BankSoal/KelolaBankSoal', $page['component']);
+        $this->assertSame('BankSoal/KelolaBankSoal/index', $page['component']);
         $this->assertSame($jenisTes->id, $page['props']['kategori']['id']);
         $this->assertTrue($bankSoalIds->contains($bankSoalTerpilih->id));
         $this->assertFalse($bankSoalIds->contains($bankSoalLain->id));
@@ -202,7 +291,6 @@ class PustakaSoalTest extends TestCase
             'teks_soal' => 'What is the main topic?',
             'keterampilan_id' => $keterampilan->id,
             'materi_soal_id' => $materiSoal->id,
-            'status' => 'draft',
         ]);
     }
 
@@ -263,7 +351,6 @@ class PustakaSoalTest extends TestCase
         $this->assertDatabaseHas('soal', [
             'materi_soal_id' => $materiAudio->id,
             'keterampilan_id' => $keterampilan->id,
-            'status' => 'draft',
         ]);
     }
 
@@ -424,7 +511,6 @@ class PustakaSoalTest extends TestCase
         $this->assertDatabaseHas('soal', [
             'materi_soal_id' => $materiAudio->id,
             'keterampilan_id' => $berbicara->id,
-            'status' => 'draft',
         ]);
     }
 

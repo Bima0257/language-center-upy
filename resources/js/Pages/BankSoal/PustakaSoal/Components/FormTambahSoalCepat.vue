@@ -1,6 +1,6 @@
 <script setup>
 import DropDown from '@/Components/Shared/DropDown.vue';
-import InputPilihan from '@/Pages/BankSoal/Components/InputPilihan.vue';
+import InputPilihan from '@/Pages/BankSoal/components/InputPilihan.vue';
 import { IconHeadphones, IconCheck } from '@tabler/icons-vue';
 
 defineProps({
@@ -18,7 +18,7 @@ defineEmits(['save', 'cancel']);
 
 <template>
     <div class="px-5 py-4 bg-pastel-blue/10 border-b border-outline-variant/30">
-        <p class="text-label-md font-semibold text-primary mb-3">Tambah Soal ke "{{ materiSoalJudul }}"</p>
+        <p class="text-label-md font-semibold text-text-heading mb-3">Tambah Soal ke "{{ materiSoalJudul }}"</p>
         <form @submit.prevent="$emit('save')" class="space-y-3">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
@@ -58,7 +58,7 @@ defineEmits(['save', 'cancel']);
                 </div>
             </div>
             <p class="text-label-md text-text-muted">
-                        Keterampilan: <span class="font-semibold text-primary">{{ labelKeterampilanFn(form.keterampilan_id) }}</span> — mengikuti tipe materiSoal ini.
+                        Keterampilan: <span class="font-semibold text-text-heading">{{ labelKeterampilanFn(form.keterampilan_id) }}</span> — mengikuti tipe materiSoal ini.
             </p>
             <template v-if="quickIsAudio">
                 <p class="flex items-center gap-1.5 text-label-md text-text-muted bg-pastel-purple/10 border border-pastel-purple/40 rounded-xl px-4 py-3">

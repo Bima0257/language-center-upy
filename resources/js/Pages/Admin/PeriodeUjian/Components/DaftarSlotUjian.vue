@@ -12,7 +12,7 @@ const emit = defineEmits(['create', 'edit', 'delete']);
 <template>
     <BaseCard>
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-title-lg font-semibold text-primary">Sesi Ujian per Hari</h2>
+            <h2 class="text-title-lg font-semibold text-text-heading">Sesi Ujian per Hari</h2>
             <BaseButton size="sm" @click="emit('create')">
                 <IconPlus :size="16" /> Tambah Sesi
             </BaseButton>
@@ -26,13 +26,13 @@ const emit = defineEmits(['create', 'edit', 'delete']);
             <div v-for="group in props.slotGroups" :key="group.tanggal" class="border border-outline-variant/50 rounded-2xl overflow-hidden">
                 <div class="px-4 py-3 bg-surface-container-low flex items-center gap-2">
                     <IconClock :size="16" class="text-secondary" />
-                    <p class="text-label-md font-semibold text-primary">{{ props.formatDate(group.tanggal) }}</p>
+                    <p class="text-label-md font-semibold text-text-heading">{{ props.formatDate(group.tanggal) }}</p>
                 </div>
                 <div class="divide-y divide-outline-variant/30">
                     <div v-for="slotUjian in group.items" :key="slotUjian.id"
                          class="px-4 py-3 flex items-center justify-between gap-3 hover:bg-surface-container-low/50 transition-colors">
                         <div>
-                            <p class="text-body-md font-semibold text-primary">
+                            <p class="text-body-md font-semibold text-text-heading">
                                 {{ slotUjian.waktu_mulai?.substring(0, 5) }} – {{ slotUjian.waktu_selesai?.substring(0, 5) }} WIB
                             </p>
                             <p class="text-label-md text-text-muted">

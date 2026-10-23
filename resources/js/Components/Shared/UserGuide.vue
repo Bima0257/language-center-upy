@@ -20,7 +20,7 @@ const show = ref(false);
     <BaseModal :show="show" max-width="2xl" @close="show = false">
         <div class="bg-surface-white rounded-2xl max-h-[calc(100dvh-3rem)] min-h-0 flex flex-col overflow-hidden">
             <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant/30 shrink-0">
-                <h3 class="text-title-lg font-semibold text-primary flex items-center gap-2">
+                <h3 class="text-title-lg font-semibold text-text-heading flex items-center gap-2">
                     <IconBook2 :size="20" class="text-secondary" /> {{ title }}
                 </h3>
                 <button @click="show = false" class="p-1.5 text-text-muted hover:text-primary transition-colors">
@@ -30,12 +30,12 @@ const show = ref(false);
 
             <div class="modal-scrollbar min-h-0 flex-1 px-6 py-5 space-y-6 overflow-y-auto overscroll-contain">
                 <div v-if="steps.length">
-                    <p class="text-label-md font-semibold text-primary uppercase tracking-wider mb-3">Alur Penggunaan</p>
+                    <p class="text-label-md font-semibold text-text-heading uppercase tracking-wider mb-3">Alur Penggunaan</p>
                     <div class="space-y-3">
                         <div v-for="(step, i) in steps" :key="i" class="flex items-start gap-3">
                             <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-full bg-primary-container text-on-primary-container text-label-md font-bold">{{ i + 1 }}</span>
                             <div>
-                                <p class="text-body-md font-semibold text-primary">{{ step.title }}</p>
+                                <p class="text-body-md font-semibold text-text-heading">{{ step.title }}</p>
                                 <p class="text-body-md text-text-body">{{ step.desc }}</p>
                             </div>
                         </div>
@@ -43,7 +43,7 @@ const show = ref(false);
                 </div>
 
                 <div v-if="rules.length">
-                    <p class="text-label-md font-semibold text-primary uppercase tracking-wider mb-3">Ketentuan</p>
+                    <p class="text-label-md font-semibold text-text-heading uppercase tracking-wider mb-3">Ketentuan</p>
                     <div class="space-y-2">
                         <p v-for="(rule, i) in rules" :key="i" class="flex items-start gap-2 text-body-md text-text-body">
                             <IconCheck :size="16" class="text-success shrink-0 mt-0.5" />

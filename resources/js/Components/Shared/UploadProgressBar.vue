@@ -28,7 +28,7 @@ const icon = computed(() => {
                 <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-pastel-purple/50 flex items-center justify-center">
                     <component :is="icon" :size="28" class="text-secondary animate-pulse" />
                 </div>
-                <h3 class="text-title-lg font-semibold text-primary mb-1">{{ title }}</h3>
+                <h3 class="text-title-lg font-semibold text-text-heading mb-1">{{ title }}</h3>
                 <p class="text-text-body text-body-md mb-6">{{ label }}</p>
                 <div class="h-2.5 rounded-full bg-surface-container overflow-hidden">
                     <div class="h-full w-1/3 rounded-full bg-primary-container progress-bar-animated"></div>

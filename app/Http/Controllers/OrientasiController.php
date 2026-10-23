@@ -16,7 +16,7 @@ class OrientasiController extends Controller
 
     public function verifikasiIdentitas(): Response
     {
-        return Inertia::render('Onboarding/IdentityVerification', $this->layananOrientasi->dataVerifikasiIdentitas(auth()->user()));
+        return Inertia::render('Onboarding/IdentityVerification/index', $this->layananOrientasi->dataVerifikasiIdentitas(auth()->user()));
     }
 
     public function unggahIdentitas(UnggahIdentitasRequest $request): RedirectResponse

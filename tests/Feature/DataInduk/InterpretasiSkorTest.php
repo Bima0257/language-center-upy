@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\DataInduk;
 
+use App\Models\InterpretasiSkor;
 use App\Models\JenisTes;
 use App\Models\Pengguna;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -58,6 +59,59 @@ class InterpretasiSkorTest extends TestCase
 
         $this->get("/admin/data-induk/interpretasi-skor/jenis-tes/{$jenisTes->id}/tambah-massal")
             ->assertOk();
+    }
+
+    public function test_admin_dapat_memperbarui_interpretasi_skor(): void
+    {
+        $this->masukSebagai('admin');
+        $interpretasiSkor = InterpretasiSkor::where('skor_minimum', 380)->firstOrFail();
+
+        $this->put("/admin/data-induk/interpretasi-skor/{$interpretasiSkor->id}", [
+            'jenis_tes_id' => $interpretasiSkor->jenis_tes_id,
+            'skor_minimum' => 381,
+            'skor_maksimum' => 400,
+            'tingkat_cefr' => 'B2',
+            'label_tingkat' => 'Excellent Updated',
+            'lulus' => true,
+            'deskripsi' => 'Updated description',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('interpretasi_skor', [
+            'id' => $interpretasiSkor->id,
+            'skor_minimum' => 381,
+            'label_tingkat' => 'Excellent Updated',
+            'deskripsi' => 'Updated description',
+        ]);
+    }
+
+    public function test_rentang_skor_tidak_valid_ditolak_saat_memperbarui(): void
+    {
+        $this->masukSebagai('admin');
+        $interpretasiSkor = InterpretasiSkor::where('skor_minimum', 380)->firstOrFail();
+
+        $this->put("/admin/data-induk/interpretasi-skor/{$interpretasiSkor->id}", [
+            'jenis_tes_id' => $interpretasiSkor->jenis_tes_id,
+            'skor_minimum' => 400,
+            'skor_maksimum' => 399,
+            'tingkat_cefr' => 'B2',
+            'label_tingkat' => 'Invalid',
+            'lulus' => true,
+        ])->assertSessionHasErrors('skor_maksimum');
+    }
+
+    public function test_peran_tanpa_izin_tidak_dapat_memperbarui_interpretasi_skor(): void
+    {
+        $this->masukSebagai('student');
+        $interpretasiSkor = InterpretasiSkor::where('skor_minimum', 380)->firstOrFail();
+
+        $this->put("/admin/data-induk/interpretasi-skor/{$interpretasiSkor->id}", [
+            'jenis_tes_id' => $interpretasiSkor->jenis_tes_id,
+            'skor_minimum' => 381,
+            'skor_maksimum' => 400,
+            'tingkat_cefr' => 'B2',
+            'label_tingkat' => 'Unauthorized',
+            'lulus' => true,
+        ])->assertForbidden();
     }
 
     public function test_admin_dapat_menyimpan_interpretasi_skor_secara_massal(): void

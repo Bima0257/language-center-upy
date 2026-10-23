@@ -126,7 +126,7 @@ class PratinjauController extends Controller
 
         [$overview, $blocks] = $this->buildSyntheticFlow($ujian, $total);
 
-        return Inertia::render('Ujian/PratinjauPengerjaan', [
+        return Inertia::render('Ujian/PratinjauPengerjaan/index', [
             'sesiUjian' => $session,
             'overview' => $overview,
             'blocks' => $blocks,

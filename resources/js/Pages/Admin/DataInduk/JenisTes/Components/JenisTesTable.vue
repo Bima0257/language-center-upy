@@ -15,8 +15,8 @@ function stripHtml(html) {
 }
 
 const columns = [
-    { key: 'kode', label: 'Kode', sortable: true, className: 'font-medium text-primary' },
-    { key: 'nama', label: 'Nama', sortable: true, className: 'font-medium text-primary' },
+    { key: 'kode', label: 'Kode', sortable: true, className: 'font-medium text-text-heading' },
+    { key: 'nama', label: 'Nama', sortable: true, className: 'font-medium text-text-heading' },
     { key: 'keterampilan_count', label: 'Keterampilan', render: (val) => val ?? 0 },
     { key: 'batas_pelanggaran', label: 'Maks. Strikes', render: (val) => val ?? 3 },
     { key: 'deskripsi', label: 'Deskripsi', render: (val) => { const text = stripHtml(val); return text ? (text.length > 60 ? text.substring(0, 60) + '…' : text) : '-'; } },

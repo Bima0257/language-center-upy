@@ -14,7 +14,7 @@ const emit = defineEmits(['close', 'submit']);
     <BaseModal :show="props.show" @close="emit('close')" max-width="lg">
         <div class="p-8">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-headline-md font-bold text-primary">{{ props.creating ? 'Tambah Fakultas' : 'Ubah Fakultas' }}</h2>
+                <h2 class="text-headline-md font-bold text-text-heading">{{ props.creating ? 'Tambah Fakultas' : 'Ubah Fakultas' }}</h2>
                 <button type="button" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors" title="Tutup">
                     <IconX :size="20" />
                 </button>

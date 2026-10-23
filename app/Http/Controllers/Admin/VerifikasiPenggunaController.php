@@ -18,7 +18,7 @@ class VerifikasiPenggunaController extends Controller
 
     public function index(): Response
     {
-        return Inertia::render('Admin/VerifikasiPengguna', $this->layananVerifikasiPengguna->dataDaftar());
+        return Inertia::render('Admin/VerifikasiPengguna/index', $this->layananVerifikasiPengguna->dataDaftar());
     }
 
     public function setujui(Pengguna $pengguna): RedirectResponse

@@ -21,20 +21,20 @@ class InterpretasiSkorController extends Controller
 
     public function index(): Response
     {
-        return Inertia::render('Admin/DataInduk/InterpretasiSkor', $this->layananDataInduk->dataDaftarInterpretasiSkor());
+        return Inertia::render('Admin/DataInduk/InterpretasiSkor/index', $this->layananDataInduk->dataDaftarInterpretasiSkor());
     }
 
     public function detailPerJenisTes(JenisTes $jenisTes): Response
     {
         return Inertia::render(
-            'Admin/DataInduk/InterpretasiSkor/JenisTes',
+            'Admin/DataInduk/InterpretasiSkor/JenisTes/index',
             $this->layananDataInduk->dataDaftarInterpretasiSkorPerJenisTes($jenisTes),
         );
     }
 
     public function tambahMassal(JenisTes $jenisTes): Response
     {
-        return Inertia::render('Admin/DataInduk/InterpretasiSkor/JenisTes/TambahMassal', [
+        return Inertia::render('Admin/DataInduk/InterpretasiSkor/JenisTes/TambahMassal/index', [
             'jenisTes' => $jenisTes,
         ]);
     }

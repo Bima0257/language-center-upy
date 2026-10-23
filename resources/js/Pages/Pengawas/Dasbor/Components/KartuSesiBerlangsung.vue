@@ -17,7 +17,7 @@ function formatDuration(startedAt) {
           class="block bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 hover:border-secondary hover:shadow-md transition-all active:scale-[0.98]">
         <div class="flex items-start justify-between mb-3">
             <div class="min-w-0 flex-1">
-                <p class="text-title-lg font-semibold text-primary truncate">{{ sesiUjian.pengguna?.name }}</p>
+                <p class="text-title-lg font-semibold text-text-heading truncate">{{ sesiUjian.pengguna?.name }}</p>
                 <p class="text-label-md text-text-muted truncate">{{ sesiUjian.pengguna?.nim || 'NIM: -' }}</p>
             </div>
             <span class="flex items-center gap-1.5 text-label-md font-medium text-success shrink-0">

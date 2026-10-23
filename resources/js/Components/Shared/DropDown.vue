@@ -77,7 +77,7 @@ const sizeClasses = {
 
 <template>
     <div ref="dropdownRoot">
-        <label v-if="label" class="text-label-md font-medium text-primary block mb-1.5">{{ label }}</label>
+        <label v-if="label" class="text-label-md font-medium text-text-heading block mb-1.5">{{ label }}</label>
         <Listbox :model-value="selected" @update:model-value="handleUpdate" :disabled="disabled">
             <div class="relative">
                 <ListboxButton

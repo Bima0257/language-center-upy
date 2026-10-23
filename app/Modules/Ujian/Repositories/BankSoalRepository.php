@@ -22,6 +22,16 @@ class BankSoalRepository implements BankSoalRepositoryInterface
         return BankSoal::where('aktif', true)->orderBy('nama')->get();
     }
 
+    public function semuaAktifDenganJenisTesDanJumlah(?string $jenisTesId = null): Collection
+    {
+        return BankSoal::with('jenisTes')
+            ->withCount('soal')
+            ->where('aktif', true)
+            ->when($jenisTesId !== null, fn ($query) => $query->where('jenis_tes_id', $jenisTesId))
+            ->orderBy('nama')
+            ->get();
+    }
+
     public function semuaAktifDenganJenisTesBerurutan(?string $jenisTesId = null): Collection
     {
         return BankSoal::with('jenisTes')

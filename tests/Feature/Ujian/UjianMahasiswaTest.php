@@ -188,7 +188,6 @@ class UjianMahasiswaTest extends TestCase
             'pilihan_d' => 'Pilihan D',
             'kunci_jawaban' => 'A',
             'urutan' => 1,
-            'status' => 'approved',
         ]);
 
         $ujian = Ujian::create([
@@ -300,7 +299,6 @@ class UjianMahasiswaTest extends TestCase
             'pilihan_d' => 'Pilihan D',
             'kunci_jawaban' => 'A',
             'urutan' => 1,
-            'status' => 'approved',
         ]);
 
         $ujian = Ujian::create([
@@ -404,7 +402,6 @@ class UjianMahasiswaTest extends TestCase
             'pilihan_d' => 'Pilihan D',
             'kunci_jawaban' => 'A',
             'urutan' => 1,
-            'status' => 'approved',
         ]);
 
         $ujian = Ujian::create([

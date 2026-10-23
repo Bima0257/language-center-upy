@@ -1,6 +1,6 @@
 <script setup>
-import InputPilihan from '@/Pages/BankSoal/Components/InputPilihan.vue';
-import PemilihKunciJawaban from '@/Pages/BankSoal/Components/PemilihKunciJawaban.vue';
+import InputPilihan from '@/Pages/BankSoal/components/InputPilihan.vue';
+import PemilihKunciJawaban from '@/Pages/BankSoal/components/PemilihKunciJawaban.vue';
 import { IconPlus, IconTrash, IconInfoCircle, IconHeadphones } from '@tabler/icons-vue';
 
 defineProps({
@@ -19,7 +19,7 @@ const emit = defineEmits(['add', 'remove']);
     <div class="border border-outline-variant/50 rounded-2xl p-5 space-y-4 relative">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <p class="text-label-md font-semibold text-primary">Soal {{ questionIndex + 1 }}</p>
+                <p class="text-label-md font-semibold text-text-heading">Soal {{ questionIndex + 1 }}</p>
                 <span v-if="isAudio" class="inline-flex items-center gap-1 bg-pastel-purple/30 text-primary px-2.5 py-0.5 rounded-full text-label-md font-medium">
                     <IconHeadphones :size="14" /> Audio
                 </span>

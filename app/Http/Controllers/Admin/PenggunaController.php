@@ -42,7 +42,7 @@ class PenggunaController extends Controller
 
         $users = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
 
-        return Inertia::render('Admin/Pengguna/Daftar', [
+        return Inertia::render('Admin/Pengguna/index', [
             'users' => $users,
             'roles' => self::ROLE_NAMES,
             'filters' => $request->only(['search', 'role', 'aktif']),

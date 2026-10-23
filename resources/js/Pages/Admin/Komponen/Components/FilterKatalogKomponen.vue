@@ -26,7 +26,7 @@ const emit = defineEmits([
                         UI inventory
                     </span>
                 </div>
-                <h2 class="text-headline-md font-bold text-primary">
+                <h2 class="text-headline-md font-bold text-text-heading">
                     Satu tempat untuk memeriksa bahasa visual aplikasi
                 </h2>
                 <p class="mt-2 text-body-md text-text-muted">
@@ -61,7 +61,7 @@ const emit = defineEmits([
             class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant/30 pt-4"
         >
             <p class="text-label-md text-text-muted">
-                Menampilkan <span class="font-semibold text-primary">{{ visibleCount }}</span>
+                Menampilkan <span class="font-semibold text-text-heading">{{ visibleCount }}</span>
                 dari {{ componentCount }} komponen
             </p>
             <button

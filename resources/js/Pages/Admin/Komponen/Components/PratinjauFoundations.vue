@@ -2,8 +2,8 @@
 import { IconFileDescription } from "@tabler/icons-vue";
 import EmptyState from "@/Components/Shared/EmptyState.vue";
 import StatusBadge from "@/Components/Shared/StatusBadge.vue";
-import PreviewCard from "@/Pages/Admin/Komponen/Components/KartuPratinjau.vue";
-import GrupPratinjau from "@/Pages/Admin/Komponen/Components/GrupPratinjau.vue";
+import PreviewCard from "@/Pages/Admin/Komponen/components/KartuPratinjau.vue";
+import GrupPratinjau from "@/Pages/Admin/Komponen/components/GrupPratinjau.vue";
 
 defineProps({
     group: { type: Object, required: true },
@@ -22,7 +22,7 @@ defineProps({
             :path="componentMeta.BaseCard.path"
         >
             <div class="rounded-2xl border border-outline-variant/30 bg-surface-container-low p-4">
-                <p class="text-title-lg font-semibold text-primary">Card preview</p>
+                <p class="text-title-lg font-semibold text-text-heading">Card preview</p>
                 <p class="mt-1 text-body-md text-text-body">
                     Slot bebas dapat berisi ringkasan, form, atau data.
                 </p>

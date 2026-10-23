@@ -130,7 +130,7 @@ onUnmounted(() => {
                             class="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl bg-surface-white border border-outline-variant shadow-soft"
                         >
                             <div class="px-4 py-3 border-b border-outline-variant/30">
-                                <p class="text-body-md font-semibold text-primary truncate">{{ $page.props.auth.user.name }}</p>
+                                <p class="text-body-md font-semibold text-text-heading truncate">{{ $page.props.auth.user.name }}</p>
                                 <p class="text-label-md text-text-muted truncate">{{ $page.props.auth.user.email }}</p>
                             </div>
                             <div class="py-1.5">

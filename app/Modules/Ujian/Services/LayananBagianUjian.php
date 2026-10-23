@@ -28,7 +28,7 @@ class LayananBagianUjian
         return DB::transaction(function () use ($ujian, $data) {
             $bagian = $this->buat($ujian, $data);
 
-            return $this->lampirkanSoalDisetujui($ujian, $bagian);
+            return $this->lampirkanSoalOtomatis($ujian, $bagian);
         });
     }
 
@@ -45,7 +45,7 @@ class LayananBagianUjian
     public function lampirkanSoal(Ujian $ujian, BagianUjian $bagian, array $soalIds): int
     {
         return DB::transaction(function () use ($ujian, $bagian, $soalIds) {
-            $diizinkan = $this->soalRepo->idDisetujuiDalam(
+            $diizinkan = $this->soalRepo->idDalam(
                 $soalIds,
                 $bagian->keterampilan_id,
                 $ujian->jenis_tes_id,
@@ -129,16 +129,16 @@ class LayananBagianUjian
         });
     }
 
-    private function lampirkanSoalDisetujui(Ujian $ujian, BagianUjian $bagian): int
+    private function lampirkanSoalOtomatis(Ujian $ujian, BagianUjian $bagian): int
     {
-        $disetujui = $this->soalRepo->disetujuiDenganIdKeterampilanUntukJenisTes($bagian->keterampilan_id, $ujian->jenis_tes_id, $bagian->bank_soal_id);
+        $soalTersedia = $this->soalRepo->soalDenganKeterampilanUntukJenisTes($bagian->keterampilan_id, $ujian->jenis_tes_id, $bagian->bank_soal_id);
 
         $nomor = 1;
-        foreach ($disetujui as $soal) {
+        foreach ($soalTersedia as $soal) {
             $this->bagianRepo->buatAtauTemukanPivotSoal($bagian->id, $soal->id, $nomor++);
         }
 
-        return $disetujui->count();
+        return $soalTersedia->count();
     }
 
     private function pastikanNomorUnik(array $items, string $kunciKesalahan): void

@@ -17,7 +17,7 @@ defineProps({
                 <IconCategory :size="22" />
             </div>
             <div>
-                <p class="text-headline-md font-bold text-primary">{{ componentCount }}</p>
+                <p class="text-headline-md font-bold text-text-heading">{{ componentCount }}</p>
                 <p class="text-label-md text-text-muted">Komponen terdaftar</p>
             </div>
         </BaseCard>
@@ -28,7 +28,7 @@ defineProps({
                 <span class="text-title-lg font-bold">G</span>
             </div>
             <div>
-                <p class="text-headline-md font-bold text-primary">{{ globalComponentCount }}</p>
+                <p class="text-headline-md font-bold text-text-heading">{{ globalComponentCount }}</p>
                 <p class="text-label-md text-text-muted">Global auto-registered</p>
             </div>
         </BaseCard>
@@ -39,7 +39,7 @@ defineProps({
                 <span class="text-title-lg font-bold">R</span>
             </div>
             <div>
-                <p class="text-headline-md font-bold text-primary">{{ reusableComponentCount }}</p>
+                <p class="text-headline-md font-bold text-text-heading">{{ reusableComponentCount }}</p>
                 <p class="text-label-md text-text-muted">Reusable explicit import</p>
             </div>
         </BaseCard>

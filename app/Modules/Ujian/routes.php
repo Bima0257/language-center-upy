@@ -42,14 +42,6 @@ Route::middleware(['auth', 'permission:question.delete'])
         Route::delete('/materi-soal/{materiSoal}', [MateriSoalController::class, 'hapus'])->name('materi-soal.hapus');
     });
 
-Route::middleware(['auth', 'permission:review.decide'])
-    ->prefix('pustaka-soal')
-    ->name('pustaka-soal.')
-    ->group(function () {
-        Route::patch('/soal/{soal}/tinjau', [PustakaSoalController::class, 'tinjau'])->name('tinjau');
-        Route::patch('/soal/tinjauan-massal', [PustakaSoalController::class, 'tinjauMassal'])->name('tinjau-massal');
-    });
-
 Route::middleware(['auth', 'permission:question.view'])
     ->prefix('pustaka-soal/bank-soal')
     ->name('pustaka-soal.bank-soal.')

@@ -19,13 +19,13 @@ function soalPreview(question) {
     <BaseModal :show="show" @close="emit('close')" max-width="2xl" scrollable>
         <div class="p-8">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-headline-md font-bold text-primary">Tambah Soal ke Bagian Ujian</h2>
+                <h2 class="text-headline-md font-bold text-text-heading">Tambah Soal ke Bagian Ujian</h2>
                 <button @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
                     <IconX :size="20" />
                 </button>
             </div>
             <p v-if="activeSection" class="text-label-md text-text-muted mb-4">
-                Bagian Ujian: <span class="font-semibold text-primary">{{ activeSection.judul }}</span> — hanya soal approved dari bank bagianUjian yang ditampilkan.
+                Bagian Ujian: <span class="font-semibold text-text-heading">{{ activeSection.judul }}</span> — hanya soal approved dari bank bagianUjian yang ditampilkan.
             </p>
 
             <div v-if="activeSection && questions.length === 0"
@@ -41,7 +41,7 @@ function soalPreview(question) {
                            @change="emit('toggle-question', question.id)"
                            class="mt-1 w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
                     <div class="min-w-0">
-                        <p class="text-body-md text-primary font-medium truncate">{{ soalPreview(question) }}</p>
+                           <p class="text-body-md text-text-heading font-medium truncate">{{ soalPreview(question) }}</p>
                         <p class="text-label-md text-text-muted truncate">
                              {{ question.bagian_soal?.nama || 'Tanpa bagianSoal' }}<span v-if="question.materi_soal"> — 📄 {{ question.materi_soal.judul }}</span>
                         </p>

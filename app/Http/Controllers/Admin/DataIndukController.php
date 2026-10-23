@@ -33,13 +33,13 @@ class DataIndukController extends Controller
 
     public function daftarKeterampilan(): Response
     {
-        return Inertia::render('Admin/DataInduk/Keterampilan', $this->layananDataInduk->dataDaftarKeterampilan());
+        return Inertia::render('Admin/DataInduk/Keterampilan/index', $this->layananDataInduk->dataDaftarKeterampilan());
     }
 
     public function daftarKeterampilanPerJenisTes(JenisTes $jenisTes): Response
     {
         return Inertia::render(
-            'Admin/DataInduk/Keterampilan/JenisTes',
+            'Admin/DataInduk/Keterampilan/JenisTes/index',
             $this->layananDataInduk->dataDaftarKeterampilanPerJenisTes($jenisTes),
         );
     }
@@ -84,7 +84,7 @@ class DataIndukController extends Controller
 
     public function daftarJenisTes(): Response
     {
-        return Inertia::render('Admin/DataInduk/JenisTes', $this->layananDataInduk->dataDaftarJenisTes());
+        return Inertia::render('Admin/DataInduk/JenisTes/index', $this->layananDataInduk->dataDaftarJenisTes());
     }
 
     public function simpanJenisTes(SimpanJenisTesRequest $request): RedirectResponse
@@ -117,7 +117,7 @@ class DataIndukController extends Controller
         $bankId = $request->query('bank_id');
         $jenisTesId = $request->query('jenis_tes_id');
 
-        return Inertia::render('Admin/DataInduk/BagianSoal', $this->layananDataInduk->dataDaftarBagianSoal($bankId, $jenisTesId));
+        return Inertia::render('Admin/DataInduk/BagianSoal/index', $this->layananDataInduk->dataDaftarBagianSoal($bankId, $jenisTesId));
     }
 
     public function simpanBagianSoal(SimpanBagianSoalRequest $request): RedirectResponse
@@ -155,7 +155,7 @@ class DataIndukController extends Controller
 
     public function daftarFakultas(): Response
     {
-        return Inertia::render('Admin/DataInduk/Fakultas', $this->layananDataInduk->dataDaftarFakultas());
+        return Inertia::render('Admin/DataInduk/Fakultas/index', $this->layananDataInduk->dataDaftarFakultas());
     }
 
     public function simpanFakultas(SimpanFakultasRequest $request): RedirectResponse
@@ -181,17 +181,17 @@ class DataIndukController extends Controller
 
     public function daftarProgramStudi(): Response
     {
-        return Inertia::render('Admin/DataInduk/ProgramStudi', $this->layananDataInduk->dataDaftarProgramStudi());
+        return Inertia::render('Admin/DataInduk/ProgramStudi/index', $this->layananDataInduk->dataDaftarProgramStudi());
     }
 
     public function daftarProgramStudiPerFakultas(Fakultas $fakultas): Response
     {
-        return Inertia::render('Admin/DataInduk/ProgramStudi/Fakultas', $this->layananDataInduk->dataDaftarProgramStudiPerFakultas($fakultas));
+        return Inertia::render('Admin/DataInduk/ProgramStudi/Fakultas/index', $this->layananDataInduk->dataDaftarProgramStudiPerFakultas($fakultas));
     }
 
     public function tambahProgramStudiMassal(Fakultas $fakultas): Response
     {
-        return Inertia::render('Admin/DataInduk/ProgramStudi/TambahMassal', $this->layananDataInduk->dataTambahProgramStudiMassal($fakultas));
+        return Inertia::render('Admin/DataInduk/ProgramStudi/TambahMassal/index', $this->layananDataInduk->dataTambahProgramStudiMassal($fakultas));
     }
 
     public function simpanProgramStudi(SimpanProgramStudiRequest $request): RedirectResponse

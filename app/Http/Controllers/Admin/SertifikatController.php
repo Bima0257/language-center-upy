@@ -18,7 +18,7 @@ class SertifikatController extends Controller
 
     public function index(): Response
     {
-        return Inertia::render('Admin/DataInduk/Sertifikat', $this->layananDataInduk->dataDaftarSertifikat());
+        return Inertia::render('Admin/DataInduk/Sertifikat/index', $this->layananDataInduk->dataDaftarSertifikat());
     }
 
     public function store(SimpanSertifikatRequest $request): RedirectResponse

@@ -139,7 +139,7 @@ class UjianTest extends TestCase
         ]);
     }
 
-    public function test_admin_dapat_menambahkan_soal_disetujui_ke_bagian(): void
+    public function test_admin_dapat_menambahkan_soal_ke_bagian(): void
     {
         $this->masukSebagai('admin');
 
@@ -148,8 +148,7 @@ class UjianTest extends TestCase
 
         $soal = Soal::where('bank_soal_id', $bankSoal->id)
             ->where('keterampilan_id', $bagianUjian->keterampilan_id)
-            ->where('status', 'approved')
-            ->first();
+            ->firstOrFail();
 
         $this->post("/admin/ujian/{$bagianUjian->ujian_id}/bagian/{$bagianUjian->id}/soal", [
             'soal_ids' => [$soal->id],
@@ -180,7 +179,6 @@ class UjianTest extends TestCase
             'pilihan_d' => 'D',
             'kunci_jawaban' => 'A',
             'urutan' => 1,
-            'status' => 'approved',
         ]);
 
         $this->post("/admin/ujian/{$bagianUjian->ujian_id}/bagian/{$bagianUjian->id}/soal", [
@@ -251,11 +249,9 @@ class UjianTest extends TestCase
         $this->assertFalse($ujian->fresh()->bagianUjian()->where('keterampilan_id', $keterampilanMembaca->id)->exists());
 
         $bankSoalId = $ujian->bagianUjian()->first()->bank_soal_id;
-        $soalMembacaDisetujui = Soal::where('bank_soal_id', $bankSoalId)
+        $soalMembaca = Soal::where('bank_soal_id', $bankSoalId)
             ->where('keterampilan_id', $keterampilanMembaca->id)
-            ->where('status', 'approved')
-            ->first();
-        $this->assertNotNull($soalMembacaDisetujui);
+            ->firstOrFail();
 
         $this->post("/admin/ujian/{$ujian->id}/sinkronkan-bagian")->assertRedirect();
 
@@ -263,7 +259,7 @@ class UjianTest extends TestCase
         $this->assertNotNull($bagianBaru);
         $this->assertDatabaseHas('soal_bagian_ujian', [
             'bagian_ujian_id' => $bagianBaru->id,
-            'soal_id' => $soalMembacaDisetujui->id,
+            'soal_id' => $soalMembaca->id,
         ]);
     }
 

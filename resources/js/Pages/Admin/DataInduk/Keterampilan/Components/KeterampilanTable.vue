@@ -26,7 +26,7 @@ function descriptionPreview(html) {
     <BaseCard :padding="false" class="overflow-hidden">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3.5">
             <div class="min-w-0 flex-1">
-                <h2 class="text-title-lg font-semibold text-primary">Daftar Keterampilan</h2>
+                <h2 class="text-title-lg font-semibold text-text-heading">Daftar Keterampilan</h2>
                 <span v-if="keterampilan.length" class="text-label-md text-text-muted">
                     Seret ikon ⠿ untuk mengubah urutan
                 </span>
@@ -69,8 +69,8 @@ function descriptionPreview(html) {
                                     class="drag-handle cursor-grab text-text-muted hover:text-secondary transition-colors"
                                 />
                             </td>
-                            <td class="px-5 py-3.5 font-medium text-primary">{{ element.kode }}</td>
-                            <td class="px-5 py-3.5 font-medium text-primary">{{ element.nama }}</td>
+                            <td class="px-5 py-3.5 font-medium text-text-heading">{{ element.kode }}</td>
+                            <td class="px-5 py-3.5 font-medium text-text-heading">{{ element.nama }}</td>
                             <td class="px-5 py-3.5 text-body-md text-text-body">
                                 {{ descriptionPreview(element.deskripsi) }}
                             </td>

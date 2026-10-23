@@ -22,13 +22,13 @@ defineProps({
                     >
                     <h1
                         v-if="materiSoal"
-                        class="font-serif text-2xl leading-tight text-primary font-bold mb-6"
+                        class="font-serif text-2xl leading-tight text-text-heading font-bold mb-6"
                     >
                         {{ materiSoal.judul }}
                     </h1>
                     <h1
                         v-else
-                        class="font-serif text-2xl leading-tight text-primary font-bold mb-6"
+                        class="font-serif text-2xl leading-tight text-text-heading font-bold mb-6"
                     >
                         {{ bagianSoalLabel }}
                     </h1>

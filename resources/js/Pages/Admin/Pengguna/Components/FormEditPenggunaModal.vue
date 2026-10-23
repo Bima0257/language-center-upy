@@ -15,7 +15,7 @@ const emit = defineEmits(['close', 'submit']);
     <BaseModal :show="props.show" max-width="lg" :closeable="false">
         <div role="dialog" aria-modal="true" aria-labelledby="pengguna-edit-modal-title" class="p-8">
             <div class="flex items-center justify-between mb-6">
-                <h2 id="pengguna-edit-modal-title" class="text-headline-md font-bold text-primary">Ubah Pengguna</h2>
+                <h2 id="pengguna-edit-modal-title" class="text-headline-md font-bold text-text-heading">Ubah Pengguna</h2>
                 <button type="button" aria-label="Tutup edit pengguna" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
                     <IconX :size="20" />
                 </button>

@@ -2,8 +2,8 @@
 import { IconX } from "@tabler/icons-vue";
 import UploadProgressBar from "@/Components/Shared/UploadProgressBar.vue";
 import UserGuide from "@/Components/Shared/UserGuide.vue";
-import PreviewCard from "@/Pages/Admin/Komponen/Components/KartuPratinjau.vue";
-import GrupPratinjau from "@/Pages/Admin/Komponen/Components/GrupPratinjau.vue";
+import PreviewCard from "@/Pages/Admin/Komponen/components/KartuPratinjau.vue";
+import GrupPratinjau from "@/Pages/Admin/Komponen/components/GrupPratinjau.vue";
 
 defineProps({
     group: { type: Object, required: true },
@@ -38,7 +38,7 @@ const emit = defineEmits(["update:modal-open"]);
                 <div class="p-6">
                     <div class="flex items-start justify-between gap-4">
                         <div>
-                            <h3 class="text-title-lg font-semibold text-primary">Contoh modal</h3>
+                            <h3 class="text-title-lg font-semibold text-text-heading">Contoh modal</h3>
                             <p class="mt-1 text-body-md text-text-muted">
                                 Modal menjaga fokus konteks dan scroll halaman.
                             </p>

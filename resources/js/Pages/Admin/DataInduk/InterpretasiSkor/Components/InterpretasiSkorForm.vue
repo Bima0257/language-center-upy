@@ -13,7 +13,7 @@ const emit = defineEmits(['submit']);
 
 <template>
     <BaseCard class="h-fit">
-        <h3 class="text-title-lg font-semibold text-primary mb-4">Tambah Interpretasi</h3>
+        <h3 class="text-title-lg font-semibold text-text-heading mb-4">Tambah Interpretasi</h3>
         <form @submit.prevent="emit('submit')" class="space-y-4">
             <div>
                 <DropDown

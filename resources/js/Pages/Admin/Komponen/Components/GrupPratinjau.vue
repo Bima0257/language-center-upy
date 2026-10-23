@@ -7,7 +7,7 @@ defineProps({
 <template>
     <section class="space-y-4">
         <div>
-            <h2 class="text-headline-md font-bold text-primary">{{ group.title }}</h2>
+            <h2 class="text-headline-md font-bold text-text-heading">{{ group.title }}</h2>
             <p class="mt-1 text-body-md text-text-muted">{{ group.description }}</p>
         </div>
 

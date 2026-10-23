@@ -7,7 +7,7 @@ const emit = defineEmits(['upload-again']);
 <template>
     <div class="bg-warning-container border border-warning rounded-2xl p-8 text-center">
         <IconCheck class="mx-auto text-success mb-4" :size="48" stroke="1.5" />
-        <h1 class="text-headline-md font-bold text-primary mb-2">Identitas Terkirim</h1>
+        <h1 class="text-headline-md font-bold text-text-heading mb-2">Identitas Terkirim</h1>
         <p class="text-text-body text-body-md mb-6">
             Foto identitas Anda sudah diunggah dan menunggu verifikasi oleh admin.
             Proses verifikasi biasanya memakan waktu 1x24 jam.

@@ -18,7 +18,7 @@ const emit = defineEmits(['close', 'submit']);
     <BaseModal :show="show" @close="emit('close')" max-width="2xl" scrollable>
         <div class="p-8">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-headline-md font-bold text-primary">{{ creating ? 'Tambah Keterampilan' : 'Ubah Keterampilan' }}</h2>
+                <h2 class="text-headline-md font-bold text-text-heading">{{ creating ? 'Tambah Keterampilan' : 'Ubah Keterampilan' }}</h2>
                 <button @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
                     <IconX :size="20" />
                 </button>

@@ -11,7 +11,7 @@ defineProps({
     <BaseCard class="flex h-full flex-col">
         <div class="flex items-start justify-between gap-3 border-b border-outline-variant/30 pb-4">
             <div class="min-w-0">
-                <h3 class="text-title-lg font-semibold text-primary">{{ name }}</h3>
+                <h3 class="text-title-lg font-semibold text-text-heading">{{ name }}</h3>
                 <p class="mt-1 text-label-md leading-relaxed text-text-muted">
                     {{ description }}
                 </p>

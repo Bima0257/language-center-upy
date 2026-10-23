@@ -27,7 +27,7 @@ function formatDateTime(value) {
 
 <template>
     <BaseCard class="h-fit sticky top-24">
-        <h2 class="text-title-lg font-semibold text-primary mb-4">Keputusan Tinjauan</h2>
+        <h2 class="text-title-lg font-semibold text-text-heading mb-4">Keputusan Tinjauan</h2>
         <form @submit.prevent="emit('submit')" class="space-y-4">
             <div>
                 <DropDown
@@ -50,7 +50,7 @@ function formatDateTime(value) {
         </form>
 
         <div v-if="props.sesiUjian.status_tinjauan" class="mt-6 pt-6 border-t border-outline-variant/30">
-            <h3 class="text-label-md font-medium text-primary mb-2">Hasil Tinjauan</h3>
+            <h3 class="text-label-md font-medium text-text-heading mb-2">Hasil Tinjauan</h3>
             <span class="inline-block px-3 py-1 rounded-full text-label-md font-medium"
                   :class="reviewStatusColors[props.sesiUjian.status_tinjauan] || 'bg-neutral-container text-on-neutral-container'">
                 {{ props.sesiUjian.status_tinjauan }}

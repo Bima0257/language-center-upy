@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         @php
-            $landingComponents = ['Welcome', 'Auth/Login', 'Auth/Register', 'Auth/ConfirmPassword', 'Auth/ForgotPassword', 'Auth/ResetPassword', 'Auth/VerifyEmail'];
-            $authComponents = ['Auth/Login', 'Auth/Register', 'Auth/ConfirmPassword', 'Auth/ForgotPassword', 'Auth/ResetPassword', 'Auth/VerifyEmail'];
+            $landingComponents = ['Welcome/index', 'Auth/Login/index', 'Auth/Register/index', 'Auth/ConfirmPassword/index', 'Auth/ForgotPassword/index', 'Auth/ResetPassword/index', 'Auth/VerifyEmail/index'];
+            $authComponents = ['Auth/Login/index', 'Auth/Register/index', 'Auth/ConfirmPassword/index', 'Auth/ForgotPassword/index', 'Auth/ResetPassword/index', 'Auth/VerifyEmail/index'];
             $isLanding = in_array($page['component'], $landingComponents);
             $isAuth = in_array($page['component'], $authComponents);
         @endphp

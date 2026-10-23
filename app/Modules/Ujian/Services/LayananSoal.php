@@ -3,6 +3,7 @@
 namespace App\Modules\Ujian\Services;
 
 use App\Imports\ImporSoal;
+use App\Models\BagianSoal;
 use App\Models\Keterampilan;
 use App\Models\MateriSoal;
 use App\Models\Soal;
@@ -24,8 +25,6 @@ use Mews\Purifier\Facades\Purifier;
 
 class LayananSoal
 {
-    private const STATUSES = ['draft', 'approved', 'rejected'];
-
     public function __construct(
         private SoalRepositoryInterface $soalRepo,
         private BankSoalRepositoryInterface $bankSoalRepo,
@@ -36,11 +35,6 @@ class LayananSoal
         private BagianSoalRepositoryInterface $bagianSoalRepo,
         private JenisTesRepositoryInterface $jenisTesRepo,
     ) {}
-
-    public function status(): array
-    {
-        return self::STATUSES;
-    }
 
     private function opsiKeterampilan(?string $jenisTesId = null): array
     {
@@ -84,20 +78,70 @@ class LayananSoal
     {
         $bankSoalId = $filter['bank_soal_id'] ?? null;
         $bankSoal = $bankSoalId !== null ? $this->bankSoalRepo->find($bankSoalId) : null;
+        $jenisTesId = $filter['jenis_tes_id'] ?? null;
+        if ($bankSoal !== null) {
+            $jenisTesId = $bankSoal->jenis_tes_id;
+        }
+        $opsiKeterampilan = $this->opsiKeterampilan($bankSoal?->jenis_tes_id);
+        $bagianSoal = $this->bagianSoalRepo->semuaAktifBerurutan();
+        $normalizedFilter = $filter;
+
+        if ($bankSoal !== null) {
+            $selectedPart = ! empty($filter['bagian_soal_id'])
+                ? $bagianSoal->first(
+                    fn (BagianSoal $part): bool => $part->id === $filter['bagian_soal_id']
+                        && $part->bank_soal_id === $bankSoal->id,
+                )
+                : null;
+
+            $keterampilanId = $filter['keterampilan'] ?? null;
+            if ($keterampilanId === null && $selectedPart !== null) {
+                $keterampilanId = $selectedPart->keterampilan_id;
+            }
+            if ($keterampilanId === null) {
+                $keterampilanId = $opsiKeterampilan[0]['value'] ?? null;
+            }
+
+            if ($keterampilanId !== null) {
+                $normalizedFilter['keterampilan'] = $keterampilanId;
+            }
+
+            $selectedPart = ! empty($normalizedFilter['bagian_soal_id'])
+                ? $bagianSoal->first(
+                    fn (BagianSoal $part): bool => $part->id === $normalizedFilter['bagian_soal_id']
+                        && $part->bank_soal_id === $bankSoal->id
+                        && $part->keterampilan_id === $keterampilanId,
+                )
+                : null;
+
+            if ($selectedPart === null) {
+                $firstPart = $bagianSoal->first(
+                    fn (BagianSoal $part): bool => $part->bank_soal_id === $bankSoal->id
+                        && $part->keterampilan_id === $keterampilanId,
+                );
+
+                if ($firstPart !== null) {
+                    $normalizedFilter['bagian_soal_id'] = $firstPart->id;
+                } else {
+                    unset($normalizedFilter['bagian_soal_id']);
+                }
+            }
+        }
 
         $soal = $bankSoalId
-            ? $this->soalRepo->paginateDenganFilter($filter)
+            ? $this->soalRepo->paginateDenganFilter($normalizedFilter)
             : $this->soalRepo->paginatorKosong();
 
         return [
             'soal' => $soal,
             'jenisTes' => $this->jenisTesRepo->semuaAktifBerurutan(),
-            'bankSoal' => $this->bankSoalRepo->semuaAktifDenganJenisTesBerurutan(),
-            'opsiKeterampilan' => $this->opsiKeterampilan($bankSoal?->jenis_tes_id),
-            'bagianSoal' => $this->bagianSoalRepo->semuaAktifBerurutan(),
+            'bankSoal' => $this->bankSoalRepo->semuaAktifDenganJenisTesDanJumlah($jenisTesId),
+            'opsiKeterampilan' => $opsiKeterampilan,
+            'bagianSoal' => $bagianSoal,
             'kebijakanMateriSoal' => $this->kebijakanMateri->semuaUntukFrontend(),
-            'status' => self::STATUSES,
-            'filter' => $filter,
+            'filter' => $normalizedFilter,
+            'bankSoalTerpilihId' => $bankSoalId,
+            'jenisTesTerpilihId' => $jenisTesId,
         ];
     }
 
@@ -154,7 +198,6 @@ class LayananSoal
                         'pilihan_d' => $dataSoal['pilihan_d'] ?? '',
                         'kunci_jawaban' => $dataSoal['kunci_jawaban'],
                         'urutan' => $urutan++,
-                        'status' => 'draft',
                         'pembuat_id' => auth()->id(),
                     ];
                 }
@@ -224,8 +267,6 @@ class LayananSoal
 
         $data = $validated;
         $data['pengubah_id'] = auth()->id();
-        $data['status'] = 'draft';
-
         $this->soalRepo->update($soal, $data);
     }
 
@@ -236,26 +277,6 @@ class LayananSoal
         }
 
         $this->soalRepo->delete($soal);
-    }
-
-    public function tinjau(Soal $soal, array $data): void
-    {
-        $this->soalRepo->update($soal, [
-            'status' => $data['status'],
-            'peninjau_id' => auth()->id(),
-            'ditinjau_pada' => now(),
-            'catatan_tinjauan' => $data['catatan_tinjauan'] ?? null,
-        ]);
-    }
-
-    public function tinjauMassal(array $ids, array $data): int
-    {
-        return $this->soalRepo->perbaruiStatusMassal($ids, [
-            'status' => $data['status'],
-            'peninjau_id' => auth()->id(),
-            'ditinjau_pada' => now(),
-            'catatan_tinjauan' => $data['catatan_tinjauan'] ?? null,
-        ]);
     }
 
     public function simpan(array $validated): void

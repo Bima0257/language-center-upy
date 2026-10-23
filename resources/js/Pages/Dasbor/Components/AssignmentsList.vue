@@ -1,6 +1,6 @@
 <script setup>
 import { IconBook2, IconHeadphones, IconCircleCheck } from '@tabler/icons-vue';
-import ListItem from '@/Pages/Dasbor/Components/ListItem.vue';
+import ListItem from '@/Pages/Dasbor/components/ListItem.vue';
 import { h } from 'vue';
 
 const assignments = [
@@ -21,7 +21,7 @@ const assignments = [
 <template>
     <div>
         <div class="flex justify-between items-center mb-6">
-            <h3 class="text-headline-md font-bold text-primary">Tugas Saya (5)</h3>
+            <h3 class="text-headline-md font-bold text-text-heading">Tugas Saya (5)</h3>
             <button class="text-primary hover:underline text-label-md font-medium">Lihat Semua</button>
         </div>
         <div class="space-y-3">

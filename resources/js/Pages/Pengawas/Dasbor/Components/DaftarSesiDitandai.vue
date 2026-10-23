@@ -9,7 +9,7 @@ const props = defineProps({
 
 <template>
     <div>
-        <h2 class="text-title-lg font-semibold text-primary mb-4 flex items-center gap-2">
+        <h2 class="text-title-lg font-semibold text-text-heading mb-4 flex items-center gap-2">
             <IconAlertTriangle class="text-warning" :size="22" />
             Sesi Perlu Tinjauan ({{ props.sesiDitandai.length }})
         </h2>
@@ -21,7 +21,7 @@ const props = defineProps({
                  class="bg-surface-white rounded-2xl p-6 shadow-soft border border-error-red/30 hover:border-error-red transition-colors">
                 <div class="flex justify-between items-center">
                     <div>
-                        <p class="font-semibold text-primary">{{ sesiUjian.pengguna?.name }}</p>
+                        <p class="font-semibold text-text-heading">{{ sesiUjian.pengguna?.name }}</p>
                         <p class="text-text-muted text-label-md">{{ sesiUjian.pengguna?.nim || 'NIM: -' }}</p>
                         <p class="text-text-muted text-label-md">{{ sesiUjian.alasan_penandaan }}</p>
                     </div>

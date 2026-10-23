@@ -1,5 +1,5 @@
 <script setup>
-import StatsCard from '@/Pages/Dasbor/Components/StatsCard.vue';
+import StatsCard from '@/Pages/Dasbor/components/StatsCard.vue';
 
 const stats = [
     { value: 85, label: 'Skor Rata-rata' },
@@ -11,7 +11,7 @@ const stats = [
 
 <template>
     <div>
-        <h3 class="text-headline-md font-bold text-primary mb-6">Statistik</h3>
+        <h3 class="text-headline-md font-bold text-text-heading mb-6">Statistik</h3>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatsCard v-for="stat in stats" :key="stat.label" :value="stat.value" :label="stat.label" />
         </div>

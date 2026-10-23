@@ -14,7 +14,7 @@ defineProps({
     error: { type: String, default: undefined },
     passwordToggle: { type: Boolean, default: false },
     showPassword: { type: Boolean, default: false },
-    inputTextClass: { type: String, default: 'text-primary' },
+    inputTextClass: { type: String, default: 'text-text-heading' },
 });
 
 const emit = defineEmits(['update:modelValue', 'toggle-password']);
@@ -23,10 +23,10 @@ const emit = defineEmits(['update:modelValue', 'toggle-password']);
 <template>
     <div class="space-y-2">
         <div v-if="$slots.labelAction" class="flex justify-between items-center px-1">
-            <label class="text-primary text-label-md font-medium" :for="id">{{ label }}</label>
+            <label class="text-text-heading text-label-md font-medium" :for="id">{{ label }}</label>
             <slot name="labelAction" />
         </div>
-        <label v-else class="text-primary text-label-md font-medium block ml-1" :for="id">{{ label }}</label>
+        <label v-else class="text-text-heading text-label-md font-medium block ml-1" :for="id">{{ label }}</label>
 
         <div class="relative">
             <component :is="icon" v-if="icon" class="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" :size="18" />

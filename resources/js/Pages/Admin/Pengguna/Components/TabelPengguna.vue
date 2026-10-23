@@ -32,7 +32,7 @@ const roleColors = {
                 <tbody>
                     <tr v-for="user in props.pengguna.data" :key="user.id" class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50 transition-colors">
                         <td class="px-5 py-4">
-                            <p class="font-medium text-primary text-body-md">{{ user.name }}</p>
+                            <p class="font-medium text-text-heading text-body-md">{{ user.name }}</p>
                             <p v-if="user.profil_mahasiswa?.nim" class="text-label-md text-text-muted">{{ user.profil_mahasiswa.nim }}</p>
                         </td>
                         <td class="px-5 py-4 text-text-body text-body-md">{{ user.email }}</td>

@@ -17,7 +17,7 @@ const emit = defineEmits(['close', 'submit']);
     <BaseModal :show="show" max-width="2xl" :closeable="false" scrollable>
         <div role="dialog" aria-modal="true" aria-labelledby="soal-bank-modal-title" class="p-8">
             <div class="flex items-center justify-between mb-6">
-                <h2 id="soal-bank-modal-title" class="text-headline-md font-bold text-primary">{{ creating ? 'Tambah Bank Soal' : 'Ubah Bank Soal' }}</h2>
+                <h2 id="soal-bank-modal-title" class="text-headline-md font-bold text-text-heading">{{ creating ? 'Tambah Bank Soal' : 'Ubah Bank Soal' }}</h2>
                 <button type="button" aria-label="Tutup form bank soal" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
                     <IconX :size="20" />
                 </button>

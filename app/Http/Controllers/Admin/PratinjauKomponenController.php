@@ -10,6 +10,6 @@ class PratinjauKomponenController extends Controller
 {
     public function index(): Response
     {
-        return Inertia::render('Admin/Komponen/Daftar');
+        return Inertia::render('Admin/Komponen/index');
     }
 }

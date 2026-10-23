@@ -34,7 +34,7 @@ onMounted(() => {
         <div class="flex justify-between items-center max-w-7xl mx-auto w-full">
             <div class="flex items-center gap-2">
                 <img :src="isDark ? '/assets/image/logo-white.png' : '/assets/image/logo-dark.png'" alt="UPY Language Test" class="h-10 w-auto object-contain" />
-                <span class="hidden sm:inline text-headline-md font-bold text-primary">UPY Language Test</span>
+                <span class="hidden sm:inline text-headline-md font-bold text-text-heading">UPY Language Test</span>
             </div>
 
             <div class="hidden md:flex items-center gap-8">

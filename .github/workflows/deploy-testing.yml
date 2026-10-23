@@ -38,6 +38,11 @@ jobs:
       - name: Full ESLint
         run: npm run lint
 
+      - name: Build Frontend Assets
+        run: npm run build
+        env:
+          VITE_TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+
       - name: Full PHP Quality Gate
         run: composer check
 

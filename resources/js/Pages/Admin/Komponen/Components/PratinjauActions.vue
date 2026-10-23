@@ -1,6 +1,6 @@
 <script setup>
-import PreviewCard from "@/Pages/Admin/Komponen/Components/KartuPratinjau.vue";
-import GrupPratinjau from "@/Pages/Admin/Komponen/Components/GrupPratinjau.vue";
+import PreviewCard from "@/Pages/Admin/Komponen/components/KartuPratinjau.vue";
+import GrupPratinjau from "@/Pages/Admin/Komponen/components/GrupPratinjau.vue";
 
 defineProps({
     group: { type: Object, required: true },
@@ -49,7 +49,7 @@ const emit = defineEmits(["update:toggle-value", "update:active-tab"]);
                 <BaseToggle :model-value="false" label="State nonaktif" disabled />
                 <p class="text-label-md text-text-muted">
                     Nilai aktif:
-                    <span class="font-semibold text-primary">{{ toggleValue ? "true" : "false" }}</span>
+                    <span class="font-semibold text-text-heading">{{ toggleValue ? "true" : "false" }}</span>
                 </p>
             </div>
         </PreviewCard>
@@ -68,7 +68,7 @@ const emit = defineEmits(["update:toggle-value", "update:active-tab"]);
                     @update:model-value="emit('update:active-tab', $event)"
                 />
                 <p class="text-body-md text-text-body">
-                    Tab aktif: <span class="font-semibold text-primary">{{ activeTab }}</span>
+                    Tab aktif: <span class="font-semibold text-text-heading">{{ activeTab }}</span>
                 </p>
             </div>
         </PreviewCard>
@@ -88,7 +88,7 @@ const emit = defineEmits(["update:toggle-value", "update:active-tab"]);
                     @update:model-value="emit('update:active-tab', $event)"
                 />
                 <div class="px-5 py-6 text-body-md text-text-body">
-                    Konten tab aktif: <span class="font-semibold text-primary">{{ activeTab }}</span>
+                    Konten tab aktif: <span class="font-semibold text-text-heading">{{ activeTab }}</span>
                 </div>
             </div>
         </PreviewCard>

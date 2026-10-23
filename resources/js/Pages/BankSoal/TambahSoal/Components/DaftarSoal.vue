@@ -24,7 +24,7 @@ defineExpose({ scrollTo });
 </script>
 
 <template>
-    <p class="text-title-lg font-semibold text-primary">Soal</p>
+    <p class="text-title-lg font-semibold text-text-heading">Soal</p>
 
     <KartuSoal
         v-for="(question, questionIndex) in questions"

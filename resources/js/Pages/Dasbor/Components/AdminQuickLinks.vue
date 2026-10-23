@@ -17,7 +17,7 @@ defineProps({
             class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 flex items-center justify-between hover:border-secondary transition-all"
         >
             <div>
-                <p class="text-title-lg font-semibold text-primary">
+                <p class="text-title-lg font-semibold text-text-heading">
                     Verifikasi Pengguna
                 </p>
                 <p class="text-text-muted text-body-md">
@@ -35,7 +35,7 @@ defineProps({
             class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 flex items-center justify-between hover:border-secondary transition-all"
         >
             <div>
-                <p class="text-title-lg font-semibold text-primary">
+                <p class="text-title-lg font-semibold text-text-heading">
                     Laporan Integritas
                 </p>
                 <p class="text-text-muted text-body-md">
@@ -51,7 +51,7 @@ defineProps({
     </div>
     <BaseCard padding="p-5">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-title-lg font-semibold text-primary">
+            <h2 class="text-title-lg font-semibold text-text-heading">
                 Akses Cepat
             </h2>
         </div>

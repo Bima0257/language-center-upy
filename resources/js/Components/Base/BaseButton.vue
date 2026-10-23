@@ -11,7 +11,7 @@ const props = defineProps({
 });
 
 const variantClasses = {
-    primary: "bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary",
+    primary: "bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container",
     secondary:
         "border border-outline-variant bg-surface-white text-text-body hover:bg-surface-container-low",
     danger: "bg-error-red text-on-error hover:bg-error-container hover:text-on-error-container",

@@ -21,14 +21,14 @@ class UjianController extends Controller
 
     public function daftar(): Response
     {
-        return Inertia::render('Admin/Ujian/Daftar', [
+        return Inertia::render('Admin/Ujian/index', [
             'ujian' => $this->layananUjian->dataDaftar(),
         ]);
     }
 
     public function tambah(): Response
     {
-        return Inertia::render('Admin/Ujian/Tambah', $this->layananUjian->dataTambah() + [
+        return Inertia::render('Admin/Ujian/create', $this->layananUjian->dataTambah() + [
             'jenisTes' => $this->layananDataInduk->jenisTesAktif(),
             'bankSoal' => $this->layananUjian->bankSoalAktif(),
         ]);
@@ -44,7 +44,7 @@ class UjianController extends Controller
 
     public function detail(Ujian $ujian): Response
     {
-        return Inertia::render('Admin/Ujian/Detail', $this->layananUjian->dataDetail($ujian));
+        return Inertia::render('Admin/Ujian/show', $this->layananUjian->dataDetail($ujian));
     }
 
     public function sinkronkanBagian(Ujian $ujian): RedirectResponse
@@ -61,7 +61,7 @@ class UjianController extends Controller
 
     public function ubah(Ujian $ujian): Response
     {
-        return Inertia::render('Admin/Ujian/Ubah', $this->layananUjian->dataUbah($ujian) + [
+        return Inertia::render('Admin/Ujian/edit', $this->layananUjian->dataUbah($ujian) + [
             'jenisTes' => $this->layananDataInduk->jenisTesAktif(),
         ]);
     }

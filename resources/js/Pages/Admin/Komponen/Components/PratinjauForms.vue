@@ -2,8 +2,8 @@
 import DropDown from "@/Components/Shared/DropDown.vue";
 import FileUpload from "@/Components/Shared/FileUpload.vue";
 import PasswordStrengthCheck from "@/Components/Shared/PasswordStrengthCheck.vue";
-import PreviewCard from "@/Pages/Admin/Komponen/Components/KartuPratinjau.vue";
-import GrupPratinjau from "@/Pages/Admin/Komponen/Components/GrupPratinjau.vue";
+import PreviewCard from "@/Pages/Admin/Komponen/components/KartuPratinjau.vue";
+import GrupPratinjau from "@/Pages/Admin/Komponen/components/GrupPratinjau.vue";
 
 defineProps({
     group: { type: Object, required: true },

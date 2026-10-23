@@ -25,7 +25,7 @@ class PengawasanController extends Controller
 
     public function dasbor(): Response
     {
-        return Inertia::render('Pengawas/Dasbor', [
+        return Inertia::render('Pengawas/Dasbor/index', [
             'sesiAktif' => $this->layananPengawasan->ambilSesiAktif(),
             'sesiDitandai' => $this->layananPengawasan->ambilSesiDitandai(),
         ]);
@@ -35,14 +35,14 @@ class PengawasanController extends Controller
     {
         $sesi = $this->sesiRepo->temukanDenganJawaban($sesiUjian->id);
 
-        return Inertia::render('Pengawas/TinjauanSesi', [
+        return Inertia::render('Pengawas/TinjauanSesi/index', [
             'sesiUjian' => $sesi->loadMissing(['pengguna', 'catatanPelanggaran', 'slotUjian.periodeUjian.ujian', 'jawaban.soal']),
         ]);
     }
 
     public function pelanggaran(SesiUjian $sesiUjian): Response
     {
-        return Inertia::render('Pengawas/TinjauanSesi', [
+        return Inertia::render('Pengawas/TinjauanSesi/index', [
             'sesiUjian' => $sesiUjian->load(['pengguna', 'catatanPelanggaran']),
         ]);
     }
@@ -75,7 +75,7 @@ class PengawasanController extends Controller
 
     public function sesiDitandai(): Response
     {
-        return Inertia::render('Pengawas/Dasbor', [
+        return Inertia::render('Pengawas/Dasbor/index', [
             'sesiAktif' => collect(),
             'sesiDitandai' => $this->layananPengawasan->ambilSesiDitandai(),
         ]);

@@ -8,7 +8,7 @@ defineProps({
 
 <template>
     <header :class="spacingClass">
-        <h1 class="text-headline-md font-bold text-primary mb-2">{{ title }}</h1>
+        <h1 class="text-headline-md font-bold text-text-heading mb-2">{{ title }}</h1>
         <p class="text-text-body text-body-md">{{ description }}</p>
     </header>
 </template>

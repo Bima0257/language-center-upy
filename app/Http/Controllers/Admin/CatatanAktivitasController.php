@@ -35,7 +35,7 @@ class CatatanAktivitasController extends Controller
 
         $events = Activity::select('event')->distinct()->pluck('event');
 
-        return Inertia::render('Admin/CatatanAktivitas/Daftar', [
+        return Inertia::render('Admin/CatatanAktivitas/index', [
             'logs' => $logs,
             'events' => $events,
             'filters' => $request->only(['causer_id', 'event', 'subject_type', 'search']),

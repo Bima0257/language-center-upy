@@ -16,7 +16,7 @@ class LaporanController extends Controller
 
     public function integritas(): Response
     {
-        return Inertia::render('Admin/Laporan/LaporanSesi', [
+        return Inertia::render('Admin/Laporan/LaporanSesi/index', [
             'sesiUjian' => $this->laporanRepo->semuaIntegritas(),
         ]);
     }

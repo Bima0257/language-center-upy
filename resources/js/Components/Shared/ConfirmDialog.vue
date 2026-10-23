@@ -19,7 +19,7 @@ const state = getState();
                     <IconAlertTriangle :size="20" class="text-warning" />
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h3 id="confirm-dialog-title" class="text-title-lg text-primary font-semibold mb-1">
+                    <h3 id="confirm-dialog-title" class="text-title-lg text-text-heading font-semibold mb-1">
                         {{ state.type === 'confirm' ? 'Konfirmasi' : 'Catatan' }}
                     </h3>
                     <p class="text-body-md text-text-body">{{ state.message }}</p>

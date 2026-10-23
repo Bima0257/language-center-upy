@@ -27,8 +27,8 @@ function isCorrect(key) {
         <div class="max-w-xl mx-auto">
             <div class="mb-8">
                 <span class="bg-pastel-purple text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block">{{ bagianSoalLabel || 'Audio' }}</span>
-                <h1 v-if="materiSoal" class="font-serif text-2xl leading-tight text-primary font-bold mb-6">{{ materiSoal.judul }}</h1>
-                <h1 v-else class="font-serif text-2xl leading-tight text-primary font-bold mb-6">{{ bagianSoalLabel || 'Audio' }}</h1>
+                <h1 v-if="materiSoal" class="font-serif text-2xl leading-tight text-text-heading font-bold mb-6">{{ materiSoal.judul }}</h1>
+                <h1 v-else class="font-serif text-2xl leading-tight text-text-heading font-bold mb-6">{{ bagianSoalLabel || 'Audio' }}</h1>
             </div>
             <p class="text-label-md text-text-muted mb-4">Putar audio sebelum menjawab soal</p>
             <div class="bg-surface-container-low rounded-2xl border border-outline-variant overflow-hidden flex flex-col">

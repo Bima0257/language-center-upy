@@ -16,7 +16,7 @@ const emit = defineEmits(['reorder', 'edit', 'delete']);
         <div class="flex items-center justify-between px-5 py-4 bg-surface-container-low/60 border-b border-outline-variant/30">
             <div class="flex items-center gap-2">
                 <IconBook :size="18" class="text-secondary" />
-                <p class="text-label-md font-semibold text-primary">{{ group.label }}</p>
+                <p class="text-label-md font-semibold text-text-heading">{{ group.label }}</p>
                 <span class="text-label-md text-text-muted">{{ group.bagianSoal.length }} bagianSoal</span>
             </div>
             <span v-if="group.bagianSoal.length" class="text-label-md text-text-muted">
@@ -56,7 +56,7 @@ const emit = defineEmits(['reorder', 'edit', 'delete']);
                                     class="drag-handle cursor-grab text-text-muted hover:text-secondary transition-colors"
                                 />
                             </td>
-                            <td class="px-5 py-3.5 font-medium text-primary">{{ element.nama }}</td>
+                            <td class="px-5 py-3.5 font-medium text-text-heading">{{ element.nama }}</td>
                             <td class="px-5 py-3.5 text-body-md text-text-body">{{ element.urutan ?? 1 }}</td>
                             <td class="px-5 py-3.5 text-body-md text-text-body">{{ element.soal_count ?? 0 }}</td>
                             <td class="px-5 py-3.5">

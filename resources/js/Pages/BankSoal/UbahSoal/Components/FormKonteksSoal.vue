@@ -1,6 +1,5 @@
 <script setup>
 import DropDown from '@/Components/Shared/DropDown.vue';
-import { IconInfoCircle } from '@tabler/icons-vue';
 
 defineProps({
     form: { type: Object, required: true },
@@ -67,8 +66,4 @@ const emit = defineEmits(['skill-change']);
             Belum ada materi soal yang cocok untuk keterampilan &amp; bank soal ini.
         </p>
     </div>
-    <p class="flex items-center gap-1.5 text-label-md text-text-muted">
-        <IconInfoCircle :size="16" class="text-secondary shrink-0" />
-        Perubahan akan direview ulang oleh admin sebelum bisa dipakai.
-    </p>
 </template>

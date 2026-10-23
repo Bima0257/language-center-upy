@@ -53,7 +53,7 @@ function soalPreview(question) {
 <template>
     <BaseCard>
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-title-lg font-semibold text-primary">Bagian Ujian &amp; Soal</h2>
+            <h2 class="text-title-lg font-semibold text-text-heading">Bagian Ujian &amp; Soal</h2>
             <BaseButton size="sm" @click="emit('sync-sections')">
                 <IconPlus :size="16" /> Sinkronkan Bagian Ujian
             </BaseButton>
@@ -71,7 +71,7 @@ function soalPreview(question) {
                         </button>
                         <IconFileDescription :size="18" class="text-secondary" />
                         <div>
-                            <p class="font-semibold text-primary">{{ bagianUjian.judul }}</p>
+                            <p class="font-semibold text-text-heading">{{ bagianUjian.judul }}</p>
                             <p class="text-text-muted text-label-md">
                                 {{ keterampilanName(bagianUjian.keterampilan) }}<span v-if="bagianUjian.bank_soal"> — {{ bagianUjian.bank_soal.nama }}</span> — {{ (soalPerBagian[bagianUjian.id] || []).length }} soal terpasang
                             </p>
@@ -113,7 +113,7 @@ function soalPreview(question) {
                                 <div v-else-if="element.type === 'materiSoal'"
                                      class="bg-surface-container-low rounded-xl px-3 py-2 border border-outline-variant/30">
                                     <div class="flex items-center justify-between gap-3">
-                                        <span class="text-body-md font-semibold text-primary flex items-center gap-2 min-w-0">
+                                        <span class="text-body-md font-semibold text-text-heading flex items-center gap-2 min-w-0">
                                             📄 <span class="truncate">{{ element.materiSoal?.judul || 'Materi' }}</span>
                                             <span class="text-label-md text-text-muted shrink-0">— {{ element.jumlahSoal }} soal</span>
                                         </span>
@@ -128,7 +128,7 @@ function soalPreview(question) {
                                     <IconGripVertical :size="16" class="text-text-muted shrink-0" />
                                     <span class="w-8 text-center font-bold text-primary text-body-md shrink-0">{{ positionOf(bagianUjian, element.soalId) }}</span>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-body-md text-primary font-medium truncate">{{ soalPreview(element.row.soal) }}</p>
+                                        <p class="text-body-md text-text-heading font-medium truncate">{{ soalPreview(element.row.soal) }}</p>
                                         <p v-if="element.row.soal.materi_soal" class="text-label-md text-text-muted truncate">📄 {{ element.row.soal.materi_soal.judul }}</p>
                                     </div>
                                  <span v-if="element.row.soal.materi_soal?.url_audio"

@@ -25,8 +25,6 @@ interface SoalRepositoryInterface
 
     public function delete(Soal $soal): void;
 
-    public function perbaruiStatusMassal(array $ids, array $data): int;
-
     public function urutanMaksimumMateriSoal(string $materiId): int;
 
     /**
@@ -37,12 +35,12 @@ interface SoalRepositoryInterface
     /**
      * @return Collection<int, Soal>
      */
-    public function disetujuiDenganIdKeterampilanUntukJenisTes(string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): Collection;
+    public function soalDenganKeterampilanUntukJenisTes(string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): Collection;
 
     /**
      * @return array<string>
      */
-    public function idDisetujuiDalam(array $ids, string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): array;
+    public function idDalam(array $ids, string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): array;
 
     /**
      * @return Collection<int, Soal>
@@ -50,36 +48,27 @@ interface SoalRepositoryInterface
     public function temukanDenganIdDenganMateriSoal(array $ids): Collection;
 
     /**
-     * Soal approved milik bank+skill tertentu yang belum terpasang di section.
+     * Soal milik bank dan keterampilan tertentu yang belum terpasang di section.
      *
      * @param  array<string>  $kecualiIds
      * @return Collection<int, Soal>
      */
-    public function disetujuiDenganBankDanKeterampilanTanpa(string $bankId, string $keterampilanId, array $kecualiIds): Collection;
+    public function soalDenganBankDanKeterampilanTanpa(string $bankId, string $keterampilanId, array $kecualiIds): Collection;
 
     /**
      * @param  array<string>  $keterampilanIds
      * @return Collection<int, Soal>
      */
-    public function cadanganDisetujuiDenganKeterampilan(array $keterampilanIds, ?string $jenisTesId, ?string $bankId, array $kecualiIds): Collection;
+    public function cadanganDenganKeterampilan(array $keterampilanIds, ?string $jenisTesId, ?string $bankId, array $kecualiIds): Collection;
 
     /**
      * @return Collection<int, BankSoal>
      */
-    public function bankDenganSoalDisetujuiDenganIdKeterampilanDanJenisTes(string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): Collection;
+    public function bankDenganKeterampilanDanJenisTes(string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): Collection;
 
     public function count(): int;
 
-    public function hitungDraf(): int;
-
-    /**
-     * @return Collection<int, Soal>
-     */
-    public function drafMenunggu(int $batas = 10): Collection;
-
     public function hitungDenganKeterampilan(): \Illuminate\Support\Collection;
-
-    public function hitungDenganStatus(): Collection;
 
     public function hitungDenganBank(): Collection;
 }

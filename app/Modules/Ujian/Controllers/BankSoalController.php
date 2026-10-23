@@ -20,12 +20,12 @@ class BankSoalController extends Controller
 
     public function daftar(): Response
     {
-        return Inertia::render('BankSoal/KelolaBankSoal', $this->layananBank->dataDaftar());
+        return Inertia::render('BankSoal/KelolaBankSoal/index', $this->layananBank->dataDaftar());
     }
 
     public function daftarKategori(JenisTes $jenisTes): Response
     {
-        return Inertia::render('BankSoal/KelolaBankSoal', $this->layananBank->dataDaftar($jenisTes->id) + [
+        return Inertia::render('BankSoal/KelolaBankSoal/index', $this->layananBank->dataDaftar($jenisTes->id) + [
             'kategori' => $jenisTes,
         ]);
     }

@@ -22,7 +22,7 @@ defineProps({
                 :size="28"
                 stroke="1.5"
             />
-            <p class="text-headline-md font-bold text-primary">
+                <p class="text-headline-md font-bold text-text-heading">
                 {{ jumlahPengguna }}
             </p>
             <p class="text-text-muted text-label-md">Pengguna Terdaftar</p>
@@ -33,7 +33,7 @@ defineProps({
                 :size="28"
                 stroke="1.5"
             />
-            <p class="text-headline-md font-bold text-primary">
+                <p class="text-headline-md font-bold text-text-heading">
                 {{ jumlahUjian }}
             </p>
             <p class="text-text-muted text-label-md">Total Ujian</p>
@@ -44,7 +44,7 @@ defineProps({
                 :size="28"
                 stroke="1.5"
             />
-            <p class="text-headline-md font-bold text-primary">
+                <p class="text-headline-md font-bold text-text-heading">
                 {{ jumlahSesiAktif }}
             </p>
             <p class="text-text-muted text-label-md">Sesi Aktif</p>

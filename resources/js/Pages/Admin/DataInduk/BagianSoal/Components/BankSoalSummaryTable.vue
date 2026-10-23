@@ -9,7 +9,7 @@ defineProps({
 });
 
 const columns = [
-    { key: 'nama', label: 'Bank Soal', sortable: true, className: 'font-medium text-primary' },
+    { key: 'nama', label: 'Bank Soal', sortable: true, className: 'font-medium text-text-heading' },
     { key: 'jumlahBagian', label: 'Bagian', sortable: true, render: (val) => val ?? 0 },
     { key: 'id', label: 'Aksi', slot: 'actions' },
 ];

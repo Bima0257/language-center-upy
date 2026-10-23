@@ -23,12 +23,12 @@ class PenjadwalanController extends Controller
 
     public function daftar(): Response
     {
-        return Inertia::render('Admin/PeriodeUjian/Daftar', $this->layananPenjadwalan->dataDaftar());
+        return Inertia::render('Admin/PeriodeUjian/index', $this->layananPenjadwalan->dataDaftar());
     }
 
     public function tambah(Ujian $ujian): Response
     {
-        return Inertia::render('Admin/PeriodeUjian/Tambah', [
+        return Inertia::render('Admin/PeriodeUjian/create', [
             'ujian' => $ujian,
         ]);
     }
@@ -47,12 +47,12 @@ class PenjadwalanController extends Controller
 
     public function detail(PeriodeUjian $periodeUjian): Response
     {
-        return Inertia::render('Admin/PeriodeUjian/Detail', $this->layananPenjadwalan->dataDetail($periodeUjian));
+        return Inertia::render('Admin/PeriodeUjian/show', $this->layananPenjadwalan->dataDetail($periodeUjian));
     }
 
     public function ubah(PeriodeUjian $periodeUjian): Response
     {
-        return Inertia::render('Admin/PeriodeUjian/Ubah', [
+        return Inertia::render('Admin/PeriodeUjian/edit', [
             'periodeUjian' => $this->layananPenjadwalan->dataDetail($periodeUjian)['periodeUjian'],
         ]);
     }

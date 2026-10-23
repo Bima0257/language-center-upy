@@ -8,7 +8,7 @@ defineProps({
 });
 
 const columns = [
-    { key: 'nama', label: 'Fakultas', sortable: true, className: 'font-medium text-primary', render: (val, row) => `${row.kode} - ${val}` },
+    { key: 'nama', label: 'Fakultas', sortable: true, className: 'font-medium text-text-heading', render: (val, row) => `${row.kode} - ${val}` },
     { key: 'program_studi_count', label: 'Jumlah Prodi', sortable: true, render: (val) => val ?? 0 },
     { key: 'id', label: 'Aksi', slot: 'actions' },
 ];

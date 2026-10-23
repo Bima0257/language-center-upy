@@ -181,7 +181,6 @@ class UjianSeeder extends Seeder
                 'pilihan_d' => $q['d'],
                 'kunci_jawaban' => $q['jawaban'],
                 'urutan' => $i + 1,
-                'status' => 'approved',
             ]);
         }
 
@@ -198,7 +197,6 @@ class UjianSeeder extends Seeder
                 'pilihan_d' => $q['d'],
                 'kunci_jawaban' => $q['jawaban'],
                 'urutan' => $i + 1,
-                'status' => 'approved',
             ]);
         }
 

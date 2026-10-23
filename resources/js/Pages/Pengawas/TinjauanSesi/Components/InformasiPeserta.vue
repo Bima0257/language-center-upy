@@ -17,23 +17,23 @@ function formatDateTime(value) {
 
 <template>
     <div class="bg-surface-white rounded-2xl p-6 shadow-soft border border-outline-variant/30">
-        <h2 class="text-title-lg font-semibold text-primary mb-4">Informasi Peserta</h2>
+        <h2 class="text-title-lg font-semibold text-text-heading mb-4">Informasi Peserta</h2>
         <div class="grid grid-cols-2 gap-4 text-text-body text-body-md">
             <div>
                 <p class="text-text-muted text-label-md">Nama</p>
-                <p class="text-primary font-medium">{{ props.sesiUjian.pengguna?.name }}</p>
+                <p class="text-text-heading font-medium">{{ props.sesiUjian.pengguna?.name }}</p>
             </div>
             <div>
                 <p class="text-text-muted text-label-md">NIM</p>
-                <p class="text-primary">{{ props.sesiUjian.pengguna?.nim || '-' }}</p>
+                <p class="text-text-heading">{{ props.sesiUjian.pengguna?.nim || '-' }}</p>
             </div>
             <div>
                 <p class="text-text-muted text-label-md">Email</p>
-                <p class="text-primary">{{ props.sesiUjian.pengguna?.email }}</p>
+                <p class="text-text-heading">{{ props.sesiUjian.pengguna?.email }}</p>
             </div>
             <div>
                 <p class="text-text-muted text-label-md">Ujian</p>
-                <p class="text-primary">{{ props.sesiUjian.slot_ujian?.periode_ujian?.ujian?.judul }}</p>
+                <p class="text-text-heading">{{ props.sesiUjian.slot_ujian?.periode_ujian?.ujian?.judul }}</p>
             </div>
             <div>
                 <p class="text-text-muted text-label-md">Status</p>
@@ -50,11 +50,11 @@ function formatDateTime(value) {
             </div>
             <div>
                 <p class="text-text-muted text-label-md">Mulai</p>
-                <p class="text-primary">{{ formatDateTime(props.sesiUjian.dimulai_pada) }}</p>
+                <p class="text-text-heading">{{ formatDateTime(props.sesiUjian.dimulai_pada) }}</p>
             </div>
             <div>
                 <p class="text-text-muted text-label-md">Selesai</p>
-                <p class="text-primary">{{ formatDateTime(props.sesiUjian.diserahkan_pada) }}</p>
+                <p class="text-text-heading">{{ formatDateTime(props.sesiUjian.diserahkan_pada) }}</p>
             </div>
         </div>
 
@@ -63,11 +63,11 @@ function formatDateTime(value) {
             <div class="grid grid-cols-2 gap-4">
                 <div v-if="props.sesiUjian.jenis_perangkat">
                     <p class="text-text-muted text-label-md">Perangkat</p>
-                    <p class="text-primary font-medium capitalize">{{ props.sesiUjian.jenis_perangkat }}</p>
+                    <p class="text-text-heading font-medium capitalize">{{ props.sesiUjian.jenis_perangkat }}</p>
                 </div>
                 <div v-if="props.sesiUjian.swafoto_diambil_pada">
                     <p class="text-text-muted text-label-md">Foto Diambil</p>
-                    <p class="text-primary">{{ formatDateTime(props.sesiUjian.swafoto_diambil_pada) }}</p>
+                    <p class="text-text-heading">{{ formatDateTime(props.sesiUjian.swafoto_diambil_pada) }}</p>
                 </div>
             </div>
             <div v-if="props.sesiUjian.lokasi_swafoto" class="mt-3">

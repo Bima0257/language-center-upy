@@ -49,13 +49,13 @@ class LayananUjian
 
             $urutan = 1;
             foreach ($this->keterampilanRepo->semuaAktifBerurutan($ujian->jenis_tes_id) as $keterampilan) {
-                $hasApproved = $this->soalRepo->disetujuiDenganIdKeterampilanUntukJenisTes(
+                $hasSoal = $this->soalRepo->soalDenganKeterampilanUntukJenisTes(
                     $keterampilan->id,
                     $ujian->jenis_tes_id,
                     $bankId,
                 )->isNotEmpty();
 
-                if (! $hasApproved) {
+                if (! $hasSoal) {
                     continue;
                 }
 
@@ -75,7 +75,7 @@ class LayananUjian
                     $this->bagianRepo->perbaruiAtauBuatPivotBagianSoal($bagian->id, $bagianSoal->id, $bagianSoal->urutan);
                 }
 
-                $this->lampirkanSoalDisetujui($ujian, $bagian, $keterampilan);
+                $this->lampirkanSoal($ujian, $bagian, $keterampilan);
             }
 
             return $ujian;
@@ -99,13 +99,13 @@ class LayananUjian
                 continue;
             }
 
-            $approved = $this->soalRepo->disetujuiDenganIdKeterampilanUntukJenisTes(
+            $soalTersedia = $this->soalRepo->soalDenganKeterampilanUntukJenisTes(
                 $keterampilan->id,
                 $ujian->jenis_tes_id,
                 $bankId,
             );
 
-            if ($approved->isEmpty()) {
+            if ($soalTersedia->isEmpty()) {
                 continue;
             }
 
@@ -123,7 +123,7 @@ class LayananUjian
                 }
             }
 
-            $this->lampirkanSoalDisetujui($ujian, $bagian, $keterampilan);
+            $this->lampirkanSoal($ujian, $bagian, $keterampilan);
             $dibuat++;
         }
 
@@ -177,7 +177,7 @@ class LayananUjian
             $bankId = $bagian->bank_soal_id;
 
             $kecualiIds = $this->bagianRepo->idSoalDalamBagian($bagian->id);
-            $soalDapatDilampirkan[$bagian->id] = $this->soalRepo->disetujuiDenganBankDanKeterampilanTanpa(
+            $soalDapatDilampirkan[$bagian->id] = $this->soalRepo->soalDenganBankDanKeterampilanTanpa(
                 $bankId,
                 $bagian->keterampilan_id,
                 $kecualiIds,
@@ -203,7 +203,7 @@ class LayananUjian
             $bankDenganKeterampilan[] = [
                 'keterampilan_id' => $keterampilan->id,
                 'label' => $keterampilan->nama,
-                'bankSoal' => $this->soalRepo->bankDenganSoalDisetujuiDenganIdKeterampilanDanJenisTes($keterampilan->id, null),
+                'bankSoal' => $this->soalRepo->bankDenganKeterampilanDanJenisTes($keterampilan->id, null),
             ];
         }
 
@@ -226,16 +226,16 @@ class LayananUjian
         ];
     }
 
-    public function lampirkanSoalDisetujui(Ujian $ujian, BagianUjian $bagian, Keterampilan $keterampilan): int
+    public function lampirkanSoal(Ujian $ujian, BagianUjian $bagian, Keterampilan $keterampilan): int
     {
-        $disetujui = $this->soalRepo->disetujuiDenganIdKeterampilanUntukJenisTes($keterampilan->id, $ujian->jenis_tes_id, $bagian->bank_soal_id);
+        $soalTersedia = $this->soalRepo->soalDenganKeterampilanUntukJenisTes($keterampilan->id, $ujian->jenis_tes_id, $bagian->bank_soal_id);
 
         $nomor = 1;
-        foreach ($disetujui as $soal) {
+        foreach ($soalTersedia as $soal) {
             $this->bagianRepo->buatAtauTemukanPivotSoal($bagian->id, $soal->id, $nomor++);
         }
 
-        return $disetujui->count();
+        return $soalTersedia->count();
     }
 
     private function pastikanDataPembuatanUjian(array $data): BankSoal

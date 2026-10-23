@@ -45,7 +45,7 @@ function remove() {
     <div>
         <label
             v-if="label"
-            class="text-label-md font-medium text-primary block mb-1.5"
+            class="text-label-md font-medium text-text-heading block mb-1.5"
         >
             {{ label }}
             <span v-if="required" class="text-error-red">*</span>

@@ -9,10 +9,8 @@ import { IconFileDescription, IconEye, IconPlus, IconEdit, IconTrash, IconCheck 
 
 defineProps({
     group: { type: Object, required: true },
-    canReview: { type: Boolean, default: false },
     materiSoalForm: { type: Object, required: true },
     editingMateriSoalId: { type: [String, null], default: null },
-    selectedIds: { type: Array, default: () => [] },
     keterampilanNameFn: { type: Function, default: () => '' },
     bankNameFn: { type: Function, default: () => '' },
     optionKeys: { type: Array, default: () => [] },
@@ -22,11 +20,10 @@ defineProps({
     quickBagianSoalFn: { type: Function, default: () => [] },
     quickIsAudio: { type: Boolean, default: false },
     labelKeterampilanFn: { type: Function, default: () => '' },
-    isMateriSoalSelectedFn: { type: Function, default: () => false },
-    toggleMateriSoalSelectionFn: { type: Function, default: () => {} },
     toggleMateriSoalFn: { type: Function, default: () => {} },
     materiSoalTypeLabelFn: { type: Function, default: () => 'Teks' },
     isMateriSoalExpandedFn: { type: Function, default: () => false },
+    attached: { type: Boolean, default: false },
 });
 
 defineEmits([
@@ -36,25 +33,23 @@ defineEmits([
     'add-soal',
     'close-add',
     'save-quick',
-    'soal-toggle',
-    'soal-review',
     'soal-delete',
     'delete-materi-soal',
 ]);
 </script>
 
 <template>
-    <BaseCard :padding="false" class="overflow-hidden">
+    <BaseCard
+        :padding="false"
+        class="overflow-hidden"
+        :class="attached ? 'rounded-none border-0 shadow-none' : ''"
+    >
         <div class="px-5 py-4 bg-surface-container-low/60 border-b border-outline-variant/30">
             <!-- TAMPILAN HEADER NORMAL -->
             <template v-if="editingMateriSoalId !== group.materiSoal.id">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <input v-if="canReview && group.soal.length" type="checkbox"
-                           :checked="isMateriSoalSelectedFn(group)" @change="toggleMateriSoalSelectionFn(group)"
-                           class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary shrink-0"
-                           title="Pilih semua soal di materi ini" />
                     <IconFileDescription :size="20" class="text-secondary shrink-0" />
-                    <h3 class="text-title-md font-semibold text-primary">{{ group.materiSoal.judul }}</h3>
+                    <h3 class="text-title-md font-semibold text-text-heading">{{ group.materiSoal.judul }}</h3>
                     <span class="inline-block bg-pastel-purple/50 text-primary px-2.5 py-0.5 rounded-full text-label-md font-medium">
                         {{ materiSoalTypeLabelFn(group.materiSoal) }}
                     </span>
@@ -90,7 +85,7 @@ defineEmits([
 
             <!-- FORM EDIT PASSAGE INLINE -->
             <template v-else>
-                <p class="text-label-md font-semibold text-primary mb-3">Ubah Materi Soal</p>
+                <p class="text-label-md font-semibold text-text-heading mb-3">Ubah Materi Soal</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="text-label-md font-medium text-primary block mb-1">Judul Materi Soal</label>
@@ -154,12 +149,8 @@ defineEmits([
 
         <TabelSoal
             :soal="group.soal"
-            :can-review="canReview"
             :keterampilan-name-fn="keterampilanNameFn"
             :bank-name-fn="bankNameFn"
-            :selected-ids="selectedIds"
-            @toggle="$emit('soal-toggle', $event)"
-            @review="(...args) => $emit('soal-review', ...args)"
             @delete="(...args) => $emit('soal-delete', ...args)"
         />
     </BaseCard>

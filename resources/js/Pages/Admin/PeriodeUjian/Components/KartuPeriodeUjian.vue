@@ -15,7 +15,7 @@ const emit = defineEmits(['delete']);
         <div class="min-w-0">
             <div class="flex items-center gap-2 mb-1">
                 <IconCalendarEvent class="text-secondary shrink-0" :size="18" />
-                <h3 class="text-title-lg font-semibold text-primary truncate">{{ props.periodeUjian.judul }}</h3>
+                <h3 class="text-title-lg font-semibold text-text-heading truncate">{{ props.periodeUjian.judul }}</h3>
             </div>
             <p class="text-text-body text-label-md">
                 {{ props.periodeUjian.ujian?.judul }} — {{ props.formatDate(props.periodeUjian.tanggal_mulai) }} s/d {{ props.formatDate(props.periodeUjian.tanggal_selesai) }}

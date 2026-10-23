@@ -21,7 +21,7 @@ const selectedMode = computed({
 
 <template>
     <div>
-        <p class="text-label-md font-medium text-primary mb-2">Materi Soal <span class="text-text-muted">(Listening wajib; Reading opsional)</span></p>
+        <p class="text-label-md font-medium text-text-heading mb-2">Materi Soal <span class="text-text-muted">(Listening wajib; Reading opsional)</span></p>
         <div class="flex gap-3">
             <label class="flex items-center gap-2 px-4 py-2.5 rounded-full border cursor-pointer transition-all"
                    :class="mode === 'none' ? 'bg-surface-container-low border-secondary' : 'border-outline-variant hover:border-secondary'">
@@ -44,7 +44,7 @@ const selectedMode = computed({
     <div v-if="mode === 'existing'" class="bg-pastel-blue/10 border border-pastel-blue/40 rounded-2xl p-5 space-y-4">
         <div class="flex items-center gap-2">
             <IconFileDescription :size="18" class="text-secondary" />
-            <p class="text-label-md font-semibold text-primary">Pilih Materi Soal</p>
+            <p class="text-label-md font-semibold text-text-heading">Pilih Materi Soal</p>
         </div>
         <div v-if="materiSoal.length">
             <DropDown
@@ -65,7 +65,7 @@ const selectedMode = computed({
     <div v-if="mode === 'new'" class="bg-pastel-blue/10 border border-pastel-blue/40 rounded-2xl p-5 space-y-4">
         <div class="flex items-center gap-2">
             <IconFileDescription :size="18" class="text-secondary" />
-            <p class="text-label-md font-semibold text-primary">Materi Soal Baru</p>
+            <p class="text-label-md font-semibold text-text-heading">Materi Soal Baru</p>
         </div>
         <div>
             <label class="text-label-md font-medium text-primary block mb-1.5">Judul Materi Soal <span class="text-error-red">*</span></label>

@@ -23,14 +23,14 @@ const violationTypeLabel = (type) => {
 
 <template>
     <BaseCard>
-        <h3 class="text-title-lg font-semibold text-primary mb-4">Log Pelanggaran</h3>
+        <h3 class="text-title-lg font-semibold text-text-heading mb-4">Log Pelanggaran</h3>
         <div v-if="pelanggaran.length === 0" class="text-text-muted text-body-md">Tidak ada pelanggaran.</div>
         <div v-else class="space-y-3">
             <div v-for="v in pelanggaran" :key="v.id"
                  class="flex items-start gap-3 p-3 bg-surface-container-low rounded-2xl">
                 <IconAlertTriangle class="text-warning shrink-0 mt-0.5" :size="18" stroke="1.5" />
                 <div>
-                    <p class="text-label-md font-medium text-primary">{{ violationTypeLabel(v.jenis) }}</p>
+                    <p class="text-label-md font-medium text-text-heading">{{ violationTypeLabel(v.jenis) }}</p>
                     <p class="text-label-md text-text-muted">{{ v.created_at }}</p>
                 </div>
                 <span class="ml-auto text-label-md font-medium"

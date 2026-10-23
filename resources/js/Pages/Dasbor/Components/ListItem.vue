@@ -16,7 +16,7 @@ defineProps({
             <component :is="icon" :size="24" stroke="1.5" />
         </div>
         <div class="ml-4 flex-1 min-w-0">
-            <h5 class="text-title-lg font-semibold text-primary truncate">{{ title }}</h5>
+            <h5 class="text-title-lg font-semibold text-text-heading truncate">{{ title }}</h5>
             <p v-if="subtitle" class="text-body-md text-text-muted truncate">{{ subtitle }}</p>
         </div>
         <slot name="action">

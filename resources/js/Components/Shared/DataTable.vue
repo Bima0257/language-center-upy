@@ -218,7 +218,7 @@ function cellDisplayValue(cell) {
 
             <div v-if="$slots.toolbar || headerTitle"
                  class="flex flex-wrap items-center gap-3 border-b-2 border-outline-variant/40 bg-surface-white px-5 py-3.5">
-                <h2 v-if="headerTitle" class="shrink-0 text-title-lg font-semibold text-primary">
+                <h2 v-if="headerTitle" class="shrink-0 text-title-lg font-semibold text-text-heading">
                     {{ headerTitle }}
                 </h2>
                 <div v-if="$slots.toolbar" class="ml-auto flex items-center justify-end gap-3">

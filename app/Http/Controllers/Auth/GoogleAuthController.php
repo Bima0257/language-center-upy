@@ -98,7 +98,7 @@ class GoogleAuthController extends Controller
 
     public function showSetPassword(): Response
     {
-        return Inertia::render('Auth/SetPassword');
+        return Inertia::render('Auth/SetPassword/index');
     }
 
     public function storeSetPassword(Request $request): RedirectResponse

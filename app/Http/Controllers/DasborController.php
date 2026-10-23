@@ -14,6 +14,6 @@ class DasborController extends Controller
 
     public function index(): Response
     {
-        return Inertia::render('Dasbor', $this->layananDasbor->dataUntuk(auth()->user()));
+        return Inertia::render('Dasbor/index', $this->layananDasbor->dataUntuk(auth()->user()));
     }
 }

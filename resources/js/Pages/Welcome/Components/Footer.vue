@@ -24,7 +24,7 @@ onUnmounted(() => {
             <div class="max-w-xs">
                 <div class="flex items-center gap-2 mb-4">
                     <img :src="isDark ? '/assets/image/logo-white.png' : '/assets/image/logo-dark.png'" alt="UPY Language Test" class="h-7 w-auto object-contain" />
-                    <span class="text-title-lg font-bold text-primary">UPY Language Test</span>
+                    <span class="text-title-lg font-bold text-text-heading">UPY Language Test</span>
                 </div>
                 <p class="text-text-body text-body-md mb-6">
                     Memberdayakan mahasiswa di seluruh Indonesia dengan persiapan Tes Bahasa dan bimbingan ahli.
@@ -41,7 +41,7 @@ onUnmounted(() => {
 
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-8 md:gap-16">
                 <div>
-                    <h4 class="text-primary font-bold mb-4 text-label-md">Produk</h4>
+                    <h4 class="text-text-heading font-bold mb-4 text-label-md">Produk</h4>
                     <ul class="space-y-2">
                         <li><a href="#" class="text-text-body text-label-md hover:text-secondary-container hover:underline transition-colors">Kursus</a></li>
                         <li><a href="#" class="text-text-body text-label-md hover:text-secondary-container hover:underline transition-colors">Harga</a></li>
@@ -49,7 +49,7 @@ onUnmounted(() => {
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-primary font-bold mb-4 text-label-md">Perusahaan</h4>
+                    <h4 class="text-text-heading font-bold mb-4 text-label-md">Perusahaan</h4>
                     <ul class="space-y-2">
                         <li><a href="#" class="text-text-body text-label-md hover:text-secondary-container hover:underline transition-colors">Tentang</a></li>
                         <li><a href="#" class="text-text-body text-label-md hover:text-secondary-container hover:underline transition-colors">Cerita Sukses</a></li>
@@ -57,7 +57,7 @@ onUnmounted(() => {
                     </ul>
                 </div>
                 <div class="col-span-2 sm:col-span-1">
-                    <h4 class="text-primary font-bold mb-4 text-label-md">Legal</h4>
+                    <h4 class="text-text-heading font-bold mb-4 text-label-md">Legal</h4>
                     <ul class="space-y-2">
                         <li><a href="#" class="text-text-body text-label-md hover:text-secondary-container hover:underline transition-colors">Ketentuan Layanan</a></li>
                         <li><a href="#" class="text-text-body text-label-md hover:text-secondary-container hover:underline transition-colors">Kebijakan Privasi</a></li>

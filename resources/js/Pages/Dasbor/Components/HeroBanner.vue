@@ -28,7 +28,7 @@ const lessons = [
                          :class="lesson.bg">
                         <component :is="lesson.icon" class="text-primary" :size="36" stroke="1.5" />
                     </div>
-                    <h4 class="text-title-lg font-semibold text-primary leading-tight mb-1">{{ lesson.label }}</h4>
+                        <h4 class="text-title-lg font-semibold text-text-heading leading-tight mb-1">{{ lesson.label }}</h4>
                     <p class="text-label-md font-medium text-text-muted mb-4">{{ lesson.count }}</p>
                     <div class="h-1.5 w-full bg-track-neutral rounded-full">
                         <div class="h-full bg-primary rounded-full" :style="{ width: lesson.progress + '%' }"></div>

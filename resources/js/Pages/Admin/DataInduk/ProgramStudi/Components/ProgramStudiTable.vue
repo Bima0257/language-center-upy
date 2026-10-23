@@ -12,7 +12,7 @@ const emit = defineEmits(['create', 'edit', 'delete']);
 <template>
     <BaseCard :padding="false" class="overflow-hidden">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3.5">
-            <h2 class="text-title-lg font-semibold text-primary">Daftar Program Studi</h2>
+            <h2 class="text-title-lg font-semibold text-text-heading">Daftar Program Studi</h2>
             <div class="flex items-center gap-2">
                 <BaseButton variant="secondary" size="sm" :href="props.backUrl">
                     <IconArrowLeft :size="16" /> Kembali
@@ -36,7 +36,7 @@ const emit = defineEmits(['create', 'edit', 'delete']);
                 </thead>
                 <tbody>
                     <tr v-for="program in programStudi" :key="program.id" class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50">
-                        <td class="px-5 py-4 font-medium text-primary">{{ program.nama }}</td>
+                        <td class="px-5 py-4 font-medium text-text-heading">{{ program.nama }}</td>
                         <td class="px-5 py-4 text-body-md text-text-body">{{ program.kode }}</td>
                         <td class="px-5 py-4 text-body-md text-text-body">{{ program.fakultas?.nama || '-' }}</td>
                         <td class="px-5 py-4">

@@ -15,6 +15,6 @@ class AnalitikController extends Controller
 
     public function index(): Response
     {
-        return Inertia::render('Admin/Analitik/Daftar', $this->layananAnalitik->data());
+        return Inertia::render('Admin/Analitik/index', $this->layananAnalitik->data());
     }
 }

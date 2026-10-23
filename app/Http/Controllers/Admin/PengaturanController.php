@@ -34,7 +34,7 @@ class PengaturanController extends Controller
 
         $pengaturan = Pengaturan::orderBy('kelompok')->orderBy('kunci')->get()->groupBy('kelompok');
 
-        return Inertia::render('Admin/Pengaturan/Daftar', [
+        return Inertia::render('Admin/Pengaturan/index', [
             'pengaturan' => $pengaturan,
             'groups' => array_keys(self::DEFAULTS),
         ]);

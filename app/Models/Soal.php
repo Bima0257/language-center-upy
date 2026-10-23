@@ -25,12 +25,8 @@ use Illuminate\Support\Carbon;
  * @property string $pilihan_d
  * @property string $kunci_jawaban
  * @property int $urutan
- * @property string $status
  * @property string|null $pembuat_id
  * @property string|null $pengubah_id
- * @property string|null $peninjau_id
- * @property Carbon|null $ditinjau_pada
- * @property string|null $catatan_tinjauan
  * @property string|null $materi
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -40,14 +36,13 @@ use Illuminate\Support\Carbon;
  * @property-read BagianSoal|null $bagianSoal
  * @property-read Pengguna|null $pembuat
  * @property-read Pengguna|null $pengubah
- * @property-read Pengguna|null $peninjau
  * @property-read Collection<int, BagianUjian> $bagianUjian
  */
 #[Fillable([
     'bank_soal_id', 'materi_soal_id', 'keterampilan_id', 'bagian_soal_id',
     'teks_soal', 'pilihan_a', 'pilihan_b', 'pilihan_c', 'pilihan_d',
-    'kunci_jawaban', 'urutan', 'status',
-    'pembuat_id', 'pengubah_id', 'peninjau_id', 'ditinjau_pada', 'catatan_tinjauan',
+    'kunci_jawaban', 'urutan',
+    'pembuat_id', 'pengubah_id',
 ])]
 class Soal extends Model
 {
@@ -59,7 +54,6 @@ class Soal extends Model
     {
         return [
             'urutan' => 'integer',
-            'ditinjau_pada' => 'datetime',
         ];
     }
 
@@ -91,11 +85,6 @@ class Soal extends Model
     public function pengubah(): BelongsTo
     {
         return $this->belongsTo(Pengguna::class, 'pengubah_id', 'id');
-    }
-
-    public function peninjau(): BelongsTo
-    {
-        return $this->belongsTo(Pengguna::class, 'peninjau_id', 'id');
     }
 
     public function bagianUjian(): BelongsToMany

@@ -30,8 +30,8 @@ function isCorrect(key) {
         <div class="max-w-xl mx-auto">
             <div class="mb-8">
                 <span class="bg-pastel-blue text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block">{{ bagianSoalLabel || 'Materi' }}</span>
-                <h1 v-if="materiSoal" class="font-serif text-2xl leading-tight text-primary font-bold mb-6">{{ materiSoal.judul }}</h1>
-                <h1 v-else class="font-serif text-2xl leading-tight text-primary font-bold mb-6">Soal Standalone</h1>
+                <h1 v-if="materiSoal" class="font-serif text-2xl leading-tight text-text-heading font-bold mb-6">{{ materiSoal.judul }}</h1>
+                <h1 v-else class="font-serif text-2xl leading-tight text-text-heading font-bold mb-6">Soal Standalone</h1>
             </div>
             <div v-if="materiSoal?.isi_teks" class="font-serif text-[18px] leading-[1.8] text-text-body space-y-6 [&_.rich-text-content]:leading-[1.8] [&_.rich-text-content]:text-text-body [&_.rich-text-content_p]:mb-6">
                 <RichTextViewer :content="materiSoal.isi_teks" />

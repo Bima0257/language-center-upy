@@ -19,7 +19,7 @@ const open = ref(props.defaultOpen);
             class="w-full flex items-center justify-between gap-3 px-6 py-4 text-left transition-colors hover:bg-surface-container-low"
             @click="open = !open"
         >
-            <span class="text-title-lg font-semibold text-primary">{{
+            <span class="text-title-lg font-semibold text-text-heading">{{
                 title
             }}</span>
             <span

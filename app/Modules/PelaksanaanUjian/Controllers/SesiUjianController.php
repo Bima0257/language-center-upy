@@ -39,7 +39,7 @@ class SesiUjianController extends Controller
 
     public function tersedia(): Response
     {
-        return Inertia::render('Ujian/Tersedia', [
+        return Inertia::render('Ujian/Tersedia/index', [
             'slotUjian' => $this->slotRepo->slotTersedia(),
         ]);
     }
@@ -52,7 +52,7 @@ class SesiUjianController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        return Inertia::render('Profil/RiwayatUjian', [
+        return Inertia::render('Profil/RiwayatUjian/index', [
             'sesiUjian' => $sesiUjian,
         ]);
     }
@@ -66,7 +66,7 @@ class SesiUjianController extends Controller
             ->orderBy('tanggal_mulai')
             ->get();
 
-        return Inertia::render('Ujian/Jadwal', [
+        return Inertia::render('Ujian/Jadwal/index', [
             'periodeUjian' => $periodeUjian,
         ]);
     }
@@ -78,14 +78,14 @@ class SesiUjianController extends Controller
             ->orderByDesc('diterbitkan_pada')
             ->get();
 
-        return Inertia::render('Ujian/Sertifikat', [
+        return Inertia::render('Ujian/Sertifikat/index', [
             'sertifikat' => $sertifikat,
         ]);
     }
 
     public function pemeriksaanAwal(SlotUjian $slotUjian): Response
     {
-        return Inertia::render('Ujian/PemeriksaanAwal', [
+        return Inertia::render('Ujian/PemeriksaanAwal/index', [
             'slotUjian' => $slotUjian->load('periodeUjian.ujian'),
         ]);
     }
@@ -129,7 +129,7 @@ class SesiUjianController extends Controller
             $jawaban->soal->makeHidden('kunci_jawaban');
         });
 
-        return Inertia::render('Ujian/Kerjakan', [
+        return Inertia::render('Ujian/Kerjakan/index', [
             'sesiUjian' => $sesi,
             'soalBank' => $this->layananPelaksanaan->soalUntukSesi($sesi),
         ]);

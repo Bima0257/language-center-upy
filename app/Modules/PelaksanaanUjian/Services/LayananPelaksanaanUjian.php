@@ -42,7 +42,7 @@ class LayananPelaksanaanUjian
             $keterampilanIds = $bagianKosong->pluck('keterampilan_id')->filter()->unique()->values()->all();
             $bankIds = $bagianKosong->pluck('bank_soal_id')->filter()->unique()->all();
 
-            $cadangan = $this->soalRepo->cadanganDisetujuiDenganKeterampilan(
+            $cadangan = $this->soalRepo->cadanganDenganKeterampilan(
                 $keterampilanIds,
                 $ujian?->jenis_tes_id,
                 count($bankIds) === 1 ? $bankIds[0] : null,

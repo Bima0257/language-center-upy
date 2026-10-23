@@ -11,6 +11,8 @@ interface BankSoalRepositoryInterface
 
     public function semuaAktifBerurutan(): Collection;
 
+    public function semuaAktifDenganJenisTesDanJumlah(?string $jenisTesId = null): Collection;
+
     public function semuaAktifDenganJenisTesBerurutan(?string $jenisTesId = null): Collection;
 
     public function find(string $id): ?BankSoal;

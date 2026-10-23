@@ -14,7 +14,7 @@ const emit = defineEmits(['create', 'edit', 'delete']);
     <BaseCard :padding="false" class="overflow-hidden">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3.5">
             <div>
-                <h2 class="text-title-lg font-semibold text-primary">Daftar Program Studi Baru</h2>
+                <h2 class="text-title-lg font-semibold text-text-heading">Daftar Program Studi Baru</h2>
                 <p class="text-label-md text-text-muted mt-1">{{ props.programStudi.length }}/{{ props.maxRows }} data</p>
             </div>
             <div class="flex items-center gap-2">
@@ -41,7 +41,7 @@ const emit = defineEmits(['create', 'edit', 'delete']);
                 <tbody>
                     <tr v-for="(program, index) in props.programStudi" :key="`${program.kode}-${index}`" class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50">
                         <td class="px-5 py-4 text-body-md text-text-muted">{{ index + 1 }}</td>
-                        <td class="px-5 py-4 font-medium text-primary">{{ program.nama }}</td>
+                        <td class="px-5 py-4 font-medium text-text-heading">{{ program.nama }}</td>
                         <td class="px-5 py-4 text-body-md text-text-body">{{ program.kode }}</td>
                         <td class="px-5 py-4">
                             <BaseBadge :variant="program.aktif ? 'success' : 'neutral'">

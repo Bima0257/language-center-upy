@@ -1,8 +1,8 @@
 <script setup>
 import RichTextEditor from "@/Components/Shared/RichTextEditor.vue";
 import RichTextViewer from "@/Components/Shared/RichTextViewer.vue";
-import PreviewCard from "@/Pages/Admin/Komponen/Components/KartuPratinjau.vue";
-import GrupPratinjau from "@/Pages/Admin/Komponen/Components/GrupPratinjau.vue";
+import PreviewCard from "@/Pages/Admin/Komponen/components/KartuPratinjau.vue";
+import GrupPratinjau from "@/Pages/Admin/Komponen/components/GrupPratinjau.vue";
 
 defineProps({
     group: { type: Object, required: true },

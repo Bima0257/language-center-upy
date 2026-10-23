@@ -11,6 +11,9 @@ interface BagianSoalRepositoryInterface
 
     public function semuaDenganJumlahSoal(): Collection;
 
+    /**
+     * @return Collection<int, BagianSoal>
+     */
     public function semuaAktifBerurutan(): Collection;
 
     /**

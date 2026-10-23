@@ -12,7 +12,7 @@ const players = [
     <div class="space-y-8">
         <div>
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-headline-md font-bold text-primary">Peringkat</h3>
+                <h3 class="text-headline-md font-bold text-text-heading">Peringkat</h3>
                 <IconChevronRight class="text-text-muted" :size="20" />
             </div>
 
@@ -22,7 +22,7 @@ const players = [
                         {{ $page.props.auth.user.name.charAt(0).toUpperCase() }}
                     </div>
                     <div>
-                        <p class="text-headline-md font-bold text-primary">#14</p>
+                        <p class="text-headline-md font-bold text-text-heading">#14</p>
                         <p class="text-label-md font-medium text-text-muted">Posisi Anda di papan peringkat</p>
                     </div>
                 </div>
@@ -41,15 +41,15 @@ const players = [
             <div class="space-y-4">
                 <div v-for="player in players" :key="player.rank"
                      class="flex items-center gap-4 p-3 hover:bg-surface-white dark:hover:bg-surface-container-high rounded-xl transition-colors">
-                    <span class="text-title-lg font-semibold text-primary w-6">#{{ player.rank }}</span>
+                    <span class="text-title-lg font-semibold text-text-heading w-6">#{{ player.rank }}</span>
                     <BaseAvatar variant="neutral" :name="player.name" :size="40" />
                     <div class="flex-1 min-w-0">
-                        <h6 class="text-label-md font-medium text-primary truncate">{{ player.name }}</h6>
+                        <h6 class="text-label-md font-medium text-text-heading truncate">{{ player.name }}</h6>
                         <p class="text-[11px] text-text-muted truncate">{{ player.role }}</p>
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
                         <IconCoin :size="16" class="text-warning" />
-                        <span class="text-label-md font-medium text-primary">{{ player.points }} poin</span>
+                        <span class="text-label-md font-medium text-text-heading">{{ player.points }} poin</span>
                     </div>
                 </div>
             </div>

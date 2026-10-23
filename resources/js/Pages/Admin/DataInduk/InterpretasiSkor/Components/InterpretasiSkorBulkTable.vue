@@ -14,7 +14,7 @@ const emit = defineEmits(['create', 'edit', 'delete']);
     <BaseCard :padding="false" class="overflow-hidden">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3.5">
             <div>
-                <h2 class="text-title-lg font-semibold text-primary">Daftar Interpretasi Skor Baru</h2>
+                <h2 class="text-title-lg font-semibold text-text-heading">Daftar Interpretasi Skor Baru</h2>
                 <p class="text-label-md text-text-muted mt-1">{{ props.interpretasiSkor.length }}/{{ props.maxRows }} data</p>
             </div>
             <div class="flex items-center gap-2">
@@ -42,7 +42,7 @@ const emit = defineEmits(['create', 'edit', 'delete']);
                 <tbody>
                     <tr v-for="(interpretasi, index) in props.interpretasiSkor" :key="`${interpretasi.skor_minimum}-${index}`" class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50">
                         <td class="px-5 py-4 text-body-md text-text-muted">{{ index + 1 }}</td>
-                        <td class="px-5 py-4 font-medium text-primary">{{ interpretasi.skor_minimum }} - {{ interpretasi.skor_maksimum }}</td>
+                        <td class="px-5 py-4 font-medium text-text-heading">{{ interpretasi.skor_minimum }} - {{ interpretasi.skor_maksimum }}</td>
                         <td class="px-5 py-4 text-body-md text-text-body">{{ interpretasi.tingkat_cefr }}</td>
                         <td class="px-5 py-4 text-body-md text-text-body">
                             <p>{{ interpretasi.label_tingkat }}</p>

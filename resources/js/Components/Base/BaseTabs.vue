@@ -2,13 +2,17 @@
 defineProps({
     items: { type: Array, default: () => [] },
     modelValue: { type: [String, Number], default: "" },
+    grouped: { type: Boolean, default: true },
 });
 
 const emit = defineEmits(["update:modelValue"]);
 </script>
 
 <template>
-    <div class="inline-flex items-center gap-1 bg-surface-container rounded-full p-1">
+    <div
+        class="inline-flex items-center gap-1"
+        :class="grouped ? 'bg-surface-container rounded-full p-1' : ''"
+    >
         <button
             v-for="item in items"
             :key="String(item.value)"

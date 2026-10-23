@@ -5,7 +5,6 @@ namespace App\Modules\Ujian\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Ujian\PerbaruiSoalPustakaRequest;
 use App\Http\Requests\Ujian\SimpanSoalPustakaRequest;
-use App\Http\Requests\Ujian\TinjauSoalRequest;
 use App\Models\Soal;
 use App\Modules\Ujian\Services\LayananSoal;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +22,7 @@ class PustakaSoalController extends Controller
     {
         $bankSoalTerpilih = $request->query('bank_soal_id');
 
-        return Inertia::render('BankSoal/TambahSoal', $this->layananSoal->dataTambah(
+        return Inertia::render('BankSoal/TambahSoal/create', $this->layananSoal->dataTambah(
             $bankSoalTerpilih,
             $this->filterKembali($request),
         ));
@@ -31,13 +30,13 @@ class PustakaSoalController extends Controller
 
     public function ubah(Soal $soal): Response
     {
-        return Inertia::render('BankSoal/UbahSoal', $this->layananSoal->dataUbah($soal));
+        return Inertia::render('BankSoal/UbahSoal/edit', $this->layananSoal->dataUbah($soal));
     }
 
     public function daftar(Request $request): Response
     {
-        return Inertia::render('BankSoal/PustakaSoal', $this->layananSoal->dataDaftar(
-            $request->only(['keterampilan', 'bank_soal_id', 'status', 'cari', 'materi_soal_id', 'bagian_soal_id'])
+        return Inertia::render('BankSoal/PustakaSoal/index', $this->layananSoal->dataDaftar(
+            $request->only(['jenis_tes_id', 'keterampilan', 'bank_soal_id', 'materi_soal_id', 'bagian_soal_id'])
         ));
     }
 
@@ -51,7 +50,7 @@ class PustakaSoalController extends Controller
 
     public function pratinjau(Soal $soal): Response
     {
-        return Inertia::render('BankSoal/PratinjauSoal', $this->layananSoal->dataPratinjau($soal));
+        return Inertia::render('BankSoal/PratinjauSoal/index', $this->layananSoal->dataPratinjau($soal));
     }
 
     public function perbarui(PerbaruiSoalPustakaRequest $request, Soal $soal): RedirectResponse
@@ -75,34 +74,10 @@ class PustakaSoalController extends Controller
         return back()->with('success', 'Soal berhasil dihapus.');
     }
 
-    public function tinjau(TinjauSoalRequest $request, Soal $soal): RedirectResponse
-    {
-        $this->layananSoal->tinjau($soal, $request->validated());
-
-        $label = $request->status === 'approved' ? 'disetujui' : 'ditolak';
-
-        return back()->with('success', "Soal berhasil {$label}.");
-    }
-
-    public function tinjauMassal(TinjauSoalRequest $request): RedirectResponse
-    {
-        $ids = $request->input('ids', []);
-
-        if (empty($ids) || ! is_array($ids)) {
-            return back()->with('error', 'Tidak ada soal yang dipilih.');
-        }
-
-        $jumlah = $this->layananSoal->tinjauMassal($ids, $request->validated());
-
-        $label = $request->status === 'approved' ? 'disetujui' : 'ditolak';
-
-        return back()->with('success', "{$jumlah} soal berhasil {$label}.");
-    }
-
     private function filterKembali(Request $request): array
     {
         return array_filter(
-            $request->only(['bank_soal_id', 'keterampilan', 'bagian_soal_id', 'status', 'cari']),
+            $request->only(['bank_soal_id', 'keterampilan', 'bagian_soal_id']),
             fn ($value) => $value !== null && $value !== ''
         );
     }
@@ -113,8 +88,6 @@ class PustakaSoalController extends Controller
             'bank_soal_id' => $request->input('bank_soal_id'),
             'keterampilan' => $request->input('_kembali_keterampilan') ?: $request->input('soal.0.keterampilan_id'),
             'bagian_soal_id' => $request->input('_kembali_bagian_soal_id'),
-            'status' => $request->input('_kembali_status'),
-            'cari' => $request->input('_kembali_cari'),
         ], fn ($value) => ! empty($value));
     }
 }

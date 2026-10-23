@@ -23,7 +23,7 @@ Route::get('/media/{path}', [MediaController::class, 'serve'])
     ->name('media.serve');
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
+    return Inertia::render('Welcome/index', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
