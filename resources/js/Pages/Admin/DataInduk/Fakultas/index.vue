@@ -1,8 +1,8 @@
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import FakultasFormModal from './components/FakultasFormModal.vue';
-import FakultasTable from './components/FakultasTable.vue';
+import FakultasFormModal from './Components/FakultasFormModal.vue';
+import FakultasTable from './Components/FakultasTable.vue';
 import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 

@@ -1,5 +1,5 @@
 <script setup>
-import StatsCard from '@/Pages/Dasbor/components/StatsCard.vue';
+import StatsCard from '@/Pages/Dasbor/Components/StatsCard.vue';
 
 const stats = [
     { value: 85, label: 'Skor Rata-rata' },

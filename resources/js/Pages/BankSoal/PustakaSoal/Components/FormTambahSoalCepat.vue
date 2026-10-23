@@ -1,6 +1,6 @@
 <script setup>
 import DropDown from '@/Components/Shared/DropDown.vue';
-import InputPilihan from '@/Pages/BankSoal/components/InputPilihan.vue';
+import InputPilihan from '@/Pages/BankSoal/Components/InputPilihan.vue';
 import { IconHeadphones, IconCheck } from '@tabler/icons-vue';
 
 defineProps({

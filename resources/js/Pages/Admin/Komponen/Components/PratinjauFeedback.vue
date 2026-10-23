@@ -2,8 +2,8 @@
 import { IconX } from "@tabler/icons-vue";
 import UploadProgressBar from "@/Components/Shared/UploadProgressBar.vue";
 import UserGuide from "@/Components/Shared/UserGuide.vue";
-import PreviewCard from "@/Pages/Admin/Komponen/components/KartuPratinjau.vue";
-import GrupPratinjau from "@/Pages/Admin/Komponen/components/GrupPratinjau.vue";
+import PreviewCard from "@/Pages/Admin/Komponen/Components/KartuPratinjau.vue";
+import GrupPratinjau from "@/Pages/Admin/Komponen/Components/GrupPratinjau.vue";
 
 defineProps({
     group: { type: Object, required: true },

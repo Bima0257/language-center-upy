@@ -2,8 +2,8 @@
 import { IconFileDescription } from "@tabler/icons-vue";
 import EmptyState from "@/Components/Shared/EmptyState.vue";
 import StatusBadge from "@/Components/Shared/StatusBadge.vue";
-import PreviewCard from "@/Pages/Admin/Komponen/components/KartuPratinjau.vue";
-import GrupPratinjau from "@/Pages/Admin/Komponen/components/GrupPratinjau.vue";
+import PreviewCard from "@/Pages/Admin/Komponen/Components/KartuPratinjau.vue";
+import GrupPratinjau from "@/Pages/Admin/Komponen/Components/GrupPratinjau.vue";
 
 defineProps({
     group: { type: Object, required: true },

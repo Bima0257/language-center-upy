@@ -1,8 +1,8 @@
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import JenisTesTable from './components/JenisTesTable.vue';
-import JenisTesFormModal from './components/JenisTesFormModal.vue';
+import JenisTesTable from './Components/JenisTesTable.vue';
+import JenisTesFormModal from './Components/JenisTesFormModal.vue';
 import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 

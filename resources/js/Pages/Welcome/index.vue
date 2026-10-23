@@ -1,11 +1,11 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
-import Navbar from '@/Pages/Welcome/components/Navbar.vue';
-import Hero from '@/Pages/Welcome/components/Hero.vue';
-import Features from '@/Pages/Welcome/components/Features.vue';
-import CTA from '@/Pages/Welcome/components/CTA.vue';
-import Footer from '@/Pages/Welcome/components/Footer.vue';
-import MobileBottomNav from '@/Pages/Welcome/components/MobileBottomNav.vue';
+import Navbar from '@/Pages/Welcome/Components/Navbar.vue';
+import Hero from '@/Pages/Welcome/Components/Hero.vue';
+import Features from '@/Pages/Welcome/Components/Features.vue';
+import CTA from '@/Pages/Welcome/Components/CTA.vue';
+import Footer from '@/Pages/Welcome/Components/Footer.vue';
+import MobileBottomNav from '@/Pages/Welcome/Components/MobileBottomNav.vue';
 import ScrollToTop from '@/Components/Shared/ScrollToTop.vue';
 
 defineProps({

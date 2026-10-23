@@ -2,10 +2,10 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import { computed } from 'vue';
-import AksiFormSoal from './components/AksiFormSoal.vue';
-import FormKonteksSoal from './components/FormKonteksSoal.vue';
-import KontenSoal from './components/KontenSoal.vue';
-import RingkasanSoal from './components/RingkasanSoal.vue';
+import AksiFormSoal from './Components/AksiFormSoal.vue';
+import FormKonteksSoal from './Components/FormKonteksSoal.vue';
+import KontenSoal from './Components/KontenSoal.vue';
+import RingkasanSoal from './Components/RingkasanSoal.vue';
 
 const props = defineProps({
     soal: { type: Object, required: true },

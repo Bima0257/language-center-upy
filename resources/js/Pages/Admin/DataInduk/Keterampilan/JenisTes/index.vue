@@ -1,8 +1,8 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import KeterampilanFormModal from '../components/KeterampilanFormModal.vue';
-import KeterampilanTable from '../components/KeterampilanTable.vue';
+import KeterampilanFormModal from '../Components/KeterampilanFormModal.vue';
+import KeterampilanTable from '../Components/KeterampilanTable.vue';
 import { computed, ref, watch } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 import { useToast } from '@/Composables/useToast';

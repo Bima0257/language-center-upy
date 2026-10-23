@@ -2,9 +2,9 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import { ref } from 'vue';
-import AddQuestionsModal from './components/AddQuestionsModal.vue';
-import ExamSummary from './components/ExamSummary.vue';
-import QuestionArrangement from './components/QuestionArrangement.vue';
+import AddQuestionsModal from './Components/AddQuestionsModal.vue';
+import ExamSummary from './Components/ExamSummary.vue';
+import QuestionArrangement from './Components/QuestionArrangement.vue';
 
 const props = defineProps({
     ujian: { type: Object, required: true },

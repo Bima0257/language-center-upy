@@ -2,13 +2,13 @@
 import { Head } from "@inertiajs/vue3";
 import TataLetakUjian from "@/Layouts/TataLetakUjian.vue";
 import GridSoalModal from "@/Components/Ujian/GridSoalModal.vue";
-import ExamIntroState from "@/Pages/Ujian/PratinjauPengerjaan/components/ExamIntroState.vue";
-import SkillIntroState from "@/Pages/Ujian/PratinjauPengerjaan/components/SkillIntroState.vue";
-import QuestionPartIntroState from "@/Pages/Ujian/PratinjauPengerjaan/components/QuestionPartIntroState.vue";
-import ReadingQuestionPane from "@/Pages/Ujian/PratinjauPengerjaan/components/ReadingQuestionPane.vue";
-import ListeningQuestionPane from "@/Pages/Ujian/PratinjauPengerjaan/components/ListeningQuestionPane.vue";
-import QuestionPreviewPane from "@/Pages/Ujian/PratinjauPengerjaan/components/QuestionPreviewPane.vue";
-import QuestionNavigation from "@/Pages/Ujian/PratinjauPengerjaan/components/QuestionNavigation.vue";
+import ExamIntroState from "@/Pages/Ujian/PratinjauPengerjaan/Components/ExamIntroState.vue";
+import SkillIntroState from "@/Pages/Ujian/PratinjauPengerjaan/Components/SkillIntroState.vue";
+import QuestionPartIntroState from "@/Pages/Ujian/PratinjauPengerjaan/Components/QuestionPartIntroState.vue";
+import ReadingQuestionPane from "@/Pages/Ujian/PratinjauPengerjaan/Components/ReadingQuestionPane.vue";
+import ListeningQuestionPane from "@/Pages/Ujian/PratinjauPengerjaan/Components/ListeningQuestionPane.vue";
+import QuestionPreviewPane from "@/Pages/Ujian/PratinjauPengerjaan/Components/QuestionPreviewPane.vue";
+import QuestionNavigation from "@/Pages/Ujian/PratinjauPengerjaan/Components/QuestionNavigation.vue";
 import { ref, computed, watch } from "vue";
 
 const props = defineProps({

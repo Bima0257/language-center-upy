@@ -1,7 +1,7 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { IconMail, IconLock, IconEye, IconEyeOff } from '@tabler/icons-vue';
-import AuthCard from '@/Pages/Auth/components/AuthCard.vue';
+import AuthCard from '@/Pages/Auth/Components/AuthCard.vue';
 import { ref, onMounted } from 'vue';
 
 defineProps({

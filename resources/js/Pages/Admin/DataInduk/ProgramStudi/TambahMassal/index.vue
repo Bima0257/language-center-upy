@@ -1,8 +1,8 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import ProgramStudiBulkTable from '../components/ProgramStudiBulkTable.vue';
-import ProgramStudiFormModal from '../components/ProgramStudiFormModal.vue';
+import ProgramStudiBulkTable from '../Components/ProgramStudiBulkTable.vue';
+import ProgramStudiFormModal from '../Components/ProgramStudiFormModal.vue';
 import { computed, ref } from 'vue';
 import { useToast } from '@/Composables/useToast';
 

@@ -1,7 +1,7 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import FakultasProgramStudiTable from './components/FakultasProgramStudiTable.vue';
+import FakultasProgramStudiTable from './Components/FakultasProgramStudiTable.vue';
 
 const props = defineProps({
     fakultas: { type: Array, default: () => [] },

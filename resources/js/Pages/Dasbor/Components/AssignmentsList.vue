@@ -1,6 +1,6 @@
 <script setup>
 import { IconBook2, IconHeadphones, IconCircleCheck } from '@tabler/icons-vue';
-import ListItem from '@/Pages/Dasbor/components/ListItem.vue';
+import ListItem from '@/Pages/Dasbor/Components/ListItem.vue';
 import { h } from 'vue';
 
 const assignments = [

@@ -1,7 +1,7 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import JenisTesKeterampilanTable from './components/JenisTesKeterampilanTable.vue';
+import JenisTesKeterampilanTable from './Components/JenisTesKeterampilanTable.vue';
 
 const props = defineProps({
     jenisTes: { type: Array, default: () => [] },

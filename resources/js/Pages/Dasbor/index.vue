@@ -2,14 +2,14 @@
 import { Head, Link, usePage } from "@inertiajs/vue3";
 import { IconClipboardCheck } from "@tabler/icons-vue";
 import TataLetakDasbor from "@/Layouts/TataLetakDasbor.vue";
-import HeroBanner from "@/Pages/Dasbor/components/HeroBanner.vue";
-import StatsGrid from "@/Pages/Dasbor/components/StatsGrid.vue";
-import AssignmentsList from "@/Pages/Dasbor/components/AssignmentsList.vue";
-import Leaderboard from "@/Pages/Dasbor/components/Leaderboard.vue";
-import VerificationBanner from "@/Pages/Dasbor/components/VerificationBanner.vue";
-import RecentExams from "@/Pages/Dasbor/components/RecentExams.vue";
-import AdminStatCards from "@/Pages/Dasbor/components/AdminStatCards.vue";
-import AdminQuickLinks from "@/Pages/Dasbor/components/AdminQuickLinks.vue";
+import HeroBanner from "@/Pages/Dasbor/Components/HeroBanner.vue";
+import StatsGrid from "@/Pages/Dasbor/Components/StatsGrid.vue";
+import AssignmentsList from "@/Pages/Dasbor/Components/AssignmentsList.vue";
+import Leaderboard from "@/Pages/Dasbor/Components/Leaderboard.vue";
+import VerificationBanner from "@/Pages/Dasbor/Components/VerificationBanner.vue";
+import RecentExams from "@/Pages/Dasbor/Components/RecentExams.vue";
+import AdminStatCards from "@/Pages/Dasbor/Components/AdminStatCards.vue";
+import AdminQuickLinks from "@/Pages/Dasbor/Components/AdminQuickLinks.vue";
 
 defineProps({
     sesiTerbaru: { type: Array, default: () => [] },

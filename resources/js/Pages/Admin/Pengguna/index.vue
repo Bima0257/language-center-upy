@@ -3,10 +3,10 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import { ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
-import FilterPengguna from '@/Pages/Admin/Pengguna/components/FilterPengguna.vue';
-import TabelPengguna from '@/Pages/Admin/Pengguna/components/TabelPengguna.vue';
-import PaginasiPengguna from '@/Pages/Admin/Pengguna/components/PaginasiPengguna.vue';
-import FormEditPenggunaModal from '@/Pages/Admin/Pengguna/components/FormEditPenggunaModal.vue';
+import FilterPengguna from '@/Pages/Admin/Pengguna/Components/FilterPengguna.vue';
+import TabelPengguna from '@/Pages/Admin/Pengguna/Components/TabelPengguna.vue';
+import PaginasiPengguna from '@/Pages/Admin/Pengguna/Components/PaginasiPengguna.vue';
+import FormEditPenggunaModal from '@/Pages/Admin/Pengguna/Components/FormEditPenggunaModal.vue';
 
 const props = defineProps({
     pengguna: { type: Object, default: () => ({ data: [], links: [], meta: null }) },

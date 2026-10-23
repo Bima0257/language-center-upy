@@ -3,9 +3,9 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
-import PeriodeUjianInfo from '@/Pages/Admin/PeriodeUjian/components/PeriodeUjianInfo.vue';
-import DaftarSlotUjian from '@/Pages/Admin/PeriodeUjian/components/DaftarSlotUjian.vue';
-import FormSlotUjianModal from '@/Pages/Admin/PeriodeUjian/components/FormSlotUjianModal.vue';
+import PeriodeUjianInfo from '@/Pages/Admin/PeriodeUjian/Components/PeriodeUjianInfo.vue';
+import DaftarSlotUjian from '@/Pages/Admin/PeriodeUjian/Components/DaftarSlotUjian.vue';
+import FormSlotUjianModal from '@/Pages/Admin/PeriodeUjian/Components/FormSlotUjianModal.vue';
 
 const confirm = useConfirm();
 

@@ -1,7 +1,7 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import FormUjian from '@/Pages/Admin/Ujian/components/FormUjian.vue';
+import FormUjian from '@/Pages/Admin/Ujian/Components/FormUjian.vue';
 import { computed, watch } from 'vue';
 
 const props = defineProps({

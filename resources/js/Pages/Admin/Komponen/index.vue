@@ -6,14 +6,14 @@ import { IconFileDescription } from "@tabler/icons-vue";
 import { useConfirm } from "@/Composables/useConfirm";
 import TataLetakDasbor from "@/Layouts/TataLetakDasbor.vue";
 import EmptyState from "@/Components/Shared/EmptyState.vue";
-import FilterKatalogKomponen from "@/Pages/Admin/Komponen/components/FilterKatalogKomponen.vue";
-import RingkasanKatalogKomponen from "@/Pages/Admin/Komponen/components/RingkasanKatalogKomponen.vue";
-import PratinjauActions from "@/Pages/Admin/Komponen/components/PratinjauActions.vue";
-import PratinjauContent from "@/Pages/Admin/Komponen/components/PratinjauContent.vue";
-import PratinjauData from "@/Pages/Admin/Komponen/components/PratinjauData.vue";
-import PratinjauFeedback from "@/Pages/Admin/Komponen/components/PratinjauFeedback.vue";
-import PratinjauFoundations from "@/Pages/Admin/Komponen/components/PratinjauFoundations.vue";
-import PratinjauForms from "@/Pages/Admin/Komponen/components/PratinjauForms.vue";
+import FilterKatalogKomponen from "@/Pages/Admin/Komponen/Components/FilterKatalogKomponen.vue";
+import RingkasanKatalogKomponen from "@/Pages/Admin/Komponen/Components/RingkasanKatalogKomponen.vue";
+import PratinjauActions from "@/Pages/Admin/Komponen/Components/PratinjauActions.vue";
+import PratinjauContent from "@/Pages/Admin/Komponen/Components/PratinjauContent.vue";
+import PratinjauData from "@/Pages/Admin/Komponen/Components/PratinjauData.vue";
+import PratinjauFeedback from "@/Pages/Admin/Komponen/Components/PratinjauFeedback.vue";
+import PratinjauFoundations from "@/Pages/Admin/Komponen/Components/PratinjauFoundations.vue";
+import PratinjauForms from "@/Pages/Admin/Komponen/Components/PratinjauForms.vue";
 
 const scopeFilters = [
     { label: "Semua", value: "all" },

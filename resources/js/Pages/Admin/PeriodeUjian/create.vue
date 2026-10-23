@@ -1,7 +1,7 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import FormPeriodeUjian from '@/Pages/Admin/PeriodeUjian/components/FormPeriodeUjian.vue';
+import FormPeriodeUjian from '@/Pages/Admin/PeriodeUjian/Components/FormPeriodeUjian.vue';
 
 const props = defineProps({
     ujian: { type: Object, required: true },

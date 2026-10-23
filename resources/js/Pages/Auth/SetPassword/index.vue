@@ -1,6 +1,6 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
-import AuthCard from '@/Pages/Auth/components/AuthCard.vue';
+import AuthCard from '@/Pages/Auth/Components/AuthCard.vue';
 import PasswordStrengthCheck from '@/Components/Shared/PasswordStrengthCheck.vue';
 import { IconLock, IconEye, IconEyeOff } from '@tabler/icons-vue';
 import { ref } from 'vue';

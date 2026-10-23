@@ -1,8 +1,8 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import InterpretasiSkorBulkTable from '../../components/InterpretasiSkorBulkTable.vue';
-import InterpretasiSkorFormModal from '../../components/InterpretasiSkorFormModal.vue';
+import InterpretasiSkorBulkTable from '../../Components/InterpretasiSkorBulkTable.vue';
+import InterpretasiSkorFormModal from '../../Components/InterpretasiSkorFormModal.vue';
 import { computed, ref } from 'vue';
 import { useToast } from '@/Composables/useToast';
 

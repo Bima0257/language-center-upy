@@ -1,7 +1,7 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
-import ReadingPreviewPane from '@/Pages/BankSoal/PratinjauSoal/components/ReadingPreviewPane.vue';
-import ListeningPreviewPane from '@/Pages/BankSoal/PratinjauSoal/components/ListeningPreviewPane.vue';
+import ReadingPreviewPane from '@/Pages/BankSoal/PratinjauSoal/Components/ReadingPreviewPane.vue';
+import ListeningPreviewPane from '@/Pages/BankSoal/PratinjauSoal/Components/ListeningPreviewPane.vue';
 import { IconArrowLeft, IconArrowRight, IconEye } from '@tabler/icons-vue';
 import { computed, ref } from 'vue';
 

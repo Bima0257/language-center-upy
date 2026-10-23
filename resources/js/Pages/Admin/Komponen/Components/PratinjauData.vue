@@ -3,8 +3,8 @@ import BarChart from "@/Components/Charts/BarChart.vue";
 import DoughnutChart from "@/Components/Charts/DoughnutChart.vue";
 import DataTable from "@/Components/Shared/DataTable.vue";
 import Pagination from "@/Components/Shared/Pagination.vue";
-import PreviewCard from "@/Pages/Admin/Komponen/components/KartuPratinjau.vue";
-import GrupPratinjau from "@/Pages/Admin/Komponen/components/GrupPratinjau.vue";
+import PreviewCard from "@/Pages/Admin/Komponen/Components/KartuPratinjau.vue";
+import GrupPratinjau from "@/Pages/Admin/Komponen/Components/GrupPratinjau.vue";
 
 defineProps({
     group: { type: Object, required: true },

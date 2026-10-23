@@ -3,9 +3,9 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
-import FormBankSoal from './components/FormBankSoal.vue';
-import TabelBankSoal from './components/TabelBankSoal.vue';
-import TabelKategoriBankSoal from './components/TabelKategoriBankSoal.vue';
+import FormBankSoal from './Components/FormBankSoal.vue';
+import TabelBankSoal from './Components/TabelBankSoal.vue';
+import TabelKategoriBankSoal from './Components/TabelKategoriBankSoal.vue';
 
 const props = defineProps({
     bankSoal: { type: Array, default: () => [] },

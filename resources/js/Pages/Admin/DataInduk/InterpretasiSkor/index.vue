@@ -1,7 +1,7 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import JenisTesInterpretasiSkorTable from './components/JenisTesInterpretasiSkorTable.vue';
+import JenisTesInterpretasiSkorTable from './Components/JenisTesInterpretasiSkorTable.vue';
 
 const props = defineProps({
     jenisTes: { type: Array, default: () => [] },

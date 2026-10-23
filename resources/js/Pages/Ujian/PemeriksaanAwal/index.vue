@@ -1,11 +1,11 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import PrecheckHeader from '@/Pages/Ujian/PemeriksaanAwal/components/PrecheckHeader.vue';
-import DeviceCheckSection from '@/Pages/Ujian/PemeriksaanAwal/components/DeviceCheckSection.vue';
-import CameraCheckSection from '@/Pages/Ujian/PemeriksaanAwal/components/CameraCheckSection.vue';
-import SelfieCaptureSection from '@/Pages/Ujian/PemeriksaanAwal/components/SelfieCaptureSection.vue';
-import ConnectionCheckSection from '@/Pages/Ujian/PemeriksaanAwal/components/ConnectionCheckSection.vue';
+import PrecheckHeader from '@/Pages/Ujian/PemeriksaanAwal/Components/PrecheckHeader.vue';
+import DeviceCheckSection from '@/Pages/Ujian/PemeriksaanAwal/Components/DeviceCheckSection.vue';
+import CameraCheckSection from '@/Pages/Ujian/PemeriksaanAwal/Components/CameraCheckSection.vue';
+import SelfieCaptureSection from '@/Pages/Ujian/PemeriksaanAwal/Components/SelfieCaptureSection.vue';
+import ConnectionCheckSection from '@/Pages/Ujian/PemeriksaanAwal/Components/ConnectionCheckSection.vue';
 import { ref, computed, onUnmounted, nextTick } from 'vue';
 
 const props = defineProps({

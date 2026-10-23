@@ -1,8 +1,8 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import InterpretasiSkorTable from '../components/InterpretasiSkorTable.vue';
-import InterpretasiSkorFormModal from '../components/InterpretasiSkorFormModal.vue';
+import InterpretasiSkorTable from '../Components/InterpretasiSkorTable.vue';
+import InterpretasiSkorFormModal from '../Components/InterpretasiSkorFormModal.vue';
 import { ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 

@@ -1,10 +1,10 @@
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import JenisTesSummaryTable from './components/JenisTesSummaryTable.vue';
-import BankSoalSummaryTable from './components/BankSoalSummaryTable.vue';
-import BagianSoalGroupTable from './components/BagianSoalGroupTable.vue';
-import BagianSoalFormModal from './components/BagianSoalFormModal.vue';
+import JenisTesSummaryTable from './Components/JenisTesSummaryTable.vue';
+import BankSoalSummaryTable from './Components/BankSoalSummaryTable.vue';
+import BagianSoalGroupTable from './Components/BagianSoalGroupTable.vue';
+import BagianSoalFormModal from './Components/BagianSoalFormModal.vue';
 import { IconPlus, IconArrowLeft } from '@tabler/icons-vue';
 import { computed, ref, watch } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';

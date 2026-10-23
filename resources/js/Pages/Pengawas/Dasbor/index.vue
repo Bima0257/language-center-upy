@@ -1,8 +1,8 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import KartuSesiBerlangsung from '@/Pages/Pengawas/Dasbor/components/KartuSesiBerlangsung.vue';
-import DaftarSesiDitandai from '@/Pages/Pengawas/Dasbor/components/DaftarSesiDitandai.vue';
+import KartuSesiBerlangsung from '@/Pages/Pengawas/Dasbor/Components/KartuSesiBerlangsung.vue';
+import DaftarSesiDitandai from '@/Pages/Pengawas/Dasbor/Components/DaftarSesiDitandai.vue';
 import { IconRefresh } from '@tabler/icons-vue';
 import { onMounted, onUnmounted } from 'vue';
 

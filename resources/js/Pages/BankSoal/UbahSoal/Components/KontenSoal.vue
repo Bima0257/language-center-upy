@@ -1,6 +1,6 @@
 <script setup>
-import InputPilihan from '@/Pages/BankSoal/components/InputPilihan.vue';
-import PemilihKunciJawaban from '@/Pages/BankSoal/components/PemilihKunciJawaban.vue';
+import InputPilihan from '@/Pages/BankSoal/Components/InputPilihan.vue';
+import PemilihKunciJawaban from '@/Pages/BankSoal/Components/PemilihKunciJawaban.vue';
 import { IconInfoCircle } from '@tabler/icons-vue';
 
 defineProps({

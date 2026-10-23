@@ -2,12 +2,12 @@
 import { Head } from "@inertiajs/vue3";
 import TataLetakUjian from "@/Layouts/TataLetakUjian.vue";
 import GridSoalModal from "@/Components/Ujian/GridSoalModal.vue";
-import ModalPelanggaran from "@/Pages/Ujian/Kerjakan/components/ModalPelanggaran.vue";
-import AudioMaterialPanel from "@/Pages/Ujian/Kerjakan/components/AudioMaterialPanel.vue";
-import QuestionNavigation from "@/Pages/Ujian/Kerjakan/components/QuestionNavigation.vue";
-import QuestionPresentation from "@/Pages/Ujian/Kerjakan/components/QuestionPresentation.vue";
-import ReadingMaterialPanel from "@/Pages/Ujian/Kerjakan/components/ReadingMaterialPanel.vue";
-import SubmitConfirmationModal from "@/Pages/Ujian/Kerjakan/components/SubmitConfirmationModal.vue";
+import ModalPelanggaran from "@/Pages/Ujian/Kerjakan/Components/ModalPelanggaran.vue";
+import AudioMaterialPanel from "@/Pages/Ujian/Kerjakan/Components/AudioMaterialPanel.vue";
+import QuestionNavigation from "@/Pages/Ujian/Kerjakan/Components/QuestionNavigation.vue";
+import QuestionPresentation from "@/Pages/Ujian/Kerjakan/Components/QuestionPresentation.vue";
+import ReadingMaterialPanel from "@/Pages/Ujian/Kerjakan/Components/ReadingMaterialPanel.vue";
+import SubmitConfirmationModal from "@/Pages/Ujian/Kerjakan/Components/SubmitConfirmationModal.vue";
 import { useMediaLoad } from "@/Composables/useMediaLoad";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { usePengaturWaktuUjian } from "@/Modules/UjianModule/Composables/usePengaturWaktuUjian.js";

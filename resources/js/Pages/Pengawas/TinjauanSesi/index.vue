@@ -1,11 +1,11 @@
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import InformasiPeserta from '@/Pages/Pengawas/TinjauanSesi/components/InformasiPeserta.vue';
-import RingkasanSkor from '@/Pages/Pengawas/TinjauanSesi/components/RingkasanSkor.vue';
-import FormPenghentianSesi from '@/Pages/Pengawas/TinjauanSesi/components/FormPenghentianSesi.vue';
-import PanelKeputusanTinjauan from '@/Pages/Pengawas/TinjauanSesi/components/PanelKeputusanTinjauan.vue';
-import LinimasaPelanggaran from '@/Pages/Pengawas/TinjauanSesi/components/LinimasaPelanggaran.vue';
+import InformasiPeserta from '@/Pages/Pengawas/TinjauanSesi/Components/InformasiPeserta.vue';
+import RingkasanSkor from '@/Pages/Pengawas/TinjauanSesi/Components/RingkasanSkor.vue';
+import FormPenghentianSesi from '@/Pages/Pengawas/TinjauanSesi/Components/FormPenghentianSesi.vue';
+import PanelKeputusanTinjauan from '@/Pages/Pengawas/TinjauanSesi/Components/PanelKeputusanTinjauan.vue';
+import LinimasaPelanggaran from '@/Pages/Pengawas/TinjauanSesi/Components/LinimasaPelanggaran.vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
 const confirm = useConfirm();

@@ -1,8 +1,8 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import ProgramStudiFormModal from '../components/ProgramStudiFormModal.vue';
-import ProgramStudiTable from '../components/ProgramStudiTable.vue';
+import ProgramStudiFormModal from '../Components/ProgramStudiFormModal.vue';
+import ProgramStudiTable from '../Components/ProgramStudiTable.vue';
 import { ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 

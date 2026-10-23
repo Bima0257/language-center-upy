@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import AuthCard from '@/Pages/Auth/components/AuthCard.vue';
+import AuthCard from '@/Pages/Auth/Components/AuthCard.vue';
 import { IconMail } from '@tabler/icons-vue';
 
 const props = defineProps({
