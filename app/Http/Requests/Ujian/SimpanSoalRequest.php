@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Ujian;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SimpanSoalRequest extends FormRequest
 {
@@ -10,7 +11,11 @@ class SimpanSoalRequest extends FormRequest
     {
         return [
             'bank_soal_id' => ['required', 'uuid', 'exists:bank_soal,id'],
-            'keterampilan_id' => ['required', 'uuid', 'exists:keterampilan,id'],
+            'keterampilan_id' => [
+                'required',
+                'uuid',
+                Rule::exists('keterampilan', 'id')->where(fn ($query) => $query->where('aktif', true)),
+            ],
             'bagian_soal_id' => ['required', 'uuid', 'exists:bagian_soal,id'],
             'materi_soal_id' => ['nullable', 'uuid', 'exists:materi_soal,id'],
             'teks_soal' => ['nullable', 'string'],

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StatusPendaftaranUjian;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -25,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read PeriodeUjian $periodeUjian
  * @property-read Collection<int, SesiUjian> $sesiUjian
+ * @property-read Collection<int, PendaftaranUjian> $pendaftaranUjian
  */
 #[Fillable([
     'periode_ujian_id', 'tanggal', 'waktu_mulai', 'waktu_selesai',
@@ -56,6 +58,11 @@ class SlotUjian extends Model
         return $this->hasMany(SesiUjian::class, 'slot_ujian_id', 'id');
     }
 
+    public function pendaftaranUjian(): HasMany
+    {
+        return $this->hasMany(PendaftaranUjian::class, 'slot_ujian_id', 'id');
+    }
+
     public function tersedia(): bool
     {
         if (! $this->aktif || ! $this->periodeUjian->sedangAktif()) {
@@ -76,6 +83,18 @@ class SlotUjian extends Model
             return false;
         }
 
-        return $this->sesiUjian()->count() < $this->kapasitas_peserta;
+        if (isset($this->attributes['pendaftaran_disetujui_count'])) {
+            $jumlahDisetujui = (int) $this->attributes['pendaftaran_disetujui_count'];
+        } elseif ($this->relationLoaded('pendaftaranUjian')) {
+            $jumlahDisetujui = $this->pendaftaranUjian
+                ->where('status', StatusPendaftaranUjian::APPROVED)
+                ->count();
+        } else {
+            $jumlahDisetujui = $this->pendaftaranUjian()
+                ->where('status', StatusPendaftaranUjian::APPROVED)
+                ->count();
+        }
+
+        return $jumlahDisetujui < $this->kapasitas_peserta;
     }
 }

@@ -18,6 +18,7 @@ use App\Modules\DataInduk\Repositories\Contracts\ProgramStudiRepositoryInterface
 use App\Modules\DataInduk\Repositories\Contracts\SertifikatRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\UrutanKodeRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\BankSoalRepositoryInterface;
+use App\Modules\Ujian\Services\LayananKebijakanMateriSoal;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -35,6 +36,7 @@ class LayananDataInduk
         private SertifikatRepositoryInterface $sertifikatRepo,
         private UrutanKodeRepositoryInterface $urutanKodeRepo,
         private BankSoalRepositoryInterface $bankSoalRepo,
+        private LayananKebijakanMateriSoal $kebijakanMateri,
     ) {}
 
     // ===== Skills =====
@@ -50,6 +52,7 @@ class LayananDataInduk
         return [
             'jenisTes' => $jenisTes,
             'keterampilan' => $this->keterampilanRepo->semuaBerurutan($jenisTes->id),
+            'kebijakanMateriSoal' => $this->kebijakanMateri->semuaUntukFrontend(),
         ];
     }
 
@@ -68,7 +71,13 @@ class LayananDataInduk
             $data['kode'] = $jenisTes->kode.str_pad((string) $nomorKode, 3, '0', STR_PAD_LEFT);
             $data['urutan'] = $data['urutan'] ?? $this->keterampilanRepo->urutanBerikutnya($jenisTes->id);
 
-            return $this->keterampilanRepo->create($data);
+            $dataKeterampilan = $data;
+            unset($dataKeterampilan['ketentuan_materi'], $dataKeterampilan['aturan_media']);
+
+            $keterampilan = $this->keterampilanRepo->create($dataKeterampilan);
+            $this->simpanKebijakanJikaDikirim($keterampilan, $data);
+
+            return $keterampilan;
         });
     }
 
@@ -76,7 +85,13 @@ class LayananDataInduk
     {
         $data = $this->bersihkanTeksOpsional($data);
 
-        $this->keterampilanRepo->update($keterampilan, $data);
+        DB::transaction(function () use ($keterampilan, $data): void {
+            $dataKeterampilan = $data;
+            unset($dataKeterampilan['ketentuan_materi'], $dataKeterampilan['aturan_media']);
+
+            $this->keterampilanRepo->update($keterampilan, $dataKeterampilan);
+            $this->simpanKebijakanJikaDikirim($keterampilan, $data);
+        });
     }
 
     public function hapusKeterampilan(Keterampilan $keterampilan): void
@@ -420,6 +435,39 @@ class LayananDataInduk
         }
 
         return $data;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function simpanKebijakanJikaDikirim(Keterampilan $keterampilan, array $data): void
+    {
+        $ketentuanMateri = $data['ketentuan_materi'] ?? null;
+        $aturanMedia = $data['aturan_media'] ?? null;
+        $adaNilaiPolicy = $ketentuanMateri !== null
+            || (is_array($aturanMedia) && count(array_filter($aturanMedia, fn ($value): bool => $value !== null)) > 0);
+
+        if (! $adaNilaiPolicy) {
+            $this->kebijakanMateri->hapusUntukKeterampilan($keterampilan->id);
+
+            return;
+        }
+
+        $jenisMedia = ['text', 'audio', 'image'];
+        if (! is_string($ketentuanMateri)
+            || ! is_array($aturanMedia)
+            || array_diff($jenisMedia, array_keys($aturanMedia)) !== []
+            || count(array_filter($aturanMedia, fn ($value): bool => $value === null)) > 0) {
+            throw ValidationException::withMessages([
+                'ketentuan_materi' => 'Konfigurasi materi dan seluruh aturan media harus diisi lengkap.',
+            ]);
+        }
+
+        $this->kebijakanMateri->simpanUntukKeterampilan(
+            $keterampilan->id,
+            $ketentuanMateri,
+            $aturanMedia,
+        );
     }
 
     private function pastikanKeterampilanMilikBank(string $bankSoalId, string $keterampilanId): void

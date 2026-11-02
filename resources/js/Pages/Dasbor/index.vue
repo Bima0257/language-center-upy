@@ -6,7 +6,6 @@ import HeroBanner from "@/Pages/Dasbor/Components/HeroBanner.vue";
 import StatsGrid from "@/Pages/Dasbor/Components/StatsGrid.vue";
 import AssignmentsList from "@/Pages/Dasbor/Components/AssignmentsList.vue";
 import Leaderboard from "@/Pages/Dasbor/Components/Leaderboard.vue";
-import VerificationBanner from "@/Pages/Dasbor/Components/VerificationBanner.vue";
 import RecentExams from "@/Pages/Dasbor/Components/RecentExams.vue";
 import AdminStatCards from "@/Pages/Dasbor/Components/AdminStatCards.vue";
 import AdminQuickLinks from "@/Pages/Dasbor/Components/AdminQuickLinks.vue";
@@ -29,11 +28,6 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
 <template>
     <Head title="Dasbor" />
     <TataLetakDasbor title="Dasbor" hide-header>
-        <VerificationBanner
-            v-if="isMahasiswa && !$page.props.auth.user.terverifikasi"
-            :href="route('onboarding.verify-identity')"
-        />
-
         <!-- === STUDENT DASHBOARD === -->
         <template v-if="isMahasiswa">
             <Link
@@ -72,12 +66,12 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
                 :jumlah-sesi-aktif="jumlahSesiAktif"
                 :jumlah-sesi-ditandai="jumlahSesiDitandai"
             />
-            <AdminQuickLinks
-                :manage-exam-href="route('admin.ujian.daftar')"
-                :proctor-dashboard-href="route('pengawas.dasbor')"
-                :verification-href="route('admin.verifikasi-pengguna')"
-                :session-report-href="route('admin.laporan.sesi')"
-            />
+        <AdminQuickLinks
+            :manage-exam-href="route('admin.ujian.daftar')"
+            :proctor-dashboard-href="route('pengawas.dasbor')"
+            :registration-href="route('admin.pendaftaran-ujian.daftar')"
+            :session-report-href="route('admin.laporan.sesi')"
+        />
         </template>
 
     </TataLetakDasbor>

@@ -22,6 +22,14 @@ class MateriSoalRepository implements MateriSoalRepositoryInterface
         return MateriSoal::with('mediaMateriSoal')->orderBy('judul')->get();
     }
 
+    public function semuaUntukBank(string $bankSoalId): Collection
+    {
+        return MateriSoal::with('mediaMateriSoal')
+            ->where('bank_soal_id', $bankSoalId)
+            ->orderBy('judul')
+            ->get();
+    }
+
     public function find(string $id): ?MateriSoal
     {
         return MateriSoal::with('mediaMateriSoal')->find($id);

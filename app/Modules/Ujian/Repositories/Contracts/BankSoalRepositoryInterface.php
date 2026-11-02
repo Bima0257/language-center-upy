@@ -17,6 +17,8 @@ interface BankSoalRepositoryInterface
 
     public function find(string $id): ?BankSoal;
 
+    public function digunakanDalamUjian(string $id): bool;
+
     public function adaAktif(string $id): bool;
 
     public function create(array $data): BankSoal;

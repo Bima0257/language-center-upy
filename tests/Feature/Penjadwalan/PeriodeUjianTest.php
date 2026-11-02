@@ -87,6 +87,25 @@ class PeriodeUjianTest extends TestCase
         ]);
     }
 
+    public function test_admin_dapat_mengubah_status_aktif_periode(): void
+    {
+        $this->masukSebagai('admin');
+
+        $periodeUjian = PeriodeUjian::first();
+
+        $this->put("/admin/periode-ujian/{$periodeUjian->id}", [
+            'judul' => $periodeUjian->judul,
+            'tanggal_mulai' => now()->addYears(10)->format('Y-m-d'),
+            'tanggal_selesai' => now()->addYears(10)->addDays(2)->format('Y-m-d'),
+            'aktif' => false,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('periode_ujian', [
+            'id' => $periodeUjian->id,
+            'aktif' => false,
+        ]);
+    }
+
     public function test_periode_tumpang_tindih_ditolak(): void
     {
         $this->masukSebagai('admin');

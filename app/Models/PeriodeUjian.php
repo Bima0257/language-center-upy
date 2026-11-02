@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -23,8 +24,10 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Ujian $ujian
+ * @property-read PeriodePendaftaranUjian|null $periodePendaftaran
  * @property-read Collection<int, SlotUjian> $slotUjian
  * @property-read Collection<int, SesiUjian> $sesiUjian
+ * @property-read Collection<int, PendaftaranUjian> $pendaftaranUjian
  */
 #[Fillable(['ujian_id', 'judul', 'tanggal_mulai', 'tanggal_selesai', 'aktif'])]
 class PeriodeUjian extends Model
@@ -54,10 +57,27 @@ class PeriodeUjian extends Model
             ->orderBy('waktu_mulai');
     }
 
+    public function periodePendaftaran(): HasOne
+    {
+        return $this->hasOne(PeriodePendaftaranUjian::class, 'periode_ujian_id', 'id');
+    }
+
     public function sesiUjian(): HasManyThrough
     {
         return $this->hasManyThrough(
             SesiUjian::class,
+            SlotUjian::class,
+            'periode_ujian_id',
+            'slot_ujian_id',
+            'id',
+            'id',
+        );
+    }
+
+    public function pendaftaranUjian(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            PendaftaranUjian::class,
             SlotUjian::class,
             'periode_ujian_id',
             'slot_ujian_id',

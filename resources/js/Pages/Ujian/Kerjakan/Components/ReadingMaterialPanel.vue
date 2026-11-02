@@ -15,7 +15,7 @@ defineProps({
         <div class="max-w-2xl mx-auto">
             <div class="mb-8">
                 <span
-                    class="bg-pastel-blue text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
+                    class="bg-pastel-blue text-text-heading px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
                     >{{ bagianSoalLabel || 'Materi' }}</span
                 >
                 <h1

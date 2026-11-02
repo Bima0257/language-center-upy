@@ -1,5 +1,5 @@
 <script setup>
-import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-vue';
+import { IconEdit, IconTrash } from '@tabler/icons-vue';
 
 defineProps({
     fakultas: { type: Array, default: () => [] },
@@ -12,9 +12,7 @@ const emit = defineEmits(['create', 'edit', 'delete']);
     <BaseCard :padding="false" class="overflow-hidden">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3.5">
             <h2 class="text-title-lg font-semibold text-text-heading">Daftar Fakultas</h2>
-            <BaseButton size="sm" @click="emit('create')">
-                <IconPlus :size="16" /> Tambah Fakultas
-            </BaseButton>
+            <BaseTambahData @click="emit('create')" />
         </div>
 
         <div class="overflow-x-auto">

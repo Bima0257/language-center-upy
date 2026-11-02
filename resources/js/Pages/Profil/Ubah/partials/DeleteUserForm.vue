@@ -48,21 +48,32 @@ const closeModal = () => {
 
         <BaseButton variant="danger" @click="confirmUserDeletion">Delete Account</BaseButton>
 
-        <BaseModal :show="confirmingUserDeletion" @close="closeModal">
-            <div class="p-6">
-                <h2
-                    class="text-lg font-medium text-text-heading"
-                >
-                    Are you sure you want to delete your account?
-                </h2>
+        <BaseModal
+            :show="confirmingUserDeletion"
+            max-width="md"
+            fit-content
+            aria-labelledby="delete-account-modal-title"
+            aria-describedby="delete-account-modal-description"
+            @close="closeModal"
+        >
+            <template #header>
+                <BaseModalHeader>
+                    <div class="px-6 py-4">
+                        <h2 id="delete-account-modal-title" class="text-lg font-medium text-text-heading">
+                            Are you sure you want to delete your account?
+                        </h2>
 
-                <p class="mt-1 text-sm text-text-body">
-                    Once your account is deleted, all of its resources and data
-                    will be permanently deleted. Please enter your password to
-                    confirm you would like to permanently delete your account.
-                </p>
+                        <p id="delete-account-modal-description" class="mt-1 text-sm text-text-body">
+                            Once your account is deleted, all of its resources and data
+                            will be permanently deleted. Please enter your password to
+                            confirm you would like to permanently delete your account.
+                        </p>
+                    </div>
+                </BaseModalHeader>
+            </template>
 
-                <div class="mt-6">
+            <template #default>
+                <div class="px-6 pt-6">
                     <BaseFieldLabel
                         for="password"
                         value="Password"
@@ -81,22 +92,26 @@ const closeModal = () => {
 
                     <BaseInputError :message="form.errors.password" class="mt-2" />
                 </div>
+            </template>
 
-                <div class="mt-6 flex justify-end">
-                    <BaseButton variant="secondary" @click="closeModal">
-                        Cancel
-                    </BaseButton>
+            <template #footer>
+                <BaseModalFooter>
+                    <div class="px-6 py-3 flex justify-end">
+                        <BaseButton variant="secondary" @click="closeModal">
+                            Cancel
+                        </BaseButton>
 
-                    <BaseButton
-                        variant="danger"
-                        class="ms-3"
-                        :disabled="form.processing"
-                        @click="deleteUser"
-                    >
-                        Delete Account
-                    </BaseButton>
-                </div>
-            </div>
+                        <BaseButton
+                            variant="danger"
+                            class="ms-3"
+                            :disabled="form.processing"
+                            @click="deleteUser"
+                        >
+                            Delete Account
+                        </BaseButton>
+                    </div>
+                </BaseModalFooter>
+            </template>
         </BaseModal>
     </section>
 </template>

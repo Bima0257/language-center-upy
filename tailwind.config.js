@@ -75,7 +75,7 @@ export default {
                 'icon-pastel': 'var(--color-icon-pastel)',
             },
             borderRadius: {
-                '2xl': '20px',
+                '2xl': '12px',
             },
             spacing: {
                 gutter: '1rem',

@@ -4,6 +4,7 @@ import KartuSoal from './KartuSoal.vue';
 
 defineProps({
     questions: { type: Array, default: () => [] },
+    errors: { type: Object, default: () => ({}) },
     materiSoalMode: { type: String, default: 'none' },
     optionKeys: { type: Array, default: () => ['A', 'B', 'C', 'D'] },
     isAudioQuestion: { type: Function, required: true },
@@ -24,19 +25,21 @@ defineExpose({ scrollTo });
 </script>
 
 <template>
-    <p class="text-title-lg font-semibold text-text-heading">Soal</p>
-
-    <KartuSoal
-        v-for="(question, questionIndex) in questions"
-        :key="questionIndex"
-        :ref="card => setQuestionRef(card, questionIndex)"
-        :question="question"
-        :question-index="questionIndex"
-        :question-count="questions.length"
-        :is-audio="isAudioQuestion(question)"
-        :materi-soal-mode="materiSoalMode"
-        :option-keys="optionKeys"
-        @add="emit('add', questionIndex)"
-        @remove="emit('remove', questionIndex)"
-    />
+    <div class="space-y-4">
+        <KartuSoal
+            v-for="(question, questionIndex) in questions"
+            :key="questionIndex"
+            :ref="card => setQuestionRef(card, questionIndex)"
+            :question="question"
+            :question-index="questionIndex"
+            :question-count="questions.length"
+            :show-add="questionIndex === questions.length - 1"
+            :errors="errors"
+            :is-audio="isAudioQuestion(question)"
+            :materi-soal-mode="materiSoalMode"
+            :option-keys="optionKeys"
+            @add="emit('add', questionIndex)"
+            @remove="emit('remove', questionIndex)"
+        />
+    </div>
 </template>

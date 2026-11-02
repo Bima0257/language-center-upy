@@ -1,6 +1,6 @@
 <script setup>
 import DataTable from '@/Components/Shared/DataTable.vue';
-import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-vue';
+import { IconEdit, IconTrash } from '@tabler/icons-vue';
 
 const props = defineProps({
     jenisTes: { type: Array, default: () => [] },
@@ -28,9 +28,7 @@ const columns = [
 <template>
         <DataTable :data="props.jenisTes" :columns="columns" header-title="Daftar Jenis Tes" searchable>
         <template #toolbar>
-            <BaseButton size="sm" @click="emit('create')">
-                <IconPlus :size="16" /> Tambah Jenis Tes
-            </BaseButton>
+            <BaseTambahData @click="emit('create')" />
         </template>
 
         <template #actions="{ row }">

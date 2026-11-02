@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Ujian;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SimpanSoalPustakaRequest extends FormRequest
 {
@@ -16,7 +17,11 @@ class SimpanSoalPustakaRequest extends FormRequest
             'materi_baru_berkas_audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg,m4a', 'max:51200'],
             'materi_baru_berkas_gambar' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
             'soal' => ['required', 'array', 'min:1', 'max:50'],
-            'soal.*.keterampilan_id' => ['required', 'uuid', 'exists:keterampilan,id'],
+            'soal.*.keterampilan_id' => [
+                'required',
+                'uuid',
+                Rule::exists('keterampilan', 'id')->where(fn ($query) => $query->where('aktif', true)),
+            ],
             'soal.*.bagian_soal_id' => ['required', 'uuid', 'exists:bagian_soal,id'],
             'soal.*.teks_soal' => ['nullable', 'string'],
             'soal.*.pilihan_a' => ['nullable', 'string'],

@@ -12,7 +12,7 @@ defineProps({
         <div class="flex items-center gap-3">
             <IconDeviceDesktop class="text-text-muted" :size="22" stroke="1.5" />
             <div>
-                <p class="text-label-md font-medium text-primary">Perangkat</p>
+                <p class="text-label-md font-medium text-text-heading">Perangkat</p>
                 <p class="text-text-muted text-xs">
                     <template v-if="deviceType === 'desktop'">Laptop / Komputer — Terdeteksi</template>
                     <template v-else-if="deviceType === 'mobile'">HP — Tidak diperbolehkan</template>

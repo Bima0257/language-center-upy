@@ -25,7 +25,11 @@ class LayananOrientasi
             'pengguna' => $pengguna,
             'fakultas' => $this->fakultasRepo->semuaAktifBerurutan(),
             'programStudi' => $this->programStudiRepo->semuaAktifBerurutan(),
-            'sudahUnggah' => $profil !== null && $profil->foto_identitas !== null && $profil->nim,
+            'sudahUnggah' => $profil !== null
+                && filled($profil->nim)
+                && filled($profil->fakultas_id)
+                && filled($profil->program_studi_id)
+                && filled($profil->tahun_angkatan),
             'profil' => $profil ? [
                 'nim' => $profil->nim,
                 'fakultas_id' => $profil->fakultas_id,

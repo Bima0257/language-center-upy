@@ -1,11 +1,10 @@
 <script setup>
 import DataTable from '@/Components/Shared/DataTable.vue';
-import { IconArrowLeft, IconEdit, IconPlus, IconTrash } from '@tabler/icons-vue';
+import { IconEdit, IconTrash } from '@tabler/icons-vue';
 
-const props = defineProps({
+defineProps({
     data: { type: Array, default: () => [] },
     columns: { type: Array, required: true },
-    backUrl: { type: String, required: true },
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
@@ -15,18 +14,18 @@ const emit = defineEmits(['create', 'edit', 'delete']);
     <DataTable :data="data" :columns="columns" header-title="Daftar Bank Soal" searchable>
         <template #toolbar>
             <div class="flex items-center gap-2">
-                <BaseButton variant="secondary" size="sm" :href="props.backUrl">
-                    <IconArrowLeft :size="16" /> Kembali
-                </BaseButton>
-                <BaseButton size="sm" @click="emit('create')">
-                    <IconPlus :size="16" /> Tambah Bank Soal
-                </BaseButton>
+                <BaseTambahData @click="emit('create')" />
             </div>
         </template>
 
         <template #actions="{ row }">
             <div class="flex items-center gap-2">
-                <button @click="emit('edit', row)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Ubah">
+                <button
+                    :disabled="row.bagian_ujian_count > 0"
+                    @click="emit('edit', row)"
+                    class="p-2 text-text-muted hover:text-secondary transition-colors disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-text-muted"
+                    :title="row.bagian_ujian_count > 0 ? 'Tidak bisa diubah karena sudah digunakan di ujian' : 'Ubah'"
+                >
                     <IconEdit :size="18" />
                 </button>
                 <button

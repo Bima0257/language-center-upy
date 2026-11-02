@@ -1,10 +1,9 @@
 <script setup>
-import { IconArrowLeft, IconEdit, IconPlus, IconTrash } from '@tabler/icons-vue';
+import { IconEdit, IconTrash } from '@tabler/icons-vue';
 
 const props = defineProps({
     interpretasiSkor: { type: Array, default: () => [] },
     jenisTes: { type: Array, default: () => [] },
-    backUrl: { type: String, required: true },
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
@@ -19,12 +18,7 @@ function examTypeName(id) {
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3.5">
                 <h2 class="text-title-lg font-semibold text-text-heading">Daftar Interpretasi Skor</h2>
             <div class="flex items-center gap-2">
-                <BaseButton variant="secondary" size="sm" :href="props.backUrl">
-                    <IconArrowLeft :size="16" /> Kembali
-                </BaseButton>
-                <BaseButton size="sm" @click="emit('create')">
-                    <IconPlus :size="16" /> Tambah Massal
-                </BaseButton>
+                <BaseTambahData @click="emit('create')" />
             </div>
         </div>
         <div class="overflow-x-auto">

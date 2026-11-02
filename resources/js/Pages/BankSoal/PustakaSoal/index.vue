@@ -1,24 +1,30 @@
 <script setup>
-import { Head, router, useForm } from "@inertiajs/vue3";
+import { Head, router, useForm, usePage } from "@inertiajs/vue3";
 import TataLetakDasbor from "@/Layouts/TataLetakDasbor.vue";
 import UploadProgressBar from "@/Components/Shared/UploadProgressBar.vue";
 import EmptyState from "@/Components/Shared/EmptyState.vue";
 import Pagination from "@/Components/Shared/Pagination.vue";
 import UserGuide from "@/Components/Shared/UserGuide.vue";
+import KeterampilanFormModal from "@/Components/Ujian/KeterampilanFormModal.vue";
+import BagianSoalFormModal from "@/Pages/Admin/DataInduk/BagianSoal/components/BagianSoalFormModal.vue";
 import KelompokSoalPustaka from "@/Pages/BankSoal/PustakaSoal/Components/KelompokSoalPustaka.vue";
+import EditMateriSoalModal from "@/Pages/BankSoal/PustakaSoal/Components/EditMateriSoalModal.vue";
+import TambahSoalMateriModal from "@/Pages/BankSoal/PustakaSoal/Components/TambahSoalMateriModal.vue";
 import RingkasanJenisTesPustaka from "@/Pages/BankSoal/PustakaSoal/Components/RingkasanJenisTesPustaka.vue";
 import RingkasanBankSoalPustaka from "@/Pages/BankSoal/PustakaSoal/Components/RingkasanBankSoalPustaka.vue";
-import { IconArrowLeft, IconBook, IconPlus } from "@tabler/icons-vue";
-import { ref, computed, watch } from "vue";
+import { IconBook, IconEdit, IconPlus, IconTrash } from "@tabler/icons-vue";
+import { ref, computed } from "vue";
 import { useConfirm } from "@/Composables/useConfirm";
 import { useUploadProgress } from "@/Composables/useUploadProgress";
 
 const confirm = useConfirm();
+const page = usePage();
 
 const props = defineProps({
     soal: { type: Object, default: () => ({ data: [] }) },
     jenisTes: { type: Array, default: () => [] },
     bankSoal: { type: Array, default: () => [] },
+    bankSoalTerpilih: { type: Object, default: null },
     opsiKeterampilan: { type: Array, default: () => [] },
     bagianSoal: { type: Array, default: () => [] },
     kebijakanMateriSoal: { type: Array, default: () => [] },
@@ -75,9 +81,11 @@ const ringkasanBankSoal = computed(() => props.bankSoal.map((bank) => ({
     jumlahSoal: Number(bank.soal_count ?? 0),
 })));
 
-const bankSoalTerpilih = computed(() => props.bankSoal.find(
+const bankSoalTerpilih = computed(() => props.bankSoalTerpilih || props.bankSoal.find(
     (bank) => String(bank.id) === String(bankSoalTerpilihId.value),
 ) || null);
+
+const bankIsLocked = computed(() => Number(bankSoalTerpilih.value?.bagian_ujian_count || 0) > 0);
 
 function jenisTesUrl(jenisTesId) {
     return `${route('pustaka-soal.daftar')}?jenis_tes_id=${encodeURIComponent(jenisTesId)}`;
@@ -97,6 +105,12 @@ const backToBankSoalUrl = computed(() => jenisTesTerpilihId.value
     ? jenisTesUrl(jenisTesTerpilihId.value)
     : route('pustaka-soal.daftar'));
 
+const pageBackUrl = computed(() => {
+    if (bankSoalTerpilihId.value) return backToBankSoalUrl.value;
+    if (jenisTesTerpilihId.value) return route('pustaka-soal.daftar');
+    return null;
+});
+
 const tabsKeterampilan = computed(() => props.opsiKeterampilan.map((skill) => ({
     value: String(skill.value),
     label: skill.label,
@@ -114,6 +128,43 @@ const tabsBagianSoal = computed(() => bagianSoalUntukKeterampilan.value.map((par
     label: part.nama,
 })));
 
+const canManageKeterampilan = computed(() =>
+    (page.props.auth?.permissions || []).includes("master_data.manage"),
+);
+const canManageBagianSoal = canManageKeterampilan;
+
+const keterampilanTerpilihData = computed(() => props.opsiKeterampilan.find(
+    (skill) => String(skill.value) === String(keterampilanTerpilih.value),
+) || null);
+
+const keterampilanActions = computed(() => [
+    { value: "edit", label: "Ubah keterampilan", icon: IconEdit },
+    { value: "delete", label: "Hapus keterampilan", icon: IconTrash, variant: "danger" },
+]);
+
+const bagianSoalTerpilihData = computed(() => bagianSoalUntukKeterampilan.value.find(
+    (part) => String(part.id) === String(bagianSoalTerpilihId.value),
+) || null);
+
+const bagianSoalActions = computed(() => [
+    { value: "edit", label: "Ubah bagian soal", icon: IconEdit },
+    { value: "delete", label: "Hapus bagian soal", icon: IconTrash, variant: "danger" },
+]);
+
+const jenisTesKeterampilan = computed(() => {
+    const jenisTesId = bankSoalTerpilih.value?.jenis_tes_id || jenisTesTerpilihId.value;
+
+    return props.jenisTes.filter((jenisTes) => String(jenisTes.id) === String(jenisTesId));
+});
+
+const canCreateSoal = computed(() => Boolean(
+    !bankIsLocked.value &&
+    tabsKeterampilan.value.length &&
+    tabsBagianSoal.value.length &&
+    keterampilanTerpilih.value &&
+    bagianSoalTerpilihId.value,
+));
+
 function onKeterampilanChange(value) {
     keterampilanTerpilih.value = String(value);
     bagianSoalTerpilihId.value = String(bagianSoalUntukKeterampilan.value[0]?.id || '');
@@ -125,9 +176,217 @@ function onBagianSoalChange(value) {
     applyFilters();
 }
 
+function policyForKeterampilan(keterampilanId) {
+    return props.kebijakanMateriSoal.find((policy) =>
+        String(policy.keterampilan_id) === String(keterampilanId),
+    ) || null;
+}
+
+function openCreateKeterampilan() {
+    creatingKeterampilan.value = true;
+    keterampilanYangDiedit.value = null;
+    keterampilanForm.clearErrors();
+    keterampilanForm.reset();
+    keterampilanForm.jenis_tes_id = bankSoalTerpilih.value?.jenis_tes_id || jenisTesTerpilihId.value;
+    showKeterampilanModal.value = true;
+}
+
+function openEditKeterampilan() {
+    const keterampilan = keterampilanTerpilihData.value;
+    if (!keterampilan) return;
+
+    creatingKeterampilan.value = false;
+    keterampilanYangDiedit.value = keterampilan;
+    editKeterampilanForm.clearErrors();
+    editKeterampilanForm.reset();
+    editKeterampilanForm.jenis_tes_id = bankSoalTerpilih.value?.jenis_tes_id || jenisTesTerpilihId.value;
+    editKeterampilanForm.kode = keterampilan.kode || "";
+    editKeterampilanForm.nama = keterampilan.label || "";
+    editKeterampilanForm.deskripsi = keterampilan.deskripsi || "";
+    editKeterampilanForm.aktif = keterampilan.aktif !== false;
+
+    const policy = policyForKeterampilan(keterampilan.value);
+    editKeterampilanForm.ketentuan_materi = policy?.ketentuan_materi || "";
+    editKeterampilanForm.aturan_media = {
+        text: policy?.aturan_media?.text || "",
+        audio: policy?.aturan_media?.audio || "",
+        image: policy?.aturan_media?.image || "",
+    };
+    showKeterampilanModal.value = true;
+}
+
+function closeKeterampilanModal() {
+    showKeterampilanModal.value = false;
+    keterampilanYangDiedit.value = null;
+    creatingKeterampilan.value = false;
+    keterampilanForm.reset();
+    editKeterampilanForm.reset();
+}
+
+function syncKeterampilanSelection(pageResponse) {
+    const nextSkillId = pageResponse.props.filter?.keterampilan
+        || pageResponse.props.opsiKeterampilan?.[0]?.value
+        || "";
+
+    keterampilanTerpilih.value = String(nextSkillId);
+    bagianSoalTerpilihId.value = String(pageResponse.props.bagianSoal?.find((part) =>
+        String(part.bank_soal_id) === String(bankSoalTerpilihId.value) &&
+        String(part.keterampilan_id) === String(nextSkillId),
+    )?.id || "");
+}
+
+function saveKeterampilan() {
+    keterampilanForm.post(route("admin.data-induk.keterampilan.simpan"), {
+        preserveScroll: true,
+        onSuccess: (pageResponse) => {
+            closeKeterampilanModal();
+            syncKeterampilanSelection(pageResponse);
+        },
+    });
+}
+
+function updateKeterampilan() {
+    if (!keterampilanYangDiedit.value) return;
+
+    editKeterampilanForm.put(route(
+        "admin.data-induk.keterampilan.perbarui",
+        keterampilanYangDiedit.value.value,
+    ), {
+        preserveScroll: true,
+        onSuccess: (pageResponse) => {
+            closeKeterampilanModal();
+            syncKeterampilanSelection(pageResponse);
+        },
+    });
+}
+
+async function deleteKeterampilan() {
+    const keterampilan = keterampilanTerpilihData.value;
+    if (!keterampilan) return;
+
+    if (!(await confirm.confirm(`Hapus keterampilan "${keterampilan.label}"?`))) return;
+
+    router.delete(route("admin.data-induk.keterampilan.hapus", keterampilan.value), {
+        preserveScroll: true,
+        onSuccess: syncKeterampilanSelection,
+    });
+}
+
+function handleKeterampilanAction(action) {
+    if (action === "edit") {
+        openEditKeterampilan();
+        return;
+    }
+
+    if (action === "delete") {
+        deleteKeterampilan();
+    }
+}
+
+function openCreateBagianSoal() {
+    creatingBagianSoal.value = true;
+    bagianSoalYangDiedit.value = null;
+    bagianSoalForm.clearErrors();
+    bagianSoalForm.reset();
+    bagianSoalForm.bank_soal_id = bankSoalTerpilihId.value;
+    bagianSoalForm.keterampilan_id = keterampilanTerpilih.value;
+    showBagianSoalModal.value = true;
+}
+
+function openEditBagianSoal() {
+    const bagianSoal = bagianSoalTerpilihData.value;
+    if (!bagianSoal) return;
+
+    creatingBagianSoal.value = false;
+    bagianSoalYangDiedit.value = bagianSoal;
+    editBagianSoalForm.clearErrors();
+    editBagianSoalForm.reset();
+    editBagianSoalForm.bank_soal_id = String(bagianSoal.bank_soal_id);
+    editBagianSoalForm.keterampilan_id = String(bagianSoal.keterampilan_id);
+    editBagianSoalForm.nama = bagianSoal.nama;
+    editBagianSoalForm.petunjuk = bagianSoal.petunjuk || "";
+    editBagianSoalForm.aktif = bagianSoal.aktif !== false;
+    showBagianSoalModal.value = true;
+}
+
+function closeBagianSoalModal() {
+    showBagianSoalModal.value = false;
+    bagianSoalYangDiedit.value = null;
+    creatingBagianSoal.value = false;
+    bagianSoalForm.reset();
+    editBagianSoalForm.reset();
+}
+
+function syncBagianSoalSelection(pageResponse) {
+    const nextPartId = pageResponse.props.filter?.bagian_soal_id
+        || pageResponse.props.bagianSoal?.find((part) =>
+            String(part.bank_soal_id) === String(bankSoalTerpilihId.value) &&
+            String(part.keterampilan_id) === String(keterampilanTerpilih.value),
+        )?.id
+        || "";
+
+    bagianSoalTerpilihId.value = String(nextPartId);
+}
+
+function saveBagianSoal() {
+    bagianSoalForm.post(route("admin.data-induk.bagian-soal.simpan"), {
+        preserveScroll: true,
+        onSuccess: (pageResponse) => {
+            closeBagianSoalModal();
+            syncBagianSoalSelection(pageResponse);
+        },
+    });
+}
+
+function updateBagianSoal() {
+    if (!bagianSoalYangDiedit.value) return;
+
+    editBagianSoalForm.put(route(
+        "admin.data-induk.bagian-soal.perbarui",
+        bagianSoalYangDiedit.value.id,
+    ), {
+        preserveScroll: true,
+        onSuccess: (pageResponse) => {
+            closeBagianSoalModal();
+            syncBagianSoalSelection(pageResponse);
+        },
+    });
+}
+
+async function deleteBagianSoal() {
+    const bagianSoal = bagianSoalTerpilihData.value;
+    if (!bagianSoal) return;
+
+    if (!(await confirm.confirm(`Hapus bagian soal "${bagianSoal.nama}"?`))) return;
+
+    router.delete(route("admin.data-induk.bagian-soal.hapus", bagianSoal.id), {
+        preserveScroll: true,
+        onSuccess: syncBagianSoalSelection,
+    });
+}
+
+function handleBagianSoalAction(action) {
+    if (action === "edit") {
+        openEditBagianSoal();
+        return;
+    }
+
+    if (action === "delete") {
+        deleteBagianSoal();
+    }
+}
+
 const expandedPassages = ref({});
 const editingPassageId = ref(null);
 const addingPassageId = ref(null);
+
+const editingMateriSoal = computed(() => {
+    if (!editingPassageId.value) return null;
+
+    return props.soal.data
+        .map((question) => question.materi_soal)
+        .find((materiSoal) => materiSoal && String(materiSoal.id) === String(editingPassageId.value)) || null;
+});
 
 const materiSoalForm = useForm({
     judul: "",
@@ -149,44 +408,88 @@ const quickQuestionForm = useForm({
     kunci_jawaban: "",
 });
 
+const keterampilanForm = useForm({
+    jenis_tes_id: "",
+    kode: "",
+    nama: "",
+    deskripsi: "",
+    aktif: true,
+    ketentuan_materi: "",
+    aturan_media: { text: "", audio: "", image: "" },
+});
+
+const editKeterampilanForm = useForm({
+    jenis_tes_id: "",
+    kode: "",
+    nama: "",
+    deskripsi: "",
+    aktif: true,
+    ketentuan_materi: "",
+    aturan_media: { text: "", audio: "", image: "" },
+});
+
+const bagianSoalForm = useForm({
+    bank_soal_id: "",
+    keterampilan_id: "",
+    nama: "",
+    petunjuk: "",
+    aktif: true,
+});
+
+const editBagianSoalForm = useForm({
+    bank_soal_id: "",
+    keterampilan_id: "",
+    nama: "",
+    petunjuk: "",
+    aktif: true,
+});
+
+const showKeterampilanModal = ref(false);
+const creatingKeterampilan = ref(false);
+const keterampilanYangDiedit = ref(null);
+const modalKeterampilanForm = computed(() => creatingKeterampilan.value
+    ? keterampilanForm
+    : editKeterampilanForm);
+const showBagianSoalModal = ref(false);
+const creatingBagianSoal = ref(false);
+const bagianSoalYangDiedit = ref(null);
+const modalBagianSoalForm = computed(() => creatingBagianSoal.value
+    ? bagianSoalForm
+    : editBagianSoalForm);
+
 const optionKeys = ["A", "B", "C", "D"];
 
 function materialForSkill(bankId, keterampilanId) {
-    return props.kebijakanMateriSoal.find(p =>
-         String(p.bank_soal_id) === String(bankId) &&
-        String(p.keterampilan_id) === String(keterampilanId),
-    )?.material || 'text';
+    return policyForBankAndSkill(bankId, keterampilanId)?.materi || null;
 }
+
+function policyForBankAndSkill(bankId, keterampilanId) {
+    const bank = props.bankSoal.find((item) => String(item.id) === String(bankId));
+
+    return props.kebijakanMateriSoal.find(p =>
+        String(p.jenis_tes_id) === String(bank?.jenis_tes_id) &&
+        String(p.keterampilan_id) === String(keterampilanId),
+    ) || null;
+}
+
+const editingMateriPolicy = computed(() => policyForBankAndSkill(
+    bankSoalTerpilihId.value,
+    keterampilanTerpilih.value,
+));
 
 function namaKeterampilanDariId(keterampilanId) {
     return props.opsiKeterampilan.find(s => String(s.value) === String(keterampilanId))?.label || '';
-}
-
-function namaKeterampilanDariSoal(keterampilan) {
-    return keterampilan?.nama || '';
 }
 
 const quickIsAudio = computed(
     () => materialForSkill(quickQuestionForm.bank_soal_id, quickQuestionForm.keterampilan_id) === "audio",
 );
 
-function quickParts() {
-    return props.bagianSoal.filter(
-        (p) =>
-            String(p.keterampilan_id) === String(quickQuestionForm.keterampilan_id) &&
-            String(p.bank_soal_id) === String(quickQuestionForm.bank_soal_id),
-    );
-}
-
 function materiSoalTypeLabel(materiSoal) {
     if (!materiSoal) return "Teks";
     if (materiSoal.memiliki_audio) return "Audio";
     if (materiSoal.memiliki_gambar) return "Gambar";
     return "Teks";
-}
-
-function bankName(id) {
-    return props.bankSoal.find((b) => b.id === id)?.nama || "";
 }
 
 function isPassageExpanded(id) {
@@ -210,8 +513,10 @@ function cancelEditPassage() {
     materiSoalForm.reset();
 }
 
-function savePassage(materiSoal) {
-    materiSoalForm.put(route("pustaka-soal.materi-soal.perbarui", materiSoal.id), {
+function savePassage() {
+    if (!editingMateriSoal.value) return;
+
+    materiSoalForm.put(route("pustaka-soal.materi-soal.perbarui", editingMateriSoal.value.id), {
         preserveScroll: true,
         onSuccess: () => {
             editingPassageId.value = null;
@@ -225,45 +530,29 @@ function savePassage(materiSoal) {
     });
 }
 
-const { showUploadProgress, uploadLabel, mediaType } = useUploadProgress(materiSoalForm);
+async function removePassageMedia(materiSoal, jenisMedia) {
+    const label = jenisMedia === 'audio' ? 'audio' : 'gambar';
+    if (!(await confirm.confirm(`Hapus ${label} dari materi soal "${materiSoal.judul}"?`))) return;
 
-function preselectQuickSkill() {
-    if (!addingPassageId.value) return;
-
-    const materiSoal = props.soal.data
-        .map((q) => q.materi_soal)
-        .find((p) => p && String(p.id) === String(addingPassageId.value));
-
-    if (!materiSoal) return;
-
-    const materiSoalMaterial = materiSoal.memiliki_audio ? "audio" : "text";
-    const bankId = quickQuestionForm.bank_soal_id;
-
-    if (!bankId) return;
-
-    const policy = props.kebijakanMateriSoal.find(
-        (p) =>
-            String(p.bank_soal_id) === String(bankId) &&
-            p.material === materiSoalMaterial,
-    );
-
-    quickQuestionForm.keterampilan_id = policy ? policy.keterampilan_id : "";
+    router.delete(route('pustaka-soal.materi-soal.media.hapus', [materiSoal.id, jenisMedia]), {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => router.reload({ only: ['soal'], preserveState: true, preserveScroll: true }),
+    });
 }
 
-watch(
-    () => quickQuestionForm.bank_soal_id,
-    () => preselectQuickSkill(),
-);
+const { showUploadProgress, uploadLabel, mediaType } = useUploadProgress(materiSoalForm);
 
 function openQuickAdd(materiSoal) {
+    if (bankIsLocked.value) return;
+
     addingPassageId.value = materiSoal.id;
     quickQuestionForm.clearErrors();
     quickQuestionForm.reset();
     quickQuestionForm.materi_soal_id = materiSoal.id;
-    if (props.bankSoal.length === 1) {
-        quickQuestionForm.bank_soal_id = props.bankSoal[0].id;
-    }
-    preselectQuickSkill();
+    quickQuestionForm.bank_soal_id = bankSoalTerpilihId.value;
+    quickQuestionForm.keterampilan_id = keterampilanTerpilih.value;
+    quickQuestionForm.bagian_soal_id = bagianSoalTerpilihId.value;
 }
 
 function closeQuickAdd() {
@@ -385,8 +674,12 @@ async function deleteQuestion(id, text) {
 
 <template>
     <Head title="Bank Soal" />
-    <TataLetakDasbor title="Bank Soal" subtitle="Kelola soal dan materi per bank soal">
-        <div class="flex justify-end mb-6">
+    <TataLetakDasbor
+        :title="bankSoalTerpilih?.nama || 'Bank Soal'"
+        subtitle="Kelola soal dan materi per bank soal"
+        :back-href="pageBackUrl"
+    >
+        <template #breadcrumb-actions>
             <UserGuide
                 title="Panduan Bank Soal"
                 :steps="[
@@ -398,7 +691,7 @@ async function deleteQuestion(id, text) {
                     'Soal dikelompokkan per keterampilan → bagian soal → materi soal.',
                 ]"
             />
-        </div>
+        </template>
 
         <template v-if="!bankSoalTerpilihId">
             <RingkasanJenisTesPustaka
@@ -410,84 +703,183 @@ async function deleteQuestion(id, text) {
                 v-else
                 :ringkasan-bank-soal="ringkasanBankSoal"
                 :detail-url="bankSoalUrl"
-                :back-url="route('pustaka-soal.daftar')"
             />
         </template>
 
         <template v-else>
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <div class="flex items-center gap-4">
-                    <div>
-                        <p class="text-title-md font-semibold text-text-heading">
-                            {{ bankSoalTerpilih?.nama || 'Bank Soal' }}
-                        </p>
-                        <p class="text-text-body text-body-md">
-                            {{ soal.total || 0 }} soal ditemukan
-                        </p>
+            <div class="relative mb-6">
+                <div
+                    v-if="tabsKeterampilan.length || canManageKeterampilan"
+                    class="flex min-w-0 items-end gap-1"
+                >
+                    <div v-if="tabsKeterampilan.length" class="min-w-0 flex-1">
+                        <BaseTabsChrome
+                            :model-value="keterampilanTerpilih"
+                            :items="tabsKeterampilan"
+                            :active-action="canManageKeterampilan && keterampilanTerpilihData !== null"
+                            aria-label="Filter keterampilan soal"
+                            class="relative z-10 -mb-px px-5"
+                            @update:model-value="onKeterampilanChange"
+                        >
+                            <template #active-action>
+                                <BaseActionMenu
+                                    :items="keterampilanActions"
+                                    icon-only
+                                    teleport-menu
+                                    compact
+                                    class="-ml-1"
+                                    aria-label="Aksi keterampilan aktif"
+                                    @select="handleKeterampilanAction"
+                                />
+                            </template>
+                            <template #after>
+                                <button
+                                    v-if="canManageKeterampilan"
+                                    type="button"
+                                    class="mb-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
+                                    aria-label="Tambah keterampilan"
+                                    title="Tambah keterampilan"
+                                    @click="openCreateKeterampilan"
+                                >
+                                    <IconPlus :size="19" />
+                                </button>
+                            </template>
+                        </BaseTabsChrome>
                     </div>
+
+                    <button
+                        v-else-if="canManageKeterampilan"
+                        type="button"
+                        class="mb-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
+                        aria-label="Tambah keterampilan"
+                        title="Tambah keterampilan"
+                        @click="openCreateKeterampilan"
+                    >
+                        <IconPlus :size="19" />
+                    </button>
+
                 </div>
-                <div class="flex items-center gap-2">
-                    <BaseButton variant="secondary" size="sm" :href="backToBankSoalUrl">
-                        <IconArrowLeft :size="16" /> Kembali
-                    </BaseButton>
-                    <BaseButton :href="route('pustaka-soal.tambah', createParams)">
-                        <IconPlus :size="18" /> Tambah Soal Baru
-                    </BaseButton>
-                </div>
+
+                <BaseCard :padding="false" class="!border-t-0 overflow-hidden">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3">
+                        <div v-if="tabsBagianSoal.length" class="inline-flex min-w-0 max-w-full items-center gap-1">
+                            <BaseTabs
+                                :model-value="bagianSoalTerpilihId"
+                                :items="tabsBagianSoal"
+                                :active-action="canManageBagianSoal && bagianSoalTerpilihData !== null"
+                                aria-label="Filter bagian soal"
+                                class="min-w-0 max-w-full"
+                                @update:model-value="onBagianSoalChange"
+                            >
+                                <template #active-action>
+                                    <BaseActionMenu
+                                        :items="bagianSoalActions"
+                                        icon-only
+                                        teleport-menu
+                                        compact
+                                        class="-ml-1 [&>button]:!text-on-primary"
+                                        aria-label="Aksi bagian soal aktif"
+                                        @select="handleBagianSoalAction"
+                                    />
+                                </template>
+                            </BaseTabs>
+                            <button
+                                v-if="canManageBagianSoal"
+                                type="button"
+                                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
+                                aria-label="Tambah bagian soal"
+                                title="Tambah bagian soal"
+                                @click="openCreateBagianSoal"
+                            >
+                                <IconPlus :size="19" />
+                            </button>
+                        </div>
+                        <button
+                            v-else-if="canManageBagianSoal"
+                            type="button"
+                            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
+                            aria-label="Tambah bagian soal"
+                            title="Tambah bagian soal"
+                            @click="openCreateBagianSoal"
+                        >
+                            <IconPlus :size="19" />
+                        </button>
+
+                        <div class="ml-auto flex shrink-0 items-center gap-2">
+                            <BaseTambahData
+                                :href="canCreateSoal ? route('pustaka-soal.tambah', createParams) : null"
+                                :disabled="!canCreateSoal"
+                                label="Tambah Soal Baru"
+                            />
+                        </div>
+                    </div>
+
+                    <EmptyState
+                        v-if="soal.data?.length === 0"
+                        :icon="IconBook"
+                        title="Tidak ada soal ditemukan."
+                        class="!rounded-none !border-0 !shadow-none"
+                    />
+
+                    <KelompokSoalPustaka
+                        v-else
+                        :kelompok-soal="kelompokSoalPerKeterampilan"
+                        :toggle-materi-soal-fn="togglePassage"
+                        :materi-soal-type-label-fn="materiSoalTypeLabel"
+                        :is-materi-soal-expanded-fn="isPassageExpanded"
+                        :bank-locked="bankIsLocked"
+                        attached
+                        @start-edit="startEditPassage"
+                        @add-soal="openQuickAdd"
+                        @soal-delete="deleteQuestion"
+                        @delete-materi-soal="deletePassage"
+                    />
+                </BaseCard>
             </div>
 
-            <BaseTabsChrome
-                v-if="tabsKeterampilan.length"
-                :model-value="keterampilanTerpilih"
-                :items="tabsKeterampilan"
-                aria-label="Filter keterampilan soal"
-                class="relative z-10 -mb-px px-5"
-                @update:model-value="onKeterampilanChange"
+            <TambahSoalMateriModal
+                v-if="addingPassageId"
+                :show="Boolean(addingPassageId)"
+                :form="quickQuestionForm"
+                :quick-is-audio="quickIsAudio"
+                :option-keys="optionKeys"
+                @close="closeQuickAdd"
+                @submit="saveQuickQuestion"
             />
 
-            <div v-if="tabsBagianSoal.length" class="mb-6 overflow-x-auto">
-                <BaseTabs
-                    :model-value="bagianSoalTerpilihId"
-                    :items="tabsBagianSoal"
-                    :grouped="false"
-                    @update:model-value="onBagianSoalChange"
-                />
-            </div>
-
-            <EmptyState
-                v-if="soal.data?.length === 0"
-                :icon="IconBook"
-                title="Tidak ada soal ditemukan."
+            <EditMateriSoalModal
+                v-if="editingMateriSoal"
+                :show="Boolean(editingMateriSoal)"
+                :materi-soal="editingMateriSoal"
+                :form="materiSoalForm"
+                :policy="editingMateriPolicy"
+                @close="cancelEditPassage"
+                @submit="savePassage"
+                @remove-media="(jenisMedia) => removePassageMedia(editingMateriSoal, jenisMedia)"
             />
 
-            <BaseCard v-else :padding="false" class="overflow-hidden">
-                <KelompokSoalPustaka
-                    :kelompok-soal="kelompokSoalPerKeterampilan"
-                   :materi-soal-form="materiSoalForm"
-                   :editing-materi-soal-id="editingPassageId"
-                   :keterampilan-name-fn="namaKeterampilanDariSoal"
-                 :bank-name-fn="bankName"
-                 :option-keys="optionKeys"
-                 :quick-form="quickQuestionForm"
-                 :bank-soal="bankSoal"
-                 :adding-materi-soal-id="addingPassageId"
-                 :quick-bagian-soal-fn="quickParts"
-                   :quick-is-audio="quickIsAudio"
-                   :label-keterampilan-fn="namaKeterampilanDariId"
-                   :toggle-materi-soal-fn="togglePassage"
-                    :materi-soal-type-label-fn="materiSoalTypeLabel"
-                    :is-materi-soal-expanded-fn="isPassageExpanded"
-                    attached
-                    @start-edit="startEditPassage"
-                    @cancel-edit="cancelEditPassage"
-                    @save-materi-soal="savePassage"
-                    @add-soal="openQuickAdd"
-                    @close-add="closeQuickAdd"
-                    @save-quick="saveQuickQuestion"
-                    @soal-delete="deleteQuestion"
-                    @delete-materi-soal="deletePassage"
-                />
-            </BaseCard>
+            <KeterampilanFormModal
+                :show="showKeterampilanModal"
+                :creating="creatingKeterampilan"
+                :form="modalKeterampilanForm"
+                :jenis-tes="jenisTesKeterampilan"
+                lock-jenis-tes
+                @close="closeKeterampilanModal"
+                @submit="creatingKeterampilan ? saveKeterampilan() : updateKeterampilan()"
+            />
+
+            <BagianSoalFormModal
+                :show="showBagianSoalModal"
+                :creating="creatingBagianSoal"
+                :form="modalBagianSoalForm"
+                :bank-soal="bankSoal"
+                :opsi-keterampilan="opsiKeterampilan"
+                :bank-filter="bankSoalTerpilihId"
+                lock-bank-soal
+                lock-keterampilan
+                @close="closeBagianSoalModal"
+                @submit="creatingBagianSoal ? saveBagianSoal() : updateBagianSoal()"
+            />
 
             <Pagination
                 :links="soal.links"

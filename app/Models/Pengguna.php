@@ -36,6 +36,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $updated_at
  * @property-read ProfilMahasiswa|null $profilMahasiswa
  * @property-read Collection<int, SesiUjian> $sesiUjian
+ * @property-read Collection<int, PendaftaranUjian> $pendaftaranUjian
  */
 #[Fillable(['name', 'email', 'password', 'nomor_telepon', 'foto', 'aktif', 'google_id', 'avatar_google', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
@@ -67,6 +68,11 @@ class Pengguna extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(SesiUjian::class, 'pengguna_id', 'id');
     }
 
+    public function pendaftaranUjian(): HasMany
+    {
+        return $this->hasMany(PendaftaranUjian::class, 'pengguna_id', 'id');
+    }
+
     public function profilTerverifikasi(): bool
     {
         if (! $this->adalahMahasiswa()) {
@@ -75,7 +81,11 @@ class Pengguna extends Authenticatable implements MustVerifyEmail
 
         $profil = $this->profilMahasiswa;
 
-        return $profil !== null ? $profil->terverifikasi : false;
+        return $profil !== null
+            && filled($profil->nim)
+            && filled($profil->fakultas_id)
+            && filled($profil->program_studi_id)
+            && filled($profil->tahun_angkatan);
     }
 
     public function getTerverifikasiAttribute(): bool

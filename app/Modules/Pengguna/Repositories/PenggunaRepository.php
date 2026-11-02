@@ -14,6 +14,11 @@ class PenggunaRepository implements PenggunaRepositoryInterface
         return Pengguna::count();
     }
 
+    public function findOrFail(string $id): Pengguna
+    {
+        return Pengguna::with('profilMahasiswa')->findOrFail($id);
+    }
+
     public function penggunaMenungguVerifikasi(): Collection
     {
         return Pengguna::role('student')

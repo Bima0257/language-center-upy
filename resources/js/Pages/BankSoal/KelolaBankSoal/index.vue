@@ -149,7 +149,6 @@ function saveEdit() {
 function closeModal() {
     showModal.value = false;
     editingBank.value = null;
-    creating.value = false;
     editForm.reset();
 }
 
@@ -164,6 +163,7 @@ async function destroy(bank) {
     <TataLetakDasbor
         :title="kategori ? `Bank Soal - ${kategori.nama}` : 'Kategori Bank Soal'"
         :subtitle="kategori ? 'Daftar bank soal dalam kategori ini' : 'Pilih kategori untuk melihat daftar bank soal'"
+        :back-href="kategori ? route('pustaka-soal.bank-soal.daftar') : null"
     >
         <template v-if="!kategori">
             <TabelKategoriBankSoal :data="kategoriBankSoal" :columns="kategoriKolom" @create="openCreate" />
@@ -173,7 +173,6 @@ async function destroy(bank) {
             <TabelBankSoal
                 :data="bankSoal"
                 :columns="kolom"
-                :back-url="route('pustaka-soal.bank-soal.daftar')"
                 @create="openCreate"
                 @edit="startEdit"
                 @delete="destroy"

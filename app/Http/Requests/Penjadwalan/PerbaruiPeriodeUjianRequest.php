@@ -20,6 +20,7 @@ class PerbaruiPeriodeUjianRequest extends FormRequest
             'judul' => ['required', 'string', 'max:255'],
             'tanggal_mulai' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
+            'aktif' => ['required', 'boolean'],
         ];
     }
 }

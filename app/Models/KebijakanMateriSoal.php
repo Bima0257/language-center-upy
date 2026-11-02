@@ -12,20 +12,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
- * Kebijakan penggunaan materi soal untuk kombinasi bank dan keterampilan.
+ * Kebijakan penggunaan materi soal untuk satu keterampilan dalam jenis tesnya.
  *
  * @property string $id
- * @property string $bank_soal_id
  * @property string $keterampilan_id
  * @property KetentuanMedia $ketentuan_materi
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read BankSoal $bankSoal
  * @property-read Keterampilan $keterampilan
  * @property-read Collection<int, AturanMediaMateriSoal> $aturanMedia
  */
 #[Fillable([
-    'bank_soal_id',
     'keterampilan_id',
     'ketentuan_materi',
 ])]
@@ -40,11 +37,6 @@ class KebijakanMateriSoal extends Model
         return [
             'ketentuan_materi' => KetentuanMedia::class,
         ];
-    }
-
-    public function bankSoal(): BelongsTo
-    {
-        return $this->belongsTo(BankSoal::class, 'bank_soal_id', 'id');
     }
 
     public function keterampilan(): BelongsTo

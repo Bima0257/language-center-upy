@@ -15,17 +15,28 @@ const emit = defineEmits(['close', 'submit']);
 </script>
 
 <template>
-    <BaseModal :show="props.show" @close="emit('close')" max-width="2xl">
-        <div class="p-8">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-headline-md font-bold text-text-heading">{{ props.creating ? 'Tambah Sesi' : 'Ubah Sesi' }}</h2>
-                <button @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
-                    <IconX :size="20" />
-                </button>
-            </div>
-            <form @submit.prevent="emit('submit')" class="space-y-5">
+    <BaseModal
+        :show="props.show"
+        @close="emit('close')"
+        max-width="2xl"
+        aria-labelledby="slot-ujian-modal-title"
+    >
+        <template #header>
+            <BaseModalHeader>
+                <div class="px-8 py-4">
+                    <div class="flex items-center justify-between">
+                         <h2 id="slot-ujian-modal-title" class="text-headline-md font-bold text-text-heading">{{ props.creating ? 'Tambah Sesi' : 'Ubah Sesi' }}</h2>
+                         <button type="button" aria-label="Tutup sesi ujian" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
+                            <IconX :size="20" />
+                        </button>
+                    </div>
+                </div>
+            </BaseModalHeader>
+        </template>
+        <template #default>
+            <form id="form-slot-ujian" @submit.prevent="emit('submit')" class="space-y-5 px-8 pb-8 pt-6">
                 <div>
-                    <label class="text-label-md font-medium text-primary block mb-2">Tanggal Sesi</label>
+                    <label class="text-label-md font-medium text-text-heading block mb-2">Tanggal Sesi</label>
                     <input type="date" v-model="props.form.tanggal" required
                            :min="props.slotDateMin" :max="props.slotDateMax"
                            class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
@@ -34,45 +45,45 @@ const emit = defineEmits(['close', 'submit']);
                         Hanya tanggal dalam periode {{ props.formatDate(props.periodeUjian.tanggal_mulai) }} s/d {{ props.formatDate(props.periodeUjian.tanggal_selesai) }} yang bisa dipilih.
                     </p>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <BaseFormGrid>
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-2">Jam Mulai</label>
+                    <label class="text-label-md font-medium text-text-heading block mb-2">Jam Mulai</label>
                         <input type="time" v-model="props.form.waktu_mulai" required
                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                         <p v-if="props.form.errors.waktu_mulai" class="text-error-red text-xs mt-1">{{ props.form.errors.waktu_mulai }}</p>
                     </div>
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-2">Jam Selesai</label>
+                    <label class="text-label-md font-medium text-text-heading block mb-2">Jam Selesai</label>
                         <input type="time" v-model="props.form.waktu_selesai" required
                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                         <p v-if="props.form.errors.waktu_selesai" class="text-error-red text-xs mt-1">{{ props.form.errors.waktu_selesai }}</p>
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
+                </BaseFormGrid>
+                <BaseFormGrid>
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-2">Toleransi (menit)</label>
+                    <label class="text-label-md font-medium text-text-heading block mb-2">Toleransi (menit)</label>
                         <input type="number" v-model="props.form.toleransi_keterlambatan_menit" min="0"
                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                     </div>
                     <div>
-                        <label class="text-label-md font-medium text-primary block mb-2">Kuota Peserta</label>
+                    <label class="text-label-md font-medium text-text-heading block mb-2">Kuota Peserta</label>
                         <input type="number" v-model="props.form.kapasitas_peserta" min="1"
                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                     </div>
-                </div>
-                <label v-if="!props.creating" class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" v-model="props.form.aktif" class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
-                    <span class="text-label-md text-text-body">Aktif</span>
-                </label>
-                <div class="flex gap-4 pt-2">
-                    <BaseButton type="submit" :disabled="props.form.processing" size="xl" class="flex-1">
-                        {{ props.form.processing ? 'Menyimpan...' : (props.creating ? 'Tambah Sesi' : 'Simpan Perubahan') }}
-                    </BaseButton>
-                    <BaseButton type="button" variant="secondary" size="lg" @click="emit('close')">
-                        Batal
-                    </BaseButton>
-                </div>
+                </BaseFormGrid>
+                <BaseToggle v-if="!props.creating" v-model="props.form.aktif" label="Sesi ujian aktif" />
             </form>
-        </div>
+        </template>
+        <template #footer>
+            <BaseModalFooter>
+                <div class="px-8 pb-3">
+                    <BaseFormActions
+                        form="form-slot-ujian"
+                        :processing="props.form.processing"
+                        @cancel="emit('close')"
+                    />
+                </div>
+            </BaseModalFooter>
+        </template>
     </BaseModal>
 </template>

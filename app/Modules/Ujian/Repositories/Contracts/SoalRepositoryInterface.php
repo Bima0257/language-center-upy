@@ -15,11 +15,26 @@ interface SoalRepositoryInterface
 
     public function find(string $id): ?Soal;
 
+    public function digunakanDalamUjian(string $id): bool;
+
     public function temukanDenganRelasi(string $id): ?Soal;
 
     public function create(array $data): Soal;
 
     public function buatBanyak(array $baris): void;
+
+    /**
+     * @param  array<string>  $materiIds
+     * @return Collection<int, Soal>
+     */
+    public function grupMateriSoal(array $materiIds, ?string $kecualiSoalId = null): Collection;
+
+    /**
+     * @return Collection<int, Soal>
+     */
+    public function soalUntukKeterampilan(string $keterampilanId): Collection;
+
+    public function memilikiSoalDenganKeterampilan(string $keterampilanId): bool;
 
     public function update(Soal $soal, array $data): Soal;
 
@@ -36,11 +51,6 @@ interface SoalRepositoryInterface
      * @return Collection<int, Soal>
      */
     public function soalDenganKeterampilanUntukJenisTes(string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): Collection;
-
-    /**
-     * @return array<string>
-     */
-    public function idDalam(array $ids, string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): array;
 
     /**
      * @return Collection<int, Soal>

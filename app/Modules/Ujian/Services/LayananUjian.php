@@ -84,50 +84,59 @@ class LayananUjian
 
     public function sinkronkanBagian(Ujian $ujian): int
     {
-        $bankId = $ujian->bagianUjian->first()?->bank_soal_id;
+        $bagianSaatIni = $this->bagianRepo->semuaUntukUjian($ujian);
+        $bankId = $bagianSaatIni->first()?->bank_soal_id;
 
         if ($bankId === null) {
             return 0;
         }
 
         $bank = $this->bankSoalRepo->find($bankId);
-        $urutan = $ujian->bagianUjian->max('urutan') ?? 0;
-        $dibuat = 0;
-
-        foreach ($this->keterampilanRepo->semuaAktifBerurutan($ujian->jenis_tes_id) as $keterampilan) {
-            if ($ujian->bagianUjian->contains('keterampilan_id', $keterampilan->id)) {
-                continue;
-            }
-
-            $soalTersedia = $this->soalRepo->soalDenganKeterampilanUntukJenisTes(
-                $keterampilan->id,
-                $ujian->jenis_tes_id,
-                $bankId,
-            );
-
-            if ($soalTersedia->isEmpty()) {
-                continue;
-            }
-
-            $bagian = $this->bagianRepo->create([
-                'ujian_id' => $ujian->id,
-                'bank_soal_id' => $bankId,
-                'keterampilan_id' => $keterampilan->id,
-                'judul' => "{$keterampilan->nama} — {$bank->nama}",
-                'urutan' => ++$urutan,
-            ]);
-
-            foreach ($this->bagianSoalRepo->semuaAktifDenganBank($bankId) as $bagianSoal) {
-                if ($bagianSoal->keterampilan_id === $keterampilan->id) {
-                    $this->bagianRepo->perbaruiAtauBuatPivotBagianSoal($bagian->id, $bagianSoal->id, $bagianSoal->urutan);
-                }
-            }
-
-            $this->lampirkanSoal($ujian, $bagian, $keterampilan);
-            $dibuat++;
+        if ($bank === null) {
+            return 0;
         }
 
-        return $dibuat;
+        return DB::transaction(function () use ($ujian, $bank, $bankId, $bagianSaatIni): int {
+            $urutan = $bagianSaatIni->max('urutan') ?? 0;
+            $dibuat = 0;
+            $bagianSoalAktif = $this->bagianSoalRepo->semuaAktifDenganBank($bankId);
+
+            foreach ($this->keterampilanRepo->semuaAktifBerurutan($ujian->jenis_tes_id) as $keterampilan) {
+                $bagian = $bagianSaatIni->firstWhere('keterampilan_id', $keterampilan->id);
+                $soalTersedia = $this->soalRepo->soalDenganKeterampilanUntukJenisTes(
+                    $keterampilan->id,
+                    $ujian->jenis_tes_id,
+                    $bankId,
+                );
+
+                if ($soalTersedia->isEmpty()) {
+                    continue;
+                }
+
+                if ($bagian === null) {
+                    $bagian = $this->bagianRepo->create([
+                        'ujian_id' => $ujian->id,
+                        'bank_soal_id' => $bankId,
+                        'keterampilan_id' => $keterampilan->id,
+                        'judul' => "{$keterampilan->nama} — {$bank->nama}",
+                        'urutan' => ++$urutan,
+                    ]);
+
+                    foreach ($bagianSoalAktif as $bagianSoal) {
+                        if ($bagianSoal->keterampilan_id === $keterampilan->id) {
+                            $this->bagianRepo->perbaruiAtauBuatPivotBagianSoal($bagian->id, $bagianSoal->id, $bagianSoal->urutan);
+                        }
+                    }
+
+                    $bagianSaatIni->push($bagian);
+                    $dibuat++;
+                }
+
+                $this->lampirkanSoal($ujian, $bagian, $keterampilan);
+            }
+
+            return $dibuat;
+        });
     }
 
     public function perbarui(Ujian $ujian, array $data): Ujian
@@ -169,20 +178,9 @@ class LayananUjian
 
     public function dataDetail(Ujian $ujian): array
     {
+        $this->sinkronkanBagian($ujian);
         $ujian = $this->ujianRepo->temukanDenganRelasi($ujian->id);
         $bagianIds = $ujian->bagianUjian->pluck('id');
-
-        $soalDapatDilampirkan = [];
-        foreach ($ujian->bagianUjian as $bagian) {
-            $bankId = $bagian->bank_soal_id;
-
-            $kecualiIds = $this->bagianRepo->idSoalDalamBagian($bagian->id);
-            $soalDapatDilampirkan[$bagian->id] = $this->soalRepo->soalDenganBankDanKeterampilanTanpa(
-                $bankId,
-                $bagian->keterampilan_id,
-                $kecualiIds,
-            );
-        }
 
         return [
             'ujian' => $ujian,
@@ -191,7 +189,6 @@ class LayananUjian
             'bankSoal' => $this->bankSoalRepo->semuaAktifBerurutan(),
             'soalPerBagian' => $this->bagianRepo->soalDikelompokkanDenganBagian($bagianIds),
             'bagianSoalPerBagian' => $this->bagianRepo->bagianSoalDikelompokkanDenganBagian($bagianIds),
-            'soalDapatDilampirkan' => $soalDapatDilampirkan,
         ];
     }
 
@@ -219,23 +216,27 @@ class LayananUjian
         return $this->bankSoalRepo->semuaAktifBerurutan();
     }
 
-    public function dataUbah(Ujian $ujian): array
-    {
-        return [
-            'ujian' => $this->ujianRepo->temukanDenganRelasi($ujian->id),
-        ];
-    }
-
     public function lampirkanSoal(Ujian $ujian, BagianUjian $bagian, Keterampilan $keterampilan): int
     {
         $soalTersedia = $this->soalRepo->soalDenganKeterampilanUntukJenisTes($keterampilan->id, $ujian->jenis_tes_id, $bagian->bank_soal_id);
 
-        $nomor = 1;
+        $terpasang = array_fill_keys($this->bagianRepo->idSoalDalamBagian($bagian->id), true);
+        $nomor = $this->bagianRepo->urutanSoalBerikutnya($bagian->id);
+        $dilampirkan = 0;
+
         foreach ($soalTersedia as $soal) {
-            $this->bagianRepo->buatAtauTemukanPivotSoal($bagian->id, $soal->id, $nomor++);
+            if (isset($terpasang[$soal->id])) {
+                continue;
+            }
+
+            $this->bagianRepo->buatPivotSoal($bagian->id, $soal->id, $nomor++);
+            $terpasang[$soal->id] = true;
+            $dilampirkan++;
         }
 
-        return $soalTersedia->count();
+        $this->bagianRepo->perbaruiJumlahSoal($bagian, $this->bagianRepo->jumlahSoalDalamBagian($bagian->id));
+
+        return $dilampirkan;
     }
 
     private function pastikanDataPembuatanUjian(array $data): BankSoal

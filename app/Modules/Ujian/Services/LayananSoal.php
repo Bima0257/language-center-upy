@@ -2,7 +2,6 @@
 
 namespace App\Modules\Ujian\Services;
 
-use App\Imports\ImporSoal;
 use App\Models\BagianSoal;
 use App\Models\Keterampilan;
 use App\Models\MateriSoal;
@@ -16,11 +15,9 @@ use App\Modules\Ujian\Repositories\Contracts\MateriSoalRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\SoalRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Maatwebsite\Excel\Facades\Excel;
 use Mews\Purifier\Facades\Purifier;
 
 class LayananSoal
@@ -39,7 +36,13 @@ class LayananSoal
     private function opsiKeterampilan(?string $jenisTesId = null): array
     {
         return $this->keterampilanRepo->semuaAktifBerurutan($jenisTesId)
-            ->map(fn (Keterampilan $keterampilan) => ['value' => $keterampilan->id, 'label' => $keterampilan->nama, 'kode' => $keterampilan->kode])
+            ->map(fn (Keterampilan $keterampilan) => [
+                'value' => $keterampilan->id,
+                'label' => $keterampilan->nama,
+                'kode' => $keterampilan->kode,
+                'deskripsi' => $keterampilan->deskripsi,
+                'aktif' => $keterampilan->aktif,
+            ])
             ->toArray();
     }
 
@@ -51,7 +54,9 @@ class LayananSoal
             'bankSoal' => $this->bankSoalRepo->semuaAktifBerurutan(),
             'opsiKeterampilan' => $this->opsiKeterampilan($bankSoal?->jenis_tes_id),
             'bagianSoal' => $this->bagianSoalRepo->semuaAktifBerurutan(),
-            'materiSoal' => $this->materiSoalRepo->semuaBerurutan(),
+            'materiSoal' => $bankSoal !== null
+                ? $this->materiSoalRepo->semuaUntukBank($bankSoal->id)
+                : new Collection,
             'kebijakanMateriSoal' => $this->kebijakanMateri->semuaUntukFrontend(),
             'bankSoalTerpilih' => $bankSoalTerpilih !== null && $bankSoalTerpilih !== '' && $this->bankSoalRepo->adaAktif($bankSoalTerpilih)
                 ? $bankSoalTerpilih
@@ -63,13 +68,14 @@ class LayananSoal
     public function dataUbah(Soal $soal): array
     {
         $soalDenganRelasi = $this->soalRepo->temukanDenganRelasi($soal->id);
+        $materiSoalAktif = $soalDenganRelasi?->materiSoal;
 
         return [
             'soal' => $soalDenganRelasi,
             'bankSoal' => $this->bankSoalRepo->semuaAktifBerurutan(),
             'opsiKeterampilan' => $this->opsiKeterampilan($soalDenganRelasi?->bankSoal?->jenis_tes_id),
             'bagianSoal' => $this->bagianSoalRepo->semuaAktifBerurutan(),
-            'materiSoal' => $this->materiSoalRepo->semuaBerurutan(),
+            'materiSoal' => $materiSoalAktif !== null ? [$materiSoalAktif] : [],
             'kebijakanMateriSoal' => $this->kebijakanMateri->semuaUntukFrontend(),
         ];
     }
@@ -77,14 +83,26 @@ class LayananSoal
     public function dataDaftar(array $filter): array
     {
         $bankSoalId = $filter['bank_soal_id'] ?? null;
+        $bagianSoal = $this->bagianSoalRepo->semuaAktifBerurutan();
+
+        if (empty($bankSoalId) && ! empty($filter['bagian_soal_id'])) {
+            $bagianSoalTerpilih = $bagianSoal->first(
+                fn (BagianSoal $part): bool => $part->id === $filter['bagian_soal_id'],
+            );
+            $bankSoalId = $bagianSoalTerpilih?->bank_soal_id;
+        }
+
         $bankSoal = $bankSoalId !== null ? $this->bankSoalRepo->find($bankSoalId) : null;
         $jenisTesId = $filter['jenis_tes_id'] ?? null;
         if ($bankSoal !== null) {
             $jenisTesId = $bankSoal->jenis_tes_id;
         }
         $opsiKeterampilan = $this->opsiKeterampilan($bankSoal?->jenis_tes_id);
-        $bagianSoal = $this->bagianSoalRepo->semuaAktifBerurutan();
         $normalizedFilter = $filter;
+
+        if ($bankSoalId !== null) {
+            $normalizedFilter['bank_soal_id'] = $bankSoalId;
+        }
 
         if ($bankSoal !== null) {
             $selectedPart = ! empty($filter['bagian_soal_id'])
@@ -98,12 +116,23 @@ class LayananSoal
             if ($keterampilanId === null && $selectedPart !== null) {
                 $keterampilanId = $selectedPart->keterampilan_id;
             }
+
+            $keterampilanIds = collect($opsiKeterampilan)
+                ->pluck('value')
+                ->map(static fn ($id): string => (string) $id);
+
+            if ($keterampilanId !== null && ! $keterampilanIds->contains((string) $keterampilanId)) {
+                $keterampilanId = null;
+            }
+
             if ($keterampilanId === null) {
                 $keterampilanId = $opsiKeterampilan[0]['value'] ?? null;
             }
 
             if ($keterampilanId !== null) {
                 $normalizedFilter['keterampilan'] = $keterampilanId;
+            } else {
+                unset($normalizedFilter['keterampilan'], $normalizedFilter['bagian_soal_id']);
             }
 
             $selectedPart = ! empty($normalizedFilter['bagian_soal_id'])
@@ -136,6 +165,7 @@ class LayananSoal
             'soal' => $soal,
             'jenisTes' => $this->jenisTesRepo->semuaAktifBerurutan(),
             'bankSoal' => $this->bankSoalRepo->semuaAktifDenganJenisTesDanJumlah($jenisTesId),
+            'bankSoalTerpilih' => $bankSoal,
             'opsiKeterampilan' => $opsiKeterampilan,
             'bagianSoal' => $bagianSoal,
             'kebijakanMateriSoal' => $this->kebijakanMateri->semuaUntukFrontend(),
@@ -152,6 +182,7 @@ class LayananSoal
         try {
             $count = DB::transaction(function () use ($validated, $request, &$storedFiles) {
                 $bankSoalId = $validated['bank_soal_id'];
+                $this->pastikanBankBelumDipakai($bankSoalId);
                 $materiId = $validated['materi_soal_id'] ?? null;
 
                 if (! $materiId && ! empty($validated['materi_baru_judul'])) {
@@ -172,9 +203,9 @@ class LayananSoal
                 $baris = [];
                 foreach ($validated['soal'] as $dataSoal) {
                     $keterampilanId = $dataSoal['keterampilan_id'];
-                    $konfigurasi = $konfigurasiKebijakan[$keterampilanId] ??= $this->selesaikanKebijakanAtauGagal($bankSoalId, $keterampilanId, 'soal');
+                    $konfigurasi = $konfigurasiKebijakan[$keterampilanId] ??= $this->selesaikanKebijakanAtauGagal($keterampilanId, 'soal');
 
-                    $this->pastikanKeterampilanBagian(
+                    $this->pastikanKonteksSoal(
                         $bankSoalId,
                         $keterampilanId,
                         $dataSoal['bagian_soal_id'],
@@ -202,6 +233,8 @@ class LayananSoal
                     ];
                 }
 
+                $this->pastikanMateriSatuGrup($baris);
+
                 $this->soalRepo->buatBanyak($baris);
 
                 return count($baris);
@@ -228,7 +261,7 @@ class LayananSoal
         $indeks = $soalDalamMateri->search(fn ($dataSoal) => $dataSoal->id === $soal->id);
         $indeks = $indeks === false ? 0 : $indeks;
 
-        $materi = $this->kebijakanMateri->materiUntuk($soal->bank_soal_id, $soal->keterampilan_id);
+        $materi = $this->kebijakanMateri->materiUntuk($soal->keterampilan_id);
 
         if ($materi !== null) {
             $soalDalamMateri->each(fn ($dataSoal) => $dataSoal->materi = $materi);
@@ -242,14 +275,15 @@ class LayananSoal
 
     public function perbaruiPustaka(Soal $soal, array $validated): void
     {
-        $this->pastikanKeterampilanBagian(
+        $this->pastikanSoalBelumDikunci($soal, $validated['bank_soal_id']);
+        $this->pastikanKonteksSoal(
             $validated['bank_soal_id'],
             $validated['keterampilan_id'],
             $validated['bagian_soal_id'],
-            'bagian_soal_id',
         );
+        $this->pastikanMateriTidakBerubah($soal, $validated);
 
-        $konfigurasi = $this->selesaikanKebijakanAtauGagal($validated['bank_soal_id'], $validated['keterampilan_id'], 'keterampilan_id');
+        $konfigurasi = $this->selesaikanKebijakanAtauGagal($validated['keterampilan_id'], 'keterampilan_id');
 
         $materi = ! empty($validated['materi_soal_id'])
             ? $this->materiSoalRepo->find($validated['materi_soal_id'])
@@ -260,6 +294,7 @@ class LayananSoal
         }
 
         $this->kebijakanMateri->pastikanMateriDiizinkan($konfigurasi, $materi, 'materi_soal_id');
+        $this->pastikanMateriSatuGrup([$validated], $soal->id);
 
         if ($konfigurasi->materi() === 'text') {
             $this->pastikanIntegritasTeks($validated, 'teks_soal');
@@ -272,50 +307,46 @@ class LayananSoal
 
     public function hapus(Soal $soal): void
     {
-        if ($soal->bagianUjian()->exists()) {
-            throw new \RuntimeException('Soal tidak bisa dihapus karena sudah dipakai di ujian.');
-        }
+        $this->pastikanSoalBelumDikunci($soal);
 
         $this->soalRepo->delete($soal);
     }
 
     public function simpan(array $validated): void
     {
-        $this->pastikanKebijakanMateriSoal($validated);
-
-        $this->soalRepo->create(array_merge(
-            $validated,
-            ['pembuat_id' => auth()->id()]
-        ));
-    }
-
-    public function simpanMassal(array $baris): int
-    {
-        return DB::transaction(function () use ($baris) {
-            $data = array_map(
-                fn ($barisSoal) => array_merge($barisSoal, ['pembuat_id' => auth()->id()]),
-                $baris,
+        DB::transaction(function () use ($validated): void {
+            $this->pastikanBankBelumDipakai($validated['bank_soal_id']);
+            $this->pastikanKonteksSoal(
+                $validated['bank_soal_id'],
+                $validated['keterampilan_id'],
+                $validated['bagian_soal_id'],
             );
+            $this->pastikanKebijakanMateriSoal($validated);
+            $this->pastikanMateriSatuGrup([$validated]);
 
-            $this->soalRepo->buatBanyak($data);
-
-            return count($data);
+            $this->soalRepo->create(array_merge(
+                $validated,
+                ['pembuat_id' => auth()->id()]
+            ));
         });
     }
 
     public function perbarui(Soal $soal, array $validated): void
     {
+        $this->pastikanSoalBelumDikunci($soal, $validated['bank_soal_id']);
+        $this->pastikanKonteksSoal(
+            $validated['bank_soal_id'],
+            $validated['keterampilan_id'],
+            $validated['bagian_soal_id'],
+        );
+        $this->pastikanMateriTidakBerubah($soal, $validated);
         $this->pastikanKebijakanMateriSoal($validated);
+        $this->pastikanMateriSatuGrup([$validated], $soal->id);
 
         $this->soalRepo->update($soal, array_merge(
             $validated,
             ['pengubah_id' => auth()->id()]
         ));
-    }
-
-    public function imporBerkas(UploadedFile $file): void
-    {
-        Excel::import(new ImporSoal, $file);
     }
 
     public function memilikiDuplikatDalam(array $items, callable $ambilKunci): bool
@@ -348,19 +379,152 @@ class LayananSoal
         return $materi;
     }
 
-    private function pastikanKeterampilanBagian(string $bankSoalId, string $keterampilanId, string $bagianSoalId, string $kunciKesalahan): void
-    {
+    private function pastikanKonteksSoal(
+        string $bankSoalId,
+        string $keterampilanId,
+        string $bagianSoalId,
+        string $kunciKesalahan = 'bagian_soal_id',
+    ): void {
+        $bankSoal = $this->bankSoalRepo->find($bankSoalId);
+        if ($bankSoal === null || ! $bankSoal->aktif) {
+            throw ValidationException::withMessages([
+                'bank_soal_id' => 'Bank soal tidak aktif atau tidak ditemukan.',
+            ]);
+        }
+
+        $keterampilan = $this->keterampilanRepo->find($keterampilanId);
+        if ($keterampilan === null || ! $keterampilan->aktif) {
+            throw ValidationException::withMessages([
+                'keterampilan_id' => 'Keterampilan tidak aktif atau tidak ditemukan.',
+            ]);
+        }
+
+        if ($keterampilan->jenis_tes_id !== $bankSoal->jenis_tes_id) {
+            throw ValidationException::withMessages([
+                'keterampilan_id' => 'Keterampilan harus berasal dari jenis tes yang sama dengan bank soal.',
+            ]);
+        }
+
         $bagianSoal = $this->bagianSoalRepo->find($bagianSoalId);
 
-        if ($bagianSoal === null || $bagianSoal->keterampilan_id !== $keterampilanId || $bagianSoal->bank_soal_id !== $bankSoalId) {
-            throw ValidationException::withMessages([$kunciKesalahan => 'Bagian soal harus milik bank soal dan keterampilan yang sama dengan soal.']);
+        if ($bagianSoal === null
+            || ! $bagianSoal->aktif
+            || $bagianSoal->keterampilan_id !== $keterampilanId
+            || $bagianSoal->bank_soal_id !== $bankSoalId) {
+            throw ValidationException::withMessages([
+                $kunciKesalahan => 'Bagian soal harus aktif dan milik bank soal serta keterampilan yang sama.',
+            ]);
         }
     }
 
-    private function selesaikanKebijakanAtauGagal(string $bankSoalId, string $keterampilanId, string $kunciKesalahan): KonfigurasiKebijakanMateriSoal
+    private function pastikanBankBelumDipakai(string $bankSoalId): void
+    {
+        if ($this->bankSoalRepo->digunakanDalamUjian($bankSoalId)) {
+            throw ValidationException::withMessages([
+                'bank_soal_id' => 'Soal tidak bisa ditambahkan karena bank soal sudah digunakan di ujian.',
+            ]);
+        }
+    }
+
+    private function pastikanSoalBelumDikunci(Soal $soal, ?string $bankSoalId = null): void
+    {
+        $bankIds = array_unique(array_filter([
+            $soal->bank_soal_id,
+            $bankSoalId,
+        ]));
+
+        foreach ($bankIds as $id) {
+            if ($this->bankSoalRepo->digunakanDalamUjian($id)) {
+                throw ValidationException::withMessages([
+                    'bank_soal_id' => 'Soal tidak bisa diubah atau dihapus karena bank soal sudah digunakan di ujian.',
+                ]);
+            }
+        }
+
+        if ($this->soalRepo->digunakanDalamUjian($soal->id)) {
+            throw ValidationException::withMessages([
+                'soal' => 'Soal tidak bisa diubah atau dihapus karena sudah digunakan di ujian.',
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $baris
+     */
+    private function pastikanMateriSatuGrup(array $baris, ?string $kecualiSoalId = null): void
+    {
+        $grupBaruPerMateri = [];
+
+        foreach ($baris as $barisSoal) {
+            if (empty($barisSoal['materi_soal_id'])) {
+                continue;
+            }
+
+            $materiId = (string) $barisSoal['materi_soal_id'];
+            $grupBaruPerMateri[$materiId][$this->kunciGrupMateri($barisSoal)] = true;
+        }
+
+        if ($grupBaruPerMateri === []) {
+            return;
+        }
+
+        $grupLamaPerMateri = $this->soalRepo
+            ->grupMateriSoal(array_keys($grupBaruPerMateri), $kecualiSoalId)
+            ->groupBy('materi_soal_id');
+
+        foreach ($grupBaruPerMateri as $materiId => $grupBaru) {
+            if (count($grupBaru) > 1) {
+                throw ValidationException::withMessages([
+                    'materi_soal_id' => 'Materi soal hanya dapat digunakan pada satu group keterampilan dan bagian soal.',
+                ]);
+            }
+
+            $grupBaruId = array_key_first($grupBaru);
+
+            foreach ($grupLamaPerMateri->get($materiId, new Collection) as $grupLama) {
+                if ($this->kunciGrupMateri([
+                    'bank_soal_id' => $grupLama->bank_soal_id,
+                    'keterampilan_id' => $grupLama->keterampilan_id,
+                    'bagian_soal_id' => $grupLama->bagian_soal_id,
+                ]) !== $grupBaruId) {
+                    throw ValidationException::withMessages([
+                        'materi_soal_id' => 'Materi soal sudah digunakan pada group keterampilan atau bagian soal lain.',
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function pastikanMateriTidakBerubah(Soal $soal, array $validated): void
+    {
+        if (($validated['materi_soal_id'] ?? null) === $soal->materi_soal_id) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'materi_soal_id' => 'Materi soal tidak dapat diubah setelah soal dibuat.',
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $barisSoal
+     */
+    private function kunciGrupMateri(array $barisSoal): string
+    {
+        return implode('|', [
+            (string) ($barisSoal['bank_soal_id'] ?? ''),
+            (string) ($barisSoal['keterampilan_id'] ?? ''),
+            (string) ($barisSoal['bagian_soal_id'] ?? ''),
+        ]);
+    }
+
+    private function selesaikanKebijakanAtauGagal(string $keterampilanId, string $kunciKesalahan): KonfigurasiKebijakanMateriSoal
     {
         try {
-            return $this->kebijakanMateri->selesaikanAtauGagal($bankSoalId, $keterampilanId);
+            return $this->kebijakanMateri->selesaikanAtauGagal($keterampilanId);
         } catch (\RuntimeException $e) {
             throw ValidationException::withMessages([$kunciKesalahan => $e->getMessage()]);
         }
@@ -375,7 +539,7 @@ class LayananSoal
 
     private function pastikanKebijakanMateriSoal(array $validated): void
     {
-        $konfigurasi = $this->selesaikanKebijakanAtauGagal($validated['bank_soal_id'], $validated['keterampilan_id'], 'materi_soal_id');
+        $konfigurasi = $this->selesaikanKebijakanAtauGagal($validated['keterampilan_id'], 'materi_soal_id');
 
         $materi = ! empty($validated['materi_soal_id'])
             ? $this->materiSoalRepo->find($validated['materi_soal_id'])
@@ -386,6 +550,10 @@ class LayananSoal
         }
 
         $this->kebijakanMateri->pastikanMateriDiizinkan($konfigurasi, $materi, 'materi_soal_id');
+
+        if ($konfigurasi->materi() === 'text') {
+            $this->pastikanIntegritasTeks($validated, 'teks_soal');
+        }
     }
 
     private function pastikanIntegritasTeks(array $dataSoal, string $kunciKesalahan): void

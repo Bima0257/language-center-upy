@@ -71,11 +71,11 @@ async function destroy(interp) {
     <TataLetakDasbor
         :title="`Interpretasi Skor - ${props.jenisTes.nama}`"
         :subtitle="`Kelola rentang interpretasi skor pada ${props.jenisTes.nama}`"
+        :back-href="route('admin.data-induk.interpretasi-skor.daftar')"
     >
         <InterpretasiSkorTable
             :interpretasi-skor="props.interpretasiSkor"
             :jenis-tes="[props.jenisTes]"
-            :back-url="route('admin.data-induk.interpretasi-skor.daftar')"
             @create="goToBulkCreate"
             @edit="startEdit"
             @delete="destroy"
@@ -86,7 +86,6 @@ async function destroy(interp) {
             editing
             :form="editForm"
             :jenis-tes="props.jenisTes"
-            submit-label="Simpan Perubahan"
             @close="closeModal"
             @submit="saveEdit"
         />

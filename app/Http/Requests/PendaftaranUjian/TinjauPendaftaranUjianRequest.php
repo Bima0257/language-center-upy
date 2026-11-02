@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Ujian;
+namespace App\Http\Requests\PendaftaranUjian;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class LampirkanSoalBagianRequest extends FormRequest
+class TinjauPendaftaranUjianRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,8 +17,7 @@ class LampirkanSoalBagianRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'soal_ids' => ['required', 'array', 'min:1'],
-            'soal_ids.*' => ['uuid', 'distinct'],
+            'catatan_admin' => ['nullable', 'string', 'max:2000'],
         ];
     }
 }

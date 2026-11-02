@@ -11,13 +11,13 @@ defineProps({
 
 <template>
     <section
-        class="w-3/5 border-r border-outline-variant bg-surface-bright flex flex-col overflow-hidden"
+        class="flex-1 min-h-0 w-full border-r border-outline-variant bg-surface-bright flex flex-col overflow-hidden md:flex-none md:w-3/5"
     >
         <div class="flex-1 min-h-0 overflow-y-auto scroll-hide p-8">
             <div class="max-w-2xl mx-auto">
                 <div class="mb-8">
                     <span
-                        class="bg-pastel-purple text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
+                        class="bg-pastel-purple text-text-heading px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
                         >{{ bagianSoalLabel }}</span
                     >
                     <h1

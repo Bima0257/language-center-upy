@@ -10,7 +10,11 @@ interface SlotUjianRepositoryInterface
 {
     public function findOrFail(string $id): SlotUjian;
 
+    public function temukanUntukUpdate(string $id): SlotUjian;
+
     public function temukanDenganPeriodeUjian(string $periodeUjianId): Collection;
+
+    public function semuaDenganPeriodeUjian(): Collection;
 
     public function create(array $data): SlotUjian;
 
@@ -19,6 +23,8 @@ interface SlotUjianRepositoryInterface
     public function delete(SlotUjian $slotUjian): void;
 
     public function memilikiSesi(SlotUjian $slotUjian): bool;
+
+    public function memilikiPendaftaran(SlotUjian $slotUjian): bool;
 
     public function memilikiWaktuTumpangTindih(string $periodeUjianId, Carbon $tanggal, string $waktuMulai, string $waktuSelesai, ?string $kecualiId = null): bool;
 

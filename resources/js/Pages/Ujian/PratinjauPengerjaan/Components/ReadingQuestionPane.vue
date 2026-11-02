@@ -5,24 +5,33 @@ defineProps({
     materiSoal: { type: Object, default: null },
     bagianSoalLabel: { type: String, default: "" },
     imageSrc: { type: String, default: null },
+    questionText: { type: String, default: "" },
+    isStandalone: { type: Boolean, default: false },
 });
 </script>
 
 <template>
     <section
-        class="w-3/5 border-r border-outline-variant overflow-y-auto scroll-hide p-8 bg-surface-bright"
+        class="flex-1 min-h-0 w-full border-r border-outline-variant overflow-y-auto scroll-hide p-8 bg-surface-bright md:flex-none"
+        :class="isStandalone ? 'md:w-1/2' : 'md:w-3/5'"
     >
         <div class="max-w-2xl mx-auto">
             <div class="mb-8">
                 <span
-                    class="bg-pastel-blue text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
-                    >{{ bagianSoalLabel }}</span
+                        class="bg-pastel-blue text-text-heading px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
+                    >{{ isStandalone ? "Soal Mandiri" : bagianSoalLabel }}</span
                 >
                 <h1
                     v-if="materiSoal"
                     class="font-serif text-2xl leading-tight text-text-heading font-bold mb-6"
                 >
                     {{ materiSoal.judul }}
+                </h1>
+                <h1
+                    v-else-if="isStandalone && questionText"
+                    class="font-headline-md text-headline-md text-text-heading leading-snug"
+                >
+                    {{ questionText }}
                 </h1>
                 <h1
                     v-else

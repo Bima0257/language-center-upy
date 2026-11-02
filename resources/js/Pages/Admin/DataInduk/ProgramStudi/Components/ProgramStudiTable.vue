@@ -1,9 +1,8 @@
 <script setup>
-import { IconArrowLeft, IconEdit, IconPlus, IconTrash } from '@tabler/icons-vue';
+import { IconEdit, IconTrash } from '@tabler/icons-vue';
 
-const props = defineProps({
+defineProps({
     programStudi: { type: Array, default: () => [] },
-    backUrl: { type: String, required: true },
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
@@ -14,12 +13,7 @@ const emit = defineEmits(['create', 'edit', 'delete']);
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3.5">
             <h2 class="text-title-lg font-semibold text-text-heading">Daftar Program Studi</h2>
             <div class="flex items-center gap-2">
-                <BaseButton variant="secondary" size="sm" :href="props.backUrl">
-                    <IconArrowLeft :size="16" /> Kembali
-                </BaseButton>
-                <BaseButton size="sm" @click="emit('create')">
-                    <IconPlus :size="16" /> Tambah Program Studi
-                </BaseButton>
+                <BaseTambahData @click="emit('create')" />
             </div>
         </div>
 

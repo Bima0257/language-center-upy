@@ -6,6 +6,7 @@ const props = defineProps({
     answeredCount: { type: Number, default: 0 },
     answers: { type: Object, default: () => ({}) },
     isAudio: { type: Boolean, default: false },
+    showQuestionText: { type: Boolean, default: true },
 });
 
 const optionKeys = ["A", "B", "C", "D"];
@@ -40,13 +41,13 @@ function selectAnswer(key) {
                 >
             </div>
             <h2
-                v-if="!isAudio"
+                v-if="showQuestionText && !isAudio"
                 class="font-headline-md text-headline-md text-text-heading mb-10 leading-snug"
             >
                 {{ currentQuestion?.teks_soal }}
             </h2>
             <h2
-                v-else-if="currentQuestion?.teks_soal"
+                v-else-if="showQuestionText && currentQuestion?.teks_soal"
                 class="font-headline-md text-headline-md text-text-heading mb-6 leading-snug"
             >
                 {{ currentQuestion.teks_soal }}
@@ -56,19 +57,19 @@ function selectAnswer(key) {
                     v-for="key in optionKeys"
                     :key="key"
                     @click="selectAnswer(key)"
-                    class="option-card w-full flex items-start gap-3 px-4 py-3 border rounded-xl text-left transition-all duration-200 group cursor-pointer"
+                    class="option-card w-full flex items-start gap-3 rounded-xl border bg-surface-white px-4 py-3 text-left transition-all duration-200 group cursor-pointer"
                     :class="
                         answers[currentQuestion.id] === key
                             ? 'option-selected'
-                            : 'border-surface-container-high hover:border-secondary hover:bg-pastel-purple/10'
+                            : ''
                     "
                 >
                     <div
-                        class="w-7 h-7 rounded-full border flex-shrink-0 flex items-center justify-center font-semibold text-[13px] transition-colors"
+                        class="option-key w-7 h-7 rounded-full border flex-shrink-0 flex items-center justify-center font-semibold text-[13px] transition-colors"
                         :class="
                             answers[currentQuestion.id] === key
-                                ? 'bg-secondary-container border-secondary text-on-secondary-container'
-                                : 'border-outline-variant text-text-muted group-hover:border-secondary group-hover:text-primary'
+                                ? 'option-key-selected bg-secondary-container text-on-secondary-container'
+                                : 'text-text-muted group-hover:border-secondary group-hover:text-primary'
                         "
                     >
                         {{ key }}
@@ -96,9 +97,34 @@ function selectAnswer(key) {
     background: var(--color-scrollbar-thumb);
     border-radius: 10px;
 }
+.option-card {
+    border-color: var(--color-outline-variant) !important;
+}
+.dark .option-card {
+    border-color: #64748b !important;
+}
+.dark .option-card:not(.option-selected) {
+    border-color: #94a3b8 !important;
+    background-color: var(--color-surface-container) !important;
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.3);
+}
 .option-card:hover {
-    border-color: var(--color-secondary);
+    border-color: var(--color-secondary) !important;
     background-color: var(--color-surface-container-low);
+}
+.dark .option-card:not(.option-selected):hover {
+    border-color: var(--color-secondary) !important;
+    background-color: var(--color-surface-container-high) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-secondary) 35%, transparent);
+}
+.option-key {
+    border-color: var(--color-outline-variant) !important;
+}
+.dark .option-key {
+    border-color: #64748b !important;
+}
+.option-key-selected {
+    border-color: var(--color-secondary) !important;
 }
 .option-selected {
     border-color: var(--color-secondary) !important;

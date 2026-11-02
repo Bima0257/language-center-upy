@@ -3,12 +3,15 @@
 namespace Tests\Feature\Ujian;
 
 use App\Enums\ModeUjian;
+use App\Enums\StatusPendaftaranUjian;
 use App\Models\BagianUjian;
 use App\Models\BankSoal;
 use App\Models\JenisTes;
 use App\Models\Keterampilan;
 use App\Models\MateriSoal;
+use App\Models\PendaftaranUjian;
 use App\Models\Pengguna;
+use App\Models\PeriodePendaftaranUjian;
 use App\Models\PeriodeUjian;
 use App\Models\SesiUjian;
 use App\Models\SlotUjian;
@@ -219,6 +222,13 @@ class UjianMahasiswaTest extends TestCase
             'tanggal_selesai' => now()->addDay(),
             'aktif' => true,
         ]);
+        PeriodePendaftaranUjian::create([
+            'periode_ujian_id' => $periodeUjian->id,
+            'nama' => 'Pendaftaran Take Test',
+            'dibuka_pada' => now()->subDay(),
+            'ditutup_pada' => now()->addDay(),
+            'aktif' => true,
+        ]);
 
         $slotUjian = SlotUjian::create([
             'periode_ujian_id' => $periodeUjian->id,
@@ -231,6 +241,12 @@ class UjianMahasiswaTest extends TestCase
         ]);
 
         $this->masukSebagaiMahasiswa();
+
+        PendaftaranUjian::create([
+            'slot_ujian_id' => $slotUjian->id,
+            'pengguna_id' => Pengguna::where('email', 'student@toefl.test')->first()->id,
+            'status' => StatusPendaftaranUjian::APPROVED,
+        ]);
 
         SesiUjian::where('pengguna_id', Pengguna::where('email', 'student@toefl.test')->first()->id)
             ->where('status', 'in_progress')
@@ -328,6 +344,13 @@ class UjianMahasiswaTest extends TestCase
             'judul' => 'Periode Device Test',
             'tanggal_mulai' => now()->subDay(),
             'tanggal_selesai' => now()->addDay(),
+            'aktif' => true,
+        ]);
+        PeriodePendaftaranUjian::create([
+            'periode_ujian_id' => $periodeUjian->id,
+            'nama' => 'Pendaftaran Device Test',
+            'dibuka_pada' => now()->subDay(),
+            'ditutup_pada' => now()->addDay(),
             'aktif' => true,
         ]);
 
@@ -431,6 +454,13 @@ class UjianMahasiswaTest extends TestCase
             'judul' => 'Periode Selfie Test',
             'tanggal_mulai' => now()->subDay(),
             'tanggal_selesai' => now()->addDay(),
+            'aktif' => true,
+        ]);
+        PeriodePendaftaranUjian::create([
+            'periode_ujian_id' => $periodeUjian->id,
+            'nama' => 'Pendaftaran Selfie Test',
+            'dibuka_pada' => now()->subDay(),
+            'ditutup_pada' => now()->addDay(),
             'aktif' => true,
         ]);
 

@@ -4,10 +4,12 @@ namespace App\Modules\Ujian\Services;
 
 use App\Enums\JenisMedia;
 use App\Models\MateriSoal;
+use App\Models\MediaMateriSoal;
 use App\Modules\Ujian\Repositories\Contracts\MateriSoalRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\MediaMateriSoalRepositoryInterface;
 use App\Services\AudioCompressionService;
 use App\Services\ImageCompressionService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -41,7 +43,12 @@ class LayananMateriSoal
                     $this->lampirkanMediaUnggahan($materi, $request, 'berkas_audio', 'berkas_gambar'),
                 );
 
-                $this->kebijakanMateri->pastikanIsiMateri($materi, 'materi_soal');
+                $materiAkhir = $this->materiSoalRepo->find($materi->id);
+                if ($materiAkhir === null) {
+                    throw new \RuntimeException('Materi soal tidak ditemukan setelah disimpan.');
+                }
+
+                $this->kebijakanMateri->pastikanIsiMateri($materiAkhir, 'materi_soal');
             });
         } catch (\Throwable $e) {
             $this->hapusBerkasTersimpan($storedFiles);
@@ -70,7 +77,13 @@ class LayananMateriSoal
                     $this->gantiMedia($materi, JenisMedia::IMAGE, $request->file('berkas_gambar'), 'passages/images', $this->imageCompression, $storedFiles, $staleFiles);
                 }
 
-                $this->kebijakanMateri->pastikanMateriMemenuhiKeterampilan($materi->fresh());
+                $materiAkhir = $this->materiSoalRepo->find($materi->id);
+                if ($materiAkhir === null) {
+                    throw new \RuntimeException('Materi soal tidak ditemukan setelah diperbarui.');
+                }
+
+                $this->kebijakanMateri->pastikanIsiMateri($materiAkhir, 'materi_soal');
+                $this->kebijakanMateri->pastikanMateriMemenuhiKeterampilan($materiAkhir);
             });
         } catch (\Throwable $e) {
             $this->hapusBerkasTersimpan($storedFiles);
@@ -94,6 +107,36 @@ class LayananMateriSoal
         $this->hapusBerkasLama($mediaFiles, $materi->id);
     }
 
+    public function hapusMedia(MateriSoal $materi, string $jenisMedia): void
+    {
+        $jenis = JenisMedia::tryFrom($jenisMedia);
+
+        if ($jenis === null) {
+            throw (new ModelNotFoundException)->setModel(MediaMateriSoal::class, [$jenisMedia]);
+        }
+
+        $media = $this->mediaMateriSoalRepo->findForMateriAndJenis($materi, $jenis);
+        if ($media === null) {
+            throw (new ModelNotFoundException)->setModel(MediaMateriSoal::class, [$jenisMedia]);
+        }
+
+        $lokasiBerkas = $media->lokasi_berkas;
+
+        DB::transaction(function () use ($media, $materi): void {
+            $this->mediaMateriSoalRepo->delete($media);
+
+            $materiAkhir = $this->materiSoalRepo->find($materi->id);
+            if ($materiAkhir === null) {
+                throw new \RuntimeException('Materi soal tidak ditemukan setelah media dihapus.');
+            }
+
+            $this->kebijakanMateri->pastikanIsiMateri($materiAkhir, 'materi_soal');
+            $this->kebijakanMateri->pastikanMateriMemenuhiKeterampilan($materiAkhir);
+        });
+
+        $this->hapusBerkasLama([$lokasiBerkas], $materi->id);
+    }
+
     /**
      * Simpan file audio/gambar dari request sebagai baris media materi soal.
      *
@@ -103,12 +146,18 @@ class LayananMateriSoal
     {
         $storedFiles = [];
 
-        if ($request !== null && $request->hasFile($audioField)) {
-            $storedFiles[] = $this->buatMedia($materi, JenisMedia::AUDIO, $request->file($audioField), 'passages/audio', $this->audioCompression);
-        }
+        try {
+            if ($request !== null && $request->hasFile($audioField)) {
+                $storedFiles[] = $this->buatMedia($materi, JenisMedia::AUDIO, $request->file($audioField), 'passages/audio', $this->audioCompression);
+            }
 
-        if ($request !== null && $request->hasFile($imageField)) {
-            $storedFiles[] = $this->buatMedia($materi, JenisMedia::IMAGE, $request->file($imageField), 'passages/images', $this->imageCompression);
+            if ($request !== null && $request->hasFile($imageField)) {
+                $storedFiles[] = $this->buatMedia($materi, JenisMedia::IMAGE, $request->file($imageField), 'passages/images', $this->imageCompression);
+            }
+        } catch (\Throwable $exception) {
+            $this->hapusBerkasTersimpan($storedFiles);
+
+            throw $exception;
         }
 
         return $storedFiles;

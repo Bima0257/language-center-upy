@@ -2,13 +2,16 @@
 import { Link } from '@inertiajs/vue3';
 import { IconHeadphones, IconEye, IconEdit, IconTrash } from '@tabler/icons-vue';
 
-defineProps({
+const props = defineProps({
     soal: { type: Array, default: () => [] },
-    keterampilanNameFn: { type: Function, default: () => '' },
-    bankNameFn: { type: Function, default: () => '' },
+    bankLocked: { type: Boolean, default: false },
 });
 
-defineEmits(['delete']);
+const emit = defineEmits(['delete']);
+
+function isLocked(question) {
+    return props.bankLocked || Number(question.bagian_ujian_count || 0) > 0;
+}
 </script>
 
 <template>
@@ -17,10 +20,8 @@ defineEmits(['delete']);
             <thead>
                 <tr class="border-b border-outline-variant/30 bg-surface-container-low">
                     <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Soal</th>
-                    <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Bank Soal</th>
-                    <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Keterampilan</th>
                     <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Pembuat</th>
-                    <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Aksi</th>
+                    <th class="w-px min-w-20 whitespace-nowrap px-5 py-4 text-center text-label-md font-semibold text-text-muted uppercase tracking-wider">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -33,25 +34,33 @@ defineEmits(['delete']);
                         </span>
                         <p class="text-text-heading text-body-md font-medium line-clamp-2">{{ q.teks_soal }}</p>
                     </td>
-                    <td class="px-5 py-4">
-                        <span v-if="q.bank_soal_id"
-                               class="inline-block bg-warning-container text-on-warning-container px-2.5 py-0.5 rounded-full text-label-md font-medium">
-                            {{ bankNameFn(q.bank_soal_id) }}
-                        </span>
-                    </td>
-                    <td class="px-5 py-4">
-                        <span v-if="q.keterampilan"
-                               class="inline-block bg-info-container text-on-info-container px-2.5 py-0.5 rounded-full text-label-md font-medium">
-                            {{ keterampilanNameFn(q.keterampilan) }}
-                        </span>
-                    </td>
                     <td class="px-5 py-4 text-body-md text-text-body whitespace-nowrap">{{ q.pembuat?.name || '-' }}</td>
-                    <td class="px-5 py-4">
-                        <div class="flex items-center gap-1">
+                    <td class="w-px min-w-20 whitespace-nowrap px-5 py-4 text-center">
+                        <div class="flex min-w-20 items-center justify-center gap-1 whitespace-nowrap">
                             <Link :href="route('pustaka-soal.pratinjau', q.id)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Pratinjau"><IconEye :size="18" /></Link>
-                            <Link :href="route('pustaka-soal.ubah', q.id)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Ubah"><IconEdit :size="18" /></Link>
-                            <button @click="$emit('delete', q.id, q.teks_soal)"
-                                    class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus">
+                            <Link
+                                v-if="!isLocked(q)"
+                                :href="route('pustaka-soal.ubah', q.id)"
+                                class="p-2 text-text-muted hover:text-secondary transition-colors"
+                                title="Ubah"
+                            >
+                                <IconEdit :size="18" />
+                            </Link>
+                            <button
+                                v-else
+                                type="button"
+                                disabled
+                                class="cursor-not-allowed p-2 text-text-muted opacity-30"
+                                title="Tidak bisa diubah karena bank soal sudah digunakan di ujian"
+                            >
+                                <IconEdit :size="18" />
+                            </button>
+                            <button
+                                :disabled="isLocked(q)"
+                                @click="emit('delete', q.id, q.teks_soal)"
+                                class="p-2 text-text-muted transition-colors hover:text-error-red disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-text-muted"
+                                :title="isLocked(q) ? 'Tidak bisa dihapus karena bank soal sudah digunakan di ujian' : 'Hapus'"
+                            >
                                 <IconTrash :size="18" />
                             </button>
                         </div>

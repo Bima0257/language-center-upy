@@ -4,7 +4,6 @@ import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue'
 import DropDown from '@/Components/Shared/DropDown.vue'
 import Pagination from '@/Components/Shared/Pagination.vue'
 import KartuPeriodeUjian from '@/Pages/Admin/PeriodeUjian/Components/KartuPeriodeUjian.vue'
-import { IconPlus } from '@tabler/icons-vue'
 import { computed, ref } from 'vue'
 import { useConfirm } from '@/Composables/useConfirm'
 
@@ -49,9 +48,7 @@ async function destroy(periodeUjian) {
                     option-value="id"
                 />
             </div>
-            <BaseButton @click="createSchedule" :disabled="!canCreate">
-                <IconPlus :size="18" /> Buat Periode Ujian
-            </BaseButton>
+            <BaseTambahData @click="createSchedule" :disabled="!canCreate" />
         </div>
 
         <div v-if="periodeUjian.data.length === 0"

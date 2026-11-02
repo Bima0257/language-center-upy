@@ -11,7 +11,7 @@ const emit = defineEmits(['select']);
 
 <template>
     <BaseCard>
-        <label class="text-label-md font-medium text-primary block mb-4">{{ label }}</label>
+        <label class="text-label-md font-medium text-text-heading block mb-4">{{ label }}</label>
         <div class="border-2 border-dashed border-outline-variant rounded-2xl p-8 text-center relative hover:border-primary transition-colors cursor-pointer">
             <img v-if="preview" :src="preview" class="max-h-40 mx-auto rounded-lg mb-2 pointer-events-none" />
             <p v-else class="text-text-muted text-body-md">{{ placeholder }}</p>

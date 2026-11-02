@@ -1,11 +1,10 @@
 <script setup>
 import DataTable from '@/Components/Shared/DataTable.vue';
-import { IconArrowLeft, IconEye } from '@tabler/icons-vue';
+import { IconEye } from '@tabler/icons-vue';
 
 defineProps({
     ringkasanBankSoal: { type: Array, default: () => [] },
     detailUrl: { type: Function, required: true },
-    backUrl: { type: String, required: true },
 });
 
 const columns = [
@@ -17,12 +16,6 @@ const columns = [
 
 <template>
     <DataTable :data="ringkasanBankSoal" :columns="columns" header-title="Daftar Bank Soal" searchable>
-        <template #toolbar>
-            <BaseButton variant="secondary" size="sm" :href="backUrl">
-                <IconArrowLeft :size="16" /> Kembali
-            </BaseButton>
-        </template>
-
         <template #actions="{ row }">
             <BaseButton
                 :href="detailUrl(row.id)"

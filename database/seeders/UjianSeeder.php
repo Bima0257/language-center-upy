@@ -11,12 +11,14 @@ use App\Models\JenisTes;
 use App\Models\Keterampilan;
 use App\Models\MateriSoal;
 use App\Models\Pengguna;
+use App\Models\PeriodePendaftaranUjian;
 use App\Models\PeriodeUjian;
 use App\Models\ProfilMahasiswa;
 use App\Models\ProgramStudi;
 use App\Models\SesiUjian;
 use App\Models\SlotUjian;
 use App\Models\Soal;
+use App\Models\SoalBagianUjian;
 use App\Models\Ujian;
 use Illuminate\Database\Seeder;
 
@@ -200,6 +202,22 @@ class UjianSeeder extends Seeder
             ]);
         }
 
+        foreach ([[$membaca, $keterampilanMembaca], [$menyimak, $keterampilanMenyimak]] as [$bagian, $keterampilan]) {
+            $soalDalamBagian = Soal::where('bank_soal_id', $bankSoal->id)
+                ->where('keterampilan_id', $keterampilan->id)
+                ->orderBy('id')
+                ->get();
+
+            foreach ($soalDalamBagian as $urutan => $soal) {
+                SoalBagianUjian::firstOrCreate(
+                    ['bagian_ujian_id' => $bagian->id, 'soal_id' => $soal->id],
+                    ['urutan' => $urutan + 1],
+                );
+            }
+
+            $bagian->update(['jumlah_soal' => $soalDalamBagian->count()]);
+        }
+
         $mahasiswaDemo = Pengguna::firstOrCreate(
             ['email' => 'demo-peserta@toefl.test'],
             [
@@ -237,6 +255,15 @@ class UjianSeeder extends Seeder
             'tanggal_mulai' => now()->subDay(),
             'tanggal_selesai' => now()->addDay(),
             'aktif' => true,
+        ]);
+
+        PeriodePendaftaranUjian::create([
+            'periode_ujian_id' => $periodeUjian->id,
+            'nama' => 'Pendaftaran Try Out Demo',
+            'dibuka_pada' => now()->subDay()->startOfDay(),
+            'ditutup_pada' => now()->addDay()->endOfDay(),
+            'aktif' => true,
+            'catatan' => 'Data demo untuk pengelolaan periode pendaftaran dan slot peserta.',
         ]);
 
         $slotUjian = SlotUjian::create([
@@ -350,7 +377,5 @@ class UjianSeeder extends Seeder
             'skor_total' => 40.5,
         ]);
 
-        // Kebijakan materi harus terisi untuk bank yang dibuat seeder ini (idempotent).
-        $this->call(KebijakanMateriSoalSeeder::class);
     }
 }

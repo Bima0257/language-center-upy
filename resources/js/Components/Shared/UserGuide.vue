@@ -7,28 +7,44 @@ defineProps({
     steps: { type: Array, default: () => [] },
     rules: { type: Array, default: () => [] },
     buttonLabel: { type: String, default: 'Panduan' },
+    buttonClass: { type: String, default: '' },
 });
 
 const show = ref(false);
 </script>
 
 <template>
-    <BaseButton type="button" variant="secondary" size="sm" @click="show = true">
+    <BaseButton type="button" variant="secondary" size="sm" :class="buttonClass" @click="show = true">
         <IconBook2 :size="16" /> {{ buttonLabel }}
     </BaseButton>
 
-    <BaseModal :show="show" max-width="2xl" @close="show = false">
-        <div class="bg-surface-white rounded-2xl max-h-[calc(100dvh-3rem)] min-h-0 flex flex-col overflow-hidden">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant/30 shrink-0">
-                <h3 class="text-title-lg font-semibold text-text-heading flex items-center gap-2">
-                    <IconBook2 :size="20" class="text-secondary" /> {{ title }}
-                </h3>
-                <button @click="show = false" class="p-1.5 text-text-muted hover:text-primary transition-colors">
-                    <IconX :size="20" />
-                </button>
-            </div>
+    <BaseModal
+        :show="show"
+        max-width="2xl"
+        scrollable
+        aria-labelledby="user-guide-title"
+        @close="show = false"
+    >
+        <template #header>
+            <BaseModalHeader>
+                <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant/30 shrink-0">
+                    <h3 id="user-guide-title" class="text-title-lg font-semibold text-text-heading flex items-center gap-2">
+                        <IconBook2 :size="20" class="text-secondary" /> {{ title }}
+                    </h3>
+                    <button
+                        type="button"
+                        aria-label="Tutup panduan"
+                        @click="show = false"
+                        class="p-1.5 text-text-muted hover:text-primary transition-colors"
+                    >
+                        <IconX :size="20" />
+                    </button>
+                </div>
+            </BaseModalHeader>
+        </template>
 
-            <div class="modal-scrollbar min-h-0 flex-1 px-6 py-5 space-y-6 overflow-y-auto overscroll-contain">
+        <template #default>
+            <div class="space-y-6 px-6 py-5">
                 <div v-if="steps.length">
                     <p class="text-label-md font-semibold text-text-heading uppercase tracking-wider mb-3">Alur Penggunaan</p>
                     <div class="space-y-3">
@@ -54,6 +70,6 @@ const show = ref(false);
 
                 <slot name="content" />
             </div>
-        </div>
+        </template>
     </BaseModal>
 </template>

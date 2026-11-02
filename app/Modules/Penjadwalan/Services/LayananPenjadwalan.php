@@ -43,7 +43,10 @@ class LayananPenjadwalan
 
     public function perbarui(PeriodeUjian $periode, array $data): PeriodeUjian
     {
-        $this->pastikanTidakAdaTanggalTumpangTindih($data, $periode->id);
+        $this->pastikanTidakAdaTanggalTumpangTindih(
+            [...$data, 'ujian_id' => $periode->ujian_id],
+            $periode->id,
+        );
 
         return $this->penjadwalanRepo->update($periode, $data);
     }
@@ -79,8 +82,8 @@ class LayananPenjadwalan
 
     public function hapusSlot(SlotUjian $slotUjian): void
     {
-        if ($this->slotRepo->memilikiSesi($slotUjian)) {
-            throw new \RuntimeException('Sesi tidak bisa dihapus karena sudah diikuti peserta.');
+        if ($this->slotRepo->memilikiSesi($slotUjian) || $this->slotRepo->memilikiPendaftaran($slotUjian)) {
+            throw new \RuntimeException('Sesi tidak bisa dihapus karena sudah memiliki peserta atau pendaftaran.');
         }
 
         $this->slotRepo->delete($slotUjian);

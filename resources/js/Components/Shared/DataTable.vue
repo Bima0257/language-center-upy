@@ -8,7 +8,8 @@ import {
 } from '@tanstack/vue-table'
 import Pagination from '@/Components/Shared/Pagination.vue'
 import DropDown from '@/Components/Shared/DropDown.vue'
-import { IconChevronUp, IconChevronDown, IconSelector, IconLoader2, IconSearch, IconX } from '@tabler/icons-vue'
+import TableFilterBar from '@/Components/Shared/TableFilterBar.vue'
+import { IconChevronUp, IconChevronDown, IconSelector, IconLoader2 } from '@tabler/icons-vue'
 import { computed, ref, watch } from 'vue'
 
 const props = defineProps({
@@ -31,7 +32,6 @@ const emit = defineEmits(['search', 'update:page-size'])
 const sorting = ref([])
 const columnFilters = ref([])
 const globalFilter = ref(props.searchQuery)
-const dropdownOpen = ref(false)
 const initialPageSize = props.pageSizeOptions.map(Number).includes(props.defaultPageSize)
     ? props.defaultPageSize
     : Number(props.pageSizeOptions[0]) || 10
@@ -210,8 +210,8 @@ function cellDisplayValue(cell) {
 </script>
 
 <template>
-    <div :class="dropdownOpen && table.getPageCount() === 1 ? 'pb-48' : ''">
-        <BaseCard :padding="false" class="relative">
+    <div>
+        <BaseCard :padding="false" class="relative overflow-hidden">
             <div v-if="loading" class="absolute inset-0 bg-surface-white/60 z-10 flex items-center justify-center">
                 <IconLoader2 class="text-primary animate-spin" :size="32" stroke="1.5" />
             </div>
@@ -226,31 +226,16 @@ function cellDisplayValue(cell) {
                 </div>
             </div>
 
-            <div v-if="searchable || $slots.filters"
-                 class="flex flex-wrap items-center justify-end gap-3 border-b border-outline-variant/30 bg-surface-container-low/30 px-5 py-3.5">
-                <div v-if="searchable" class="relative w-full sm:w-64">
-                    <IconSearch class="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" :size="17" />
-                    <input
-                        v-model="globalFilter"
-                        type="text"
-                        :placeholder="searchPlaceholder"
-                        class="w-full rounded-full border border-outline-variant bg-surface-container-lowest py-2.5 pl-10 pr-10 text-body-md text-text-body focus:border-secondary focus:outline-none focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]"
-                    />
-                    <button
-                        v-if="globalFilter"
-                        type="button"
-                        class="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
-                        title="Hapus pencarian"
-                        aria-label="Hapus pencarian"
-                        @click="globalFilter = ''"
-                    >
-                        <IconX :size="16" />
-                    </button>
-                </div>
-                <div v-if="$slots.filters" class="ml-auto flex items-center justify-end gap-3">
+            <TableFilterBar
+                v-if="searchable || $slots.filters"
+                v-model:search="globalFilter"
+                :show-search="searchable"
+                :search-placeholder="searchPlaceholder"
+            >
+                <template #filters>
                     <slot name="filters" :table="table" />
-                </div>
-            </div>
+                </template>
+            </TableFilterBar>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
@@ -259,9 +244,15 @@ function cellDisplayValue(cell) {
                             <tr class="border-b border-outline-variant/30 bg-surface-container-low">
                                 <th v-for="header in headerGroup.headers" :key="header.id"
                                     class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4"
-                                    :class="header.column.getCanSort() ? 'cursor-pointer select-none hover:text-primary transition-colors' : ''"
+                                    :class="[
+                                        header.column.getCanSort() ? 'cursor-pointer select-none hover:text-primary transition-colors' : '',
+                                        header.column.columnDef.slot === 'actions' ? 'w-px min-w-20 whitespace-nowrap text-center' : '',
+                                    ]"
                                     @click="header.column.getToggleSortingHandler()?.()">
-                                    <div class="flex items-center gap-1.5">
+                                    <div
+                                        class="flex items-center gap-1.5"
+                                        :class="header.column.columnDef.slot === 'actions' ? 'justify-center' : ''"
+                                    >
                                         <span>{{ header.column.columnDef.header }}</span>
                                         <span v-if="header.column.getCanSort()" class="shrink-0">
                                             <IconChevronUp v-if="header.column.getIsSorted() === 'asc'"
@@ -293,9 +284,21 @@ function cellDisplayValue(cell) {
                             :class="rowLink ? 'cursor-pointer hover:bg-surface-container-low/50' : 'hover:bg-surface-container-low/50'"
                             @click="rowLink && rowLink(row.original)">
                             <td v-for="cell in row.getVisibleCells()" :key="cell.id"
-                                class="px-5 py-4 text-body-md"
-                                :class="cell.column.columnDef.meta?.className || 'text-text-body'">
-                                <slot v-if="cell.column.columnDef.slot"
+                                 class="px-5 py-4 text-body-md"
+                                 :class="[
+                                     cell.column.columnDef.meta?.className || 'text-text-body',
+                                     cell.column.columnDef.slot === 'actions' ? 'w-px min-w-20 whitespace-nowrap text-center' : '',
+                                 ]">
+                                <template v-if="cell.column.columnDef.slot === 'actions'">
+                                    <div class="flex min-w-20 items-center justify-center gap-1 whitespace-nowrap">
+                                        <slot
+                                            :name="cell.column.columnDef.slot"
+                                            :row="row.original"
+                                            :value="cellDisplayValue(cell)"
+                                        />
+                                    </div>
+                                </template>
+                                <slot v-else-if="cell.column.columnDef.slot"
                                       :name="cell.column.columnDef.slot"
                                       :row="row.original"
                                       :value="cellDisplayValue(cell)" />
@@ -329,8 +332,8 @@ function cellDisplayValue(cell) {
                         option-value="value"
                         size="sm"
                         button-class="min-w-[120px]"
-                        :menu-placement="table.getPageCount() > 1 ? 'top' : 'bottom'"
-                        @open-change="dropdownOpen = $event"
+                        menu-placement="auto"
+                        teleport-menu
                     />
                     <Pagination
                         v-if="table.getPageCount() > 1"

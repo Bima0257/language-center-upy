@@ -1,10 +1,9 @@
 <script setup>
-import { IconArrowLeft, IconEdit, IconPlus, IconTrash } from '@tabler/icons-vue';
+import { IconEdit, IconTrash } from '@tabler/icons-vue';
 
 const props = defineProps({
     programStudi: { type: Array, default: () => [] },
     maxRows: { type: Number, default: 10 },
-    backUrl: { type: String, required: true },
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
@@ -18,12 +17,10 @@ const emit = defineEmits(['create', 'edit', 'delete']);
                 <p class="text-label-md text-text-muted mt-1">{{ props.programStudi.length }}/{{ props.maxRows }} data</p>
             </div>
             <div class="flex items-center gap-2">
-                <BaseButton variant="secondary" size="sm" :href="props.backUrl">
-                    <IconArrowLeft :size="16" /> Kembali
-                </BaseButton>
-                <BaseButton size="sm" :disabled="props.programStudi.length >= props.maxRows" @click="emit('create')">
-                    <IconPlus :size="16" /> Tambah Data
-                </BaseButton>
+                <BaseTambahData
+                    :disabled="props.programStudi.length >= props.maxRows"
+                    @click="emit('create')"
+                />
             </div>
         </div>
 

@@ -35,38 +35,41 @@ function isCurrent(number) {
 </script>
 
 <template>
-    <BaseModal :show="show" max-width="2xl" :closeable="false">
-        <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="soal-grid-modal-title"
-            class="max-h-[calc(100dvh-3rem)] min-h-0 flex flex-col overflow-hidden"
-        >
-            <!-- HEADER -->
-            <div class="flex items-center justify-between px-6 py-5 border-b border-outline-variant shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-pastel-purple flex items-center justify-center">
-                        <IconMap :size="20" class="text-secondary" />
+    <BaseModal
+        :show="show"
+        max-width="2xl"
+        :closeable="false"
+        scrollable
+        aria-labelledby="soal-grid-modal-title"
+    >
+        <template #header>
+            <BaseModalHeader>
+                <div class="flex items-center justify-between px-6 py-4 shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-pastel-purple flex items-center justify-center">
+                            <IconMap :size="20" class="text-secondary" />
+                        </div>
+                        <div>
+                            <h3 id="soal-grid-modal-title" class="text-title-lg font-semibold text-text-heading">Peta Soal</h3>
+                            <p class="text-label-md text-text-muted">
+                                {{ answeredCount }} dari {{ jumlahSoal }} soal terjawab
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 id="soal-grid-modal-title" class="text-title-lg font-semibold text-text-heading">Peta Soal</h3>
-                        <p class="text-label-md text-text-muted">
-                            {{ answeredCount }} dari {{ jumlahSoal }} soal terjawab
-                        </p>
-                    </div>
+                    <button
+                        type="button"
+                        aria-label="Tutup peta soal"
+                        @click="emit('close')"
+                        class="w-9 h-9 rounded-full flex items-center justify-center text-text-muted hover:text-text-heading hover:bg-surface-container-low transition-colors"
+                    >
+                        <IconX :size="20" />
+                    </button>
                 </div>
-                <button
-                    type="button"
-                    aria-label="Tutup peta soal"
-                    @click="emit('close')"
-                    class="w-9 h-9 rounded-full flex items-center justify-center text-text-muted hover:text-text-heading hover:bg-surface-container-low transition-colors"
-                >
-                    <IconX :size="20" />
-                </button>
-            </div>
+            </BaseModalHeader>
+        </template>
 
-            <!-- GROUPS -->
-            <div class="modal-scrollbar min-h-0 flex-1 px-6 py-5 overflow-y-auto overscroll-contain space-y-5">
+        <template #default>
+            <div class="space-y-5 px-6 py-5">
                 <div v-for="(group, gi) in groups" :key="gi">
                     <div class="flex items-center justify-between mb-2.5">
                         <span class="text-label-md font-bold uppercase tracking-wider text-text-heading">
@@ -97,31 +100,34 @@ function isCurrent(number) {
                     </div>
                 </div>
             </div>
+        </template>
 
-            <!-- FOOTER -->
-            <div class="px-6 py-4 border-t border-outline-variant bg-surface-container-low/50 flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-4 text-label-md">
-                    <span class="flex items-center gap-1.5 text-text-muted">
-                        <span class="w-3 h-3 rounded-full bg-secondary inline-block"></span>
-                        Saat ini
-                    </span>
-                    <span class="flex items-center gap-1.5 text-text-muted">
-                        <span class="w-3 h-3 rounded-full bg-success inline-block"></span>
-                        Dijawab
-                    </span>
-                    <span class="flex items-center gap-1.5 text-text-muted">
-                        <span class="w-3 h-3 rounded-full bg-surface-container-highest border border-outline-variant inline-block"></span>
-                        Belum
-                    </span>
+        <template #footer>
+            <BaseModalFooter>
+                <div class="px-6 py-3 bg-surface-container-low/50 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-4 text-label-md">
+                        <span class="flex items-center gap-1.5 text-text-muted">
+                            <span class="w-3 h-3 rounded-full bg-secondary inline-block"></span>
+                            Saat ini
+                        </span>
+                        <span class="flex items-center gap-1.5 text-text-muted">
+                            <span class="w-3 h-3 rounded-full bg-success inline-block"></span>
+                            Dijawab
+                        </span>
+                        <span class="flex items-center gap-1.5 text-text-muted">
+                            <span class="w-3 h-3 rounded-full bg-surface-container-highest border border-outline-variant inline-block"></span>
+                            Belum
+                        </span>
+                    </div>
+                    <button
+                        type="button"
+                        @click="emit('close')"
+                        class="px-5 py-2 rounded-full text-label-md font-semibold border border-outline-variant bg-surface-white text-text-heading hover:bg-surface-container-low transition-all"
+                    >
+                        Tutup
+                    </button>
                 </div>
-                <button
-                    type="button"
-                    @click="emit('close')"
-                    class="px-5 py-2 rounded-full text-label-md font-semibold border border-outline-variant bg-surface-white text-text-heading hover:bg-surface-container-low transition-all"
-                >
-                    Tutup
-                </button>
-            </div>
-        </div>
+            </BaseModalFooter>
+        </template>
     </BaseModal>
 </template>

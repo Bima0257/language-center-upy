@@ -28,6 +28,6 @@ class OrientasiController extends Controller
             $request->file('foto'),
         );
 
-        return redirect()->route('onboarding.verify-identity')->with('success', 'Identitas berhasil diunggah. Menunggu verifikasi admin.');
+        return redirect()->route('onboarding.verify-identity')->with('success', 'Identitas akademik berhasil disimpan.');
     }
 }

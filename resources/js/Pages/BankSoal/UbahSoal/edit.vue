@@ -1,8 +1,7 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import { computed } from 'vue';
-import AksiFormSoal from './Components/AksiFormSoal.vue';
 import FormKonteksSoal from './Components/FormKonteksSoal.vue';
 import KontenSoal from './Components/KontenSoal.vue';
 import RingkasanSoal from './Components/RingkasanSoal.vue';
@@ -36,26 +35,31 @@ function namaKeterampilanDariId(keterampilanId) {
 }
 
 function materialForSkill(bankId, keterampilanId) {
+    const bank = props.bankSoal.find((item) => String(item.id) === String(bankId));
+
     return props.kebijakanMateriSoal.find(p =>
-        String(p.bank_soal_id) === String(bankId) &&
+        String(p.jenis_tes_id) === String(bank?.jenis_tes_id) &&
         String(p.keterampilan_id) === String(keterampilanId),
-    )?.material || 'text';
+    )?.materi || null;
 }
 
 const isMaterialAudio = computed(() => materialForSkill(form.bank_soal_id, form.keterampilan_id) === 'audio');
+
+const selectedPolicy = computed(() => {
+    const bank = props.bankSoal.find((item) => String(item.id) === String(form.bank_soal_id));
+
+    return props.kebijakanMateriSoal.find((policy) =>
+        String(policy.jenis_tes_id) === String(bank?.jenis_tes_id) &&
+        String(policy.keterampilan_id) === String(form.keterampilan_id),
+    ) || null;
+});
 
 const selectedPassage = computed(() =>
     props.materiSoal.find((p) => String(p.id) === String(form.materi_soal_id)) || null,
 );
 
-const materiSoalSesuai = computed(() =>
-    props.materiSoal.filter((p) =>
-        String(p.bank_soal_id) === String(form.bank_soal_id) &&
-        (isMaterialAudio.value ? !!p.memiliki_audio : !p.memiliki_audio),
-    ),
-);
-
 const canSubmit = computed(() => {
+    if (!selectedPolicy.value) return false;
     if (isMaterialAudio.value && !selectedPassage.value?.url_audio) return false;
     return true;
 });
@@ -83,10 +87,14 @@ function submit() {
 
 <template>
     <Head title="Ubah Soal" />
-    <TataLetakDasbor title="Ubah Soal" subtitle="Perbarui teks soal, opsi jawaban, dan kunci">
-            <Link :href="indexUrl" class="inline-block text-secondary text-label-md font-medium hover:underline mb-6">← Kembali ke Pustaka Soal</Link>
+    <TataLetakDasbor
+        title="Ubah Soal"
+        subtitle="Perbarui teks soal, opsi jawaban, dan kunci"
+        :back-href="indexUrl"
+        back-label="Kembali ke Pustaka Soal"
+    >
         <div class="max-w-5xl mx-auto">
-            <div class="bg-surface-white rounded-3xl p-8 shadow-soft border border-outline-variant/30">
+            <div class="bg-surface-white rounded-2xl p-8 shadow-soft border border-outline-variant/30">
                 <RingkasanSoal :keterampilan-name="namaKeterampilanDariId(form.keterampilan_id)" />
                 <form @submit.prevent="submit" class="space-y-6">
                     <FormKonteksSoal
@@ -94,8 +102,7 @@ function submit() {
                         :bank-soal="bankSoal"
                         :opsi-keterampilan="opsiKeterampilan"
                         :bagian-soals="bagianSoalsForSelectedSkill"
-                        :materi-soal="materiSoalSesuai"
-                        :is-material-audio="isMaterialAudio"
+                        :materi-soal="materiSoal"
                         @skill-change="onSkillChange"
                     />
 
@@ -109,7 +116,11 @@ function submit() {
                     />
 
                     <hr class="border-outline-variant/50" />
-                    <AksiFormSoal :form="form" :can-submit="canSubmit" :cancel-href="indexUrl" />
+                    <BaseFormActions
+                        :processing="form.processing"
+                        :disabled="!canSubmit"
+                        :cancel-href="indexUrl"
+                    />
                 </form>
             </div>
         </div>

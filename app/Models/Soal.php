@@ -28,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $pembuat_id
  * @property string|null $pengubah_id
  * @property string|null $materi
+ * @property-read int $bagian_ujian_count
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read BankSoal $bankSoal

@@ -10,7 +10,7 @@ const lessons = [
 
 <template>
     <section class="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-10">
-        <div class="xl:col-span-12 bg-primary-container rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 text-on-primary-container relative overflow-hidden">
+        <div class="xl:col-span-12 bg-primary-container rounded-2xl p-8 flex flex-col md:flex-row items-center gap-8 text-on-primary-container relative overflow-hidden">
             <div class="flex-1 z-10">
                 <p class="text-body-md opacity-70 mb-2">Halo, {{ $page.props.auth.user.name }}!</p>
                 <h3 class="text-3xl md:text-4xl font-bold max-w-md leading-tight mb-6">

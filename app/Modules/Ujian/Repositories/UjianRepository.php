@@ -17,7 +17,11 @@ class UjianRepository implements UjianRepositoryInterface
 
     public function temukanDenganRelasi(string $id): ?Ujian
     {
-        return Ujian::with('bagianUjian.bankSoal')->find($id);
+        return Ujian::with([
+            'bagianUjian' => fn ($query) => $query
+                ->with(['bankSoal', 'keterampilan'])
+                ->orderBy('urutan'),
+        ])->find($id);
     }
 
     public function create(array $data): Ujian
@@ -50,6 +54,14 @@ class UjianRepository implements UjianRepositoryInterface
     public function semuaAktifBerurutan(): Collection
     {
         return Ujian::where('aktif', true)->orderBy('judul')->get();
+    }
+
+    public function semuaAktifDenganJenisTes(): Collection
+    {
+        return Ujian::with('jenisTes')
+            ->where('aktif', true)
+            ->orderBy('judul')
+            ->get();
     }
 
     public function count(): int

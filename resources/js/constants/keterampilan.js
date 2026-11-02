@@ -1,6 +1,6 @@
 /**
  * Helper keterampilan berbasis ID — perilaku material ditentukan policy database
- * (keterampilan_materi-soal_policies) yang dikirim backend, bukan pencocokan kode keterampilan.
+ * (kebijakan_materi_soal) yang dikirim backend, bukan pencocokan kode keterampilan.
  */
 
 /**

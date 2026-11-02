@@ -7,26 +7,34 @@ const state = getState();
 </script>
 
 <template>
-    <BaseModal :show="state.visible" max-width="md" :closeable="false">
-        <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="confirm-dialog-title"
-            class="border border-outline-variant/30 p-6"
-        >
-            <div class="flex items-start gap-4 mb-6">
-                <div class="w-10 h-10 rounded-full bg-warning-container flex items-center justify-center shrink-0">
-                    <IconAlertTriangle :size="20" class="text-warning" />
+    <BaseModal
+        :show="state.visible"
+        max-width="md"
+        fit-content
+        :closeable="false"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-description"
+    >
+        <template #header>
+            <BaseModalHeader>
+                <div class="px-6 py-4">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-full bg-warning-container flex items-center justify-center shrink-0">
+                            <IconAlertTriangle :size="20" class="text-warning" />
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 id="confirm-dialog-title" class="text-title-lg text-text-heading font-semibold mb-1">
+                                {{ state.type === 'confirm' ? 'Konfirmasi' : 'Catatan' }}
+                            </h3>
+                            <p id="confirm-dialog-description" class="text-body-md text-text-body">{{ state.message }}</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <h3 id="confirm-dialog-title" class="text-title-lg text-text-heading font-semibold mb-1">
-                        {{ state.type === 'confirm' ? 'Konfirmasi' : 'Catatan' }}
-                    </h3>
-                    <p class="text-body-md text-text-body">{{ state.message }}</p>
-                </div>
-            </div>
+            </BaseModalHeader>
+        </template>
 
-            <div v-if="state.type === 'prompt'" class="mb-4">
+        <template #default>
+            <div v-if="state.type === 'prompt'" class="px-6 pb-4 pt-4">
                 <BaseTextarea
                     v-model="state.inputValue"
                     :placeholder="state.inputPlaceholder || 'Tulis catatan...'"
@@ -34,15 +42,19 @@ const state = getState();
                     class="resize-none"
                 />
             </div>
+        </template>
 
-            <div class="flex justify-end gap-3">
-                <BaseButton variant="secondary" size="xs" @click="onCancel">
-                    Batal
-                </BaseButton>
-                <BaseButton variant="danger" size="xs" @click="onOk">
-                    {{ state.type === 'confirm' ? 'Ya, Hapus' : 'Simpan' }}
-                </BaseButton>
-            </div>
-        </div>
+        <template #footer>
+            <BaseModalFooter>
+                <div class="px-6 py-3 flex justify-end gap-3">
+                    <BaseButton variant="secondary" size="xs" @click="onCancel">
+                        Batal
+                    </BaseButton>
+                    <BaseButton variant="danger" size="xs" @click="onOk">
+                        {{ state.type === 'confirm' ? 'Ya, Hapus' : 'Simpan' }}
+                    </BaseButton>
+                </div>
+            </BaseModalFooter>
+        </template>
     </BaseModal>
 </template>

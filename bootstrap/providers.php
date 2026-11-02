@@ -4,6 +4,7 @@ use App\Modules\DataInduk\Providers\DataIndukModuleServiceProvider;
 use App\Modules\Keamanan\Providers\KeamananModuleServiceProvider;
 use App\Modules\Laporan\Providers\LaporanModuleServiceProvider;
 use App\Modules\PelaksanaanUjian\Providers\PelaksanaanUjianModuleServiceProvider;
+use App\Modules\PendaftaranUjian\Providers\PendaftaranUjianModuleServiceProvider;
 use App\Modules\Pengawasan\Providers\PengawasanModuleServiceProvider;
 use App\Modules\Pengguna\Providers\PenggunaModuleServiceProvider;
 use App\Modules\Penilaian\Providers\PenilaianModuleServiceProvider;
@@ -15,6 +16,7 @@ return [
     AppServiceProvider::class,
     UjianModuleServiceProvider::class,
     PenjadwalanModuleServiceProvider::class,
+    PendaftaranUjianModuleServiceProvider::class,
     PelaksanaanUjianModuleServiceProvider::class,
     KeamananModuleServiceProvider::class,
     PengawasanModuleServiceProvider::class,

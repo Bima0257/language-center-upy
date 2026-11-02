@@ -1,7 +1,7 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import KeterampilanFormModal from '../Components/KeterampilanFormModal.vue';
+import KeterampilanFormModal from '@/Components/Ujian/KeterampilanFormModal.vue';
 import KeterampilanTable from '../Components/KeterampilanTable.vue';
 import { computed, ref, watch } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
@@ -10,6 +10,7 @@ import { useToast } from '@/Composables/useToast';
 const props = defineProps({
     jenisTes: { type: Object, required: true },
     keterampilan: { type: Array, default: () => [] },
+    kebijakanMateriSoal: { type: Array, default: () => [] },
 });
 
 const confirm = useConfirm();
@@ -21,6 +22,8 @@ const form = useForm({
     nama: '',
     deskripsi: '',
     aktif: true,
+    ketentuan_materi: '',
+    aturan_media: { text: '', audio: '', image: '' },
 });
 
 const editForm = useForm({
@@ -29,6 +32,8 @@ const editForm = useForm({
     nama: '',
     deskripsi: '',
     aktif: true,
+    ketentuan_materi: '',
+    aturan_media: { text: '', audio: '', image: '' },
 });
 
 const showModal = ref(false);
@@ -38,6 +43,12 @@ const reordering = ref(false);
 const originalOrder = ref('');
 
 const modalForm = computed(() => creating.value ? form : editForm);
+
+function policyForSkill(keterampilanId) {
+    return props.kebijakanMateriSoal.find((policy) =>
+        String(policy.keterampilan_id) === String(keterampilanId),
+    ) || null;
+}
 
 watch(() => props.keterampilan, (list) => {
     originalOrder.value = list.map((skill) => skill.id).join(',');
@@ -99,6 +110,13 @@ function startEdit(keterampilan) {
     editForm.nama = keterampilan.nama;
     editForm.deskripsi = keterampilan.deskripsi || '';
     editForm.aktif = !!keterampilan.aktif;
+    const policy = policyForSkill(keterampilan.id);
+    editForm.ketentuan_materi = policy?.ketentuan_materi || '';
+    editForm.aturan_media = {
+        text: policy?.aturan_media?.text || '',
+        audio: policy?.aturan_media?.audio || '',
+        image: policy?.aturan_media?.image || '',
+    };
     showModal.value = true;
 }
 
@@ -128,11 +146,11 @@ async function destroy(keterampilan) {
     <TataLetakDasbor
         :title="`Keterampilan - ${props.jenisTes.nama}`"
         :subtitle="`Kelola keterampilan pada ${props.jenisTes.nama}`"
+        :back-href="route('admin.data-induk.keterampilan.daftar')"
     >
         <KeterampilanTable
             :keterampilan="props.keterampilan"
             :reordering="reordering"
-            :back-url="route('admin.data-induk.keterampilan.daftar')"
             @create="openCreate"
             @reorder="onReorder"
             @edit="startEdit"

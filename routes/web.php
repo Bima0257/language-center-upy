@@ -8,7 +8,6 @@ use App\Http\Controllers\Admin\PengaturanController;
 use App\Http\Controllers\Admin\PenggunaController;
 use App\Http\Controllers\Admin\PratinjauKomponenController;
 use App\Http\Controllers\Admin\SertifikatController;
-use App\Http\Controllers\Admin\VerifikasiPenggunaController;
 use App\Http\Controllers\DasborController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\OrientasiController;
@@ -18,7 +17,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/media/{path}', [MediaController::class, 'serve'])
+Route::middleware('auth')->get('/media/{path}', [MediaController::class, 'serve'])
     ->where('path', '.*')
     ->name('media.serve');
 
@@ -39,19 +38,15 @@ Route::middleware('auth')->prefix('onboarding')->name('onboarding.')->group(func
     Route::post('/upload-identity', [OrientasiController::class, 'unggahIdentitas'])->name('upload-identity');
 });
 
-Route::middleware(['auth', 'verified', 'verified.user'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dasbor', [DasborController::class, 'index'])->name('dasbor');
 
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware('permission:user.view')->group(function () {
-            Route::get('/verifikasi-pengguna', [VerifikasiPenggunaController::class, 'index'])->name('verifikasi-pengguna');
             Route::get('/pengguna', [PenggunaController::class, 'index'])->name('pengguna.daftar');
         });
 
         Route::middleware('permission:user.edit')->group(function () {
-            Route::post('/verifikasi-pengguna/{pengguna}/setujui', [VerifikasiPenggunaController::class, 'setujui'])->name('verifikasi-pengguna.setujui');
-            Route::post('/verifikasi-pengguna/{pengguna}/tolak', [VerifikasiPenggunaController::class, 'tolak'])->name('verifikasi-pengguna.tolak');
-            Route::post('/verifikasi-pengguna/{pengguna}/batalkan-verifikasi', [VerifikasiPenggunaController::class, 'batalkanVerifikasi'])->name('verifikasi-pengguna.batalkan-verifikasi');
             Route::patch('/pengguna/{pengguna}', [PenggunaController::class, 'update'])->name('pengguna.perbarui');
             Route::patch('/pengguna/{pengguna}/ubah-keaktifan', [PenggunaController::class, 'ubahKeaktifan'])->name('pengguna.ubah-keaktifan');
             Route::patch('/pengguna/{pengguna}/atur-ulang-sandi', [PenggunaController::class, 'aturUlangSandi'])->name('pengguna.atur-ulang-sandi');

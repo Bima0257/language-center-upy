@@ -22,19 +22,36 @@ const icon = computed(() => {
 </script>
 
 <template>
-    <Teleport to="body">
-        <div v-if="show" class="fixed inset-0 z-[300] bg-scrim/50 flex items-center justify-center p-6">
-            <div class="bg-surface-white rounded-3xl p-8 shadow-app-frame max-w-sm w-full text-center">
-                <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-pastel-purple/50 flex items-center justify-center">
-                    <component :is="icon" :size="28" class="text-secondary animate-pulse" />
+    <BaseModal
+        :show="show"
+        max-width="sm"
+        :closeable="false"
+        aria-labelledby="upload-progress-title"
+        aria-describedby="upload-progress-description"
+    >
+        <template #header>
+            <BaseModalHeader>
+                <div class="px-6 py-4 text-center">
+                    <h3 id="upload-progress-title" class="text-title-lg font-semibold text-text-heading">
+                        {{ title }}
+                    </h3>
                 </div>
-                <h3 class="text-title-lg font-semibold text-text-heading mb-1">{{ title }}</h3>
-                <p class="text-text-body text-body-md mb-6">{{ label }}</p>
-                <div class="h-2.5 rounded-full bg-surface-container overflow-hidden">
-                    <div class="h-full w-1/3 rounded-full bg-primary-container progress-bar-animated"></div>
+            </BaseModalHeader>
+        </template>
+
+        <template #default>
+            <div class="px-6 pb-6 pt-5 text-center" role="status" aria-live="polite">
+                <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pastel-purple/50">
+                    <component :is="icon" :size="28" class="animate-pulse text-secondary" />
                 </div>
-                <p class="text-text-muted text-label-md mt-4">File besar bisa memakan waktu beberapa detik. Mohon jangan tutup halaman ini.</p>
+                <p id="upload-progress-description" class="mb-6 text-body-md text-text-body">{{ label }}</p>
+                <div class="h-2.5 overflow-hidden rounded-full bg-surface-container">
+                    <div class="progress-bar-animated h-full w-1/3 rounded-full bg-primary-container"></div>
+                </div>
+                <p class="mt-4 text-label-md text-text-muted">
+                    File besar bisa memakan waktu beberapa detik. Mohon jangan tutup halaman ini.
+                </p>
             </div>
-        </div>
-    </Teleport>
+        </template>
+    </BaseModal>
 </template>

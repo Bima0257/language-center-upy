@@ -14,9 +14,12 @@ const props = defineProps({
     title: { type: String, default: "Dasbor" },
     subtitle: { type: String, default: "" },
     hideHeader: { type: Boolean, default: false },
+    breadcrumbs: { type: Array, default: null },
+    backHref: { type: String, default: null },
+    backLabel: { type: String, default: "Kembali" },
 });
 
-const breadcrumbs = getBreadcrumbs(props.title);
+const breadcrumbs = props.breadcrumbs || getBreadcrumbs(props.title);
 
 const sidebarCollapsed = ref(false);
 
@@ -36,8 +39,28 @@ const currentYear = new Date().getFullYear();
                 class="flex-1 overflow-y-auto scrollbar-hide dashboard-scroll-area bg-surface"
             >
                 <div class="min-h-full flex flex-col p-8">
-                    <Breadcrumb :items="breadcrumbs" class="mb-6" />
-                    <PageHeader v-if="!hideHeader" :title="title" :subtitle="subtitle" />
+                    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+                        <Breadcrumb :items="breadcrumbs" class="min-w-0 flex-1" />
+                        <div
+                            v-if="$slots['breadcrumb-actions']"
+                            class="ml-auto flex shrink-0 items-center gap-2"
+                        >
+                            <slot name="breadcrumb-actions" />
+                        </div>
+                    </div>
+                    <PageHeader
+                        v-if="!hideHeader"
+                        :title="title"
+                        :subtitle="subtitle"
+                        :back-href="backHref"
+                        :back-label="backLabel"
+                    />
+                    <BaseBackButton
+                        v-else-if="backHref"
+                        :href="backHref"
+                        :label="backLabel"
+                        class="mb-6"
+                    />
                     <slot />
                     <div class="mt-auto -mx-8 -mb-8 pt-8">
                         <footer
@@ -49,7 +72,7 @@ const currentYear = new Date().getFullYear();
                     </div>
                 </div>
             </div>
-            <ScrollToTop container=".dashboard-scroll-area" />
+            <ScrollToTop container=".dashboard-scroll-area" :bottom-threshold="96" />
         </main>
         <MobileNav />
         <ConfirmDialog />

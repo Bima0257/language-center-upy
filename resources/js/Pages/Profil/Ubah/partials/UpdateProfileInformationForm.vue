@@ -34,36 +34,38 @@ const form = useForm({
             @submit.prevent="form.patch(route('profile.update'))"
             class="mt-6 space-y-6"
         >
-            <div>
-                <BaseFieldLabel for="name" value="Name" />
+            <BaseFormGrid>
+                <div>
+                    <BaseFieldLabel for="name" value="Name" />
 
-                <BaseInput
-                    id="name"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.name"
-                    required
-                    autofocus
-                    autocomplete="name"
-                />
+                    <BaseInput
+                        id="name"
+                        type="text"
+                        class="mt-1 block w-full"
+                        v-model="form.name"
+                        required
+                        autofocus
+                        autocomplete="name"
+                    />
 
-                <BaseInputError class="mt-2" :message="form.errors.name" />
-            </div>
+                    <BaseInputError class="mt-2" :message="form.errors.name" />
+                </div>
 
-            <div>
-                <BaseFieldLabel for="email" value="Email" />
+                <div>
+                    <BaseFieldLabel for="email" value="Email" />
 
-                <BaseInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autocomplete="username"
-                />
+                    <BaseInput
+                        id="email"
+                        type="email"
+                        class="mt-1 block w-full"
+                        v-model="form.email"
+                        required
+                        autocomplete="username"
+                    />
 
-                <BaseInputError class="mt-2" :message="form.errors.email" />
-            </div>
+                    <BaseInputError class="mt-2" :message="form.errors.email" />
+                </div>
+            </BaseFormGrid>
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">
                 <p class="mt-2 text-sm text-text-heading">

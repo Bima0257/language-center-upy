@@ -23,6 +23,8 @@ class UjianController extends Controller
     {
         return Inertia::render('Admin/Ujian/index', [
             'ujian' => $this->layananUjian->dataDaftar(),
+            'jenisTes' => $this->layananDataInduk->jenisTesAktif(),
+            'bankSoal' => $this->layananUjian->bankSoalAktif(),
         ]);
     }
 
@@ -57,13 +59,6 @@ class UjianController extends Controller
                 ? "{$dibuat} bagian baru berhasil disinkronkan."
                 : 'Tidak ada bagian baru yang perlu disinkronkan.',
         );
-    }
-
-    public function ubah(Ujian $ujian): Response
-    {
-        return Inertia::render('Admin/Ujian/edit', $this->layananUjian->dataUbah($ujian) + [
-            'jenisTes' => $this->layananDataInduk->jenisTesAktif(),
-        ]);
     }
 
     public function perbarui(PerbaruiUjianRequest $request, Ujian $ujian): RedirectResponse

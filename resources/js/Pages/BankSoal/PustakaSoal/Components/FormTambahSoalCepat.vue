@@ -1,87 +1,66 @@
 <script setup>
-import DropDown from '@/Components/Shared/DropDown.vue';
 import InputPilihan from '@/Pages/BankSoal/Components/InputPilihan.vue';
-import { IconHeadphones, IconCheck } from '@tabler/icons-vue';
+import PemilihKunciJawaban from '@/Pages/BankSoal/Components/PemilihKunciJawaban.vue';
+import { IconHeadphones } from '@tabler/icons-vue';
 
 defineProps({
     form: { type: Object, required: true },
-    materiSoalJudul: { type: String, default: '' },
-    bankSoal: { type: Array, default: () => [] },
-    quickBagianSoalFn: { type: Function, default: () => [] },
     quickIsAudio: { type: Boolean, default: false },
     optionKeys: { type: Array, default: () => [] },
-    labelKeterampilanFn: { type: Function, default: () => '' },
+    formId: { type: String, default: null },
+    showActions: { type: Boolean, default: true },
 });
 
 defineEmits(['save', 'cancel']);
 </script>
 
 <template>
-    <div class="px-5 py-4 bg-pastel-blue/10 border-b border-outline-variant/30">
-        <p class="text-label-md font-semibold text-text-heading mb-3">Tambah Soal ke "{{ materiSoalJudul }}"</p>
-        <form @submit.prevent="$emit('save')" class="space-y-3">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                    <DropDown
-                        v-model="form.bank_soal_id"
-                        :options="bankSoal"
-                        label="Bank Soal *"
-                        placeholder="Pilih Bank"
-                        option-label="nama"
-                        option-value="id"
-                        size="sm"
-                    />
-                    <p v-if="form.errors.bank_soal_id" class="text-error-red text-xs mt-1">{{ form.errors.bank_soal_id }}</p>
-                </div>
-                <div>
-                    <DropDown
-                        v-model="form.bagian_soal_id"
-                        :options="quickBagianSoalFn()"
-                        label="Bagian Soal *"
-                        placeholder="Pilih bagianSoal"
-                        option-label="nama"
-                        option-value="id"
-                        size="sm"
-                        :disabled="!form.keterampilan_id"
-                    />
-                </div>
-                <div>
-                    <DropDown
-                        v-model="form.kunci_jawaban"
-                        :options="optionKeys.map(k => ({ id: k, name: k }))"
-                        label="Kunci Jawaban *"
-                        placeholder="Pilih kunci"
-                        option-label="name"
-                        option-value="id"
-                        size="sm"
-                    />
-                </div>
-            </div>
-            <p class="text-label-md text-text-muted">
-                        Keterampilan: <span class="font-semibold text-text-heading">{{ labelKeterampilanFn(form.keterampilan_id) }}</span> — mengikuti tipe materiSoal ini.
-            </p>
-            <template v-if="quickIsAudio">
-                <p class="flex items-center gap-1.5 text-label-md text-text-muted bg-pastel-purple/10 border border-pastel-purple/40 rounded-xl px-4 py-3">
-                    <IconHeadphones :size="16" class="text-secondary shrink-0" />
-                    Soal listening memakai audio materiSoal ini — tanpa teks soal dan pilihan jawaban.
+    <form :id="formId || undefined" @submit.prevent="$emit('save')" class="space-y-5">
+        <template v-if="quickIsAudio">
+            <div class="space-y-4 rounded-xl border border-pastel-purple/40 bg-pastel-purple/10 p-4">
+                <p class="flex items-center gap-1.5 text-label-md text-text-muted">
+                    <IconHeadphones :size="16" class="shrink-0 text-secondary" />
+                    Soal audio memakai audio materi soal ini — tanpa teks soal dan pilihan jawaban.
                 </p>
-            </template>
-            <template v-else>
-                <div>
-                    <label class="text-label-md font-medium text-primary block mb-1">Teks Soal <span class="text-error-red">*</span></label>
-                    <BaseTextarea v-model="form.teks_soal" rows="2" required />
-                    <p v-if="form.errors.teks_soal" class="text-error-red text-xs mt-1">{{ form.errors.teks_soal }}</p>
-                </div>
-                <InputPilihan :form="form" :option-keys="optionKeys" size="sm" />
-            </template>
-            <div class="flex items-center gap-2">
-                <BaseButton type="submit" :disabled="form.processing" size="xs">
-                    <IconCheck :size="16" /> {{ form.processing ? 'Menyimpan...' : 'Simpan Soal' }}
-                </BaseButton>
-                <BaseButton type="button" variant="secondary" size="xs" @click="$emit('cancel')">
-                    Batal
-                </BaseButton>
+                <PemilihKunciJawaban
+                    v-model="form.kunci_jawaban"
+                    :option-keys="optionKeys"
+                    label="Pilihan Jawaban"
+                    size="compact"
+                />
             </div>
-        </form>
-    </div>
+        </template>
+        <template v-else>
+            <BaseFormGrid>
+                <div class="sm:col-span-2">
+                    <label class="mb-1.5 block text-body-md font-medium text-text-heading">
+                        Teks Soal <span class="text-error-red">*</span>
+                    </label>
+                    <BaseTextarea v-model="form.teks_soal" rows="4" required />
+                    <p v-if="form.errors.teks_soal" class="mt-1 text-xs text-error-red">
+                        {{ form.errors.teks_soal }}
+                    </p>
+                </div>
+
+                <InputPilihan
+                    class="sm:col-span-2"
+                    :form="form"
+                    :option-keys="optionKeys"
+                    size="compact"
+                />
+
+                <PemilihKunciJawaban
+                    class="sm:col-span-2"
+                    v-model="form.kunci_jawaban"
+                    :option-keys="optionKeys"
+                    size="compact"
+                />
+            </BaseFormGrid>
+        </template>
+        <BaseFormActions
+            v-if="showActions"
+            :processing="form.processing"
+            @cancel="$emit('cancel')"
+        />
+    </form>
 </template>

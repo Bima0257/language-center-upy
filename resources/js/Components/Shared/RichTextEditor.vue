@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeUnmount, watch } from 'vue';
+import { onBeforeUnmount, ref, watch } from 'vue';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -31,6 +31,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue']);
+const linkDialogOpen = ref(false);
+const linkUrl = ref('');
+const linkSelection = ref(null);
 
 const editor = useEditor({
     content: props.modelValue,
@@ -59,14 +62,40 @@ function isActive(name, attrs) {
 }
 
 function setLink() {
-    const prevUrl = editor.value.getAttributes('link').href;
-    const url = window.prompt('Masukkan URL:', prevUrl || 'https://');
-    if (url === null) return;
-    if (url === '') {
-        editor.value.chain().focus().extendMarkRange('link').unsetLink().run();
+    if (!editor.value) return;
+
+    const { from, to } = editor.value.state.selection;
+    linkSelection.value = { from, to };
+    linkUrl.value = editor.value.getAttributes('link').href || '';
+    linkDialogOpen.value = true;
+}
+
+function closeLinkDialog() {
+    linkDialogOpen.value = false;
+    linkUrl.value = '';
+    linkSelection.value = null;
+}
+
+function applyLink() {
+    if (!editor.value || !linkSelection.value) {
+        closeLinkDialog();
         return;
     }
-    editor.value.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+
+    const { from, to } = linkSelection.value;
+    const chain = editor.value
+        .chain()
+        .focus()
+        .setTextSelection({ from, to })
+        .extendMarkRange('link');
+
+    if (linkUrl.value.trim() === '') {
+        chain.unsetLink().run();
+    } else {
+        chain.setLink({ href: linkUrl.value.trim() }).run();
+    }
+
+    closeLinkDialog();
 }
 
 onBeforeUnmount(() => {
@@ -163,4 +192,48 @@ onBeforeUnmount(() => {
             <EditorContent :editor="editor" />
         </div>
     </div>
+
+    <BaseModal
+        :show="linkDialogOpen"
+        max-width="md"
+        fit-content
+        aria-labelledby="rich-text-link-title"
+        @close="closeLinkDialog"
+    >
+        <template #header>
+            <BaseModalHeader>
+                <div class="px-6 py-4">
+                    <h3 id="rich-text-link-title" class="text-title-lg font-semibold text-text-heading">
+                        Tambahkan Tautan
+                    </h3>
+                </div>
+            </BaseModalHeader>
+        </template>
+
+        <template #default>
+            <form class="px-6 py-5" @submit.prevent="applyLink">
+                <BaseFieldLabel for="rich-text-link-url">URL</BaseFieldLabel>
+                <BaseInput
+                    id="rich-text-link-url"
+                    v-model="linkUrl"
+                    type="text"
+                    autofocus
+                    placeholder="https://example.com"
+                />
+            </form>
+        </template>
+
+        <template #footer>
+            <BaseModalFooter>
+                <div class="flex justify-end gap-3 px-6 py-3">
+                    <BaseButton type="button" variant="secondary" size="sm" @click="closeLinkDialog">
+                        Batal
+                    </BaseButton>
+                    <BaseButton type="button" size="sm" @click="applyLink">
+                        Simpan
+                    </BaseButton>
+                </div>
+            </BaseModalFooter>
+        </template>
+    </BaseModal>
 </template>

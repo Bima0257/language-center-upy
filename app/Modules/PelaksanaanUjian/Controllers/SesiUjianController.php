@@ -3,9 +3,9 @@
 namespace App\Modules\PelaksanaanUjian\Controllers;
 
 use App\Enums\JenisPelanggaran;
-use App\Enums\ModeUjian;
 use App\Http\Controllers\Controller;
-use App\Models\PeriodeUjian;
+use App\Http\Requests\Penjadwalan\FilterJadwalUjianRequest;
+use App\Models\Pengguna;
 use App\Models\Sertifikat;
 use App\Models\SesiUjian;
 use App\Models\SlotUjian;
@@ -16,6 +16,7 @@ use App\Modules\PelaksanaanUjian\Actions\SelesaikanBagian;
 use App\Modules\PelaksanaanUjian\Actions\SerahkanUjian;
 use App\Modules\PelaksanaanUjian\Actions\SimpanJawaban;
 use App\Modules\PelaksanaanUjian\Services\LayananPelaksanaanUjian;
+use App\Modules\PendaftaranUjian\Services\LayananPendaftaranUjian;
 use App\Modules\Penjadwalan\Repositories\Contracts\SlotUjianRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -35,6 +36,7 @@ class SesiUjianController extends Controller
         private CatatPelanggaran $catatPelanggaran,
         private SlotUjianRepositoryInterface $slotRepo,
         private LayananPelaksanaanUjian $layananPelaksanaan,
+        private LayananPendaftaranUjian $layananPendaftaran,
     ) {}
 
     public function tersedia(): Response
@@ -57,17 +59,13 @@ class SesiUjianController extends Controller
         ]);
     }
 
-    public function jadwal(): Response
+    public function jadwal(FilterJadwalUjianRequest $request): Response
     {
-        $periodeUjian = PeriodeUjian::where('aktif', true)
-            ->where('tanggal_selesai', '>=', now()->toDateString())
-            ->whereHas('ujian', fn ($q) => $q->where('mode', ModeUjian::OFFICIAL))
-            ->with(['ujian', 'slotUjian' => fn ($q) => $q->where('aktif', true)->orderBy('tanggal')->orderBy('waktu_mulai')])
-            ->orderBy('tanggal_mulai')
-            ->get();
+        /** @var Pengguna $pengguna */
+        $pengguna = auth()->user();
 
         return Inertia::render('Ujian/Jadwal/index', [
-            'periodeUjian' => $periodeUjian,
+            ...$this->layananPendaftaran->dataJadwal($pengguna, $request->validated()),
         ]);
     }
 
@@ -83,10 +81,21 @@ class SesiUjianController extends Controller
         ]);
     }
 
-    public function pemeriksaanAwal(SlotUjian $slotUjian): Response
+    public function pemeriksaanAwal(SlotUjian $slotUjian): Response|RedirectResponse
     {
+        $slotUjian->load('periodeUjian.ujian.jenisTes');
+
+        /** @var Pengguna $pengguna */
+        $pengguna = auth()->user();
+
+        try {
+            $this->layananPendaftaran->pastikanBolehMulai($pengguna, $slotUjian);
+        } catch (\RuntimeException $exception) {
+            return to_route('ujian.jadwal')->with('error', $exception->getMessage());
+        }
+
         return Inertia::render('Ujian/PemeriksaanAwal/index', [
-            'slotUjian' => $slotUjian->load('periodeUjian.ujian'),
+            'slotUjian' => $slotUjian,
         ]);
     }
 

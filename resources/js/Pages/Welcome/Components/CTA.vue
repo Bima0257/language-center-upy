@@ -4,7 +4,7 @@ import { Link } from '@inertiajs/vue3';
 
 <template>
     <section class="max-w-7xl mx-auto mb-16 px-4 md:px-0">
-        <div class="bg-surface-white rounded-3xl p-8 md:p-12 text-center border border-outline-variant/30 shadow-standard relative overflow-hidden">
+        <div class="bg-surface-white rounded-2xl p-8 md:p-12 text-center border border-outline-variant/30 shadow-standard relative overflow-hidden">
             <div class="absolute -top-24 -left-24 w-64 h-64 bg-pastel-blue/40 rounded-full blur-3xl"></div>
             <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-pastel-purple/40 rounded-full blur-3xl"></div>
             <div class="relative z-10">

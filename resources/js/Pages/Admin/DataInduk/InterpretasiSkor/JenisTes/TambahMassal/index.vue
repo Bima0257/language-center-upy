@@ -146,11 +146,11 @@ function submit() {
     <TataLetakDasbor
         :title="'Tambah Massal Interpretasi Skor'"
         :subtitle="`Tambahkan interpretasi skor untuk ${props.jenisTes.nama}`"
+        :back-href="route('admin.data-induk.interpretasi-skor.jenis-tes.daftar', props.jenisTes.id)"
     >
         <InterpretasiSkorBulkTable
             :interpretasi-skor="interpretasiSkor"
             :max-rows="MAX_ROWS"
-            :back-url="route('admin.data-induk.interpretasi-skor.jenis-tes.daftar', props.jenisTes.id)"
             @create="openCreate"
             @edit="openEdit"
             @delete="removeDraft"
@@ -171,7 +171,6 @@ function submit() {
             :editing="editingIndex !== null"
             :form="draftForm"
             :jenis-tes="props.jenisTes"
-            submit-label="Tambah ke Daftar"
             @close="closeModal"
             @submit="saveDraft"
         />

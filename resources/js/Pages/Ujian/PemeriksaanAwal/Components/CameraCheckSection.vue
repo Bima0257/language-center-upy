@@ -16,7 +16,7 @@ const emit = defineEmits(['check']);
         <div class="flex items-center gap-3">
             <IconCamera class="text-text-muted" :size="22" stroke="1.5" />
             <div>
-                <p class="text-label-md font-medium text-primary">Kamera</p>
+                <p class="text-label-md font-medium text-text-heading">Kamera</p>
                 <p class="text-text-muted text-xs">
                     <template v-if="cameraOk && !photoPreview">Terdeteksi — Siap ambil foto</template>
                     <template v-else-if="cameraOk && photoPreview">Foto berhasil diambil</template>

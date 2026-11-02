@@ -29,24 +29,26 @@ function formatDateTime(value) {
     <BaseCard class="h-fit sticky top-24">
         <h2 class="text-title-lg font-semibold text-text-heading mb-4">Keputusan Tinjauan</h2>
         <form @submit.prevent="emit('submit')" class="space-y-4">
-            <div>
-                <DropDown
-                    v-model="props.form.status_tinjauan"
-                    :options="reviewOptions"
-                    label="Status"
-                    placeholder="Pilih keputusan"
-                    option-label="name"
-                    option-value="id"
-                />
-            </div>
-            <div>
-                <label class="text-label-md font-medium text-primary block mb-2">Catatan</label>
-                <BaseTextarea v-model="props.form.catatan_tinjauan" rows="5"
-                              placeholder="Alasan dan detail keputusan..." />
-            </div>
-            <BaseButton type="submit" :disabled="props.form.processing" size="xl" class="w-full">
-                {{ props.form.processing ? 'Menyimpan...' : 'Simpan Keputusan' }}
-            </BaseButton>
+            <BaseFormGrid>
+                <div>
+                    <DropDown
+                        v-model="props.form.status_tinjauan"
+                        :options="reviewOptions"
+                        label="Status"
+                        placeholder="Pilih keputusan"
+                        option-label="name"
+                        option-value="id"
+                    />
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="text-label-md font-medium text-text-heading block mb-2">Catatan</label>
+                    <BaseTextarea v-model="props.form.catatan_tinjauan" rows="5"
+                                  placeholder="Alasan dan detail keputusan..." />
+                </div>
+                <BaseButton type="submit" :disabled="props.form.processing" size="xl" class="w-full sm:col-span-2">
+                    {{ props.form.processing ? 'Menyimpan...' : 'Simpan Keputusan' }}
+                </BaseButton>
+            </BaseFormGrid>
         </form>
 
         <div v-if="props.sesiUjian.status_tinjauan" class="mt-6 pt-6 border-t border-outline-variant/30">

@@ -39,10 +39,6 @@ class AuthenticatedSessionController extends Controller
 
         cookie()->queue(cookie('_logged', '1', config('session.lifetime')));
 
-        if ($pengguna->hasRole('student') && ! $pengguna->profilTerverifikasi()) {
-            return redirect()->route('onboarding.verify-identity');
-        }
-
         return redirect()->intended(route('dasbor', absolute: false));
     }
 

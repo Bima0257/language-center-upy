@@ -6,6 +6,8 @@ const props = defineProps({
     form: { type: Object, required: true },
     jenisTes: { type: Array, default: () => [] },
     bankSoalTersaring: { type: Array, default: () => [] },
+    formId: { type: String, default: 'form-ujian' },
+    showActions: { type: Boolean, default: true },
 });
 
 const emit = defineEmits(['submit']);
@@ -17,34 +19,36 @@ const modeOptions = [
 </script>
 
 <template>
-    <form @submit.prevent="emit('submit')" class="space-y-6">
-        <div>
-            <DropDown
-                v-model="props.form.jenis_tes_id"
-                :options="props.jenisTes"
-                label="Jenis Tes"
-                placeholder="Pilih jenis tes"
-                option-label="nama"
-                option-value="id"
-            />
-            <p v-if="props.form.errors.jenis_tes_id" class="text-error-red text-xs mt-1">{{ props.form.errors.jenis_tes_id }}</p>
-        </div>
+    <form :id="props.formId" @submit.prevent="emit('submit')" class="space-y-6">
+        <BaseFormGrid>
+            <div :class="{ 'sm:col-span-2': !props.creating || !props.form.jenis_tes_id }">
+                <DropDown
+                    v-model="props.form.jenis_tes_id"
+                    :options="props.jenisTes"
+                    label="Jenis Tes"
+                    placeholder="Pilih jenis tes"
+                    option-label="nama"
+                    option-value="id"
+                />
+                <p v-if="props.form.errors.jenis_tes_id" class="text-error-red text-xs mt-1">{{ props.form.errors.jenis_tes_id }}</p>
+            </div>
 
-        <div v-if="props.creating && props.form.jenis_tes_id">
-            <DropDown
-                v-model="props.form.bank_soal_id"
-                :options="props.bankSoalTersaring"
-                label="Bank Soal *"
-                placeholder="Pilih bank soal"
-                option-label="nama"
-                option-value="id"
-                empty-message="Belum ada bank soal aktif untuk jenis tes ini."
-            />
-            <p v-if="props.form.errors.bank_soal_id" class="text-error-red text-xs mt-1">{{ props.form.errors.bank_soal_id }}</p>
-        </div>
+            <div v-if="props.creating && props.form.jenis_tes_id">
+                <DropDown
+                    v-model="props.form.bank_soal_id"
+                    :options="props.bankSoalTersaring"
+                    label="Bank Soal *"
+                    placeholder="Pilih bank soal"
+                    option-label="nama"
+                    option-value="id"
+                    empty-message="Belum ada bank soal aktif untuk jenis tes ini."
+                />
+                <p v-if="props.form.errors.bank_soal_id" class="text-error-red text-xs mt-1">{{ props.form.errors.bank_soal_id }}</p>
+            </div>
+        </BaseFormGrid>
 
         <div>
-            <label class="text-label-md font-medium text-primary block mb-2">{{ props.creating ? 'Judul Soal Ujian' : 'Judul Ujian' }}</label>
+            <label class="text-label-md font-medium text-text-heading block mb-2">{{ props.creating ? 'Judul Soal Ujian' : 'Judul Ujian' }}</label>
             <input type="text" v-model="props.form.judul" required
                    :placeholder="props.creating ? 'Tes Bahasa 2026' : null"
                    class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]" />
@@ -52,12 +56,12 @@ const modeOptions = [
         </div>
 
         <div>
-            <label class="text-label-md font-medium text-primary block mb-2">Deskripsi</label>
+            <label class="text-label-md font-medium text-text-heading block mb-2">Deskripsi</label>
             <BaseTextarea v-model="props.form.deskripsi" rows="3"
                           :placeholder="props.creating ? 'Deskripsi ujian...' : null" />
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <BaseFormGrid>
             <div>
                 <DropDown
                     v-model="props.form.mode"
@@ -68,19 +72,19 @@ const modeOptions = [
                 />
             </div>
             <div>
-                <label class="text-label-md font-medium text-primary block mb-2">Durasi (menit)</label>
+                <label class="text-label-md font-medium text-text-heading block mb-2">Durasi (menit)</label>
                 <input type="number" v-model="props.form.durasi_menit" required min="1"
                        class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]" />
             </div>
-        </div>
+        </BaseFormGrid>
 
-        <div v-if="!props.creating" class="flex items-center gap-2">
-            <input type="checkbox" id="aktif" v-model="props.form.aktif"
-                   class="rounded border-outline-variant text-primary focus:ring-secondary" />
-            <label for="aktif" class="text-text-body text-body-md">Aktif</label>
+        <div v-if="!props.creating">
+            <BaseToggle v-model="props.form.aktif" label="Ujian aktif" />
+            <p v-if="props.form.errors.aktif" class="text-error-red text-xs mt-1">{{ props.form.errors.aktif }}</p>
         </div>
 
         <BaseButton
+            v-if="props.showActions"
             type="submit"
             :disabled="props.form.processing || (props.creating && !props.form.bank_soal_id)"
             size="xl"

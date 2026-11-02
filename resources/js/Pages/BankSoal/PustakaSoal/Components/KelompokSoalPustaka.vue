@@ -5,30 +5,16 @@ import TabelSoal from './TabelSoal.vue';
 
 defineProps({
     kelompokSoal: { type: Array, default: () => [] },
-    materiSoalForm: { type: Object, required: true },
-    editingMateriSoalId: { type: [String, null], default: null },
-    keterampilanNameFn: { type: Function, default: () => '' },
-    bankNameFn: { type: Function, default: () => '' },
-    optionKeys: { type: Array, default: () => [] },
-    quickForm: { type: Object, required: true },
-    bankSoal: { type: Array, default: () => [] },
-    addingMateriSoalId: { type: [String, null], default: null },
-    quickBagianSoalFn: { type: Function, default: () => [] },
-    quickIsAudio: { type: Boolean, default: false },
-    labelKeterampilanFn: { type: Function, default: () => '' },
     toggleMateriSoalFn: { type: Function, default: () => {} },
     materiSoalTypeLabelFn: { type: Function, default: () => 'Teks' },
     isMateriSoalExpandedFn: { type: Function, default: () => false },
     attached: { type: Boolean, default: false },
+    bankLocked: { type: Boolean, default: false },
 });
 
 defineEmits([
     'start-edit',
-    'cancel-edit',
-    'save-materi-soal',
     'add-soal',
-    'close-add',
-    'save-quick',
     'soal-delete',
     'delete-materi-soal',
 ]);
@@ -51,27 +37,13 @@ defineEmits([
                             v-for="group in kelompokBagianSoal.groups"
                             :key="group.materiSoal.id"
                             :group="group"
-                            :materi-soal-form="materiSoalForm"
-                            :editing-materi-soal-id="editingMateriSoalId"
-                            :keterampilan-name-fn="keterampilanNameFn"
-                            :bank-name-fn="bankNameFn"
-                            :option-keys="optionKeys"
-                            :quick-form="quickForm"
-                            :bank-soal="bankSoal"
-                            :adding-materi-soal-id="addingMateriSoalId"
-                            :quick-bagian-soal-fn="quickBagianSoalFn"
-                            :quick-is-audio="quickIsAudio"
-                            :label-keterampilan-fn="labelKeterampilanFn"
                             :toggle-materi-soal-fn="toggleMateriSoalFn"
                             :materi-soal-type-label-fn="materiSoalTypeLabelFn"
                             :is-materi-soal-expanded-fn="isMateriSoalExpandedFn"
                             :attached="attached"
+                            :bank-locked="bankLocked"
                             @start-edit="$emit('start-edit', $event)"
-                            @cancel-edit="$emit('cancel-edit')"
-                            @save-materi-soal="$emit('save-materi-soal', $event)"
                             @add-soal="$emit('add-soal', $event)"
-                            @close-add="$emit('close-add')"
-                            @save-quick="$emit('save-quick')"
                             @soal-delete="(...args) => $emit('soal-delete', ...args)"
                             @delete-materi-soal="$emit('delete-materi-soal', $event)"
                         />
@@ -90,8 +62,7 @@ defineEmits([
                             >
                                 <TabelSoal
                                     :soal="kelompokBagianSoal.standalone"
-                                    :keterampilan-name-fn="keterampilanNameFn"
-                                    :bank-name-fn="bankNameFn"
+                                    :bank-locked="bankLocked"
                                     @delete="(...args) => $emit('soal-delete', ...args)"
                                 />
                             </BaseCard>

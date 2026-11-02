@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $nama
  * @property string|null $deskripsi
  * @property bool $aktif
+ * @property-read int $soal_count
+ * @property-read int $bagian_ujian_count
  * @property-read JenisTes $jenisTes
  * @property-read Collection<int, Soal> $soal
  * @property-read Collection<int, BagianSoal> $bagianSoal

@@ -65,7 +65,7 @@ onMounted(() => {
         </div>
 
         <div class="flex-1 min-h-0 bg-surface p-6 md:p-10 flex flex-col justify-start overflow-y-auto">
-            <div class="max-w-[520px] mx-auto w-full bg-surface-white shadow-sm rounded-3xl px-6 py-12 md:px-8 md:py-16">
+            <div class="max-w-[520px] mx-auto w-full bg-surface-white shadow-sm rounded-2xl px-6 py-12 md:px-8 md:py-16">
                 <slot />
             </div>
         </div>

@@ -5,7 +5,6 @@ import JenisTesSummaryTable from './Components/JenisTesSummaryTable.vue';
 import BankSoalSummaryTable from './Components/BankSoalSummaryTable.vue';
 import BagianSoalGroupTable from './Components/BagianSoalGroupTable.vue';
 import BagianSoalFormModal from './Components/BagianSoalFormModal.vue';
-import { IconPlus, IconArrowLeft } from '@tabler/icons-vue';
 import { computed, ref, watch } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 import { useToast } from '@/Composables/useToast';
@@ -235,6 +234,7 @@ async function destroy(bagianSoal) {
     <TataLetakDasbor
         :title="bankSoalTerpilih ? `Bagian Soal - ${bankSoalTerpilih.nama}` : jenisTesTerpilih ? `Bank Soal - ${jenisTesTerpilih.nama}` : 'Data Induk Bagian Soal'"
         :subtitle="bankSoalTerpilih ? 'Kelola bagian soal per keterampilan' : jenisTesTerpilih ? 'Pilih bank soal untuk melihat bagian soal' : 'Pilih jenis tes untuk melihat bank soal'"
+        :back-href="jenisTesFilter ? backUrl : null"
     >
         <template v-if="!jenisTesFilter">
             <JenisTesSummaryTable
@@ -247,7 +247,6 @@ async function destroy(bagianSoal) {
             <BankSoalSummaryTable
                 :ringkasan-bank-soal="ringkasanBankSoal"
                 :detail-url="detailUrl"
-                :back-url="backUrl"
             />
         </template>
 
@@ -261,16 +260,11 @@ async function destroy(bagianSoal) {
                     class="relative z-10 -mb-px px-5"
                 />
 
-                <BaseCard :padding="false" class="overflow-hidden">
+                <BaseCard :padding="false" class="!border-t-0 overflow-hidden">
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3.5">
                         <h2 class="text-title-lg font-semibold text-text-heading">Daftar Bagian Soal</h2>
                         <div class="flex items-center gap-2">
-                            <BaseButton variant="secondary" size="sm" :href="backUrl">
-                                <IconArrowLeft :size="16" /> Kembali
-                            </BaseButton>
-                            <BaseButton size="sm" @click="openCreate">
-                                <IconPlus :size="16" /> Tambah Bagian Soal
-                            </BaseButton>
+                            <BaseTambahData @click="openCreate" />
                         </div>
                     </div>
                     <BagianSoalGroupTable

@@ -87,7 +87,7 @@ function closeModal() {
 }
 
 async function destroy(slotUjian) {
-    if (slotUjian.sesi_ujian_count > 0) return
+    if (slotUjian.sesi_ujian_count > 0 || slotUjian.pendaftaran_ujian_count > 0) return
     if (!await confirm.confirm(`Hapus sesi ${slotUjian.tanggal} ${slotUjian.waktu_mulai?.substring(0, 5)}-${slotUjian.waktu_selesai?.substring(0, 5)}?`)) return
     router.delete(route('admin.periode-ujian.slot.hapus', slotUjian.id), { preserveScroll: true })
 }
@@ -109,7 +109,12 @@ function formatDate(value) {
 
 <template>
     <Head :title="periodeUjian.judul" />
-    <TataLetakDasbor :title="periodeUjian.judul" :subtitle="formatDate(periodeUjian.tanggal_mulai) + ' – ' + formatDate(periodeUjian.tanggal_selesai)">
+    <TataLetakDasbor
+        :title="periodeUjian.judul"
+        :subtitle="formatDate(periodeUjian.tanggal_mulai) + ' – ' + formatDate(periodeUjian.tanggal_selesai)"
+        :back-href="route('admin.periode-ujian.daftar')"
+        back-label="Penjadwalan"
+    >
         <div class="space-y-6">
             <PeriodeUjianInfo :periode-ujian="periodeUjian" :format-date="formatDate" />
 

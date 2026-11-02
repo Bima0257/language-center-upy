@@ -20,6 +20,7 @@ class SoalRepository implements SoalRepositoryInterface
         $bagianSoalId = $filter['bagian_soal_id'] ?? null;
 
         return Soal::with(['materiSoal.mediaMateriSoal', 'bankSoal', 'keterampilan', 'bagianSoal', 'pembuat'])
+            ->withCount('bagianUjian')
             ->when($keterampilanId, fn ($q) => $q->where('keterampilan_id', $keterampilanId))
             ->when($bankSoalId, fn ($q) => $q->where('bank_soal_id', $bankSoalId))
             ->when($materiId, fn ($q) => $q->where('materi_soal_id', $materiId))
@@ -39,6 +40,11 @@ class SoalRepository implements SoalRepositoryInterface
         return Soal::find($id);
     }
 
+    public function digunakanDalamUjian(string $id): bool
+    {
+        return Soal::whereKey($id)->whereHas('bagianUjian')->exists();
+    }
+
     public function temukanDenganRelasi(string $id): ?Soal
     {
         return Soal::with(['materiSoal.mediaMateriSoal', 'bankSoal', 'bagianSoal', 'pembuat', 'pengubah'])->find($id);
@@ -54,6 +60,32 @@ class SoalRepository implements SoalRepositoryInterface
         foreach ($baris as $barisSoal) {
             Soal::create($barisSoal);
         }
+    }
+
+    public function grupMateriSoal(array $materiIds, ?string $kecualiSoalId = null): Collection
+    {
+        if ($materiIds === []) {
+            return new Collection;
+        }
+
+        return Soal::query()
+            ->select(['materi_soal_id', 'bank_soal_id', 'keterampilan_id', 'bagian_soal_id'])
+            ->whereIn('materi_soal_id', $materiIds)
+            ->when($kecualiSoalId, fn ($query) => $query->where('id', '!=', $kecualiSoalId))
+            ->distinct()
+            ->get();
+    }
+
+    public function soalUntukKeterampilan(string $keterampilanId): Collection
+    {
+        return Soal::with('materiSoal.mediaMateriSoal')
+            ->where('keterampilan_id', $keterampilanId)
+            ->get();
+    }
+
+    public function memilikiSoalDenganKeterampilan(string $keterampilanId): bool
+    {
+        return Soal::where('keterampilan_id', $keterampilanId)->exists();
     }
 
     public function update(Soal $soal, array $data): Soal
@@ -88,19 +120,6 @@ class SoalRepository implements SoalRepositoryInterface
             ->when($jenisTesId, fn ($q) => $q->whereHas('bankSoal', fn ($b) => $b->where('jenis_tes_id', $jenisTesId)))
             ->orderBy('id')
             ->get();
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function idDalam(array $ids, string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): array
-    {
-        return Soal::whereIn('id', $ids)
-            ->where('keterampilan_id', $keterampilanId)
-            ->when($bankId, fn ($q) => $q->where('bank_soal_id', $bankId))
-            ->when($jenisTesId, fn ($q) => $q->whereHas('bankSoal', fn ($b) => $b->where('jenis_tes_id', $jenisTesId)))
-            ->pluck('id')
-            ->all();
     }
 
     public function temukanDenganIdDenganMateriSoal(array $ids): Collection

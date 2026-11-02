@@ -32,6 +32,12 @@ class LayananBankSoal
 
     public function perbarui(BankSoal $bankSoal, array $validated): void
     {
+        if ($this->bankSoalRepo->digunakanDalamUjian($bankSoal->id)) {
+            throw ValidationException::withMessages([
+                'bank_soal_id' => 'Bank soal tidak bisa diubah karena sudah digunakan di ujian.',
+            ]);
+        }
+
         $jenisTesId = $validated['jenis_tes_id'];
 
         if ($jenisTesId !== $bankSoal->jenis_tes_id) {
@@ -47,7 +53,7 @@ class LayananBankSoal
 
     public function hapus(BankSoal $bankSoal): void
     {
-        if ($bankSoal->soal()->exists() || $bankSoal->bagianUjian()->exists()) {
+        if ($bankSoal->soal()->exists() || $this->bankSoalRepo->digunakanDalamUjian($bankSoal->id)) {
             throw new \RuntimeException('Bank soal tidak bisa dihapus karena masih memiliki soal atau digunakan di ujian.');
         }
 

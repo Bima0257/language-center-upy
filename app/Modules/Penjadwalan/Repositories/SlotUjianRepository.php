@@ -3,6 +3,7 @@
 namespace App\Modules\Penjadwalan\Repositories;
 
 use App\Enums\ModeUjian;
+use App\Enums\StatusPendaftaranUjian;
 use App\Models\SlotUjian;
 use App\Modules\Penjadwalan\Repositories\Contracts\SlotUjianRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
@@ -12,14 +13,36 @@ class SlotUjianRepository implements SlotUjianRepositoryInterface
 {
     public function findOrFail(string $id): SlotUjian
     {
-        return SlotUjian::with('periodeUjian.ujian')->findOrFail($id);
+        return SlotUjian::with('periodeUjian.periodePendaftaran', 'periodeUjian.ujian.jenisTes')->findOrFail($id);
+    }
+
+    public function temukanUntukUpdate(string $id): SlotUjian
+    {
+        return SlotUjian::with('periodeUjian.periodePendaftaran', 'periodeUjian.ujian.jenisTes')
+            ->lockForUpdate()
+            ->findOrFail($id);
     }
 
     public function temukanDenganPeriodeUjian(string $periodeUjianId): Collection
     {
-        return SlotUjian::withCount('sesiUjian')
+        return SlotUjian::withCount([
+            'sesiUjian',
+            'pendaftaranUjian',
+            'pendaftaranUjian as pendaftaran_disetujui_count' => fn ($query) => $query->where(
+                'status',
+                StatusPendaftaranUjian::APPROVED,
+            ),
+        ])
             ->where('periode_ujian_id', $periodeUjianId)
             ->orderBy('tanggal')
+            ->orderBy('waktu_mulai')
+            ->get();
+    }
+
+    public function semuaDenganPeriodeUjian(): Collection
+    {
+        return SlotUjian::with('periodeUjian.ujian.jenisTes')
+            ->orderByDesc('tanggal')
             ->orderBy('waktu_mulai')
             ->get();
     }
@@ -46,6 +69,11 @@ class SlotUjianRepository implements SlotUjianRepositoryInterface
         return $slotUjian->sesiUjian()->exists();
     }
 
+    public function memilikiPendaftaran(SlotUjian $slotUjian): bool
+    {
+        return $slotUjian->pendaftaranUjian()->exists();
+    }
+
     public function memilikiWaktuTumpangTindih(string $periodeUjianId, Carbon $tanggal, string $waktuMulai, string $waktuSelesai, ?string $kecualiId = null): bool
     {
         return SlotUjian::where('periode_ujian_id', $periodeUjianId)
@@ -61,6 +89,12 @@ class SlotUjianRepository implements SlotUjianRepositoryInterface
         $today = now()->toDateString();
 
         return SlotUjian::with('periodeUjian.ujian')
+            ->withCount([
+                'pendaftaranUjian as pendaftaran_disetujui_count' => fn ($query) => $query->where(
+                    'status',
+                    StatusPendaftaranUjian::APPROVED,
+                ),
+            ])
             ->where('aktif', true)
             ->whereDate('tanggal', $today)
             ->whereHas('periodeUjian.ujian', fn ($q) => $q->where('mode', ModeUjian::TRYOUT))

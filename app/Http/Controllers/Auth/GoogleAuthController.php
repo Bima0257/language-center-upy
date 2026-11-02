@@ -89,10 +89,6 @@ class GoogleAuthController extends Controller
             return redirect()->route('google.set-password');
         }
 
-        if ($pengguna->hasRole('student') && ! $pengguna->profilTerverifikasi()) {
-            return redirect()->route('onboarding.verify-identity');
-        }
-
         return redirect()->intended(route('dasbor'));
     }
 
@@ -114,10 +110,6 @@ class GoogleAuthController extends Controller
         $pengguna->batalkanSesiLain();
 
         cookie()->queue(cookie('_logged', '1', config('session.lifetime')));
-
-        if ($pengguna->hasRole('student') && ! $pengguna->profilTerverifikasi()) {
-            return redirect()->route('onboarding.verify-identity');
-        }
 
         return redirect()->intended(route('dasbor'))
             ->with('success', 'Password berhasil dibuat. Sekarang Anda bisa login dengan email dan password.');

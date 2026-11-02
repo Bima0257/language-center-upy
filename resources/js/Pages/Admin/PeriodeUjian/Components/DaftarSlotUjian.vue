@@ -1,5 +1,5 @@
 <script setup>
-import { IconPlus, IconTrash, IconEdit, IconClock } from '@tabler/icons-vue';
+import { IconTrash, IconEdit, IconClock } from '@tabler/icons-vue';
 
 const props = defineProps({
     slotGroups: { type: Array, default: () => [] },
@@ -13,9 +13,7 @@ const emit = defineEmits(['create', 'edit', 'delete']);
     <BaseCard>
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-title-lg font-semibold text-text-heading">Sesi Ujian per Hari</h2>
-            <BaseButton size="sm" @click="emit('create')">
-                <IconPlus :size="16" /> Tambah Sesi
-            </BaseButton>
+            <BaseTambahData @click="emit('create')" />
         </div>
 
         <p v-if="props.slotGroups.length === 0" class="text-text-muted text-body-md text-center py-10">
@@ -36,7 +34,8 @@ const emit = defineEmits(['create', 'edit', 'delete']);
                                 {{ slotUjian.waktu_mulai?.substring(0, 5) }} – {{ slotUjian.waktu_selesai?.substring(0, 5) }} WIB
                             </p>
                             <p class="text-label-md text-text-muted">
-                                {{ slotUjian.sesi_ujian_count || 0 }}/{{ slotUjian.kapasitas_peserta }} peserta —
+                                {{ slotUjian.pendaftaran_disetujui_count || 0 }}/{{ slotUjian.kapasitas_peserta }} peserta disetujui —
+                                {{ slotUjian.pendaftaran_ujian_count || 0 }} pendaftaran —
                                 toleransi {{ slotUjian.toleransi_keterlambatan_menit ?? 15 }} menit —
                                 <span :class="slotUjian.aktif ? 'text-success' : 'text-error-red'">
                                     {{ slotUjian.aktif ? 'Aktif' : 'Nonaktif' }}
@@ -48,10 +47,10 @@ const emit = defineEmits(['create', 'edit', 'delete']);
                                 <IconEdit :size="18" />
                             </button>
                             <button @click="emit('delete', slotUjian)"
-                                    :disabled="slotUjian.sesi_ujian_count > 0"
-                                    :title="slotUjian.sesi_ujian_count > 0 ? 'Tidak bisa dihapus — sudah diikuti peserta' : 'Hapus sesi'"
+                                    :disabled="slotUjian.sesi_ujian_count > 0 || slotUjian.pendaftaran_ujian_count > 0"
+                                    :title="slotUjian.sesi_ujian_count > 0 || slotUjian.pendaftaran_ujian_count > 0 ? 'Tidak bisa dihapus — sudah memiliki peserta atau pendaftaran' : 'Hapus sesi'"
                                     class="p-2 transition-colors"
-                                    :class="slotUjian.sesi_ujian_count > 0
+                                    :class="slotUjian.sesi_ujian_count > 0 || slotUjian.pendaftaran_ujian_count > 0
                                         ? 'text-outline-variant cursor-not-allowed'
                                         : 'text-text-muted hover:text-error-red'">
                                 <IconTrash :size="18" />

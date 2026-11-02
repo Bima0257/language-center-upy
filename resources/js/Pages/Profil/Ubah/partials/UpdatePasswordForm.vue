@@ -44,59 +44,61 @@ const updatePassword = () => {
         </header>
 
         <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
-            <div>
-                <BaseFieldLabel for="current_password" value="Current Password" />
+            <BaseFormGrid>
+                <div class="sm:col-span-2">
+                    <BaseFieldLabel for="current_password" value="Current Password" />
 
-                <BaseInput
-                    id="current_password"
-                    ref="currentPasswordInput"
-                    v-model="form.current_password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    autocomplete="current-password"
-                />
+                    <BaseInput
+                        id="current_password"
+                        ref="currentPasswordInput"
+                        v-model="form.current_password"
+                        type="password"
+                        class="mt-1 block w-full"
+                        autocomplete="current-password"
+                    />
 
-                <BaseInputError
-                    :message="form.errors.current_password"
-                    class="mt-2"
-                />
-            </div>
+                    <BaseInputError
+                        :message="form.errors.current_password"
+                        class="mt-2"
+                    />
+                </div>
 
-            <div>
-                <BaseFieldLabel for="password" value="New Password" />
+                <div>
+                    <BaseFieldLabel for="password" value="New Password" />
 
-                <BaseInput
-                    id="password"
-                    ref="passwordInput"
-                    v-model="form.password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    autocomplete="new-password"
-                />
+                    <BaseInput
+                        id="password"
+                        ref="passwordInput"
+                        v-model="form.password"
+                        type="password"
+                        class="mt-1 block w-full"
+                        autocomplete="new-password"
+                    />
 
-                <PasswordStrengthCheck :password="form.password" />
-                <BaseInputError :message="form.errors.password" class="mt-2" />
-            </div>
+                    <PasswordStrengthCheck :password="form.password" />
+                    <BaseInputError :message="form.errors.password" class="mt-2" />
+                </div>
 
-            <div>
-                <BaseFieldLabel
-                    for="password_confirmation"
-                    value="Confirm Password"
-                />
+                <div>
+                    <BaseFieldLabel
+                        for="password_confirmation"
+                        value="Confirm Password"
+                    />
 
-                <BaseInput
-                    id="password_confirmation"
-                    v-model="form.password_confirmation"
-                    type="password"
-                    class="mt-1 block w-full"
-                    autocomplete="new-password"
-                />
+                    <BaseInput
+                        id="password_confirmation"
+                        v-model="form.password_confirmation"
+                        type="password"
+                        class="mt-1 block w-full"
+                        autocomplete="new-password"
+                    />
 
-                <BaseInputError
-                    :message="form.errors.password_confirmation"
-                    class="mt-2"
-                />
-            </div>
+                    <BaseInputError
+                        :message="form.errors.password_confirmation"
+                        class="mt-2"
+                    />
+                </div>
+            </BaseFormGrid>
 
             <div class="flex items-center gap-4">
                 <BaseButton :disabled="form.processing">Save</BaseButton>

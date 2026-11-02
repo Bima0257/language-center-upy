@@ -12,7 +12,7 @@ const emit = defineEmits(["previous", "next"]);
 
 <template>
     <div
-        class="bg-surface-white rounded-3xl shadow-standard border border-outline-variant/30 max-w-3xl w-full overflow-hidden"
+        class="bg-surface-white rounded-2xl shadow-standard border border-outline-variant/30 max-w-3xl w-full overflow-hidden"
     >
         <div
             class="bg-secondary px-8 py-7 text-on-secondary flex items-center justify-between"

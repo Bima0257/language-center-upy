@@ -67,21 +67,23 @@ function saveGroup(group) {
                     <p class="text-text-muted text-body-md mb-6">{{ groupDescriptions[group] || '' }}</p>
 
                     <form @submit.prevent="saveGroup(group)" class="space-y-4">
-                        <div v-for="item in (settings[group] || [])" :key="item.key">
-                            <label class="text-label-md font-medium text-primary block mb-1.5">
-                                {{ item.key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
-                            </label>
-                            <input
-                                type="text"
-                                v-model="item.value"
-                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary"
-                            />
-                        </div>
-                        <div class="flex justify-end pt-2">
-                            <BaseButton type="submit" :disabled="forms[group].processing" size="lg">
-                                {{ forms[group].processing ? 'Menyimpan...' : 'Simpan Pengaturan' }}
-                            </BaseButton>
-                        </div>
+                        <BaseFormGrid>
+                            <div v-for="item in (settings[group] || [])" :key="item.key">
+                                <label class="text-label-md font-medium text-text-heading block mb-1.5">
+                                    {{ item.key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+                                </label>
+                                <input
+                                    type="text"
+                                    v-model="item.value"
+                                    class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md focus:outline-none focus:border-secondary"
+                                />
+                            </div>
+                            <div class="flex justify-end pt-2 sm:col-span-2">
+                                <BaseButton type="submit" :disabled="forms[group].processing" size="lg">
+                                    {{ forms[group].processing ? 'Menyimpan...' : 'Simpan Pengaturan' }}
+                                </BaseButton>
+                            </div>
+                        </BaseFormGrid>
                     </form>
                 </BaseCard>
             </div>

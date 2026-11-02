@@ -27,32 +27,32 @@ const emit = defineEmits(['submit']);
                 />
                 <p v-if="props.form.errors.jenis_tes_id" class="text-error-red text-xs mt-1">{{ props.form.errors.jenis_tes_id }}</p>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <BaseFormGrid>
                 <div>
-                    <label class="text-label-md font-medium text-primary block mb-1">Min Skor</label>
+                    <label class="text-label-md font-medium text-text-heading block mb-1">Min Skor</label>
                     <input type="number" v-model="props.form.skor_minimum" required min="0"
                            class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                 </div>
                 <div>
-                    <label class="text-label-md font-medium text-primary block mb-1">Max Skor</label>
+                    <label class="text-label-md font-medium text-text-heading block mb-1">Max Skor</label>
                     <input type="number" v-model="props.form.skor_maksimum" required min="0"
                            class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                 </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
+            </BaseFormGrid>
+            <BaseFormGrid>
                 <div>
-                    <label class="text-label-md font-medium text-primary block mb-1">CEFR</label>
+                    <label class="text-label-md font-medium text-text-heading block mb-1">CEFR</label>
                     <input type="text" v-model="props.form.tingkat_cefr" required placeholder="B1+" maxlength="10"
                            class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                 </div>
                 <div>
-                    <label class="text-label-md font-medium text-primary block mb-1">Label</label>
+                    <label class="text-label-md font-medium text-text-heading block mb-1">Label</label>
                     <input type="text" v-model="props.form.label_tingkat" required placeholder="Good"
                            class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                 </div>
-            </div>
+            </BaseFormGrid>
             <div>
-                <label class="text-label-md font-medium text-primary block mb-1">Deskripsi</label>
+                <label class="text-label-md font-medium text-text-heading block mb-1">Deskripsi</label>
                 <input type="text" v-model="props.form.deskripsi" placeholder="Opsional"
                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
             </div>

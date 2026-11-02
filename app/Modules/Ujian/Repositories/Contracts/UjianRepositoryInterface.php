@@ -23,5 +23,7 @@ interface UjianRepositoryInterface
 
     public function semuaAktifBerurutan(): Collection;
 
+    public function semuaAktifDenganJenisTes(): Collection;
+
     public function count(): int;
 }

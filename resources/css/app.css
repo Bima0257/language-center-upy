@@ -132,6 +132,21 @@
 }
 
 @layer components {
+    .dark .dashboard-scroll-area {
+        --color-surface-white: #1e293b;
+        --color-surface-container-low: #172033;
+        --color-surface-container-high: #273449;
+        --color-outline-variant: #334155;
+    }
+    .dark .text-primary,
+    .dark-dashboard .text-primary,
+    .dark .text-primary-container,
+    .dark-dashboard .text-primary-container,
+    .dark .hover\:text-primary:hover,
+    .dark-dashboard .hover\:text-primary:hover {
+        color: var(--color-text-heading) !important;
+    }
+
     .shadow-standard {
         box-shadow: var(--shadow-standard);
     }
@@ -153,6 +168,13 @@
     .modal-scrollbar::-webkit-scrollbar-thumb:hover {
         background: var(--color-secondary);
     }
+    .modal-scroll-container .base-form-actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 20;
+        background-color: var(--color-surface-white);
+        box-shadow: 0 -2px 8px rgba(15, 23, 42, 0.06);
+    }
     .dark .shadow-soft {
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
@@ -170,6 +192,28 @@
     }
     .dark [class*="hover:border-secondary"] {
         border-color: transparent !important;
+    }
+    .dark .modal-scroll-container .modal-header,
+    .dark .modal-scroll-container .modal-footer {
+        border-color: var(--color-outline-variant) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+    .dark .modal-scroll-container .modal-footer {
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.35);
+    }
+    .dark .modal-scroll-container {
+        background-color: color-mix(in srgb, var(--color-surface-container) 78%, transparent) !important;
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+    }
+    .dark .modal-scroll-container .modal-header,
+    .dark .modal-scroll-container .modal-footer {
+        background-color: color-mix(in srgb, var(--color-surface-container-low) 82%, transparent) !important;
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+    }
+    .dark .modal-scroll-container .modal-footer .base-form-actions {
+        background-color: var(--color-surface-container-low);
     }
     .dark .bg-surface-container-lowest[class*="border-outline-variant"]:not(.border-t):not(.border-b):not(.border-r):not(.border-l),
     .dark .bg-surface-container-low[class*="border-outline-variant"]:not(.border-t):not(.border-b):not(.border-r):not(.border-l),

@@ -9,7 +9,7 @@ import ReadingQuestionPane from "@/Pages/Ujian/PratinjauPengerjaan/Components/Re
 import ListeningQuestionPane from "@/Pages/Ujian/PratinjauPengerjaan/Components/ListeningQuestionPane.vue";
 import QuestionPreviewPane from "@/Pages/Ujian/PratinjauPengerjaan/Components/QuestionPreviewPane.vue";
 import QuestionNavigation from "@/Pages/Ujian/PratinjauPengerjaan/Components/QuestionNavigation.vue";
-import { ref, computed, watch } from "vue";
+import { onMounted, onUnmounted, ref, computed, watch } from "vue";
 
 const props = defineProps({
     sesiUjian: { type: Object, required: true },
@@ -41,6 +41,22 @@ const steps = computed(() => {
 const stepIndex = ref(0);
 const subIndex = ref(0);
 const showGridModal = ref(false);
+const previewTheme = ref("light");
+let previousDarkTheme = false;
+
+function togglePreviewTheme() {
+    previewTheme.value = previewTheme.value === "dark" ? "light" : "dark";
+    document.documentElement.classList.toggle("dark", previewTheme.value === "dark");
+}
+
+onMounted(() => {
+    previousDarkTheme = document.documentElement.classList.contains("dark");
+    document.documentElement.classList.remove("dark");
+});
+
+onUnmounted(() => {
+    document.documentElement.classList.toggle("dark", previousDarkTheme);
+});
 
 const currentStep = computed(
     () => steps.value[stepIndex.value] || { kind: "intro" },
@@ -250,6 +266,10 @@ const isMaterialAudio = computed(
     () => currentQuestion.value?.materi === "audio",
 );
 
+const isStandaloneQuestion = computed(
+    () => !isMaterialAudio.value && !materiSoal.value,
+);
+
 // Timer mock statis untuk preview
 const minutes = ref(50);
 const seconds = ref(37);
@@ -266,6 +286,10 @@ const seconds = ref(37);
         :is-warning="false"
         :is-danger="false"
         :show-timer="isQuestions"
+        soft-header
+        show-theme-toggle
+        :theme-mode="previewTheme"
+        @toggle-theme="togglePreviewTheme"
     >
         <!-- ==================== FASE: INTRO / SKILL / PART ==================== -->
         <div
@@ -296,12 +320,14 @@ const seconds = ref(37);
         </div>
 
         <!-- ==================== FASE: MENGERJAKAN SOAL ==================== -->
-        <div v-else class="flex h-full">
+        <div v-else class="flex h-full flex-col md:flex-row">
             <ReadingQuestionPane
                 v-if="!isMaterialAudio"
                 :materi-soal="materiSoal"
                 :bagian-soal-label="currentBlock.bagianSoal.nama"
                 :image-src="imageSrc"
+                :question-text="isStandaloneQuestion ? currentQuestion?.teks_soal : ''"
+                :is-standalone="isStandaloneQuestion"
             />
             <ListeningQuestionPane
                 v-else
@@ -311,7 +337,10 @@ const seconds = ref(37);
                 :audio-src="audioSrc"
             />
 
-            <section class="w-2/5 flex flex-col bg-surface-white">
+            <section
+                class="flex flex-1 min-h-0 w-full flex-col bg-surface-white md:flex-none"
+                :class="isStandaloneQuestion ? 'md:w-1/2' : 'md:w-2/5'"
+            >
                 <QuestionPreviewPane
                     :current-question="currentQuestion"
                     :global-number="globalNumber"
@@ -319,6 +348,7 @@ const seconds = ref(37);
                     :answered-count="answeredCount"
                     :answers="answers"
                     :is-audio="isMaterialAudio"
+                    :show-question-text="!isStandaloneQuestion"
                     @select-answer="selectAnswer"
                 />
                 <QuestionNavigation

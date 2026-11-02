@@ -5,6 +5,7 @@ namespace App\Modules\Ujian\Repositories;
 use App\Models\BagianSoalUjian;
 use App\Models\BagianUjian;
 use App\Models\SoalBagianUjian;
+use App\Models\Ujian;
 use App\Modules\Ujian\Repositories\Contracts\BagianUjianRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
@@ -14,6 +15,16 @@ class BagianUjianRepository implements BagianUjianRepositoryInterface
     public function create(array $data): BagianUjian
     {
         return BagianUjian::create($data);
+    }
+
+    /**
+     * @return Collection<int, BagianUjian>
+     */
+    public function semuaUntukUjian(Ujian $ujian): Collection
+    {
+        return BagianUjian::where('ujian_id', $ujian->id)
+            ->orderBy('urutan')
+            ->get();
     }
 
     public function update(BagianUjian $bagian, array $data): BagianUjian
@@ -68,13 +79,6 @@ class BagianUjianRepository implements BagianUjianRepositoryInterface
         ]);
     }
 
-    public function hapusPivotSoal(string $bagianId, string $soalId): void
-    {
-        SoalBagianUjian::where('bagian_ujian_id', $bagianId)
-            ->where('soal_id', $soalId)
-            ->delete();
-    }
-
     /**
      * @return array<string>
      */
@@ -121,11 +125,22 @@ class BagianUjianRepository implements BagianUjianRepositoryInterface
     {
         return SoalBagianUjian::with('soal')
             ->where('bagian_ujian_id', $bagianId)
+            ->orderBy('urutan')
             ->get();
     }
 
     public function perbaruiUrutanPivotSoal(string $barisId, int $urutan): void
     {
         SoalBagianUjian::whereKey($barisId)->update(['urutan' => $urutan]);
+    }
+
+    public function jumlahSoalDalamBagian(string $bagianId): int
+    {
+        return SoalBagianUjian::where('bagian_ujian_id', $bagianId)->count();
+    }
+
+    public function perbaruiJumlahSoal(BagianUjian $bagian, int $jumlah): void
+    {
+        $bagian->update(['jumlah_soal' => $jumlah]);
     }
 }

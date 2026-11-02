@@ -19,20 +19,41 @@ import {
 } from "@tabler/icons-vue";
 
 export function getNav(roles, permissions = []) {
-    const isMahasiswa = roles.includes("mahasiswa");
+    const isMahasiswa = roles.includes("student");
     const isSuperadmin = roles.includes("superadmin");
     const isAdmin = roles.includes("admin") || roles.includes("superadmin");
-    const can = (permission) => isSuperadmin || permissions.includes(permission);
+    const can = (permission) =>
+        isSuperadmin || permissions.includes(permission);
 
     const nav = [];
 
     if (isMahasiswa) {
         nav.push(
             { label: "Dasbor", icon: IconChartPie, route: "dasbor" },
-            { label: "Tryout", icon: IconClipboardCheck, route: "ujian.tersedia", permission: "exam_session.take" },
-            { label: "Ujian", icon: IconCalendarEvent, route: "ujian.jadwal", permission: "exam_session.take" },
-            { label: "Riwayat Tryout", icon: IconHistory, route: "ujian.riwayat", permission: "exam_session.take" },
-            { label: "Sertifikat", icon: IconCertificate, route: "ujian.sertifikat", permission: "exam_session.take" },
+            {
+                label: "Tryout",
+                icon: IconClipboardCheck,
+                route: "ujian.tersedia",
+                permission: "exam_session.take",
+            },
+            {
+                label: "Ujian",
+                icon: IconCalendarEvent,
+                route: "ujian.jadwal",
+                permission: "exam_session.take",
+            },
+            {
+                label: "Riwayat Tryout",
+                icon: IconHistory,
+                route: "ujian.riwayat",
+                permission: "exam_session.take",
+            },
+            {
+                label: "Sertifikat",
+                icon: IconCertificate,
+                route: "ujian.sertifikat",
+                permission: "exam_session.take",
+            },
         );
     }
 
@@ -40,42 +61,137 @@ export function getNav(roles, permissions = []) {
         nav.push(
             { label: "Dasbor", icon: IconChartPie, route: "dasbor" },
             {
-                label: "Soal",
-                icon: IconBooks,
-                children: [
-                    { label: "Bank Soal Manager", icon: IconFolders, route: "pustaka-soal.bank-soal.daftar", permission: "soal.view" },
-                    { label: "Bagian Soal", icon: IconListDetails, route: "admin.data-induk.bagian-soal.daftar", permission: "master_data.view" },
-                    { label: "Bank Soal", icon: IconBooks, route: "pustaka-soal.daftar", permission: "soal.view" },
-                ],
-            },
-            {
                 label: "Master Data",
                 icon: IconFolders,
                 children: [
-                    { label: "Kategori Tes", icon: IconCategory, route: "admin.data-induk.jenis-tes.daftar", permission: "master_data.view" },
-                    { label: "Keterampilan", icon: IconListDetails, route: "admin.data-induk.keterampilan.daftar", permission: "master_data.view" },
-                    { label: "Fakultas", icon: IconBuilding, route: "admin.data-induk.fakultas.daftar", permission: "master_data.view" },
-                    { label: "Jurusan", icon: IconSchool, route: "admin.data-induk.program-studi.daftar", permission: "master_data.view" },
-                    { label: "Interpretasi Skor", icon: IconListDetails, route: "admin.data-induk.interpretasi-skor.daftar", permission: "master_data.view" },
+                    {
+                        label: "Kategori Tes",
+                        icon: IconCategory,
+                        route: "admin.data-induk.jenis-tes.daftar",
+                        permission: "master_data.view",
+                    },
+                    {
+                        label: "Keterampilan",
+                        icon: IconListDetails,
+                        route: "admin.data-induk.keterampilan.daftar",
+                        permission: "master_data.view",
+                    },
+                    {
+                        label: "Fakultas",
+                        icon: IconBuilding,
+                        route: "admin.data-induk.fakultas.daftar",
+                        permission: "master_data.view",
+                    },
+                    {
+                        label: "Jurusan",
+                        icon: IconSchool,
+                        route: "admin.data-induk.program-studi.daftar",
+                        permission: "master_data.view",
+                    },
+                    {
+                        label: "Interpretasi Skor",
+                        icon: IconListDetails,
+                        route: "admin.data-induk.interpretasi-skor.daftar",
+                        permission: "master_data.view",
+                    },
+                ],
+            },
+            {
+                label: "Soal",
+                icon: IconBooks,
+                children: [
+                    {
+                        label: "Bank Soal Manager",
+                        icon: IconFolders,
+                        route: "pustaka-soal.bank-soal.daftar",
+                        permission: "soal.view",
+                    },
+                    {
+                        label: "Bagian Soal",
+                        icon: IconListDetails,
+                        route: "admin.data-induk.bagian-soal.daftar",
+                        permission: "master_data.view",
+                    },
+                    {
+                        label: "Bank Soal",
+                        icon: IconBooks,
+                        route: "pustaka-soal.daftar",
+                        permission: "soal.view",
+                    },
                 ],
             },
             {
                 label: "Manajemen Ujian",
                 icon: IconFileDescription,
                 children: [
-                    { label: "Daftar Ujian", icon: IconClipboardCheck, route: "admin.ujian.daftar", permission: "exam.manage" },
-                    { label: "Penjadwalan", icon: IconCalendarEvent, route: "admin.periode-ujian.daftar", permission: "periodeUjian.view" },
+                    {
+                        label: "Daftar Ujian",
+                        icon: IconClipboardCheck,
+                        route: "admin.ujian.daftar",
+                        permission: "exam.manage",
+                    },
+                    {
+                        label: "Penjadwalan",
+                        icon: IconCalendarEvent,
+                        route: "admin.periode-ujian.daftar",
+                        permission: "schedule.view",
+                    },
+                    {
+                        label: "Pendaftaran Ujian",
+                        icon: IconUsers,
+                        route: "admin.pendaftaran-ujian.daftar",
+                        permission: "exam_registration.view",
+                    },
                 ],
             },
-            { label: "Verifikasi", icon: IconUsers, route: "admin.verifikasi-pengguna", permission: "pengguna.view" },
-            { label: "Sertifikat", icon: IconCertificate, route: "admin.sertifikat.daftar", permission: "certificate.view" },
-            { label: "Dasbor Pengawas", icon: IconEyeCheck, route: "pengawas.dasbor", permission: "exam_session.monitor" },
-            { label: "Manajemen Pengguna", icon: IconUsers, route: "admin.pengguna.daftar", permission: "pengguna.view" },
-            { label: "Log Aktivitas", icon: IconHistory, route: "admin.catatan-aktivitas.daftar", permission: "audit_log.view" },
-            { label: "Analitik", icon: IconChartBar, route: "admin.analitik.daftar", permission: "analytics.view" },
-            { label: "Pengaturan", icon: IconSettings, route: "admin.pengaturan.daftar", permission: "settings.manage" },
-            { label: "Pratinjau Komponen", icon: IconCategory, route: "admin.komponen.daftar", permission: "components.view" },
-            { label: "Laporan", icon: IconReport, route: "admin.laporan.sesi", permission: "report.view" },
+            {
+                label: "Sertifikat",
+                icon: IconCertificate,
+                route: "admin.sertifikat.daftar",
+                permission: "certificate.view",
+            },
+            {
+                label: "Dasbor Pengawas",
+                icon: IconEyeCheck,
+                route: "pengawas.dasbor",
+                permission: "exam_session.monitor",
+            },
+            {
+                label: "Manajemen Pengguna",
+                icon: IconUsers,
+                route: "admin.pengguna.daftar",
+                permission: "pengguna.view",
+            },
+            {
+                label: "Log Aktivitas",
+                icon: IconHistory,
+                route: "admin.catatan-aktivitas.daftar",
+                permission: "audit_log.view",
+            },
+            {
+                label: "Analitik",
+                icon: IconChartBar,
+                route: "admin.analitik.daftar",
+                permission: "analytics.view",
+            },
+            {
+                label: "Pengaturan",
+                icon: IconSettings,
+                route: "admin.pengaturan.daftar",
+                permission: "settings.manage",
+            },
+            {
+                label: "Pratinjau Komponen",
+                icon: IconCategory,
+                route: "admin.komponen.daftar",
+                permission: "components.view",
+            },
+            {
+                label: "Laporan",
+                icon: IconReport,
+                route: "admin.laporan.sesi",
+                permission: "report.view",
+            },
         );
     }
 
@@ -118,7 +234,8 @@ export function getBreadcrumbs(title) {
     }
 
     const url = window.__inertia_page?.url || "";
-    const fallback = (candidate) => !candidate || url.includes(candidate.replace(".", "/"));
+    const fallback = (candidate) =>
+        !candidate || url.includes(candidate.replace(".", "/"));
 
     const isActiveRoute = (candidate) => {
         if (!candidate) return false;
@@ -139,7 +256,10 @@ export function getBreadcrumbs(title) {
         if (item.children) {
             for (const child of item.children) {
                 const childBase = baseOf(child.route);
-                if (isActiveRoute(child.route) || (routeName && routeMatches(routeName, childBase))) {
+                if (
+                    isActiveRoute(child.route) ||
+                    (routeName && routeMatches(routeName, childBase))
+                ) {
                     if (childBase.length > bestBase.length) {
                         bestBase = childBase;
                         best = { parent: item, child };
@@ -148,7 +268,10 @@ export function getBreadcrumbs(title) {
             }
         } else {
             const base = baseOf(item.route);
-            if (isActiveRoute(item.route) || (routeName && routeMatches(routeName, base))) {
+            if (
+                isActiveRoute(item.route) ||
+                (routeName && routeMatches(routeName, base))
+            ) {
                 if (base.length > bestBase.length) {
                     bestBase = base;
                     best = { parent: null, child: item };

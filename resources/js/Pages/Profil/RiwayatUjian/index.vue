@@ -8,7 +8,7 @@ defineProps({
 })
 
 const columns = [
-    { key: 'ujian', label: 'Ujian', sortable: true, className: 'font-medium text-primary',
+    { key: 'ujian', label: 'Ujian', sortable: true, className: 'font-medium text-text-heading',
       render: (val, row) => row.slot_ujian?.periode_ujian?.ujian?.judul || '-' },
     { key: 'created_at', label: 'Tanggal', sortable: true,
       render: (val) => val ? new Date(val).toLocaleDateString('id-ID') : '-' },

@@ -34,6 +34,36 @@ const emit = defineEmits(["update:toggle-value", "update:active-tab"]);
         </PreviewCard>
 
         <PreviewCard
+            v-if="isVisible('BaseTambahData')"
+            name="BaseTambahData"
+            scope="Global"
+            :description="componentMeta.BaseTambahData.description"
+            :path="componentMeta.BaseTambahData.path"
+        >
+            <BaseTambahData />
+        </PreviewCard>
+
+        <PreviewCard
+            v-if="isVisible('BaseFormActions')"
+            name="BaseFormActions"
+            scope="Global"
+            :description="componentMeta.BaseFormActions.description"
+            :path="componentMeta.BaseFormActions.path"
+        >
+            <BaseFormActions />
+        </PreviewCard>
+
+        <PreviewCard
+            v-if="isVisible('BaseBackButton')"
+            name="BaseBackButton"
+            scope="Global"
+            :description="componentMeta.BaseBackButton.description"
+            :path="componentMeta.BaseBackButton.path"
+        >
+            <BaseBackButton />
+        </PreviewCard>
+
+        <PreviewCard
             v-if="isVisible('BaseToggle')"
             name="BaseToggle"
             scope="Global"
@@ -46,6 +76,7 @@ const emit = defineEmits(["update:toggle-value", "update:active-tab"]);
                     label="Notifikasi email"
                     @update:model-value="emit('update:toggle-value', $event)"
                 />
+                <BaseToggle :model-value="true" label="State aktif" disabled />
                 <BaseToggle :model-value="false" label="State nonaktif" disabled />
                 <p class="text-label-md text-text-muted">
                     Nilai aktif:

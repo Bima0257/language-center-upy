@@ -10,6 +10,7 @@ defineProps({
     bankSoal: { type: Array, default: () => [] },
     opsiKeterampilan: { type: Array, default: () => [] },
     bankFilter: { type: String, default: '' },
+    lockBankSoal: { type: Boolean, default: false },
     lockKeterampilan: { type: Boolean, default: false },
 });
 
@@ -17,16 +18,27 @@ const emit = defineEmits(['close', 'submit']);
 </script>
 
 <template>
-    <BaseModal :show="show" @close="emit('close')" max-width="2xl" scrollable>
-        <div class="p-8">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-headline-md font-bold text-text-heading">{{ creating ? 'Tambah Bagian Soal' : 'Ubah Bagian Soal' }}</h2>
-                <button @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
-                    <IconX :size="20" />
-                </button>
-            </div>
-            <form @submit.prevent="emit('submit')" class="space-y-5">
-                <div class="grid grid-cols-2 gap-4">
+    <BaseModal
+        :show="show"
+        @close="emit('close')"
+        max-width="2xl"
+        aria-labelledby="bagian-soal-modal-title"
+    >
+        <template #header>
+            <BaseModalHeader>
+                <div class="px-8 py-4">
+                    <div class="flex items-center justify-between">
+                         <h2 id="bagian-soal-modal-title" class="text-headline-md font-bold text-text-heading">{{ creating ? 'Tambah Bagian Soal' : 'Ubah Bagian Soal' }}</h2>
+                         <button type="button" aria-label="Tutup form bagian soal" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
+                            <IconX :size="20" />
+                        </button>
+                    </div>
+                </div>
+            </BaseModalHeader>
+        </template>
+        <template #default>
+            <form id="form-bagian-soal" @submit.prevent="emit('submit')" class="space-y-5 px-8 pb-8 pt-6">
+                <BaseFormGrid>
                     <div>
                         <DropDown
                             v-model="form.bank_soal_id"
@@ -35,7 +47,7 @@ const emit = defineEmits(['close', 'submit']);
                             placeholder="Pilih bank"
                             option-label="nama"
                             option-value="id"
-                            :disabled="creating && bankFilter !== ''"
+                            :disabled="lockBankSoal || (creating && bankFilter !== '')"
                         />
                         <p v-if="form.errors.bank_soal_id" class="text-error-red text-xs mt-1">{{ form.errors.bank_soal_id }}</p>
                     </div>
@@ -52,9 +64,9 @@ const emit = defineEmits(['close', 'submit']);
                         />
                         <p v-if="form.errors.keterampilan_id" class="text-error-red text-xs mt-1">{{ form.errors.keterampilan_id }}</p>
                     </div>
-                </div>
+                </BaseFormGrid>
                 <div>
-                    <label class="text-label-md font-medium text-primary block mb-1.5">Nama Bagian Soal *</label>
+                    <label class="text-label-md font-medium text-text-heading block mb-1.5">Nama Bagian Soal *</label>
                     <input type="text" v-model="form.nama" required placeholder="Bagian 1"
                            class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                     <p v-if="form.errors.nama" class="text-error-red text-xs mt-1">{{ form.errors.nama }}</p>
@@ -63,24 +75,23 @@ const emit = defineEmits(['close', 'submit']);
                     </p>
                 </div>
                 <div>
-                    <label class="text-label-md font-medium text-primary block mb-1.5">Petunjuk</label>
+                    <label class="text-label-md font-medium text-text-heading block mb-1.5">Petunjuk</label>
                     <RichTextEditor v-model="form.petunjuk" placeholder="Teks arahan untuk bagianSoal ini..." :min-height="'120px'" />
                     <p v-if="form.errors.petunjuk" class="text-error-red text-xs mt-1">{{ form.errors.petunjuk }}</p>
                 </div>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" v-model="form.aktif" class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
-                    <span class="text-label-md text-text-body">Aktif</span>
-                </label>
-                <hr class="border-outline-variant/50" />
-                <div class="flex gap-4">
-                    <BaseButton type="submit" :disabled="form.processing" size="xl" class="flex-1">
-                        {{ form.processing ? 'Menyimpan...' : (creating ? 'Simpan Bagian Soal' : 'Simpan Perubahan') }}
-                    </BaseButton>
-                    <BaseButton type="button" variant="secondary" size="lg" @click="emit('close')">
-                        Batal
-                    </BaseButton>
-                </div>
+                <BaseToggle v-model="form.aktif" label="Bagian soal aktif" />
             </form>
-        </div>
+        </template>
+        <template #footer>
+            <BaseModalFooter>
+                <div class="px-8 pb-3">
+                    <BaseFormActions
+                        form="form-bagian-soal"
+                        :processing="form.processing"
+                        @cancel="emit('close')"
+                    />
+                </div>
+            </BaseModalFooter>
+        </template>
     </BaseModal>
 </template>

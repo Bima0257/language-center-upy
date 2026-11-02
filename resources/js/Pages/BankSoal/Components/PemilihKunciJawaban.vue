@@ -5,6 +5,7 @@ defineProps({
     modelValue: { type: String, default: "" },
     optionKeys: { type: Array, default: () => ["A", "B", "C", "D"] },
     label: { type: String, default: "Kunci Jawaban *" },
+    size: { type: String, default: "md" },
 });
 
 defineEmits(["update:modelValue"]);
@@ -14,13 +15,16 @@ const groupName = computed(() => `answer-${Math.random().toString(36).slice(2, 9
 
 <template>
     <div>
-        <p class="text-label-md font-medium text-primary mb-2">{{ label }}</p>
+        <p class="text-label-md font-medium text-text-heading mb-2">{{ label }}</p>
         <div class="flex flex-wrap gap-3">
             <label
                 v-for="key in optionKeys"
                 :key="key"
-                class="flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer transition-all"
-                :class="modelValue === key ? 'border-secondary bg-secondary/10' : 'border-outline-variant bg-surface-container-lowest hover:border-secondary/50'"
+                :class="[
+                    'flex items-center gap-2 border cursor-pointer transition-all',
+                    size === 'compact' ? 'rounded-lg px-4 py-2' : 'rounded-xl px-4 py-2',
+                    modelValue === key ? 'border-secondary bg-secondary/10' : 'border-outline-variant bg-surface-container-lowest hover:border-secondary/50',
+                ]"
             >
                 <input
                     type="radio"
@@ -28,9 +32,9 @@ const groupName = computed(() => `answer-${Math.random().toString(36).slice(2, 9
                     :value="key"
                     :checked="modelValue === key"
                     @change="$emit('update:modelValue', key)"
-                    class="w-4 h-4 border-outline-variant text-secondary focus:ring-secondary"
+                    class="h-4 w-4 border-outline-variant text-secondary focus:ring-secondary"
                 />
-                <span class="font-semibold" :class="modelValue === key ? 'text-secondary' : 'text-primary'">{{ key }}</span>
+                <span class="font-semibold" :class="modelValue === key ? 'text-secondary' : 'text-text-heading'">{{ key }}</span>
             </label>
         </div>
     </div>

@@ -16,7 +16,7 @@ defineProps({
          :class="[
              theme === 'dark'
                   ? (isDanger ? 'text-error-red' : isWarning ? 'text-warning' : 'text-on-primary-container')
-                  : (isDanger ? 'text-error-red' : isWarning ? 'text-warning' : 'text-primary'),
+                  : (isDanger ? 'text-error-red' : isWarning ? 'text-warning' : 'text-text-heading'),
          ]">
         <IconClock :size="18" class="opacity-80" />
         <span class="font-mono text-title-lg font-bold tabular-nums tracking-wider">

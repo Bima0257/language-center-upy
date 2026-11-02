@@ -30,6 +30,15 @@ class RoleSeeder extends Seeder
             'exam_session.monitor',
             'exam_session.terminate',
 
+            'exam_registration.view',
+            'exam_registration.apply',
+            'exam_registration.manage',
+
+            'registration_period.view',
+            'registration_period.create',
+            'registration_period.edit',
+            'registration_period.delete',
+
             'schedule.create',
             'schedule.edit',
             'schedule.delete',
@@ -84,6 +93,10 @@ class RoleSeeder extends Seeder
             'exam_session.view',
             'exam_session.monitor',
             'exam_session.terminate',
+            'exam_registration.view',
+            'exam_registration.manage',
+            'registration_period.view', 'registration_period.create',
+            'registration_period.edit', 'registration_period.delete',
             'schedule.view', 'schedule.create', 'schedule.edit', 'schedule.delete',
             'question.view', 'question.create', 'question.edit', 'question.delete',
             'review.violations',
@@ -122,6 +135,7 @@ class RoleSeeder extends Seeder
             'exam.view',
             'exam_session.view',
             'exam_session.take',
+            'exam_registration.apply',
         ]);
     }
 }

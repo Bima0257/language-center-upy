@@ -14,6 +14,18 @@ class MediaMateriSoalRepository implements MediaMateriSoalRepositoryInterface
         return MediaMateriSoal::create($data);
     }
 
+    public function findForMateriAndJenis(MateriSoal $materi, JenisMedia $jenis): ?MediaMateriSoal
+    {
+        return MediaMateriSoal::where('materi_soal_id', $materi->id)
+            ->where('jenis_media', $jenis->value)
+            ->first();
+    }
+
+    public function delete(MediaMateriSoal $media): void
+    {
+        $media->delete();
+    }
+
     public function gantiDenganJenis(MateriSoal $materi, JenisMedia $jenis, array $data): MediaMateriSoal
     {
         $materi->mediaMateriSoal()->where('jenis_media', $jenis->value)->delete();

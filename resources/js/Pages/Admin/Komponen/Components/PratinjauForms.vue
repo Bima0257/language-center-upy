@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from "vue";
 import DropDown from "@/Components/Shared/DropDown.vue";
 import FileUpload from "@/Components/Shared/FileUpload.vue";
 import PasswordStrengthCheck from "@/Components/Shared/PasswordStrengthCheck.vue";
@@ -27,10 +28,37 @@ const emit = defineEmits([
     "update:file-value",
     "update:password-value",
 ]);
+
+const filledInputValue = ref("Nama peserta");
+const emailInputValue = ref("peserta@example.com");
+const errorInputValue = ref("");
 </script>
 
 <template>
     <GrupPratinjau :group="group">
+        <PreviewCard
+            v-if="isVisible('BaseFormGrid')"
+            name="BaseFormGrid"
+            scope="Global"
+            :description="componentMeta.BaseFormGrid.description"
+            :path="componentMeta.BaseFormGrid.path"
+        >
+            <BaseFormGrid>
+                <div>
+                    <BaseFieldLabel for="form-grid-name">Nama</BaseFieldLabel>
+                    <BaseInput id="form-grid-name" placeholder="Nama peserta" />
+                </div>
+                <div>
+                    <BaseFieldLabel for="form-grid-email">Email</BaseFieldLabel>
+                    <BaseInput id="form-grid-email" type="email" placeholder="peserta@example.com" />
+                </div>
+                <div class="sm:col-span-2">
+                    <BaseFieldLabel for="form-grid-notes">Catatan panjang</BaseFieldLabel>
+                    <BaseTextarea id="form-grid-notes" rows="3" placeholder="Field panjang tetap memenuhi satu baris grid." />
+                </div>
+            </BaseFormGrid>
+        </PreviewCard>
+
         <PreviewCard
             v-if="isVisible('BaseFieldLabel')"
             name="BaseFieldLabel"
@@ -53,15 +81,50 @@ const emit = defineEmits([
             :description="componentMeta.BaseInput.description"
             :path="componentMeta.BaseInput.path"
         >
-            <div class="space-y-3">
-                <BaseInput
-                    :model-value="inputValue"
-                    placeholder="Ketik sesuatu..."
-                    @update:model-value="emit('update:input-value', $event)"
-                />
+            <div class="space-y-4">
+                <div>
+                    <BaseFieldLabel for="base-input-default">Default</BaseFieldLabel>
+                    <BaseInput
+                        id="base-input-default"
+                        :model-value="inputValue"
+                        placeholder="Ketik sesuatu..."
+                        @update:model-value="emit('update:input-value', $event)"
+                    />
+                </div>
+                <div>
+                    <BaseFieldLabel for="base-input-filled">Terisi</BaseFieldLabel>
+                    <BaseInput id="base-input-filled" v-model="filledInputValue" />
+                </div>
+                <div>
+                    <BaseFieldLabel for="base-input-email">Email</BaseFieldLabel>
+                    <BaseInput
+                        id="base-input-email"
+                        v-model="emailInputValue"
+                        type="email"
+                        placeholder="nama@example.com"
+                    />
+                </div>
+                <div>
+                    <BaseFieldLabel for="base-input-error">Error state</BaseFieldLabel>
+                    <BaseInput
+                        id="base-input-error"
+                        v-model="errorInputValue"
+                        error
+                        placeholder="Field wajib diisi"
+                    />
+                    <p class="mt-1 text-label-md text-error-red">Contoh pesan validasi.</p>
+                </div>
+                <div>
+                    <BaseFieldLabel for="base-input-disabled">Disabled</BaseFieldLabel>
+                    <BaseInput
+                        id="base-input-disabled"
+                        model-value="Input tidak dapat diubah"
+                        disabled
+                    />
+                </div>
                 <p class="text-label-md text-text-muted">
-                    Value:
-                    <span class="font-semibold text-primary">{{ inputValue || "kosong" }}</span>
+                    Value default:
+                    <span class="font-semibold text-text-heading">{{ inputValue || "kosong" }}</span>
                 </p>
             </div>
         </PreviewCard>
@@ -110,7 +173,7 @@ const emit = defineEmits([
                     @update:model-value="emit('update:radio-value', $event)"
                 />
                 <p class="text-label-md text-text-muted">
-                    Pilihan: <span class="font-semibold text-primary">{{ radioValue }}</span>
+                    Pilihan: <span class="font-semibold text-text-heading">{{ radioValue }}</span>
                 </p>
             </div>
         </PreviewCard>
@@ -134,7 +197,7 @@ const emit = defineEmits([
                 />
                 <p class="text-label-md text-text-muted">
                     Value:
-                    <span class="font-semibold text-primary">{{ dropdownValue || "kosong" }}</span>
+                    <span class="font-semibold text-text-heading">{{ dropdownValue || "kosong" }}</span>
                 </p>
             </div>
         </PreviewCard>

@@ -18,7 +18,7 @@ defineProps({
             <div class="max-w-2xl mx-auto">
                 <div class="mb-8">
                     <span
-                        class="bg-pastel-purple text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
+                        class="bg-pastel-purple text-text-heading px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
                         >{{ bagianSoalLabel || 'Audio' }}</span
                     >
                     <h1

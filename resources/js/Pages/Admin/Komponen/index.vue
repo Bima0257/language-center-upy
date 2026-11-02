@@ -52,6 +52,26 @@ const componentMeta = {
         path: "resources/js/Components/Base/BaseButton.vue",
         description: "Aksi utama dengan variant dan ukuran konsisten.",
     },
+    BaseTambahData: {
+        scope: "global",
+        path: "resources/js/Components/Base/BaseTambahData.vue",
+        description: "Tombol standar untuk aksi tambah atau create data.",
+    },
+    BaseFormActions: {
+        scope: "global",
+        path: "resources/js/Components/Base/BaseFormActions.vue",
+        description: "Aksi form konsisten dengan batal di kiri dan simpan di kanan.",
+    },
+    BaseFormGrid: {
+        scope: "global",
+        path: "resources/js/Components/Base/BaseFormGrid.vue",
+        description: "Layout form responsif untuk field pendek dua kolom dan field panjang full-width.",
+    },
+    BaseBackButton: {
+        scope: "global",
+        path: "resources/js/Components/Base/BaseBackButton.vue",
+        description: "Tombol kembali standar untuk navigasi antar halaman.",
+    },
     BaseToggle: {
         scope: "global",
         path: "resources/js/Components/Base/BaseToggle.vue",
@@ -142,6 +162,11 @@ const componentMeta = {
         path: "resources/js/Components/Shared/DataTable.vue",
         description: "Tabel client-side berbasis TanStack dengan search, filter, sorting, badge, page size, dan pagination.",
     },
+    TableFilterBar: {
+        scope: "reusable",
+        path: "resources/js/Components/Shared/TableFilterBar.vue",
+        description: "Toolbar search client-side dengan slot untuk filter tambahan pada tabel.",
+    },
     Pagination: {
         scope: "reusable",
         path: "resources/js/Components/Shared/Pagination.vue",
@@ -208,6 +233,9 @@ const componentGroups = [
         description: "Kontrol aksi, pilihan, dan navigasi konteks.",
         components: [
             "BaseButton",
+            "BaseTambahData",
+            "BaseFormActions",
+            "BaseBackButton",
             "BaseToggle",
             "BaseTabs",
             "BaseTabsChrome",
@@ -221,6 +249,7 @@ const componentGroups = [
         description: "Field input dan komponen pemilihan data.",
         components: [
             "BaseFieldLabel",
+            "BaseFormGrid",
             "BaseInput",
             "BaseInputError",
             "BaseTextarea",
@@ -245,7 +274,7 @@ const componentGroups = [
         id: "data",
         title: "Data dan visualisasi",
         description: "Komponen untuk data tabular dan visualisasi metrik.",
-        components: ["DataTable", "Pagination", "BarChart", "DoughnutChart"],
+        components: ["DataTable", "TableFilterBar", "Pagination", "BarChart", "DoughnutChart"],
     },
     {
         id: "feedback",

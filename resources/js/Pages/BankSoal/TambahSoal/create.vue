@@ -1,21 +1,18 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import UploadProgressBar from '@/Components/Shared/UploadProgressBar.vue';
-import DropDown from '@/Components/Shared/DropDown.vue';
 import UserGuide from '@/Components/Shared/UserGuide.vue';
-import PemilihKeterampilanBagian from '@/Pages/BankSoal/TambahSoal/Components/PemilihKeterampilanBagian.vue';
 import FormMateriSoal from '@/Pages/BankSoal/TambahSoal/Components/FormMateriSoal.vue';
 import DaftarSoal from '@/Pages/BankSoal/TambahSoal/Components/DaftarSoal.vue';
 import { useUploadProgress } from '@/Composables/useUploadProgress';
-import { IconBooks } from '@tabler/icons-vue';
+import { IconBook, IconBooks, IconFileDescription } from '@tabler/icons-vue';
 import { computed, nextTick, ref, watch } from 'vue';
 
 const props = defineProps({
     bankSoal: { type: Array, default: () => [] },
     opsiKeterampilan: { type: Array, default: () => [] },
     bagianSoal: { type: Array, default: () => [] },
-    materiSoal: { type: Array, default: () => [] },
     kebijakanMateriSoal: { type: Array, default: () => [] },
     bankSoalTerpilih: { type: String, default: null },
     filterKembali: { type: Object, default: () => ({}) },
@@ -26,30 +23,22 @@ const optionKeys = ['A', 'B', 'C', 'D'];
 const materiSoalMode = ref('none');
 const daftarSoalRef = ref(null);
 
-const keterampilanGlobal = ref('');
-const globalPart = ref('');
+const keterampilanGlobal = ref(String(props.filterKembali?.keterampilan || ''));
+const globalPart = ref(String(props.filterKembali?.bagian_soal_id || ''));
 
-function bagianSoalUntukKeterampilan(keterampilanId) {
-    return props.bagianSoal.filter(p =>
-        String(p.keterampilan_id) === String(keterampilanId) &&
-        String(p.bank_soal_id) === String(form.bank_soal_id),
-    );
+function policyForSkill(bankId, keterampilanId) {
+    const bank = props.bankSoal.find((item) => String(item.id) === String(bankId));
+
+    return props.kebijakanMateriSoal.find((policy) =>
+        String(policy.jenis_tes_id) === String(bank?.jenis_tes_id) &&
+        String(policy.keterampilan_id) === String(keterampilanId),
+    ) || null;
 }
 
-function globalParts() {
-    return bagianSoalUntukKeterampilan(keterampilanGlobal.value);
-}
+const isAudioQuestion = (q) => policyForSkill(form.bank_soal_id, q.keterampilan_id)?.materi === 'audio';
 
-function materialForSkill(bankId, keterampilanId) {
-    return props.kebijakanMateriSoal.find(p =>
-        String(p.bank_soal_id) === String(bankId) &&
-        String(p.keterampilan_id) === String(keterampilanId),
-    )?.material || 'text';
-}
-
-const isAudioQuestion = (q) => materialForSkill(form.bank_soal_id, q.keterampilan_id) === 'audio';
-
-const hasListeningQuestion = computed(() => materialForSkill(form.bank_soal_id, keterampilanGlobal.value) === 'audio');
+const selectedPolicy = computed(() => policyForSkill(form.bank_soal_id, keterampilanGlobal.value));
+const hasListeningQuestion = computed(() => selectedPolicy.value?.materi === 'audio');
 
 function newQuestion() {
     return {
@@ -66,7 +55,6 @@ function newQuestion() {
 
 const form = useForm({
     bank_soal_id: props.bankSoalTerpilih || '',
-    materi_soal_id: null,
     materi_baru_judul: '',
     materi_baru_isi_teks: '',
     materi_baru_berkas_audio: null,
@@ -76,18 +64,52 @@ const form = useForm({
     soal: [newQuestion()],
 });
 
+watch(selectedPolicy, (policy) => {
+    if (!policy) {
+        materiSoalMode.value = 'none';
+        form.materi_baru_judul = '';
+        form.materi_baru_isi_teks = '';
+        form.materi_baru_berkas_audio = null;
+        form.materi_baru_berkas_gambar = null;
+
+        return;
+    }
+
+    if (policy?.ketentuan_materi === 'required') {
+        materiSoalMode.value = 'new';
+    } else if (policy?.ketentuan_materi === 'forbidden') {
+        materiSoalMode.value = 'none';
+    }
+
+    if (policy.aturan_media?.text === 'forbidden') form.materi_baru_isi_teks = '';
+    if (policy.aturan_media?.audio === 'forbidden') form.materi_baru_berkas_audio = null;
+    if (policy.aturan_media?.image === 'forbidden') form.materi_baru_berkas_gambar = null;
+}, { immediate: true });
+
+watch(materiSoalMode, (mode) => {
+    if (mode !== 'new') {
+        form.materi_baru_judul = '';
+        form.materi_baru_isi_teks = '';
+        form.materi_baru_berkas_audio = null;
+        form.materi_baru_berkas_gambar = null;
+    }
+});
+
 const selectedBank = computed(() =>
     props.bankSoal.find(b => String(b.id) === String(form.bank_soal_id)) || null,
 );
 
-const materiSoalUntukBank = computed(() =>
-    props.materiSoal.filter(p => String(p.bank_soal_id) === String(form.bank_soal_id)),
+const bankIsLocked = computed(() => Number(selectedBank.value?.bagian_ujian_count || 0) > 0);
+
+const selectedKeterampilan = computed(() =>
+    props.opsiKeterampilan.find((skill) => String(skill.value) === String(keterampilanGlobal.value)) || null,
 );
 
-const materiSoalSesuai = computed(() =>
-    hasListeningQuestion.value
-        ? materiSoalUntukBank.value.filter(p => p.memiliki_audio)
-        : materiSoalUntukBank.value.filter(p => !p.memiliki_audio),
+const selectedBagianSoal = computed(() =>
+    props.bagianSoal.find((part) =>
+        String(part.id) === String(globalPart.value) &&
+        String(part.bank_soal_id) === String(form.bank_soal_id),
+    ) || null,
 );
 
 watch(keterampilanGlobal, (keterampilan) => {
@@ -97,16 +119,20 @@ watch(keterampilanGlobal, (keterampilan) => {
         q.bagian_soal_id = '';
     }
 
-    form.materi_soal_id = null;
-    if (!hasListeningQuestion.value) {
+    if (selectedPolicy.value?.aturan_media?.audio === 'forbidden') {
         form.materi_baru_berkas_audio = null;
+    }
+
+    if (selectedPolicy.value?.ketentuan_materi === 'required') {
+        materiSoalMode.value = 'new';
+    } else if (selectedPolicy.value?.ketentuan_materi === 'forbidden') {
+        materiSoalMode.value = 'none';
     }
 });
 
 watch(() => form.bank_soal_id, () => {
     keterampilanGlobal.value = '';
     globalPart.value = '';
-    form.materi_soal_id = null;
     for (const q of form.soal) {
         q.keterampilan_id = '';
         q.bagian_soal_id = '';
@@ -140,15 +166,22 @@ function removeQuestion(index) {
 }
 
 const canSubmit = computed(() => {
+    if (bankIsLocked.value) return false;
     if (!form.bank_soal_id) return false;
     if (form.soal.length === 0) return false;
     if (!keterampilanGlobal.value) return false;
     if (!globalPart.value) return false;
+    if (!selectedPolicy.value) return false;
 
-    if (materiSoalMode.value === 'existing' && !form.materi_soal_id) return false;
     if (materiSoalMode.value === 'new') {
         if (!form.materi_baru_judul.trim()) return false;
-        if (hasListeningQuestion.value && !form.materi_baru_berkas_audio) return false;
+        if (selectedPolicy.value.ketentuan_materi === 'forbidden') return false;
+        if (!form.materi_baru_isi_teks.trim() && !form.materi_baru_berkas_audio && !form.materi_baru_berkas_gambar) return false;
+        if (selectedPolicy.value.aturan_media?.text === 'required' && !form.materi_baru_isi_teks.trim()) return false;
+        if (selectedPolicy.value.aturan_media?.audio === 'required' && !form.materi_baru_berkas_audio) return false;
+        if (selectedPolicy.value.aturan_media?.image === 'required' && !form.materi_baru_berkas_gambar) return false;
+    } else if (selectedPolicy.value.ketentuan_materi === 'required') {
+        return false;
     }
 
     return form.soal.every(q => {
@@ -183,88 +216,133 @@ const indexUrl = computed(() => {
 
 <template>
     <Head title="Tambah Soal Baru" />
-    <TataLetakDasbor title="Tambah Soal Baru" subtitle="Buat soal baru beserta materi pendampingnya">
-        <Link :href="route('pustaka-soal.daftar', indexUrl)" class="inline-block text-secondary text-label-md font-medium hover:underline mb-6">← Kembali ke Pustaka Soal</Link>
-        <div class="max-w-5xl mx-auto">
-            <div class="bg-surface-white rounded-3xl p-8 shadow-soft border border-outline-variant/30">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-headline-md font-bold text-text-heading">Tambah Soal Baru</h2>
-                    <UserGuide
-                        title="Panduan Tambah Soal"
-                        :steps="[
-                             { title: 'Pilih Bank Soal', desc: 'Bank menentukan kategori tes.' },
-                             { title: 'Pilih Keterampilan & Bagian Soal', desc: 'Listening wajib menggunakan materiSoal audio; Reading memakai materiSoal teks/gambar.' },
-                             { title: 'Pilih / Buat Materi Soal', desc: 'Listening: audio (wajib) + gambar (opsional). Reading: teks atau gambar.' },
-                             { title: 'Isi Soal & Kunci', desc: 'Soal standalone langsung diisi; kunci jawaban di bawah soal.' },
-                        ]"
-                        :rules="[
-                            'Listening: materi, soal & pilihan ada di audio — materiSoal audio wajib.',
-                            'Reading: teks soal + 4 pilihan jawaban wajib diisi.',
-                        ]"
-                    />
+    <TataLetakDasbor
+        title="Tambah Soal Baru"
+        hide-header
+        :breadcrumbs="[
+            { label: 'Bank Soal', route: 'pustaka-soal.daftar' },
+            { label: 'Tambah Soal Baru' },
+        ]"
+    >
+        <template #breadcrumb-actions>
+            <UserGuide
+                title="Panduan Tambah Soal"
+                :steps="[
+                    { title: 'Tinjau konteks soal', desc: 'Bank soal, keterampilan, dan bagian mengikuti filter Pustaka Soal.' },
+                    { title: 'Tentukan materi soal', desc: 'Gunakan tanpa materi atau buat materi baru sesuai tipe keterampilan.' },
+                    { title: 'Isi soal & kunci', desc: 'Tambahkan pertanyaan, pilihan jawaban, dan kunci jawaban.' },
+                ]"
+                :rules="[
+                    'Listening wajib menggunakan materi soal audio.',
+                    'Reading wajib memiliki teks soal dan empat pilihan jawaban.',
+                ]"
+            />
+        </template>
+        <div class="w-full space-y-6">
+            <header>
+                <div>
+                    <h1 class="text-headline-lg font-bold text-text-heading">Tambah Soal Baru</h1>
+                    <p class="text-body-md text-text-muted mt-2">Buat beberapa soal sekaligus untuk bank soal yang dipilih.</p>
                 </div>
+            </header>
 
-                <form @submit.prevent="submit" class="space-y-6">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                             <div v-if="bankSoalTerpilih">
-                                <label class="text-label-md font-medium text-primary block mb-1.5">Bank Soal</label>
-                                <div class="flex items-center gap-2 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl">
-                                    <IconBooks :size="18" class="text-secondary shrink-0" />
-                                     <span class="text-body-md font-medium text-text-heading truncate">{{ selectedBank?.nama }}</span>
-                                     <span v-if="selectedBank?.jenis_tes" class="inline-block bg-pastel-blue/50 text-primary px-2.5 py-0.5 rounded-full text-label-md shrink-0">
-                                         {{ selectedBank.jenis_tes.nama }}
-                                    </span>
+            <form @submit.prevent="submit" class="space-y-6 pb-2">
+                <BaseCard :padding="false" class="p-5 md:p-7">
+                    <div class="space-y-5">
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            <div class="flex min-w-0 items-center gap-3 rounded-xl border border-outline-variant/50 bg-surface-container-lowest px-4 py-4">
+                                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pastel-blue text-secondary">
+                                    <IconBooks :size="20" />
+                                </span>
+                                <div class="min-w-0">
+                                    <p class="text-label-md text-text-muted mb-1">Bank Soal</p>
+                            <p class="truncate text-body-md font-semibold text-text-heading">{{ selectedBank?.nama || 'Belum dipilih' }}</p>
+                            <p v-if="bankIsLocked" class="mt-1 text-label-md text-error-red">
+                                Bank soal sudah digunakan di ujian dan dikunci.
+                            </p>
                                 </div>
                             </div>
-                            <div v-else>
-                                <DropDown
-                                     v-model="form.bank_soal_id"
-                                    :options="bankSoal"
-                                    label="Bank Soal *"
-                                    placeholder="Pilih Bank Soal"
-                                     :option-label="(b) => b.nama + (b.jenis_tes ? ' (' + b.jenis_tes.nama + ')' : '')"
-                                    option-value="id"
-                                />
+
+                            <div class="flex min-w-0 items-center gap-3 rounded-xl border border-outline-variant/50 bg-surface-container-lowest px-4 py-4">
+                                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pastel-purple text-secondary">
+                                    <IconBook :size="20" />
+                                </span>
+                                <div class="min-w-0">
+                                    <p class="text-label-md text-text-muted mb-1">Keterampilan</p>
+                                    <span v-if="selectedKeterampilan" class="inline-flex max-w-full truncate rounded-lg bg-pastel-blue px-3 py-1 text-label-md font-semibold text-secondary">
+                                        {{ selectedKeterampilan.label }}
+                                    </span>
+                                    <p v-else class="text-body-md font-semibold text-text-heading">Belum dipilih</p>
+                                </div>
                             </div>
-                             <p v-if="form.errors.bank_soal_id" class="text-error-red text-xs mt-1">{{ form.errors.bank_soal_id }}</p>
+
+                            <div class="flex min-w-0 items-center gap-3 rounded-xl border border-outline-variant/50 bg-surface-container-lowest px-4 py-4">
+                                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pastel-peach text-primary">
+                                    <IconFileDescription :size="20" />
+                                </span>
+                                <div class="min-w-0">
+                                    <p class="text-label-md text-text-muted mb-1">Bagian Soal</p>
+                                    <span v-if="selectedBagianSoal" class="inline-flex max-w-full truncate rounded-lg bg-success-container px-3 py-1 text-label-md font-semibold text-on-success-container">
+                                        {{ selectedBagianSoal.nama }}
+                                    </span>
+                                    <p v-else class="text-body-md font-semibold text-text-heading">Belum dipilih</p>
+                                </div>
+                            </div>
                         </div>
+
+                        <div class="border-t border-outline-variant/50 pt-6">
+                            <h2 class="text-title-lg font-semibold text-text-heading">Materi Soal</h2>
+                            <p class="text-body-md text-text-muted mt-1">Pilih tanpa materi atau buat materi baru. Audio wajib untuk soal Listening.</p>
+                        </div>
+
+                        <FormMateriSoal
+                            v-model:mode="materiSoalMode"
+                            :form="form"
+                            :policy="selectedPolicy"
+                            :has-listening-question="hasListeningQuestion"
+                        />
                     </div>
-                    <PemilihKeterampilanBagian
-                        v-model:selected-keterampilan="keterampilanGlobal"
-                        v-model:selected-bagian="globalPart"
-                        :keterampilan="opsiKeterampilan"
-                        :bagian-soal="globalParts()"
-                    />
+                </BaseCard>
 
-                    <hr class="border-outline-variant/50" />
-
-                    <FormMateriSoal
-                        v-model:mode="materiSoalMode"
-                        :form="form"
-                        :materi-soal="materiSoalSesuai"
-                        :has-listening-question="hasListeningQuestion"
-                    />
+                <section class="space-y-4">
+                    <p v-if="form.errors.soal" class="rounded-xl border border-error-red/30 bg-error-container/30 px-4 py-3 text-body-md text-error-red">
+                        {{ form.errors.soal }}
+                    </p>
 
                     <DaftarSoal
                         ref="daftarSoalRef"
                         :questions="form.soal"
+                        :errors="form.errors"
                         :materi-soal-mode="materiSoalMode"
                         :option-keys="optionKeys"
                         :is-audio-question="isAudioQuestion"
                         @add="addQuestion"
                         @remove="removeQuestion"
                     />
+                </section>
 
-                    <hr class="border-outline-variant/50" />
-                    <div class="flex gap-4">
-                        <BaseButton type="submit" :disabled="form.processing || !canSubmit" size="xl" class="flex-1">
-                            {{ form.processing ? 'Menyimpan...' : `Simpan ${form.soal.length} Soal` }}
+                <div class="sticky bottom-0 z-20 -mx-8 border-t border-outline-variant/30 bg-surface/95 px-8 py-4 backdrop-blur">
+                    <div class="flex justify-end gap-3">
+                        <BaseButton
+                            type="button"
+                            variant="secondary"
+                            size="md"
+                            :href="route('pustaka-soal.daftar', indexUrl)"
+                            class="!w-28 !rounded-lg"
+                        >
+                            Batal
                         </BaseButton>
-                        <BaseButton :href="route('pustaka-soal.daftar', indexUrl)" variant="secondary" size="lg">Batal</BaseButton>
+                        <BaseButton
+                            type="submit"
+                            size="md"
+                            :disabled="form.processing || !canSubmit"
+                            class="!w-32 !rounded-lg !bg-secondary !text-on-secondary"
+                        >
+                            {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
+                        </BaseButton>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
         <UploadProgressBar :show="showUploadProgress" :label="uploadLabel" :media-type="mediaType" />
     </TataLetakDasbor>

@@ -16,7 +16,7 @@ const emit = defineEmits(["next"]);
 
 <template>
     <div
-        class="bg-surface-white rounded-3xl shadow-standard border border-outline-variant/30 max-w-3xl w-full overflow-hidden"
+        class="bg-surface-white rounded-2xl shadow-standard border border-outline-variant/30 max-w-3xl w-full overflow-hidden"
     >
         <div class="bg-secondary px-8 py-7 text-on-secondary">
             <div class="flex items-center gap-3 mb-2">
@@ -86,7 +86,7 @@ const emit = defineEmits(["next"]);
                         <span
                             v-for="bagianSoal in keterampilan.bagianSoal"
                             :key="bagianSoal.nama"
-                            class="px-3 py-1 rounded-full bg-pastel-blue/60 text-primary text-[12px] font-semibold"
+                            class="px-3 py-1 rounded-full bg-pastel-blue/60 text-text-heading text-[12px] font-semibold"
                             >{{ bagianSoal.nama }} · {{ bagianSoal.jumlahSoal }} soal</span
                         >
                     </div>

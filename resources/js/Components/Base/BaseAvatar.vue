@@ -9,8 +9,8 @@ const props = defineProps({
 });
 
 const variantClasses = {
-    pastel: "bg-pastel-purple text-primary",
-    neutral: "bg-surface-container text-primary",
+    pastel: "bg-pastel-purple text-text-heading",
+    neutral: "bg-surface-container text-text-heading",
 };
 
 const initials = computed(() =>

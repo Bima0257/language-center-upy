@@ -3,7 +3,6 @@
 namespace App\Modules\Ujian\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Ujian\LampirkanSoalBagianRequest;
 use App\Http\Requests\Ujian\PerbaruiBagianRequest;
 use App\Http\Requests\Ujian\SimpanSusunanRequest;
 use App\Http\Requests\Ujian\SusunUlangBagianSoalRequest;
@@ -21,28 +20,22 @@ class BagianUjianController extends Controller
 
     public function perbarui(PerbaruiBagianRequest $request, Ujian $ujian, BagianUjian $bagianUjian): RedirectResponse
     {
-        $this->layananBagian->perbarui($bagianUjian, $request->validated());
+        $this->layananBagian->perbarui($ujian, $bagianUjian, $request->validated());
 
         return back()->with('success', 'Bagian ujian diperbarui.');
     }
 
     public function hapus(Ujian $ujian, BagianUjian $bagianUjian): RedirectResponse
     {
-        $this->layananBagian->hapus($bagianUjian);
+        $this->layananBagian->hapus($ujian, $bagianUjian);
 
         return back()->with('success', 'Bagian ujian dihapus.');
-    }
-
-    public function lampirkanSoal(LampirkanSoalBagianRequest $request, Ujian $ujian, BagianUjian $bagianUjian): RedirectResponse
-    {
-        $dilampirkan = $this->layananBagian->lampirkanSoal($ujian, $bagianUjian, $request->validated('soal_ids'));
-
-        return back()->with('success', "{$dilampirkan} soal berhasil ditambahkan ke bagian ujian.");
     }
 
     public function simpanSusunan(SimpanSusunanRequest $request, Ujian $ujian, BagianUjian $bagianUjian): RedirectResponse
     {
         $this->layananBagian->simpanSusunan(
+            $ujian,
             $bagianUjian,
             $request->validated('urutan_bagian_soal') ?? [],
             $request->validated('urutan_soal') ?? [],
@@ -53,14 +46,14 @@ class BagianUjianController extends Controller
 
     public function susunUlangSoal(SusunUlangSoalRequest $request, Ujian $ujian, BagianUjian $bagianUjian): RedirectResponse
     {
-        $this->layananBagian->susunUlangSoal($bagianUjian, $request->validated('urutan'));
+        $this->layananBagian->susunUlangSoal($ujian, $bagianUjian, $request->validated('urutan'));
 
         return back()->with('success', 'Nomor soal diperbarui.');
     }
 
     public function susunUlangBagianSoal(SusunUlangBagianSoalRequest $request, Ujian $ujian, BagianUjian $bagianUjian): RedirectResponse
     {
-        $this->layananBagian->susunUlangBagianSoal($bagianUjian, $request->validated('urutan'));
+        $this->layananBagian->susunUlangBagianSoal($ujian, $bagianUjian, $request->validated('urutan'));
 
         return back()->with('success', 'Urutan bagian soal diperbarui dan nomor soal disusun ulang.');
     }

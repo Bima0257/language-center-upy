@@ -32,6 +32,9 @@ Route::middleware(['auth', 'permission:question.edit'])
         Route::get('/soal/{soal}/ubah', [PustakaSoalController::class, 'ubah'])->whereUuid('soal')->name('ubah');
         Route::put('/soal/{soal}', [PustakaSoalController::class, 'perbarui'])->whereUuid('soal')->name('perbarui');
         Route::put('/materi-soal/{materiSoal}', [MateriSoalController::class, 'perbarui'])->name('materi-soal.perbarui');
+        Route::delete('/materi-soal/{materiSoal}/media/{jenisMedia}', [MateriSoalController::class, 'hapusMedia'])
+            ->whereIn('jenisMedia', ['audio', 'image'])
+            ->name('materi-soal.media.hapus');
     });
 
 Route::middleware(['auth', 'permission:question.delete'])
@@ -93,11 +96,9 @@ Route::middleware(['auth', 'permission:exam.edit'])
     ->prefix('admin/ujian')
     ->name('admin.ujian.')
     ->group(function () {
-        Route::get('/{ujian}/ubah', [UjianController::class, 'ubah'])->name('ubah');
         Route::put('/{ujian}', [UjianController::class, 'perbarui'])->name('perbarui');
         Route::post('/{ujian}/sinkronkan-bagian', [UjianController::class, 'sinkronkanBagian'])->name('sinkronkan-bagian');
         Route::put('/{ujian}/bagian/{bagianUjian}', [BagianUjianController::class, 'perbarui'])->name('bagian.perbarui');
-        Route::post('/{ujian}/bagian/{bagianUjian}/soal', [BagianUjianController::class, 'lampirkanSoal'])->name('bagian.soal.simpan');
         Route::patch('/{ujian}/bagian/{bagianUjian}/soal/urutan', [BagianUjianController::class, 'susunUlangSoal'])->name('bagian.soal.urutan');
         Route::patch('/{ujian}/bagian/{bagianUjian}/bagian-soal/urutan', [BagianUjianController::class, 'susunUlangBagianSoal'])->name('bagian.bagian-soal.urutan');
         Route::patch('/{ujian}/bagian/{bagianUjian}/susunan', [BagianUjianController::class, 'simpanSusunan'])->name('bagian.susunan');
@@ -108,15 +109,13 @@ Route::middleware(['auth', 'permission:question.create'])
     ->name('admin.ujian.')
     ->group(function () {
         Route::post('/soal', [SoalController::class, 'simpan'])->name('soal.simpan');
-        Route::post('/soal/massal', [SoalController::class, 'simpanMassal'])->name('soal.massal');
-        Route::post('/soal/impor', [SoalController::class, 'imporBerkas'])->name('soal.impor');
     });
 
 Route::middleware(['auth', 'permission:question.edit'])
     ->prefix('admin/ujian')
     ->name('admin.ujian.')
     ->group(function () {
-        Route::put('/soal/{soal}', [SoalController::class, 'perbarui'])->name('soal.perbarui');
+        Route::put('/soal/{soal}', [SoalController::class, 'perbarui'])->whereUuid('soal')->name('soal.perbarui');
     });
 
 Route::middleware(['auth', 'permission:exam.delete'])
@@ -131,5 +130,5 @@ Route::middleware(['auth', 'permission:question.delete'])
     ->prefix('admin/ujian')
     ->name('admin.ujian.')
     ->group(function () {
-        Route::delete('/soal/{soal}', [SoalController::class, 'hapus'])->name('soal.hapus');
+        Route::delete('/soal/{soal}', [SoalController::class, 'hapus'])->whereUuid('soal')->name('soal.hapus');
     });

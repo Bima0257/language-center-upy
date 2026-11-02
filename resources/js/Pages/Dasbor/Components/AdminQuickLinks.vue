@@ -5,7 +5,7 @@ import { IconFileDescription, IconUsers } from "@tabler/icons-vue";
 defineProps({
     manageExamHref: { type: String, required: true },
     proctorDashboardHref: { type: String, required: true },
-    verificationHref: { type: String, required: true },
+    registrationHref: { type: String, required: true },
     sessionReportHref: { type: String, required: true },
 });
 </script>
@@ -13,15 +13,15 @@ defineProps({
 <template>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Link
-            :href="verificationHref"
+            :href="registrationHref"
             class="bg-surface-white rounded-2xl p-5 shadow-soft border border-outline-variant/30 flex items-center justify-between hover:border-secondary transition-all"
         >
             <div>
                 <p class="text-title-lg font-semibold text-text-heading">
-                    Verifikasi Pengguna
+                    Pendaftaran Ujian
                 </p>
                 <p class="text-text-muted text-body-md">
-                    Setujui atau tolak identitas peserta
+                    Verifikasi bukti pembayaran peserta
                 </p>
             </div>
             <IconUsers
@@ -65,9 +65,9 @@ defineProps({
                 >Dasbor Pengawas</Link
             >
             <Link
-                :href="verificationHref"
+                :href="registrationHref"
                 class="border border-outline-variant text-primary px-5 py-2.5 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all"
-                >Verifikasi</Link
+                >Pendaftaran</Link
             >
             <Link
                 :href="sessionReportHref"

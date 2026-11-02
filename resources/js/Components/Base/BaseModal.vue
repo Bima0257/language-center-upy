@@ -33,6 +33,10 @@ const props = defineProps({
         type: String,
         default: '2xl',
     },
+    fitContent: {
+        type: Boolean,
+        default: false,
+    },
     closeable: {
         type: Boolean,
         default: true,
@@ -41,17 +45,32 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    ariaLabel: {
+        type: String,
+        default: null,
+    },
+    ariaLabelledby: {
+        type: String,
+        default: null,
+    },
+    ariaDescribedby: {
+        type: String,
+        default: null,
+    },
 });
 
-defineEmits(['close']);
+const emit = defineEmits(['close']);
 
 const dialog = ref();
 const showSlot = ref(props.show);
+const isClosing = ref(false);
 const closeTimer = ref(null);
 let bodyScrollLocked = false;
 let previouslyFocusedElement = null;
 
 const openDialog = () => {
+    isClosing.value = false;
+
     if (closeTimer.value) {
         clearTimeout(closeTimer.value);
         closeTimer.value = null;
@@ -81,6 +100,8 @@ const openDialog = () => {
 };
 
 const closeDialog = () => {
+    isClosing.value = true;
+
     if (bodyScrollLocked) {
         unlockBodyScroll();
         bodyScrollLocked = false;
@@ -91,6 +112,7 @@ const closeDialog = () => {
     closeTimer.value = setTimeout(() => {
         if (dialog.value?.open) dialog.value.close();
         showSlot.value = false;
+        isClosing.value = false;
         closeTimer.value = null;
 
         if (previouslyFocusedElement?.isConnected) {
@@ -99,6 +121,12 @@ const closeDialog = () => {
 
         previouslyFocusedElement = null;
     }, 200);
+};
+
+const handleCancel = (event) => {
+    event.preventDefault();
+
+    if (props.closeable) emit('close');
 };
 
 watch(
@@ -128,8 +156,15 @@ const maxWidthClass = computed(() => {
         lg: 'sm:max-w-lg',
         xl: 'sm:max-w-xl',
         '2xl': 'sm:max-w-2xl',
+        '3xl': 'sm:max-w-3xl',
+        '4xl': 'sm:max-w-4xl',
     }[props.maxWidth];
 });
+
+const modalWidthClass = computed(() => [
+    props.fitContent ? 'w-fit max-w-[calc(100vw-2rem)]' : 'w-full',
+    maxWidthClass.value,
+]);
 </script>
 
 <template>
@@ -137,7 +172,10 @@ const maxWidthClass = computed(() => {
         class="z-50 m-0 min-h-full min-w-full overflow-hidden bg-transparent backdrop:bg-transparent"
         ref="dialog"
         aria-modal="true"
-        @cancel.prevent
+        :aria-label="props.ariaLabel || undefined"
+        :aria-labelledby="props.ariaLabelledby || undefined"
+        :aria-describedby="props.ariaDescribedby || undefined"
+        @cancel="handleCancel"
     >
         <div
             class="fixed inset-0 z-50 flex items-center justify-center overflow-hidden px-4 py-6 sm:px-0"
@@ -153,7 +191,7 @@ const maxWidthClass = computed(() => {
             >
                 <div
                     v-show="show"
-                    class="fixed inset-0 transform transition-all"
+                    class="fixed inset-0 z-0 transform transition-all"
                 >
                     <div
                         class="absolute inset-0 bg-scrim/40 backdrop-blur-sm"
@@ -171,15 +209,37 @@ const maxWidthClass = computed(() => {
             >
                 <div
                     v-show="show"
-                    class="mb-0 max-h-[calc(100dvh-3rem)] transform rounded-3xl bg-surface-white shadow-soft transition-all sm:mx-auto sm:w-full"
+                    class="modal-scroll-container relative z-10 mb-0 flex max-h-[calc(100dvh-3rem)] min-h-0 flex-col overflow-hidden overscroll-contain rounded-2xl bg-surface-white shadow-soft transition-all transform dark:bg-surface-container/80 dark:backdrop-blur-sm sm:mx-auto"
                     :class="[
-                        maxWidthClass,
+                        modalWidthClass,
                         scrollable
-                            ? 'modal-scrollbar overflow-y-auto overscroll-contain'
-                            : 'overflow-hidden',
+                            ? 'h-[calc(100dvh-3rem)]'
+                            : 'h-fit',
                     ]"
                 >
-                    <slot v-if="showSlot" />
+                    <div
+                        v-if="showSlot && $slots.header"
+                        class="sticky top-0 z-20 w-full shrink-0"
+                        :class="{ invisible: isClosing }"
+                    >
+                        <slot name="header" />
+                    </div>
+                    <div
+                        class="min-h-0 overscroll-contain"
+                        :class="[
+                            'modal-scrollbar flex-1 overflow-y-auto',
+                            { invisible: isClosing },
+                        ]"
+                    >
+                        <slot v-if="showSlot" />
+                    </div>
+                    <div
+                        v-if="showSlot && $slots.footer"
+                        class="sticky bottom-0 z-20 w-full shrink-0"
+                        :class="{ invisible: isClosing }"
+                    >
+                        <slot name="footer" />
+                    </div>
                 </div>
             </Transition>
         </div>

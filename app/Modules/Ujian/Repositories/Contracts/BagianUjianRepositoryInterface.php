@@ -4,12 +4,18 @@ namespace App\Modules\Ujian\Repositories\Contracts;
 
 use App\Models\BagianUjian;
 use App\Models\SoalBagianUjian;
+use App\Models\Ujian;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
 
 interface BagianUjianRepositoryInterface
 {
     public function create(array $data): BagianUjian;
+
+    /**
+     * @return Collection<int, BagianUjian>
+     */
+    public function semuaUntukUjian(Ujian $ujian): Collection;
 
     public function update(BagianUjian $bagian, array $data): BagianUjian;
 
@@ -27,8 +33,6 @@ interface BagianUjianRepositoryInterface
     public function buatAtauTemukanPivotSoal(string $bagianId, string $soalId, int $urutan): void;
 
     public function buatPivotSoal(string $bagianId, string $soalId, int $urutan): void;
-
-    public function hapusPivotSoal(string $bagianId, string $soalId): void;
 
     /**
      * @return array<string>
@@ -52,4 +56,8 @@ interface BagianUjianRepositoryInterface
     public function barisSoalDenganSoal(string $bagianId): Collection;
 
     public function perbaruiUrutanPivotSoal(string $barisId, int $urutan): void;
+
+    public function jumlahSoalDalamBagian(string $bagianId): int;
+
+    public function perbaruiJumlahSoal(BagianUjian $bagian, int $jumlah): void;
 }

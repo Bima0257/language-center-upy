@@ -33,35 +33,46 @@ const emit = defineEmits(["update:modal-open"]);
             <BaseModal
                 :show="modalOpen"
                 max-width="md"
+                fit-content
+                aria-labelledby="component-preview-modal-title"
+                aria-describedby="component-preview-modal-description"
                 @close="emit('update:modal-open', false)"
             >
-                <div class="p-6">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <h3 class="text-title-lg font-semibold text-text-heading">Contoh modal</h3>
-                            <p class="mt-1 text-body-md text-text-muted">
-                                Modal menjaga fokus konteks dan scroll halaman.
-                            </p>
+                <template #header>
+                    <BaseModalHeader>
+                        <div class="px-6 py-4">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <h3 id="component-preview-modal-title" class="text-title-lg font-semibold text-text-heading">Contoh modal</h3>
+                                    <p id="component-preview-modal-description" class="mt-1 text-body-md text-text-muted">
+                                        Modal menjaga fokus konteks dan scroll halaman.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="text-text-muted transition-colors hover:text-primary"
+                                    aria-label="Tutup modal"
+                                    @click="emit('update:modal-open', false)"
+                                >
+                                    <IconX :size="20" />
+                                </button>
+                            </div>
                         </div>
-                        <button
-                            type="button"
-                            class="text-text-muted transition-colors hover:text-primary"
-                            aria-label="Tutup modal"
-                            @click="emit('update:modal-open', false)"
-                        >
-                            <IconX :size="20" />
-                        </button>
-                    </div>
-                    <div class="mt-6 flex justify-end">
-                        <BaseButton
-                            size="sm"
-                            variant="secondary"
-                            @click="emit('update:modal-open', false)"
-                        >
-                            Tutup
-                        </BaseButton>
-                    </div>
-                </div>
+                    </BaseModalHeader>
+                </template>
+                <template #footer>
+                    <BaseModalFooter>
+                        <div class="px-6 py-3 flex justify-end">
+                            <BaseButton
+                                    size="sm"
+                                    variant="secondary"
+                                    @click="emit('update:modal-open', false)"
+                                >
+                                    Tutup
+                                </BaseButton>
+                        </div>
+                    </BaseModalFooter>
+                </template>
             </BaseModal>
         </PreviewCard>
 

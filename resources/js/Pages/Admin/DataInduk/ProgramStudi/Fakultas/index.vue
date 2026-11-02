@@ -62,10 +62,10 @@ async function destroy(programStudi) {
     <TataLetakDasbor
         :title="`Program Studi - ${props.fakultas.nama}`"
         :subtitle="`Kelola program studi pada ${props.fakultas.nama}`"
+        :back-href="route('admin.data-induk.program-studi.daftar')"
     >
         <ProgramStudiTable
             :program-studi="props.programStudi"
-            :back-url="route('admin.data-induk.program-studi.daftar')"
             @create="goToBulkCreate"
             @edit="startEdit"
             @delete="destroy"

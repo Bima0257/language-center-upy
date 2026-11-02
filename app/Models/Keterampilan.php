@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -25,7 +26,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, BagianSoal> $bagianSoal
  * @property-read Collection<int, Soal> $soal
  * @property-read Collection<int, BagianUjian> $bagianUjian
- * @property-read Collection<int, KebijakanMateriSoal> $kebijakanMateriSoal
+ * @property-read KebijakanMateriSoal|null $kebijakanMateriSoal
  */
 class Keterampilan extends Model
 {
@@ -70,8 +71,8 @@ class Keterampilan extends Model
         return $this->hasMany(BagianUjian::class, 'keterampilan_id', 'id');
     }
 
-    public function kebijakanMateriSoal(): HasMany
+    public function kebijakanMateriSoal(): HasOne
     {
-        return $this->hasMany(KebijakanMateriSoal::class, 'keterampilan_id', 'id');
+        return $this->hasOne(KebijakanMateriSoal::class, 'keterampilan_id', 'id');
     }
 }

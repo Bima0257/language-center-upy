@@ -19,13 +19,16 @@ class BankSoalRepository implements BankSoalRepositoryInterface
 
     public function semuaAktifBerurutan(): Collection
     {
-        return BankSoal::where('aktif', true)->orderBy('nama')->get();
+        return BankSoal::withCount('bagianUjian')
+            ->where('aktif', true)
+            ->orderBy('nama')
+            ->get();
     }
 
     public function semuaAktifDenganJenisTesDanJumlah(?string $jenisTesId = null): Collection
     {
         return BankSoal::with('jenisTes')
-            ->withCount('soal')
+            ->withCount(['soal', 'bagianUjian'])
             ->where('aktif', true)
             ->when($jenisTesId !== null, fn ($query) => $query->where('jenis_tes_id', $jenisTesId))
             ->orderBy('nama')
@@ -43,7 +46,12 @@ class BankSoalRepository implements BankSoalRepositoryInterface
 
     public function find(string $id): ?BankSoal
     {
-        return BankSoal::find($id);
+        return BankSoal::withCount('bagianUjian')->find($id);
+    }
+
+    public function digunakanDalamUjian(string $id): bool
+    {
+        return BankSoal::whereKey($id)->whereHas('bagianUjian')->exists();
     }
 
     public function adaAktif(string $id): bool

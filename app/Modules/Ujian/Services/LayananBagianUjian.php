@@ -7,6 +7,7 @@ use App\Models\Ujian;
 use App\Modules\DataInduk\Repositories\Contracts\BagianSoalRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\BagianUjianRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\SoalRepositoryInterface;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -32,46 +33,24 @@ class LayananBagianUjian
         });
     }
 
-    public function perbarui(BagianUjian $bagian, array $data): BagianUjian
+    public function perbarui(Ujian $ujian, BagianUjian $bagian, array $data): BagianUjian
     {
+        $this->pastikanMilikUjian($ujian, $bagian);
+
         return $this->bagianRepo->update($bagian, $data);
     }
 
-    public function hapus(BagianUjian $bagian): void
+    public function hapus(Ujian $ujian, BagianUjian $bagian): void
     {
+        $this->pastikanMilikUjian($ujian, $bagian);
+
         $this->bagianRepo->delete($bagian);
     }
 
-    public function lampirkanSoal(Ujian $ujian, BagianUjian $bagian, array $soalIds): int
+    public function simpanSusunan(Ujian $ujian, BagianUjian $bagian, array $urutanBagianSoal, array $urutanSoal): void
     {
-        return DB::transaction(function () use ($ujian, $bagian, $soalIds) {
-            $diizinkan = $this->soalRepo->idDalam(
-                $soalIds,
-                $bagian->keterampilan_id,
-                $ujian->jenis_tes_id,
-                $bagian->bank_soal_id,
-            );
+        $this->pastikanMilikUjian($ujian, $bagian);
 
-            $sudahAda = array_intersect($this->bagianRepo->idSoalDalamBagian($bagian->id), $diizinkan);
-
-            $urutanBerikutnya = $this->bagianRepo->urutanSoalBerikutnya($bagian->id);
-
-            $dilampirkan = 0;
-            foreach ($diizinkan as $soalId) {
-                if (in_array($soalId, $sudahAda, true)) {
-                    continue;
-                }
-
-                $this->bagianRepo->buatPivotSoal($bagian->id, $soalId, $urutanBerikutnya++);
-                $dilampirkan++;
-            }
-
-            return $dilampirkan;
-        });
-    }
-
-    public function simpanSusunan(BagianUjian $bagian, array $urutanBagianSoal, array $urutanSoal): void
-    {
         DB::transaction(function () use ($bagian, $urutanBagianSoal, $urutanSoal) {
             if (! empty($urutanBagianSoal)) {
                 $bagianSoalIds = $this->bagianSoalRepo->idDenganBankDanKeterampilan($bagian->bank_soal_id, $bagian->keterampilan_id);
@@ -90,6 +69,8 @@ class LayananBagianUjian
             if (! empty($urutanSoal)) {
                 $this->pastikanNomorUnik($urutanSoal, 'urutan_soal');
                 $this->pastikanSoalDalamBagian($bagian, $urutanSoal, 'urutan_soal');
+                $this->pastikanSusunanSoalLengkap($bagian, $urutanSoal);
+                $this->pastikanSoalTetapDalamBagianSoal($bagian, $urutanSoal);
 
                 foreach ($urutanSoal as $soal) {
                     $this->bagianRepo->perbaruiUrutanSoal($bagian->id, $soal['soal_id'], $soal['nomor']);
@@ -98,10 +79,14 @@ class LayananBagianUjian
         });
     }
 
-    public function susunUlangSoal(BagianUjian $bagian, array $urutan): void
+    public function susunUlangSoal(Ujian $ujian, BagianUjian $bagian, array $urutan): void
     {
+        $this->pastikanMilikUjian($ujian, $bagian);
+
         $this->pastikanNomorUnik($urutan, 'urutan');
         $this->pastikanSoalDalamBagian($bagian, $urutan, 'urutan');
+        $this->pastikanSusunanSoalLengkap($bagian, $urutan);
+        $this->pastikanSoalTetapDalamBagianSoal($bagian, $urutan);
 
         DB::transaction(function () use ($bagian, $urutan) {
             foreach ($urutan as $soal) {
@@ -110,8 +95,10 @@ class LayananBagianUjian
         });
     }
 
-    public function susunUlangBagianSoal(BagianUjian $bagian, array $urutan): void
+    public function susunUlangBagianSoal(Ujian $ujian, BagianUjian $bagian, array $urutan): void
     {
+        $this->pastikanMilikUjian($ujian, $bagian);
+
         $bagianSoalIds = $this->bagianSoalRepo->idDenganBankDanKeterampilan($bagian->bank_soal_id, $bagian->keterampilan_id);
 
         foreach ($urutan as $bagianSoal) {
@@ -138,7 +125,17 @@ class LayananBagianUjian
             $this->bagianRepo->buatAtauTemukanPivotSoal($bagian->id, $soal->id, $nomor++);
         }
 
+        $this->sinkronkanJumlahSoal($bagian);
+
         return $soalTersedia->count();
+    }
+
+    private function sinkronkanJumlahSoal(BagianUjian $bagian): void
+    {
+        $this->bagianRepo->perbaruiJumlahSoal(
+            $bagian,
+            $this->bagianRepo->jumlahSoalDalamBagian($bagian->id),
+        );
     }
 
     private function pastikanNomorUnik(array $items, string $kunciKesalahan): void
@@ -157,6 +154,45 @@ class LayananBagianUjian
             if (! in_array($soal['soal_id'], $idSoalBagian, true)) {
                 throw ValidationException::withMessages([$kunciKesalahan => 'Soal tidak terpasang di bagian ujian ini.']);
             }
+        }
+    }
+
+    private function pastikanSusunanSoalLengkap(BagianUjian $bagian, array $items): void
+    {
+        $idSoalSaatIni = $this->bagianRepo->idSoalDalamBagian($bagian->id);
+        $idSoalDiminta = array_column($items, 'soal_id');
+
+        sort($idSoalSaatIni);
+        sort($idSoalDiminta);
+
+        if ($idSoalSaatIni !== $idSoalDiminta) {
+            throw ValidationException::withMessages([
+                'urutan_soal' => 'Susunan soal harus memuat seluruh soal di bagian ujian ini.',
+            ]);
+        }
+    }
+
+    private function pastikanSoalTetapDalamBagianSoal(BagianUjian $bagian, array $items): void
+    {
+        $barisSoal = $this->bagianRepo->barisSoalDenganSoal($bagian->id);
+        $bagianSoalPerSoal = $barisSoal->mapWithKeys(
+            fn ($baris): array => [
+                $baris->soal_id => (string) ($baris->soal->bagian_soal_id ?? 'none'),
+            ],
+        );
+        $urutanBagianSaatIni = $barisSoal
+            ->map(fn ($baris): string => (string) ($baris->soal->bagian_soal_id ?? 'none'))
+            ->values()
+            ->all();
+        $urutanBagianDiminta = collect($items)
+            ->map(fn (array $item): string => (string) $bagianSoalPerSoal->get($item['soal_id']))
+            ->values()
+            ->all();
+
+        if ($urutanBagianSaatIni !== $urutanBagianDiminta) {
+            throw ValidationException::withMessages([
+                'urutan_soal' => 'Soal tidak boleh dipindahkan ke bagian soal lain.',
+            ]);
         }
     }
 
@@ -194,6 +230,13 @@ class LayananBagianUjian
         $nomor = 1;
         foreach ($baris as $barisSoal) {
             $this->bagianRepo->perbaruiUrutanPivotSoal($barisSoal->id, $nomor++);
+        }
+    }
+
+    private function pastikanMilikUjian(Ujian $ujian, BagianUjian $bagian): void
+    {
+        if ($bagian->ujian_id !== $ujian->id) {
+            throw (new ModelNotFoundException)->setModel(BagianUjian::class, [$bagian->id]);
         }
     }
 }

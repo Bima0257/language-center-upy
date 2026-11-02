@@ -12,6 +12,11 @@ interface MateriSoalRepositoryInterface
 
     public function semuaBerurutan(): Collection;
 
+    /**
+     * @return Collection<int, MateriSoal>
+     */
+    public function semuaUntukBank(string $bankSoalId): Collection;
+
     public function find(string $id): ?MateriSoal;
 
     public function create(array $data): MateriSoal;

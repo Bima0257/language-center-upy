@@ -126,10 +126,10 @@ function submit() {
     <TataLetakDasbor
         :title="`Tambah Massal Program Studi`"
         :subtitle="`Tambahkan program studi untuk ${props.fakultas.nama}`"
+        :back-href="route('admin.data-induk.program-studi.fakultas.daftar', props.fakultas.id)"
     >
         <ProgramStudiBulkTable
             :program-studi="programStudi"
-            :back-url="route('admin.data-induk.program-studi.fakultas.daftar', props.fakultas.id)"
             @create="openCreate"
             @edit="openEdit"
             @delete="removeDraft"
@@ -151,7 +151,6 @@ function submit() {
             :form="draftForm"
             :fakultas="[props.fakultas]"
             lock-faculty
-            submit-label="Tambah ke Daftar"
             @close="closeModal"
             @submit="saveDraft"
         />

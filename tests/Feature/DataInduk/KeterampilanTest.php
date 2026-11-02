@@ -3,6 +3,7 @@
 namespace Tests\Feature\DataInduk;
 
 use App\Models\JenisTes;
+use App\Models\KebijakanMateriSoal;
 use App\Models\Keterampilan;
 use App\Models\Pengguna;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -68,6 +69,90 @@ class KeterampilanTest extends TestCase
             ->firstOrFail();
 
         $this->assertSame('001003', $keterampilan->kode);
+    }
+
+    public function test_admin_dapat_menyimpan_policy_materi_per_keterampilan(): void
+    {
+        $this->masukSebagai('admin');
+        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->firstOrFail();
+
+        $this->post('/admin/data-induk/keterampilan', [
+            'jenis_tes_id' => $jenisTes->id,
+            'nama' => 'Speaking Audio',
+            'aktif' => true,
+            'ketentuan_materi' => 'required',
+            'aturan_media' => [
+                'text' => 'forbidden',
+                'audio' => 'required',
+                'image' => 'optional',
+            ],
+        ])->assertRedirect();
+
+        $keterampilan = Keterampilan::where('nama', 'Speaking Audio')->firstOrFail();
+        $kebijakan = KebijakanMateriSoal::where('keterampilan_id', $keterampilan->id)->firstOrFail();
+
+        $this->assertSame('required', $kebijakan->ketentuan_materi->value);
+        $this->assertDatabaseHas('aturan_media_materi_soal', [
+            'kebijakan_materi_soal_id' => $kebijakan->id,
+            'jenis_media' => 'audio',
+            'ketentuan' => 'required',
+        ]);
+    }
+
+    public function test_policy_materi_kontradiktif_ditolak(): void
+    {
+        $this->masukSebagai('admin');
+        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->firstOrFail();
+
+        $this->post('/admin/data-induk/keterampilan', [
+            'jenis_tes_id' => $jenisTes->id,
+            'nama' => 'Policy Kontradiktif',
+            'aktif' => true,
+            'ketentuan_materi' => 'optional',
+            'aturan_media' => [
+                'text' => 'optional',
+                'audio' => 'required',
+                'image' => 'forbidden',
+            ],
+        ])->assertSessionHasErrors('ketentuan_materi');
+
+        $this->assertDatabaseMissing('keterampilan', ['nama' => 'Policy Kontradiktif']);
+    }
+
+    public function test_policy_materi_dapat_dikosongkan_jika_keterampilan_belum_dipakai_soal(): void
+    {
+        $this->masukSebagai('admin');
+        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->firstOrFail();
+
+        $this->post('/admin/data-induk/keterampilan', [
+            'jenis_tes_id' => $jenisTes->id,
+            'nama' => 'Policy Yang Dikosongkan',
+            'aktif' => true,
+            'ketentuan_materi' => 'required',
+            'aturan_media' => [
+                'text' => 'required',
+                'audio' => 'forbidden',
+                'image' => 'optional',
+            ],
+        ])->assertRedirect();
+
+        $keterampilan = Keterampilan::where('nama', 'Policy Yang Dikosongkan')->firstOrFail();
+
+        $this->put("/admin/data-induk/keterampilan/{$keterampilan->id}", [
+            'nama' => $keterampilan->nama,
+            'deskripsi' => null,
+            'aktif' => true,
+            'ketentuan_materi' => null,
+            'aturan_media' => [
+                'text' => null,
+                'audio' => null,
+                'image' => null,
+            ],
+        ])->assertRedirect();
+
+        $this->assertDatabaseMissing('kebijakan_materi_soal', [
+            'keterampilan_id' => $keterampilan->id,
+        ]);
     }
 
     public function test_nama_keterampilan_duplikat_dalam_jenis_tes_ditolak(): void

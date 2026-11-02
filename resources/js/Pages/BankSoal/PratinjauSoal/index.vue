@@ -58,10 +58,7 @@ function goBack() {
                         class="flex items-center gap-2 px-4 py-1.5 bg-secondary-container hover:bg-secondary-container/80 text-on-secondary-container rounded-full font-label-md text-label-md font-bold transition-all active:scale-95 duration-150 shadow-lg">
                     <IconEye :size="14" /> {{ showKey ? 'Sembunyikan Kunci' : 'Tampilkan Kunci' }}
                 </button>
-                    <button @click="goBack"
-                        class="flex items-center gap-2 px-4 py-1.5 bg-surface-white text-primary-container rounded-full font-label-md text-label-md font-bold transition-all active:scale-95 duration-150">
-                        <IconArrowLeft :size="14" /> Kembali
-                    </button>
+                    <BaseBackButton @click="goBack" />
             </div>
         </header>
 
@@ -104,9 +101,7 @@ function goBack() {
                         class="px-6">
                     Selanjutnya <IconArrowRight :size="16" class="transition-transform group-hover:translate-x-1" />
                 </BaseButton>
-                <BaseButton v-else @click="goBack" class="px-6">
-                    <IconArrowLeft :size="16" /> Kembali
-                </BaseButton>
+                <BaseBackButton v-else @click="goBack" />
             </footer>
     </div>
 </template>

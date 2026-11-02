@@ -24,7 +24,8 @@ class MediaController extends Controller
 
         $full = str_replace('\\', '/', $full);
 
-        if (strncmp($full, $root, strlen($root)) !== 0) {
+        $rootWithSeparator = rtrim($root, '/').'/';
+        if ($full !== $root && ! str_starts_with($full, $rootWithSeparator)) {
             abort(404);
         }
 

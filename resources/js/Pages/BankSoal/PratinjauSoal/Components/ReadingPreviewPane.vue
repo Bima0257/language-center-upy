@@ -29,7 +29,7 @@ function isCorrect(key) {
     <section class="w-1/2 border-r border-outline-variant overflow-y-auto scroll-hide p-8 bg-surface-bright">
         <div class="max-w-xl mx-auto">
             <div class="mb-8">
-                <span class="bg-pastel-blue text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block">{{ bagianSoalLabel || 'Materi' }}</span>
+                <span class="bg-pastel-blue text-text-heading px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block">{{ bagianSoalLabel || 'Materi' }}</span>
                 <h1 v-if="materiSoal" class="font-serif text-2xl leading-tight text-text-heading font-bold mb-6">{{ materiSoal.judul }}</h1>
                 <h1 v-else class="font-serif text-2xl leading-tight text-text-heading font-bold mb-6">Soal Standalone</h1>
             </div>

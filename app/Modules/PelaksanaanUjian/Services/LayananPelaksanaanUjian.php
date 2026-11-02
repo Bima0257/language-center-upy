@@ -53,10 +53,7 @@ class LayananPelaksanaanUjian
         }
 
         return $soal->each(function ($dataSoal) {
-            $materi = $this->kebijakanMateri->materiUntuk(
-                $dataSoal->bank_soal_id,
-                $dataSoal->keterampilan_id,
-            );
+            $materi = $this->kebijakanMateri->materiUntuk($dataSoal->keterampilan_id);
 
             if ($materi !== null) {
                 $dataSoal->materi = $materi;

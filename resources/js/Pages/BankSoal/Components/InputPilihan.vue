@@ -8,7 +8,7 @@ defineProps({
 
 <template>
     <div>
-        <p class="text-label-md font-medium text-primary mb-2">
+        <p class="text-label-md font-medium text-text-heading mb-2">
             Pilihan Jawaban <span class="text-error-red">*</span>
         </p>
         <div :class="size === 'md' ? 'space-y-3' : 'space-y-2'">
@@ -19,10 +19,12 @@ defineProps({
             >
                 <span
                     :class="[
-                        'shrink-0 flex items-center justify-center rounded-full border border-outline-variant font-semibold text-primary text-sm',
+                        'shrink-0 flex items-center justify-center rounded-full border border-outline-variant font-semibold text-text-heading text-sm',
                         size === 'md'
                             ? 'w-8 h-8 bg-surface-container-low'
-                            : 'w-7 h-7 bg-surface-white',
+                            : size === 'compact'
+                                ? 'w-9 h-9 bg-pastel-blue/30 text-secondary'
+                                : 'w-7 h-7 bg-surface-white',
                     ]"
                 >{{ key }}</span>
                 <input
@@ -34,7 +36,9 @@ defineProps({
                         'flex-1 px-4 py-2.5 border border-outline-variant text-body-md text-text-body focus:outline-none focus:border-secondary',
                         size === 'md'
                             ? 'bg-surface-container-lowest rounded-2xl py-3'
-                            : 'bg-surface-white rounded-xl',
+                            : size === 'compact'
+                                ? 'bg-surface-white rounded-xl py-2'
+                                : 'bg-surface-white rounded-xl',
                     ]"
                 />
             </div>

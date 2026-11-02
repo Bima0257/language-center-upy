@@ -10,6 +10,8 @@ interface PenggunaRepositoryInterface
 {
     public function count(): int;
 
+    public function findOrFail(string $id): Pengguna;
+
     public function penggunaMenungguVerifikasi(): Collection;
 
     public function temukanDenganEmail(string $email): ?Pengguna;

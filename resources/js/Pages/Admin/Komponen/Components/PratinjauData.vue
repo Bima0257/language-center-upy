@@ -1,8 +1,11 @@
 <script setup>
+import { ref } from "vue";
 import BarChart from "@/Components/Charts/BarChart.vue";
 import DoughnutChart from "@/Components/Charts/DoughnutChart.vue";
 import DataTable from "@/Components/Shared/DataTable.vue";
+import DropDown from "@/Components/Shared/DropDown.vue";
 import Pagination from "@/Components/Shared/Pagination.vue";
+import TableFilterBar from "@/Components/Shared/TableFilterBar.vue";
 import PreviewCard from "@/Pages/Admin/Komponen/Components/KartuPratinjau.vue";
 import GrupPratinjau from "@/Pages/Admin/Komponen/Components/GrupPratinjau.vue";
 
@@ -21,10 +24,51 @@ defineProps({
     toggleTableLoading: { type: Function, required: true },
     updateTableSearch: { type: Function, required: true },
 });
+
+const filterBarSearch = ref("");
+const filterBarStatus = ref("");
+const filterBarStatusOptions = [
+    { id: "all", nama: "Semua status" },
+    { id: "active", nama: "Aktif" },
+    { id: "inactive", nama: "Nonaktif" },
+];
 </script>
 
 <template>
     <GrupPratinjau :group="group">
+        <PreviewCard
+            v-if="isVisible('TableFilterBar')"
+            name="TableFilterBar"
+            scope="Reusable"
+            :description="componentMeta.TableFilterBar.description"
+            :path="componentMeta.TableFilterBar.path"
+        >
+            <div class="space-y-3">
+                <TableFilterBar
+                    v-model:search="filterBarSearch"
+                    search-placeholder="Cari peserta..."
+                >
+                    <template #filters>
+                        <DropDown
+                            v-model="filterBarStatus"
+                            :options="filterBarStatusOptions"
+                            option-label="nama"
+                            option-value="id"
+                            placeholder="Semua status"
+                            size="sm"
+                            button-class="min-w-[140px]"
+                            clearable
+                            menu-placement="auto"
+                            teleport-menu
+                        />
+                    </template>
+                </TableFilterBar>
+                <p class="text-label-md text-text-muted">
+                    Search dan filter tambahan dapat dikendalikan oleh parent melalui model dan slot.
+                </p>
+            </div>
+        </PreviewCard>
+
         <div v-if="isVisible('DataTable')" class="xl:col-span-2">
             <PreviewCard
                 name="DataTable"

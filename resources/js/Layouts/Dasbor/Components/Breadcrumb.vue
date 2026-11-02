@@ -23,14 +23,14 @@ defineProps({
             </Link>
             <span
                 v-else-if="item.route"
-                :class="i === items.length - 1 ? 'text-primary font-semibold' : 'text-text-muted'"
+                :class="i === items.length - 1 ? 'text-text-heading font-semibold' : 'text-text-muted'"
                 class="whitespace-nowrap"
             >
                 {{ item.label }}
             </span>
             <span
                 v-else
-                :class="i === items.length - 1 ? 'text-primary font-semibold' : 'text-text-muted'"
+                :class="i === items.length - 1 ? 'text-text-heading font-semibold' : 'text-text-muted'"
                 class="whitespace-nowrap"
             >
                 {{ item.label }}

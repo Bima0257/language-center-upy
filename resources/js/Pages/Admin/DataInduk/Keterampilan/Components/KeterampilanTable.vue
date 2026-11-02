@@ -1,11 +1,10 @@
 <script setup>
-import { IconArrowLeft, IconEdit, IconGripVertical, IconPlus, IconTrash } from '@tabler/icons-vue';
+import { IconEdit, IconGripVertical, IconTrash } from '@tabler/icons-vue';
 import draggable from 'vuedraggable';
 
-const props = defineProps({
+defineProps({
     keterampilan: { type: Array, default: () => [] },
     reordering: { type: Boolean, default: false },
-    backUrl: { type: String, required: true },
 });
 
 const emit = defineEmits(['create', 'reorder', 'edit', 'delete']);
@@ -20,6 +19,7 @@ function descriptionPreview(html) {
     const text = stripHtml(html);
     return text ? (text.length > 60 ? text.substring(0, 60) + '…' : text) : '-';
 }
+
 </script>
 
 <template>
@@ -32,12 +32,7 @@ function descriptionPreview(html) {
                 </span>
             </div>
             <div class="flex items-center gap-2">
-                <BaseButton variant="secondary" size="sm" :href="props.backUrl">
-                    <IconArrowLeft :size="16" /> Kembali
-                </BaseButton>
-                <BaseButton size="sm" @click="emit('create')">
-                    <IconPlus :size="16" /> Tambah Keterampilan
-                </BaseButton>
+                <BaseTambahData @click="emit('create')" />
             </div>
         </div>
 
@@ -75,9 +70,11 @@ function descriptionPreview(html) {
                                 {{ descriptionPreview(element.deskripsi) }}
                             </td>
                             <td class="px-5 py-3.5">
-                                <BaseBadge :variant="element.aktif ? 'success' : 'neutral'">
-                                    {{ element.aktif ? 'Aktif' : 'Nonaktif' }}
-                                </BaseBadge>
+                                <div class="flex flex-col items-start gap-1.5">
+                                    <BaseBadge :variant="element.aktif ? 'success' : 'neutral'">
+                                        {{ element.aktif ? 'Aktif' : 'Nonaktif' }}
+                                    </BaseBadge>
+                                </div>
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center gap-2">

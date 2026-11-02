@@ -11,6 +11,7 @@ const props = defineProps({
     variant: { type: String, default: "inline" },
     mediaType: { type: String, default: "image" },
     previewUrl: { type: String, default: null },
+    previewInDropzone: { type: Boolean, default: false },
     required: { type: Boolean, default: false },
     error: { type: String, default: null },
 });
@@ -28,6 +29,10 @@ const displayName = computed(
 
 const displayPreview = computed(
     () => props.previewUrl || (props.modelValue ? URL.createObjectURL(props.modelValue) : null),
+);
+
+const showInlineImagePreview = computed(
+    () => props.previewInDropzone && props.mediaType === "image" && displayPreview.value,
 );
 
 function onSelect(e) {
@@ -83,12 +88,32 @@ function remove() {
         <!-- DROPZONE: kotak upload besar -->
         <template v-else>
             <div
-                class="border-2 border-dashed border-outline-variant rounded-2xl p-6 text-center hover:border-secondary transition-colors cursor-pointer"
-                :class="{ 'border-error-red': error }"
+                class="relative border-2 border-dashed border-outline-variant rounded-2xl text-center hover:border-secondary transition-colors cursor-pointer"
+                :class="[
+                    { 'border-error-red': error },
+                    showInlineImagePreview ? 'p-3' : 'p-6',
+                ]"
                 @click="inputRef?.click()"
             >
-                <IconUpload class="mx-auto text-text-muted mb-2" :size="24" stroke="1.5" />
-                <p class="text-label-md text-text-body font-medium">{{ displayName }}</p>
+                <template v-if="showInlineImagePreview">
+                    <img
+                        :src="displayPreview"
+                        class="mx-auto max-h-40 max-w-full rounded-xl object-contain"
+                        alt="Pratinjau gambar pendukung"
+                    />
+                    <button
+                        type="button"
+                        @click.stop="remove"
+                        class="absolute -top-2 -right-2 w-6 h-6 bg-error-red text-on-error rounded-full flex items-center justify-center hover:bg-error-container hover:text-on-error-container transition-colors shadow-sm"
+                        title="Hapus gambar"
+                    >
+                        <IconX :size="14" />
+                    </button>
+                </template>
+                <template v-else>
+                    <IconUpload class="mx-auto text-text-muted mb-2" :size="24" stroke="1.5" />
+                    <p class="text-label-md text-text-body font-medium">{{ displayName }}</p>
+                </template>
                 <p v-if="hint" class="text-xs text-text-muted mt-1">{{ hint }}</p>
             </div>
             <input
@@ -99,7 +124,7 @@ function remove() {
                 @change="onSelect"
             />
 
-            <div v-if="displayPreview" class="relative mt-3 bg-surface-container-low rounded-xl p-3">
+            <div v-if="displayPreview && !showInlineImagePreview" class="relative mt-3 bg-surface-container-low rounded-xl p-3">
                 <audio
                     v-if="mediaType === 'audio'"
                     :src="displayPreview"

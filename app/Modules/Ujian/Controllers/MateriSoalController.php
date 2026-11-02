@@ -37,6 +37,17 @@ class MateriSoalController extends Controller
         return back()->with('success', 'Materi soal berhasil diperbarui.');
     }
 
+    public function hapusMedia(MateriSoal $materiSoal, string $jenisMedia): RedirectResponse
+    {
+        try {
+            $this->layananMateri->hapusMedia($materiSoal, $jenisMedia);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Media materi soal berhasil dihapus.');
+    }
+
     public function hapus(MateriSoal $materiSoal): RedirectResponse
     {
         try {

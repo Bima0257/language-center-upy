@@ -21,8 +21,8 @@ class UnggahIdentitasRequest extends FormRequest
             'fakultas_id' => 'required|uuid|exists:fakultas,id',
             'program_studi_id' => 'required|uuid|exists:program_studi,id',
             'tahun_angkatan' => 'required|integer|min:2000|max:'.(date('Y') + 1),
-            'foto_identitas' => 'required|image|mimes:jpg,jpeg,png|max:5120',
-            'foto' => 'required|image|mimes:jpg,jpeg,png|max:5120',
+            'foto_identitas' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+            'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         ];
     }
 }

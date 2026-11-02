@@ -6,6 +6,7 @@ const props = defineProps({
     href: { type: String, default: null },
     variant: { type: String, default: "primary" },
     type: { type: String, default: "button" },
+    form: { type: String, default: null },
     disabled: { type: Boolean, default: false },
     size: { type: String, default: "md" },
 });
@@ -41,7 +42,7 @@ const classes = computed(() =>
     <Link v-if="href" :href="href" :class="classes">
         <slot />
     </Link>
-    <button v-else :type="type" :disabled="disabled" :class="classes">
+    <button v-else :type="type" :form="form" :disabled="disabled" :class="classes">
         <slot />
     </button>
 </template>

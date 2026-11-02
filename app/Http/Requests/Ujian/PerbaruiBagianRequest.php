@@ -20,7 +20,6 @@ class PerbaruiBagianRequest extends FormRequest
             'keterampilan_id' => ['uuid', 'exists:keterampilan,id'],
             'judul' => ['string', 'max:255'],
             'urutan' => ['integer'],
-            'jumlah_soal' => ['nullable', 'integer'],
         ];
     }
 }
