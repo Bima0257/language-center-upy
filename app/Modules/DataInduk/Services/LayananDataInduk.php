@@ -442,6 +442,11 @@ class LayananDataInduk
      */
     private function simpanKebijakanJikaDikirim(Keterampilan $keterampilan, array $data): void
     {
+        if (! array_key_exists('ketentuan_materi', $data)
+            && ! array_key_exists('aturan_media', $data)) {
+            return;
+        }
+
         $ketentuanMateri = $data['ketentuan_materi'] ?? null;
         $aturanMedia = $data['aturan_media'] ?? null;
         $adaNilaiPolicy = $ketentuanMateri !== null

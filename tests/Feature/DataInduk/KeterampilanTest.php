@@ -224,7 +224,7 @@ class KeterampilanTest extends TestCase
         $this->put("/admin/data-induk/keterampilan/{$keterampilan->id}", [
             'nama' => 'Reading Updated',
             'aktif' => true,
-        ])->assertRedirect();
+        ])->assertRedirect()->assertSessionDoesntHaveErrors();
 
         $this->assertDatabaseHas('keterampilan', [
             'id' => $keterampilan->id,
