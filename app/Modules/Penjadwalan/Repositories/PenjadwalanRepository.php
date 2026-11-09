@@ -11,12 +11,56 @@ use Illuminate\Support\Carbon;
 
 class PenjadwalanRepository implements PenjadwalanRepositoryInterface
 {
-    public function paginateSemua(int $perPage = 15): LengthAwarePaginator
-    {
-        return PeriodeUjian::with('ujian')
+    public function paginateSemua(
+        int $perPage = 15,
+        ?string $jenisTesId = null,
+        ?string $ujianId = null,
+    ): LengthAwarePaginator {
+        return PeriodeUjian::with('ujian.jenisTes')
+            ->when($jenisTesId !== null, fn ($query) => $query->whereHas(
+                'ujian',
+                fn ($ujian) => $ujian->where('jenis_tes_id', $jenisTesId),
+            ))
+            ->when($ujianId !== null, fn ($query) => $query->where('ujian_id', $ujianId))
             ->withCount('slotUjian')
             ->latest('tanggal_mulai')
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    public function paginatorKosong(int $perPage = 15): LengthAwarePaginator
+    {
+        return PeriodeUjian::query()
+            ->whereRaw('1 = 0')
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<string, int>
+     */
+    public function jumlahPeriodePerJenisTes(): \Illuminate\Support\Collection
+    {
+        return PeriodeUjian::query()
+            ->join('ujian', 'ujian.id', '=', 'periode_ujian.ujian_id')
+            ->select('ujian.jenis_tes_id')
+            ->selectRaw('COUNT(periode_ujian.id) AS jumlah_periode')
+            ->groupBy('ujian.jenis_tes_id')
+            ->pluck('jumlah_periode', 'ujian.jenis_tes_id');
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<string, int>
+     */
+    public function jumlahPeriodePerUjian(?string $jenisTesId = null): \Illuminate\Support\Collection
+    {
+        return PeriodeUjian::query()
+            ->join('ujian', 'ujian.id', '=', 'periode_ujian.ujian_id')
+            ->when($jenisTesId !== null, fn ($query) => $query->where('ujian.jenis_tes_id', $jenisTesId))
+            ->select('periode_ujian.ujian_id')
+            ->selectRaw('COUNT(periode_ujian.id) AS jumlah_periode')
+            ->groupBy('periode_ujian.ujian_id')
+            ->pluck('jumlah_periode', 'periode_ujian.ujian_id');
     }
 
     public function findOrFail(string $id): PeriodeUjian
@@ -33,11 +77,17 @@ class PenjadwalanRepository implements PenjadwalanRepositoryInterface
             ->get();
     }
 
-    public function semuaAktifUntukPendaftaran(?string $kecualiPeriodePendaftaranId = null): Collection
-    {
+    public function semuaAktifUntukPendaftaran(
+        ?string $kecualiPeriodePendaftaranId = null,
+        ?string $jenisTesId = null,
+    ): Collection {
         return PeriodeUjian::query()
             ->where('aktif', true)
             ->whereHas('ujian', fn ($query) => $query->where('aktif', true))
+            ->when($jenisTesId !== null, fn ($query) => $query->whereHas(
+                'ujian',
+                fn ($ujian) => $ujian->where('jenis_tes_id', $jenisTesId),
+            ))
             ->whereDoesntHave('periodePendaftaran', function ($query) use ($kecualiPeriodePendaftaranId): void {
                 $query->when($kecualiPeriodePendaftaranId, fn ($query) => $query->where('id', '!=', $kecualiPeriodePendaftaranId));
             })

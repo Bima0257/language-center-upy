@@ -9,6 +9,7 @@ const props = defineProps({
     form: { type: String, default: null },
     disabled: { type: Boolean, default: false },
     size: { type: String, default: "md" },
+    iconOnly: { type: Boolean, default: false },
 });
 
 const variantClasses = {
@@ -31,9 +32,9 @@ const sizeClasses = {
 
 const classes = computed(() =>
     [
-        "inline-flex items-center justify-center gap-2 rounded-full transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:ring-offset-2",
+        "inline-flex items-center justify-center gap-2 rounded-full transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:ring-offset-2",
         variantClasses[props.variant],
-        sizeClasses[props.size],
+        props.iconOnly ? "h-8 w-8 p-2 gap-0" : sizeClasses[props.size],
     ].join(" "),
 );
 </script>

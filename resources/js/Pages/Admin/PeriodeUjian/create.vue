@@ -23,7 +23,6 @@ function submit() {
     <TataLetakDasbor title="Buat Periode Ujian" subtitle="Buat periode ujian baru beserta slotnya">
         <div class="max-w-2xl mx-auto">
             <BaseCard padding="p-8">
-                <p class="text-text-body text-body-md mb-6">Ujian: <strong>{{ ujian.judul }}</strong></p>
                 <FormPeriodeUjian :form="form" creating @submit="submit" />
             </BaseCard>
         </div>

@@ -2,8 +2,11 @@
 
 namespace App\Modules\Penjadwalan\Services;
 
+use App\Models\JenisTes;
 use App\Models\PeriodeUjian;
 use App\Models\SlotUjian;
+use App\Models\Ujian;
+use App\Modules\DataInduk\Repositories\Contracts\JenisTesRepositoryInterface;
 use App\Modules\Penjadwalan\Repositories\Contracts\PenjadwalanRepositoryInterface;
 use App\Modules\Penjadwalan\Repositories\Contracts\SlotUjianRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\UjianRepositoryInterface;
@@ -16,13 +19,62 @@ class LayananPenjadwalan
         private PenjadwalanRepositoryInterface $penjadwalanRepo,
         private SlotUjianRepositoryInterface $slotRepo,
         private UjianRepositoryInterface $ujianRepo,
+        private JenisTesRepositoryInterface $jenisTesRepo,
     ) {}
 
-    public function dataDaftar(int $perPage = 15): array
-    {
+    public function dataDaftar(
+        ?string $jenisTesId = null,
+        ?string $ujianId = null,
+        int $perPage = 15,
+    ): array {
+        $jenisTes = $this->jenisTesRepo->semuaAktifBerurutan();
+        $ujianAktif = $this->ujianRepo->semuaAktifDenganJenisTes();
+        $jumlahUjianPerJenisTes = $ujianAktif->groupBy('jenis_tes_id')->map->count();
+        $jumlahPeriodePerJenisTes = $this->penjadwalanRepo->jumlahPeriodePerJenisTes();
+        $ringkasanJenisTes = $jenisTes
+            ->filter(fn (JenisTes $jenis): bool => $jumlahUjianPerJenisTes->has($jenis->id))
+            ->map(fn (JenisTes $jenis): array => [
+                'id' => $jenis->id,
+                'kode' => $jenis->kode,
+                'nama' => $jenis->nama,
+                'jumlahUjian' => (int) $jumlahUjianPerJenisTes->get($jenis->id, 0),
+                'jumlahPeriode' => (int) $jumlahPeriodePerJenisTes->get($jenis->id, 0),
+            ])
+            ->values()
+            ->all();
+
+        $jenisTesTerpilih = $jenisTes->first(
+            fn (JenisTes $jenis): bool => $jenis->id === $jenisTesId
+                && $jumlahUjianPerJenisTes->has($jenis->id),
+        );
+        $ujianUntukJenisTes = $jenisTesTerpilih !== null
+            ? $ujianAktif->where('jenis_tes_id', $jenisTesTerpilih->id)->values()
+            : new Collection;
+        $jumlahPeriodePerUjian = $jenisTesTerpilih !== null
+            ? $this->penjadwalanRepo->jumlahPeriodePerUjian($jenisTesTerpilih->id)
+            : collect();
+        $ringkasanUjian = $ujianUntukJenisTes
+            ->map(fn (Ujian $ujian): array => [
+                'id' => $ujian->id,
+                'jenisTesId' => $ujian->jenis_tes_id,
+                'judul' => $ujian->judul,
+                'mode' => $ujian->mode->value,
+                'jumlahPeriode' => (int) $jumlahPeriodePerUjian->get($ujian->id, 0),
+            ])
+            ->values()
+            ->all();
+        $ujianTerpilih = $ujianUntukJenisTes->firstWhere('id', $ujianId);
+
         return [
-            'periodeUjian' => $this->penjadwalanRepo->paginateSemua($perPage),
-            'ujian' => $this->ujianRepo->semuaAktifBerurutan(),
+            'periodeUjian' => $ujianTerpilih !== null
+                ? $this->penjadwalanRepo->paginateSemua($perPage, $jenisTesTerpilih->id, $ujianTerpilih->id)
+                : $this->penjadwalanRepo->paginatorKosong($perPage),
+            'ringkasanJenisTes' => $ringkasanJenisTes,
+            'ringkasanUjian' => $ringkasanUjian,
+            'jenisTesTerpilih' => $jenisTesTerpilih,
+            'jenisTesTerpilihId' => $jenisTesTerpilih?->id,
+            'ujianTerpilih' => $ujianTerpilih,
+            'ujianTerpilihId' => $ujianTerpilih?->id,
         ];
     }
 

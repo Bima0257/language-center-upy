@@ -12,6 +12,14 @@ const emit = defineEmits(['delete']);
 function isLocked(question) {
     return props.bankLocked || Number(question.bagian_ujian_count || 0) > 0;
 }
+
+function previewUrl(question) {
+    return route('preview.exam-take', {
+        bank_soal_id: question.bank_soal_id,
+        jenis_tes_id: question.bank_soal?.jenis_tes_id,
+        soal_id: question.id,
+    });
+}
 </script>
 
 <template>
@@ -37,7 +45,7 @@ function isLocked(question) {
                     <td class="px-5 py-4 text-body-md text-text-body whitespace-nowrap">{{ q.pembuat?.name || '-' }}</td>
                     <td class="w-px min-w-20 whitespace-nowrap px-5 py-4 text-center">
                         <div class="flex min-w-20 items-center justify-center gap-1 whitespace-nowrap">
-                            <Link :href="route('pustaka-soal.pratinjau', q.id)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Pratinjau"><IconEye :size="18" /></Link>
+                            <Link :href="previewUrl(q)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Pratinjau"><IconEye :size="18" /></Link>
                             <Link
                                 v-if="!isLocked(q)"
                                 :href="route('pustaka-soal.ubah', q.id)"

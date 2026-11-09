@@ -1,4 +1,5 @@
 <script setup>
+import DataTable from '@/Components/Shared/DataTable.vue';
 import { IconEdit, IconTrash } from '@tabler/icons-vue';
 
 const props = defineProps({
@@ -7,65 +8,79 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
+
+function scoreRange(_value, row) {
+    return `${row.skor_minimum} - ${row.skor_maksimum}`;
+}
+
+function labelSearchValue(value, row) {
+    return [value, row.deskripsi].filter(Boolean).join(' ');
+}
+
+function statusLabel(value) {
+    return value ? 'LULUS' : 'TIDAK LULUS';
+}
+
+const columns = [
+    { key: '_index', label: 'No.', render: (_value, row) => props.interpretasiSkor.indexOf(row) + 1 },
+    { key: 'skor_minimum', label: 'Rentang Skor', sortable: true, render: scoreRange, className: 'font-medium text-text-heading' },
+    { key: 'tingkat_cefr', label: 'CEFR', sortable: true },
+    { key: 'label_tingkat', label: 'Label', sortable: true, searchable: true, render: labelSearchValue, slot: 'label' },
+    { key: 'lulus', label: 'Kelulusan', sortable: true, searchable: true, render: statusLabel, slot: 'pass-status' },
+    { key: 'id', label: 'Aksi', slot: 'actions' },
+];
+
+function rowIndex(interpretasi) {
+    return props.interpretasiSkor.indexOf(interpretasi);
+}
 </script>
 
 <template>
-    <BaseCard :padding="false" class="overflow-hidden">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3.5">
-            <div>
-                <h2 class="text-title-lg font-semibold text-text-heading">Daftar Interpretasi Skor Baru</h2>
-                <p class="text-label-md text-text-muted mt-1">{{ props.interpretasiSkor.length }}/{{ props.maxRows }} data</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <BaseTambahData
-                    :disabled="props.interpretasiSkor.length >= props.maxRows"
-                    @click="emit('create')"
-                />
-            </div>
-        </div>
+    <DataTable
+        :data="props.interpretasiSkor"
+        :columns="columns"
+        header-title="Daftar Interpretasi Skor Baru"
+        :show-page-size="false"
+        searchable
+    >
+        <template #toolbar>
+            <span class="text-label-md text-text-muted">{{ props.interpretasiSkor.length }}/{{ props.maxRows }} data</span>
+            <BaseTambahData
+                :disabled="props.interpretasiSkor.length >= props.maxRows"
+                @click="emit('create')"
+            />
+        </template>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="border-b border-outline-variant/30 bg-surface-container-low">
-                        <th class="w-16 text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">No.</th>
-                        <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Rentang Skor</th>
-                        <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">CEFR</th>
-                        <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Label</th>
-                        <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Kelulusan</th>
-                        <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(interpretasi, index) in props.interpretasiSkor" :key="`${interpretasi.skor_minimum}-${index}`" class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50">
-                        <td class="px-5 py-4 text-body-md text-text-muted">{{ index + 1 }}</td>
-                        <td class="px-5 py-4 font-medium text-text-heading">{{ interpretasi.skor_minimum }} - {{ interpretasi.skor_maksimum }}</td>
-                        <td class="px-5 py-4 text-body-md text-text-body">{{ interpretasi.tingkat_cefr }}</td>
-                        <td class="px-5 py-4 text-body-md text-text-body">
-                            <p>{{ interpretasi.label_tingkat }}</p>
-                            <p v-if="interpretasi.deskripsi" class="text-text-muted text-label-md">{{ interpretasi.deskripsi }}</p>
-                        </td>
-                        <td class="px-5 py-4">
-                            <BaseBadge :variant="interpretasi.lulus ? 'success' : 'danger'">
-                                {{ interpretasi.lulus ? 'LULUS' : 'TIDAK LULUS' }}
-                            </BaseBadge>
-                        </td>
-                        <td class="px-5 py-4">
-                            <div class="flex items-center gap-2">
-                                <button type="button" @click="emit('edit', index)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Ubah">
-                                    <IconEdit :size="18" />
-                                </button>
-                                <button type="button" @click="emit('delete', index)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus">
-                                    <IconTrash :size="18" />
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr v-if="props.interpretasiSkor.length === 0">
-                        <td colspan="6" class="px-5 py-12 text-center text-text-muted text-body-md">Belum ada data untuk ditambahkan.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </BaseCard>
+        <template #label="{ row }">
+            <p class="text-body-md text-text-body">{{ row.label_tingkat }}</p>
+            <p v-if="row.deskripsi" class="text-text-muted text-label-md">{{ row.deskripsi }}</p>
+        </template>
+
+        <template #pass-status="{ row }">
+            <BaseBadge :variant="row.lulus ? 'success' : 'danger'">
+                {{ statusLabel(row.lulus) }}
+            </BaseBadge>
+        </template>
+
+        <template #actions="{ row }">
+            <BaseButton
+                variant="secondary"
+                icon-only
+                title="Ubah"
+                aria-label="Ubah"
+                @click="emit('edit', rowIndex(row))"
+            >
+                <IconEdit :size="16" />
+            </BaseButton>
+            <BaseButton
+                variant="danger"
+                icon-only
+                title="Hapus"
+                aria-label="Hapus"
+                @click="emit('delete', rowIndex(row))"
+            >
+                <IconTrash :size="16" />
+            </BaseButton>
+        </template>
+    </DataTable>
 </template>

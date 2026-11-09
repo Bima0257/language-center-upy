@@ -45,7 +45,7 @@ interface SoalRepositoryInterface
     /**
      * @return Collection<int, Soal>
      */
-    public function pratinjauDenganMateriSoal(string $materiId): Collection;
+    public function semuaUntukPratinjauBank(string $bankId): Collection;
 
     /**
      * @return Collection<int, Soal>

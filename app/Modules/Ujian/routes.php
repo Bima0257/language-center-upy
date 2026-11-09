@@ -13,7 +13,6 @@ Route::middleware(['auth', 'permission:question.view'])
     ->name('pustaka-soal.')
     ->group(function () {
         Route::get('/', [PustakaSoalController::class, 'daftar'])->name('daftar');
-        Route::get('/soal/{soal}/pratinjau', [PustakaSoalController::class, 'pratinjau'])->whereUuid('soal')->name('pratinjau');
     });
 
 Route::middleware(['auth', 'permission:question.create'])

@@ -1,64 +1,95 @@
 <script setup>
-import { IconTrash, IconEdit, IconClock } from '@tabler/icons-vue';
+import DataTable from '@/Components/Shared/DataTable.vue';
+import { IconTrash, IconEdit } from '@tabler/icons-vue';
 
 const props = defineProps({
-    slotGroups: { type: Array, default: () => [] },
+    slots: { type: Array, default: () => [] },
     formatDate: { type: Function, required: true },
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
+
+function formatTimeRange(slotUjian) {
+    const waktuMulai = slotUjian.waktu_mulai?.substring(0, 5) || '-';
+    const waktuSelesai = slotUjian.waktu_selesai?.substring(0, 5) || '-';
+
+    return `${waktuMulai} – ${waktuSelesai} WIB`;
+}
+
+const columns = [
+    {
+        key: 'tanggal',
+        label: 'Tanggal',
+        sortable: true,
+        render: value => props.formatDate(value),
+    },
+    {
+        key: 'waktu_mulai',
+        label: 'Waktu',
+        sortable: true,
+        render: (_value, row) => formatTimeRange(row),
+    },
+    {
+        key: 'kapasitas_peserta',
+        label: 'Peserta',
+        sortable: true,
+        render: (_value, row) => `${row.pendaftaran_disetujui_count ?? 0}/${row.kapasitas_peserta ?? 0}`,
+    },
+    {
+        key: 'pendaftaran_ujian_count',
+        label: 'Pendaftaran',
+        sortable: true,
+        render: value => value ?? 0,
+    },
+    {
+        key: 'toleransi_keterlambatan_menit',
+        label: 'Toleransi',
+        sortable: true,
+        render: value => `${value ?? 15} menit`,
+    },
+    {
+        key: 'aktif',
+        label: 'Status',
+        sortable: true,
+        badge: true,
+        render: value => value ? 'Aktif' : 'Nonaktif',
+    },
+    { key: 'id', label: 'Aksi', slot: 'actions' },
+];
 </script>
 
 <template>
-    <BaseCard>
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-title-lg font-semibold text-text-heading">Sesi Ujian per Hari</h2>
+    <DataTable
+        :data="slots"
+        :columns="columns"
+        header-title="Daftar Sesi Ujian"
+        searchable
+        search-placeholder="Cari sesi ujian..."
+    >
+        <template #toolbar>
             <BaseTambahData @click="emit('create')" />
-        </div>
+        </template>
 
-        <p v-if="props.slotGroups.length === 0" class="text-text-muted text-body-md text-center py-10">
-            Belum ada sesi. Tambahkan sesi per hari dalam periode ini.
-        </p>
-
-        <div v-else class="space-y-5">
-            <div v-for="group in props.slotGroups" :key="group.tanggal" class="border border-outline-variant/50 rounded-2xl overflow-hidden">
-                <div class="px-4 py-3 bg-surface-container-low flex items-center gap-2">
-                    <IconClock :size="16" class="text-secondary" />
-                    <p class="text-label-md font-semibold text-text-heading">{{ props.formatDate(group.tanggal) }}</p>
-                </div>
-                <div class="divide-y divide-outline-variant/30">
-                    <div v-for="slotUjian in group.items" :key="slotUjian.id"
-                         class="px-4 py-3 flex items-center justify-between gap-3 hover:bg-surface-container-low/50 transition-colors">
-                        <div>
-                            <p class="text-body-md font-semibold text-text-heading">
-                                {{ slotUjian.waktu_mulai?.substring(0, 5) }} – {{ slotUjian.waktu_selesai?.substring(0, 5) }} WIB
-                            </p>
-                            <p class="text-label-md text-text-muted">
-                                {{ slotUjian.pendaftaran_disetujui_count || 0 }}/{{ slotUjian.kapasitas_peserta }} peserta disetujui —
-                                {{ slotUjian.pendaftaran_ujian_count || 0 }} pendaftaran —
-                                toleransi {{ slotUjian.toleransi_keterlambatan_menit ?? 15 }} menit —
-                                <span :class="slotUjian.aktif ? 'text-success' : 'text-error-red'">
-                                    {{ slotUjian.aktif ? 'Aktif' : 'Nonaktif' }}
-                                </span>
-                            </p>
-                        </div>
-                        <div class="flex items-center gap-1 shrink-0">
-                            <button @click="emit('edit', slotUjian)" class="p-2 text-text-muted hover:text-secondary transition-colors">
-                                <IconEdit :size="18" />
-                            </button>
-                            <button @click="emit('delete', slotUjian)"
-                                    :disabled="slotUjian.sesi_ujian_count > 0 || slotUjian.pendaftaran_ujian_count > 0"
-                                    :title="slotUjian.sesi_ujian_count > 0 || slotUjian.pendaftaran_ujian_count > 0 ? 'Tidak bisa dihapus — sudah memiliki peserta atau pendaftaran' : 'Hapus sesi'"
-                                    class="p-2 transition-colors"
-                                    :class="slotUjian.sesi_ujian_count > 0 || slotUjian.pendaftaran_ujian_count > 0
-                                        ? 'text-outline-variant cursor-not-allowed'
-                                        : 'text-text-muted hover:text-error-red'">
-                                <IconTrash :size="18" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </BaseCard>
+        <template #actions="{ row }">
+            <BaseButton
+                variant="secondary"
+                icon-only
+                title="Ubah sesi"
+                aria-label="Ubah sesi"
+                @click="emit('edit', row)"
+            >
+                <IconEdit :size="16" />
+            </BaseButton>
+            <BaseButton
+                variant="danger"
+                icon-only
+                :disabled="row.sesi_ujian_count > 0 || row.pendaftaran_ujian_count > 0"
+                :title="row.sesi_ujian_count > 0 || row.pendaftaran_ujian_count > 0 ? 'Tidak bisa dihapus — sudah memiliki peserta atau pendaftaran' : 'Hapus sesi'"
+                :aria-label="row.sesi_ujian_count > 0 || row.pendaftaran_ujian_count > 0 ? 'Tidak bisa dihapus — sudah memiliki peserta atau pendaftaran' : 'Hapus sesi'"
+                @click="emit('delete', row)"
+            >
+                <IconTrash :size="16" />
+            </BaseButton>
+        </template>
+    </DataTable>
 </template>

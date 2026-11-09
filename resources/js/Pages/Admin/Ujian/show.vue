@@ -69,10 +69,6 @@ const partTabs = computed(() => {
     ];
 });
 
-const activePartLabel = computed(() => activePartId.value === 'all'
-    ? 'Semua Bagian'
-    : partNameFor(activePartId.value));
-
 function savedOrderFor(bagianUjianId) {
     return (props.soalPerBagian[bagianUjianId] || [])
         .slice()
@@ -100,7 +96,6 @@ function buildItems(bagianUjianId) {
 
     const items = [];
     let currentPartKey = null;
-    let currentPassageKey = null;
 
     for (const questionId of urutan) {
         const row = byId[questionId];
@@ -109,7 +104,6 @@ function buildItems(bagianUjianId) {
         const bagianSoalId = row.soal?.bagian_soal_id ? String(row.soal.bagian_soal_id) : 'none';
         if (bagianSoalId !== currentPartKey) {
             currentPartKey = bagianSoalId;
-            currentPassageKey = null;
             const bagianSoal = bagianSoalId === 'none'
                 ? null
                 : props.bagianSoal.find((part) => String(part.id) === bagianSoalId);
@@ -121,23 +115,6 @@ function buildItems(bagianUjianId) {
                 nama: bagianSoal?.nama || (bagianSoalId === 'none' ? 'Tanpa Bagian Soal' : 'Bagian Soal'),
                 jumlahSoal: 0,
             });
-        }
-
-        const materiSoalId = row.soal?.materi_soal_id ? String(row.soal.materi_soal_id) : null;
-        const materiSoalKey = materiSoalId ? `pass-${materiSoalId}` : null;
-
-        if (materiSoalKey !== currentPassageKey) {
-            currentPassageKey = materiSoalKey;
-            if (materiSoalKey) {
-                items.push({
-                    type: 'materiSoal',
-                    key: materiSoalKey,
-                    bagianSoalId,
-                    materiSoal: row.soal.materi_soal,
-                    soalPertamaId: questionId,
-                    jumlahSoal: 0,
-                });
-            }
         }
 
         items.push({ type: 'soal', key: `q-${questionId}`, bagianSoalId, soalId: questionId, row });
@@ -153,14 +130,6 @@ function buildItems(bagianUjianId) {
     for (const item of items) {
         if (item.type === 'bagianSoal') {
             item.jumlahSoal = counts[item.key.replace('bagianSoal-', '')] || 0;
-        }
-
-        if (item.type === 'materiSoal') {
-            const passageId = item.key.replace('pass-', '');
-            item.jumlahSoal = urutan.filter((questionId) => {
-                const row = byId[questionId];
-                return row && String(row.soal?.materi_soal_id) === passageId;
-            }).length;
         }
     }
 
@@ -198,9 +167,8 @@ const visibleItems = computed(() => {
 
     if (activePartId.value === 'all') return items;
 
-    return items.filter((item) => (
-        item.type === 'soal' || item.type === 'materiSoal'
-    ) && item.bagianSoalId === activePartId.value);
+    return items.filter((item) => item.type === 'soal'
+        && item.bagianSoalId === activePartId.value);
 });
 
 function onSectionSort(bagianUjianId, partId, orderedQuestionIds) {
@@ -302,7 +270,6 @@ watch(partTabs, (tabs) => {
                         :soal-per-bagian="soalPerBagian"
                         :items="visibleItems"
                         :part-id="activePartId"
-                        :part-label="activePartLabel"
                         :items-by-section="itemsBySection"
                         :dirty-sections="dirtySections"
                         embedded

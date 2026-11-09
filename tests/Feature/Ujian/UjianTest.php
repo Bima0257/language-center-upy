@@ -12,6 +12,7 @@ use App\Models\PeriodeUjian;
 use App\Models\Soal;
 use App\Models\Ujian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -65,6 +66,38 @@ class UjianTest extends TestCase
             ->component('Admin/Ujian/index')
             ->has('jenisTes')
             ->has('bankSoal'));
+    }
+
+    public function test_halaman_daftar_menampilkan_grouping_semua_jenis_tes_aktif(): void
+    {
+        $this->masukSebagai('admin');
+
+        $this->get('/admin/ujian')->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Ujian/index')
+            ->where('jenisTesTerpilihId', null)
+            ->has('ringkasanJenisTes', JenisTes::where('aktif', true)->count())
+            ->has('ujian', 0));
+    }
+
+    public function test_halaman_daftar_memfilter_ujian_berdasarkan_jenis_tes(): void
+    {
+        $this->masukSebagai('admin');
+
+        $jenisTes = JenisTes::where('aktif', true)
+            ->whereHas('ujian')
+            ->firstOrFail();
+        $jumlahUjian = Ujian::where('jenis_tes_id', $jenisTes->id)->count();
+
+        $this->get('/admin/ujian?jenis_tes_id='.$jenisTes->id)->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Ujian/index')
+            ->where('jenisTesTerpilihId', $jenisTes->id)
+            ->where('jenisTesTerpilih.id', $jenisTes->id)
+            ->has('ujian', $jumlahUjian)
+            ->where('ujian', function (Collection $ujian) use ($jenisTes): bool {
+                return $ujian->every(
+                    fn (array $item): bool => $item['jenis_tes_id'] === $jenisTes->id,
+                );
+            }));
     }
 
     public function test_admin_dapat_memperbarui_ujian_dari_form_daftar(): void

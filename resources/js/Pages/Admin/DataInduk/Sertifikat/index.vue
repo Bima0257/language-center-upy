@@ -61,9 +61,15 @@ function isValid(cert) {
                                 </BaseBadge>
                             </td>
                             <td class="px-5 py-4">
-                                <button @click="destroy(cert)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus">
-                                    <IconTrash :size="18" />
-                                </button>
+                                <BaseButton
+                                    variant="danger"
+                                    icon-only
+                                    title="Hapus"
+                                    aria-label="Hapus"
+                                    @click="destroy(cert)"
+                                >
+                                    <IconTrash :size="16" />
+                                </BaseButton>
                             </td>
                         </tr>
                         <tr v-if="sertifikat.length === 0">

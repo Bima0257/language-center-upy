@@ -32,14 +32,25 @@ const columns = [
         </template>
 
         <template #actions="{ row }">
-            <div class="flex items-center gap-2">
-                <button @click="emit('edit', row)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Ubah"><IconEdit :size="18" /></button>
-                <button @click="emit('delete', row)" :disabled="row.bank_soal_count > 0 || row.ujian_count > 0 || row.aturan_penilaian_count > 0 || row.interpretasi_skor_count > 0"
-                        class="p-2 text-text-muted hover:text-error-red transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-text-muted"
-                        :title="(row.bank_soal_count > 0 || row.ujian_count > 0 || row.aturan_penilaian_count > 0 || row.interpretasi_skor_count > 0) ? 'Tidak bisa dihapus karena masih digunakan konfigurasi ujian' : 'Hapus'">
-                    <IconTrash :size="18" />
-                </button>
-            </div>
+            <BaseButton
+                variant="secondary"
+                icon-only
+                title="Ubah"
+                aria-label="Ubah"
+                @click="emit('edit', row)"
+            >
+                <IconEdit :size="16" />
+            </BaseButton>
+            <BaseButton
+                variant="danger"
+                icon-only
+                :disabled="row.bank_soal_count > 0 || row.ujian_count > 0 || row.aturan_penilaian_count > 0 || row.interpretasi_skor_count > 0"
+                :title="(row.bank_soal_count > 0 || row.ujian_count > 0 || row.aturan_penilaian_count > 0 || row.interpretasi_skor_count > 0) ? 'Tidak bisa dihapus karena masih digunakan konfigurasi ujian' : 'Hapus'"
+                :aria-label="(row.bank_soal_count > 0 || row.ujian_count > 0 || row.aturan_penilaian_count > 0 || row.interpretasi_skor_count > 0) ? 'Tidak bisa dihapus karena masih digunakan konfigurasi ujian' : 'Hapus'"
+                @click="emit('delete', row)"
+            >
+                <IconTrash :size="16" />
+            </BaseButton>
         </template>
     </DataTable>
 </template>

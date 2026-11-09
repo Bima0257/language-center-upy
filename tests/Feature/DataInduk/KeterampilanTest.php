@@ -53,6 +53,31 @@ class KeterampilanTest extends TestCase
         $this->get("/admin/data-induk/keterampilan/jenis-tes/{$jenisTes->id}")->assertOk();
     }
 
+    public function test_admin_dapat_menyimpan_urutan_keterampilan(): void
+    {
+        $this->masukSebagai('admin');
+        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->firstOrFail();
+        $keterampilan = Keterampilan::where('jenis_tes_id', $jenisTes->id)
+            ->orderBy('urutan')
+            ->get();
+
+        $this->assertGreaterThan(1, $keterampilan->count());
+
+        $reversed = $keterampilan->pluck('id')->reverse()->values()->all();
+
+        $this->post('/admin/data-induk/keterampilan/urutkan', [
+            'keterampilan' => $reversed,
+            'jenis_tes_id' => $jenisTes->id,
+        ])->assertRedirect();
+
+        $updated = Keterampilan::where('jenis_tes_id', $jenisTes->id)
+            ->orderBy('urutan')
+            ->pluck('id')
+            ->all();
+
+        $this->assertSame($reversed, $updated);
+    }
+
     public function test_admin_dapat_membuat_keterampilan_dengan_kode_otomatis(): void
     {
         $this->masukSebagai('admin');

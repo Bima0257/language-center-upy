@@ -17,6 +17,7 @@ const props = defineProps({
     breadcrumbs: { type: Array, default: null },
     backHref: { type: String, default: null },
     backLabel: { type: String, default: "Kembali" },
+    preferHistory: { type: Boolean, default: true },
 });
 
 const breadcrumbs = props.breadcrumbs || getBreadcrumbs(props.title);
@@ -54,11 +55,13 @@ const currentYear = new Date().getFullYear();
                         :subtitle="subtitle"
                         :back-href="backHref"
                         :back-label="backLabel"
+                        :prefer-history="preferHistory"
                     />
                     <BaseBackButton
                         v-else-if="backHref"
                         :href="backHref"
                         :label="backLabel"
+                        :prefer-history="preferHistory"
                         class="mb-6"
                     />
                     <slot />

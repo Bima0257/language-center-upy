@@ -3,24 +3,26 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import DataTable from '@/Components/Shared/DataTable.vue';
-import DropDown from '@/Components/Shared/DropDown.vue';
 import Pagination from '@/Components/Shared/Pagination.vue';
 import FormPeriodePendaftaranModal from '@/Pages/Admin/PendaftaranUjian/Components/FormPeriodePendaftaranModal.vue';
+import JenisTesSummaryTable from '@/Pages/Admin/PendaftaranUjian/Components/JenisTesSummaryTable.vue';
 import { useConfirm } from '@/Composables/useConfirm';
-import { IconEdit, IconEye, IconSearch, IconTrash } from '@tabler/icons-vue';
+import { IconEdit, IconEye, IconTrash } from '@tabler/icons-vue';
 
 const props = defineProps({
     periodePendaftaranUjian: { type: Object, default: () => ({ data: [], links: [], total: 0, per_page: 15 }) },
     periodeUjian: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
+    ringkasanJenisTes: { type: Array, default: () => [] },
+    jenisTesTerpilih: { type: Object, default: null },
+    jenisTesTerpilihId: { type: [String, null], default: null },
 });
 
 const confirm = useConfirm();
-const search = ref(props.filters.search || '');
-const status = ref(props.filters.status || '');
 const showModal = ref(false);
 const creating = ref(false);
 const editingPeriod = ref(null);
+const jenisTesFilter = computed(() => props.jenisTesTerpilihId || '');
 
 const form = useForm({
     periode_ujian_id: '',
@@ -38,13 +40,6 @@ const editForm = useForm({
     aktif: true,
     catatan: '',
 });
-
-const statusOptions = [
-    { id: 'upcoming', nama: 'Akan Dibuka' },
-    { id: 'open', nama: 'Sedang Dibuka' },
-    { id: 'closed', nama: 'Ditutup' },
-    { id: 'inactive', nama: 'Nonaktif' },
-];
 
 function formatDateTime(value) {
     return value
@@ -93,6 +88,10 @@ const columns = [
 const tablePageSize = Number(props.periodePendaftaranUjian.per_page) || 15;
 
 const modalForm = computed(() => (creating.value ? form : editForm));
+
+function jenisTesUrl(jenisTesId) {
+    return `${route('admin.pendaftaran-ujian.daftar')}?jenis_tes_id=${encodeURIComponent(jenisTesId)}`;
+}
 
 function localDateTime(value) {
     return value ? value.substring(0, 16).replace(' ', 'T') : '';
@@ -145,19 +144,6 @@ function closeModal() {
     editForm.reset();
 }
 
-function filterData() {
-    router.get(route('admin.pendaftaran-ujian.daftar'), {
-        search: search.value || undefined,
-        status: status.value || undefined,
-    }, { preserveState: true, replace: true });
-}
-
-function resetFilter() {
-    search.value = '';
-    status.value = '';
-    filterData();
-}
-
 async function destroy(period) {
     if (!await confirm.confirm(`Hapus periode pendaftaran "${period.nama}"?`)) return;
 
@@ -167,53 +153,33 @@ async function destroy(period) {
 
 <template>
     <Head title="Periode Pendaftaran Ujian" />
-    <TataLetakDasbor title="Periode Pendaftaran Ujian" subtitle="Atur pembukaan pendaftaran dan slot peserta">
-        <DataTable
-            :data="periodePendaftaranUjian.data"
-            :columns="columns"
-            :default-page-size="tablePageSize"
-            :page-size-options="[tablePageSize]"
-            :show-page-size="false"
-            header-title="Daftar Periode Pendaftaran"
-        >
+    <TataLetakDasbor
+        :title="jenisTesTerpilih ? `Periode Pendaftaran - ${jenisTesTerpilih.nama}` : 'Periode Pendaftaran Ujian'"
+        :subtitle="jenisTesTerpilih ? 'Atur pembukaan pendaftaran dan slot peserta' : 'Pilih jenis tes untuk melihat periode pendaftaran'"
+        :back-href="jenisTesFilter ? route('admin.pendaftaran-ujian.daftar') : null"
+    >
+        <template v-if="!jenisTesFilter">
+            <JenisTesSummaryTable
+                :ringkasan-jenis-tes="ringkasanJenisTes"
+                :detail-url="jenisTesUrl"
+            />
+        </template>
+
+        <template v-else>
+            <DataTable
+                :data="periodePendaftaranUjian.data"
+                :columns="columns"
+                :default-page-size="tablePageSize"
+                :page-size-options="[tablePageSize]"
+                :show-page-size="false"
+                header-title="Daftar Periode Pendaftaran"
+            >
             <template #toolbar>
                 <BaseTambahData @click="openCreate" />
             </template>
 
-            <template #filters>
-                <div class="flex w-full flex-col gap-3 lg:flex-row lg:items-end">
-                    <div class="relative min-w-0 flex-1">
-                        <label class="mb-1.5 block text-label-md font-medium text-text-heading">Cari periode</label>
-                        <IconSearch class="absolute left-4 top-[2.65rem] -translate-y-1/2 text-text-muted" :size="18" />
-                        <input
-                            v-model="search"
-                            type="text"
-                            placeholder="Nama periode atau ujian..."
-                            class="w-full rounded-2xl border border-outline-variant bg-surface-container-lowest py-3 pl-11 pr-4 text-body-md text-text-body focus:border-secondary focus:outline-none"
-                            @keyup.enter="filterData"
-                        />
-                    </div>
-                    <div class="w-full lg:w-56">
-                        <DropDown
-                            v-model="status"
-                            :options="statusOptions"
-                            label="Status"
-                            placeholder="Semua status"
-                            option-label="nama"
-                            option-value="id"
-                            clearable
-                        />
-                    </div>
-                    <div class="flex gap-2">
-                        <BaseButton type="button" @click="filterData">Cari</BaseButton>
-                        <BaseButton type="button" variant="secondary" @click="resetFilter">Reset</BaseButton>
-                    </div>
-                </div>
-            </template>
-
             <template #period="{ row }">
                 <p class="font-semibold text-text-heading">{{ row.nama }}</p>
-                <p class="mt-1 max-w-xs text-label-md text-text-muted">{{ row.catatan || 'Tidak ada catatan.' }}</p>
             </template>
 
             <template #exam="{ row }">
@@ -232,8 +198,7 @@ async function destroy(period) {
                 <BaseButton
                     :href="route('admin.pendaftaran-ujian.detail', row.id)"
                     variant="secondary"
-                    size="sm"
-                    class="!p-2"
+                    icon-only
                     title="Lihat detail"
                     aria-label="Lihat detail"
                 >
@@ -241,8 +206,7 @@ async function destroy(period) {
                 </BaseButton>
                 <BaseButton
                     variant="secondary"
-                    size="sm"
-                    class="!p-2"
+                    icon-only
                     title="Ubah periode"
                     aria-label="Ubah periode"
                     @click="openEdit(row)"
@@ -251,8 +215,7 @@ async function destroy(period) {
                 </BaseButton>
                 <BaseButton
                     variant="danger"
-                    size="sm"
-                    class="!p-2"
+                    icon-only
                     title="Hapus periode"
                     aria-label="Hapus periode"
                     @click="destroy(row)"
@@ -260,21 +223,22 @@ async function destroy(period) {
                     <IconTrash :size="16" />
                 </BaseButton>
             </template>
-        </DataTable>
+            </DataTable>
 
-        <Pagination
-            :links="periodePendaftaranUjian.links"
-            :total="periodePendaftaranUjian.total"
-            :per-page="periodePendaftaranUjian.per_page"
-        />
+            <Pagination
+                :links="periodePendaftaranUjian.links"
+                :total="periodePendaftaranUjian.total"
+                :per-page="periodePendaftaranUjian.per_page"
+            />
 
-        <FormPeriodePendaftaranModal
-            :show="showModal"
-            :creating="creating"
-            :form="modalForm"
-            :periode-ujian="periodeUjian"
-            @close="closeModal"
-            @submit="submit"
-        />
+            <FormPeriodePendaftaranModal
+                :show="showModal"
+                :creating="creating"
+                :form="modalForm"
+                :periode-ujian="periodeUjian"
+                @close="closeModal"
+                @submit="submit"
+            />
+        </template>
     </TataLetakDasbor>
 </template>

@@ -99,7 +99,9 @@ class PendaftaranUjianTest extends TestCase
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
         $periodePendaftaran = $slot->periodeUjian->periodePendaftaran;
 
-        $rootPage = $this->get('/admin/pendaftaran-ujian')->assertOk()->inertiaPage();
+        $rootPage = $this->get('/admin/pendaftaran-ujian?jenis_tes_id='.$slot->periodeUjian->ujian->jenis_tes_id)
+            ->assertOk()
+            ->inertiaPage();
         $this->assertArrayHasKey('periodeUjian', $rootPage['props']);
         $this->assertTrue(collect($rootPage['props']['periodePendaftaranUjian']['data'])->contains(
             fn ($period) => $period['id'] === $periodePendaftaran->id,
@@ -127,6 +129,79 @@ class PendaftaranUjianTest extends TestCase
 
         $this->delete('/admin/pendaftaran-ujian/'.$periodePendaftaran->id)->assertRedirect();
         $this->assertDatabaseMissing('periode_pendaftaran_ujian', ['id' => $periodePendaftaran->id]);
+    }
+
+    public function test_admin_melihat_ringkasan_periode_pendaftaran_per_jenis_tes(): void
+    {
+        $this->masukSebagai('admin');
+        $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
+
+        $page = $this->get('/admin/pendaftaran-ujian')
+            ->assertOk()
+            ->inertiaPage();
+        $ringkasan = collect($page['props']['ringkasanJenisTes'])
+            ->firstWhere('id', $slot->periodeUjian->ujian->jenis_tes_id);
+
+        $this->assertNull($page['props']['jenisTesTerpilihId']);
+        $this->assertNotNull($ringkasan);
+        $this->assertGreaterThanOrEqual(1, $ringkasan['jumlahUjian']);
+        $this->assertGreaterThanOrEqual(1, $ringkasan['jumlahPeriodePendaftaran']);
+    }
+
+    public function test_admin_dapat_membuka_daftar_periode_pendaftaran_per_jenis_tes(): void
+    {
+        $this->masukSebagai('admin');
+        $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
+        $jenisTesId = $slot->periodeUjian->ujian->jenis_tes_id;
+
+        $page = $this->get('/admin/pendaftaran-ujian?jenis_tes_id='.$jenisTesId)
+            ->assertOk()
+            ->inertiaPage();
+
+        $this->assertSame($jenisTesId, $page['props']['jenisTesTerpilihId']);
+        $this->assertTrue(collect($page['props']['periodePendaftaranUjian']['data'])->every(
+            fn (array $periode): bool => $periode['periode_ujian']['ujian']['jenis_tes_id'] === $jenisTesId,
+        ));
+        $this->assertTrue(collect($page['props']['periodeUjian'])->every(
+            fn (array $periode): bool => $periode['ujian']['jenis_tes_id'] === $jenisTesId,
+        ));
+    }
+
+    public function test_jenis_tes_dengan_ujian_aktif_tanpa_periode_pendaftaran_tetap_muncul(): void
+    {
+        $this->masukSebagai('admin');
+
+        $jenisTes = JenisTes::create([
+            'kode' => '010',
+            'nama' => 'Jenis Tes Tanpa Pendaftaran',
+            'batas_pelanggaran' => 3,
+            'aktif' => true,
+        ]);
+        Ujian::create([
+            'jenis_tes_id' => $jenisTes->id,
+            'judul' => 'Ujian Aktif Tanpa Pendaftaran',
+            'mode' => ModeUjian::OFFICIAL->value,
+            'durasi_menit' => 60,
+            'aktif' => true,
+        ]);
+
+        $page = $this->get('/admin/pendaftaran-ujian')
+            ->assertOk()
+            ->inertiaPage();
+        $ringkasan = collect($page['props']['ringkasanJenisTes'])
+            ->firstWhere('id', $jenisTes->id);
+
+        $this->assertNotNull($ringkasan);
+        $this->assertSame(1, (int) $ringkasan['jumlahUjian']);
+        $this->assertSame(0, (int) $ringkasan['jumlahPeriodePendaftaran']);
+
+        $detail = $this->get('/admin/pendaftaran-ujian?jenis_tes_id='.$jenisTes->id)
+            ->assertOk()
+            ->inertiaPage();
+
+        $this->assertSame($jenisTes->id, $detail['props']['jenisTesTerpilihId']);
+        $this->assertEmpty($detail['props']['periodePendaftaranUjian']['data']);
+        $this->assertEmpty($detail['props']['periodeUjian']);
     }
 
     public function test_admin_tidak_dapat_menyimpan_periode_dengan_waktu_tutup_sebelum_dibuka(): void

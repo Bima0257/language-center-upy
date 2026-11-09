@@ -50,16 +50,34 @@ const roleColors = {
                         <td class="px-5 py-4 text-text-body text-body-md">{{ user.sesi_ujian_count ?? 0 }}</td>
                         <td class="px-5 py-4">
                             <div class="flex items-center gap-1">
-                                <button @click="emit('edit', user)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Ubah">
-                                    <IconEdit :size="18" />
-                                </button>
-                                <button @click="emit('toggle-active', user)" class="p-2 transition-colors" :class="user.aktif ? 'text-text-muted hover:text-error-red' : 'text-text-muted hover:text-success'" :title="user.aktif ? 'Nonaktifkan' : 'Aktifkan'">
-                                    <IconToggleRight v-if="user.aktif" :size="18" />
-                                    <IconToggleLeft v-else :size="18" />
-                                </button>
-                                <button @click="emit('reset-password', user)" class="p-2 text-text-muted hover:text-warning transition-colors" title="Reset Password">
-                                    <IconKey :size="18" />
-                                </button>
+                                <BaseButton
+                                    variant="secondary"
+                                    icon-only
+                                    title="Ubah"
+                                    aria-label="Ubah"
+                                    @click="emit('edit', user)"
+                                >
+                                    <IconEdit :size="16" />
+                                </BaseButton>
+                                <BaseButton
+                                    :variant="user.aktif ? 'danger' : 'success'"
+                                    icon-only
+                                    :title="user.aktif ? 'Nonaktifkan' : 'Aktifkan'"
+                                    :aria-label="user.aktif ? 'Nonaktifkan' : 'Aktifkan'"
+                                    @click="emit('toggle-active', user)"
+                                >
+                                    <IconToggleRight v-if="user.aktif" :size="16" />
+                                    <IconToggleLeft v-else :size="16" />
+                                </BaseButton>
+                                <BaseButton
+                                    variant="warning"
+                                    icon-only
+                                    title="Reset Password"
+                                    aria-label="Reset Password"
+                                    @click="emit('reset-password', user)"
+                                >
+                                    <IconKey :size="16" />
+                                </BaseButton>
                             </div>
                         </td>
                     </tr>

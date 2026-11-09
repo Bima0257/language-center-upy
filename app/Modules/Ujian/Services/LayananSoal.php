@@ -3,6 +3,7 @@
 namespace App\Modules\Ujian\Services;
 
 use App\Models\BagianSoal;
+use App\Models\BankSoal;
 use App\Models\Keterampilan;
 use App\Models\MateriSoal;
 use App\Models\Soal;
@@ -14,7 +15,9 @@ use App\Modules\Ujian\Repositories\Contracts\BankSoalRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\MateriSoalRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\SoalRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -250,26 +253,172 @@ class LayananSoal
         return $count;
     }
 
-    public function dataPratinjau(Soal $soal): array
-    {
-        $soal = $this->soalRepo->temukanDenganRelasi($soal->id);
+    /**
+     * @return array<string, mixed>
+     */
+    public function dataPratinjauBank(
+        string $bankSoalId,
+        ?string $jenisTesId,
+        string $participantName,
+        ?string $initialSoalId = null,
+    ): array {
+        $bankSoal = $this->bankSoalRepo->find($bankSoalId);
 
-        $soalDalamMateri = $soal->materi_soal_id
-            ? $this->soalRepo->pratinjauDenganMateriSoal($soal->materi_soal_id)
-            : new Collection([$soal]);
-
-        $indeks = $soalDalamMateri->search(fn ($dataSoal) => $dataSoal->id === $soal->id);
-        $indeks = $indeks === false ? 0 : $indeks;
-
-        $materi = $this->kebijakanMateri->materiUntuk($soal->keterampilan_id);
-
-        if ($materi !== null) {
-            $soalDalamMateri->each(fn ($dataSoal) => $dataSoal->materi = $materi);
+        if ($bankSoal === null || ! $bankSoal->aktif) {
+            throw (new ModelNotFoundException)->setModel(BankSoal::class, [$bankSoalId]);
         }
 
+        if ($jenisTesId !== null && $bankSoal->jenis_tes_id !== $jenisTesId) {
+            throw (new ModelNotFoundException)->setModel(BankSoal::class, [$bankSoalId]);
+        }
+
+        $keterampilan = $this->keterampilanRepo->semuaAktifBerurutan($bankSoal->jenis_tes_id);
+        $bagianSoal = $this->bagianSoalRepo->semuaAktifDenganBank($bankSoal->id);
+        $soal = $this->soalRepo->semuaUntukPratinjauBank($bankSoal->id);
+
+        if ($initialSoalId !== null && ! $soal->contains('id', $initialSoalId)) {
+            throw (new ModelNotFoundException)->setModel(Soal::class, [$initialSoalId]);
+        }
+
+        $soalPerKeterampilan = $soal->groupBy('keterampilan_id');
+        $materiPerKeterampilan = $keterampilan->mapWithKeys(fn (Keterampilan $skill): array => [
+            $skill->id => $this->kebijakanMateri->materiUntuk($skill->id),
+        ]);
+
+        $blocks = [];
+        $nomorGlobal = 1;
+
+        foreach ($keterampilan as $skill) {
+            $soalSkill = $soalPerKeterampilan->get($skill->id, new Collection);
+            $partsSkill = $bagianSoal
+                ->where('keterampilan_id', $skill->id)
+                ->sortBy('urutan')
+                ->values();
+            $materi = $materiPerKeterampilan->get($skill->id)
+                ?? ($soalSkill->first()?->materiSoal?->url_audio !== null ? 'audio' : 'text');
+
+            foreach ($partsSkill as $part) {
+                $soalPart = $soalSkill
+                    ->where('bagian_soal_id', $part->id)
+                    ->sortBy('urutan')
+                    ->values();
+
+                if ($soalPart->isEmpty()) {
+                    continue;
+                }
+
+                $blocks[] = $this->buatBlokPratinjau(
+                    $skill,
+                    $part->nama,
+                    $part->petunjuk,
+                    $soalPart,
+                    $materi,
+                    $nomorGlobal,
+                );
+                $nomorGlobal += $soalPart->count();
+            }
+
+            $soalStandalone = $soalSkill
+                ->whereNull('bagian_soal_id')
+                ->sortBy('urutan')
+                ->values();
+
+            if ($soalStandalone->isNotEmpty()) {
+                $blocks[] = $this->buatBlokPratinjau(
+                    $skill,
+                    'Soal Standalone',
+                    null,
+                    $soalStandalone,
+                    $materi,
+                    $nomorGlobal,
+                );
+                $nomorGlobal += $soalStandalone->count();
+            }
+        }
+
+        $blocks = collect($blocks);
+
         return [
-            'soal' => $soalDalamMateri->values(),
-            'indeks' => $indeks,
+            'sesiUjian' => [
+                'id' => 0,
+                'status' => 'preview',
+                'pengguna' => ['name' => $participantName],
+            ],
+            'overview' => [
+                'judulUjian' => $bankSoal->nama,
+                'durasiMenit' => null,
+                'jumlahSoal' => $nomorGlobal - 1,
+                'keterampilan' => $blocks
+                    ->groupBy('keterampilan.kode')
+                    ->map(fn (SupportCollection $items): array => [
+                        'kode' => $items->first()['keterampilan']['kode'],
+                        'nama' => $items->first()['keterampilan']['nama'],
+                        'materi' => $items->first()['materi'],
+                        'jumlahSoal' => $items->sum('jumlahSoal'),
+                        'bagianSoal' => $items->map(fn (array $block): array => [
+                            'nama' => $block['bagianSoal']['nama'],
+                            'jumlahSoal' => $block['jumlahSoal'],
+                        ])->values()->all(),
+                    ])
+                    ->values()
+                    ->all(),
+            ],
+            'blocks' => $blocks->values()->all(),
+            'initialSoalId' => $initialSoalId,
+        ];
+    }
+
+    /**
+     * @param  Collection<int, Soal>  $soal
+     * @return array<string, mixed>
+     */
+    private function buatBlokPratinjau(
+        Keterampilan $keterampilan,
+        string $namaBagian,
+        ?string $petunjuk,
+        Collection $soal,
+        string $materi,
+        int $nomorMulai,
+    ): array {
+        return [
+            'nomorMulai' => $nomorMulai,
+            'jumlahSoal' => $soal->count(),
+            'materi' => $materi,
+            'keterampilan' => [
+                'kode' => $keterampilan->kode,
+                'nama' => $keterampilan->nama,
+                'deskripsi' => $keterampilan->deskripsi,
+            ],
+            'bagianSoal' => [
+                'nama' => $namaBagian,
+                'petunjuk' => $petunjuk,
+            ],
+            'soal' => $soal->values()->map(
+                fn (Soal $dataSoal, int $indeks): array => $this->petakanSoalPratinjau(
+                    $dataSoal,
+                    $materi,
+                    $nomorMulai + $indeks,
+                ),
+            )->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function petakanSoalPratinjau(Soal $soal, string $materi, int $nomorGlobal): array
+    {
+        return [
+            'id' => $soal->id,
+            'teks_soal' => $soal->teks_soal,
+            'pilihan_a' => $soal->pilihan_a,
+            'pilihan_b' => $soal->pilihan_b,
+            'pilihan_c' => $soal->pilihan_c,
+            'pilihan_d' => $soal->pilihan_d,
+            'urutan' => $soal->urutan,
+            'nomor_global' => $nomorGlobal,
+            'materiSoal' => $soal->materiSoal,
+            'materi' => $materi,
         ];
     }
 

@@ -105,11 +105,12 @@ class SoalRepository implements SoalRepositoryInterface
         return Soal::where('materi_soal_id', $materiId)->max('urutan') ?? 0;
     }
 
-    public function pratinjauDenganMateriSoal(string $materiId): Collection
+    public function semuaUntukPratinjauBank(string $bankId): Collection
     {
         return Soal::with(['materiSoal.mediaMateriSoal', 'keterampilan', 'bagianSoal'])
-            ->where('materi_soal_id', $materiId)
+            ->where('bank_soal_id', $bankId)
             ->orderBy('urutan')
+            ->orderBy('id')
             ->get();
     }
 

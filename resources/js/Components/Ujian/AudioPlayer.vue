@@ -8,6 +8,7 @@ const props = defineProps({
     title: { type: String, default: '' },
     strip: { type: Boolean, default: false },
     bar: { type: Boolean, default: false },
+    compact: { type: Boolean, default: false },
 });
 
 const { loading, onLoad, onError } = useMediaLoad(() => props.src);
@@ -57,7 +58,8 @@ function formatTime(seconds) {
 <template>
     <!-- MODE BAR: horizontal compact untuk fixed bottom -->
     <div v-if="bar"
-         class="bg-surface-white px-6 py-3.5 flex items-center gap-4">
+         class="bg-surface-white flex items-center"
+         :class="compact ? 'gap-2 px-3 py-2' : 'gap-4 px-6 py-3.5'">
         <audio ref="audioRef" :src="src" preload="metadata" class="hidden"
                @timeupdate="onTimeUpdate"
                @loadedmetadata="onLoadedMetadata"
@@ -67,20 +69,24 @@ function formatTime(seconds) {
                @ended="isPlaying = false"></audio>
 
         <div v-if="loading" class="flex-1">
-            <BaseMediaLoader
-                media-type="audio"
-                skeleton-class="h-10"
-            />
+             <BaseMediaLoader
+                 media-type="audio"
+                 :skeleton-class="compact ? 'h-8' : 'h-10'"
+             />
         </div>
 
         <template v-else>
             <button @click="togglePlay"
-                     class="w-10 h-10 rounded-full bg-pastel-blue flex items-center justify-center text-secondary hover:bg-secondary hover:text-on-secondary transition-colors shrink-0">
-                <IconPlayerPlayFilled v-if="!isPlaying" :size="18" />
-                <IconPlayerPauseFilled v-else :size="18" />
+                     class="rounded-full bg-pastel-blue flex items-center justify-center text-secondary hover:bg-secondary hover:text-on-secondary transition-colors shrink-0"
+                     :class="compact ? 'h-8 w-8' : 'h-10 w-10'">
+                 <IconPlayerPlayFilled v-if="!isPlaying" :size="compact ? 16 : 18" />
+                 <IconPlayerPauseFilled v-else :size="compact ? 16 : 18" />
             </button>
 
-            <span class="text-label-md font-mono tabular-nums text-text-heading shrink-0">{{ formatTime(currentTime) }}</span>
+             <span
+                 class="font-mono tabular-nums text-text-heading shrink-0"
+                 :class="compact ? 'text-xs' : 'text-label-md'"
+             >{{ formatTime(currentTime) }}</span>
 
             <div ref="barRef" @click="onSeek"
                  class="relative flex-1 h-[6px] bg-track-neutral rounded-full cursor-pointer group">
@@ -90,10 +96,13 @@ function formatTime(seconds) {
                      :style="{ left: progress + '%' }"></div>
             </div>
 
-            <span class="text-label-md font-mono tabular-nums text-text-muted shrink-0">{{ formatTime(duration) }}</span>
+             <span
+                 class="font-mono tabular-nums text-text-muted shrink-0"
+                 :class="compact ? 'text-xs' : 'text-label-md'"
+             >{{ formatTime(duration) }}</span>
 
-            <button class="text-text-muted hover:text-text-heading transition-colors shrink-0" title="Volume">
-                <IconVolume :size="20" />
+             <button class="text-text-muted hover:text-text-heading transition-colors shrink-0" title="Volume">
+                 <IconVolume :size="compact ? 18 : 20" />
             </button>
         </template>
     </div>

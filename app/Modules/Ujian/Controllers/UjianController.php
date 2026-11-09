@@ -3,6 +3,7 @@
 namespace App\Modules\Ujian\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Ujian\FilterUjianRequest;
 use App\Http\Requests\Ujian\PerbaruiUjianRequest;
 use App\Http\Requests\Ujian\SimpanUjianRequest;
 use App\Models\Ujian;
@@ -19,11 +20,11 @@ class UjianController extends Controller
         private LayananDataInduk $layananDataInduk,
     ) {}
 
-    public function daftar(): Response
+    public function daftar(FilterUjianRequest $request): Response
     {
-        return Inertia::render('Admin/Ujian/index', [
-            'ujian' => $this->layananUjian->dataDaftar(),
-            'jenisTes' => $this->layananDataInduk->jenisTesAktif(),
+        return Inertia::render('Admin/Ujian/index', $this->layananUjian->dataDaftar(
+            $request->validated()['jenis_tes_id'] ?? null,
+        ) + [
             'bankSoal' => $this->layananUjian->bankSoalAktif(),
         ]);
     }

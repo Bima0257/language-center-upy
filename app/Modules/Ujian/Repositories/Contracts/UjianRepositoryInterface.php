@@ -7,7 +7,12 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface UjianRepositoryInterface
 {
-    public function semuaUntukDaftar(): Collection;
+    public function semuaUntukDaftar(?string $jenisTesId = null): Collection;
+
+    /**
+     * @return \Illuminate\Support\Collection<string, int>
+     */
+    public function jumlahPerJenisTes(): \Illuminate\Support\Collection;
 
     public function temukanDenganRelasi(string $id): ?Ujian;
 
@@ -21,8 +26,11 @@ interface UjianRepositoryInterface
 
     public function all(): Collection;
 
-    public function semuaAktifBerurutan(): Collection;
+    public function semuaAktifBerurutan(?string $jenisTesId = null): Collection;
 
+    /**
+     * @return Collection<int, Ujian>
+     */
     public function semuaAktifDenganJenisTes(): Collection;
 
     public function count(): int;

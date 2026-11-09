@@ -645,7 +645,12 @@ const kelompokSoalPerKeterampilan = computed(() => {
             bagianSoal: Array.from(s.bagianSoal.values())
                 .map((p) => ({
                     bagianSoal: p.bagianSoal,
-                    groups: Array.from(p.materiSoalGroups.values()),
+                    groups: Array.from(p.materiSoalGroups.values()).map((group) => ({
+                        ...group,
+                        soal: [...group.soal].sort(
+                            (left, right) => (left.urutan ?? 0) - (right.urutan ?? 0),
+                        ),
+                    })),
                     standalone: p.standalone,
                 }))
                 .sort((a, b) => (a.bagianSoal?.urutan ?? 99) - (b.bagianSoal?.urutan ?? 99)),

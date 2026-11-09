@@ -3,7 +3,6 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
-import PeriodeUjianInfo from '@/Pages/Admin/PeriodeUjian/Components/PeriodeUjianInfo.vue';
 import DaftarSlotUjian from '@/Pages/Admin/PeriodeUjian/Components/DaftarSlotUjian.vue';
 import FormSlotUjianModal from '@/Pages/Admin/PeriodeUjian/Components/FormSlotUjianModal.vue';
 
@@ -92,16 +91,6 @@ async function destroy(slotUjian) {
     router.delete(route('admin.periode-ujian.slot.hapus', slotUjian.id), { preserveScroll: true })
 }
 
-const slotsByDate = computed(() => {
-    const map = new Map();
-    for (const slotUjian of props.slotUjian) {
-        const key = slotUjian.tanggal;
-        if (!map.has(key)) map.set(key, []);
-        map.get(key).push(slotUjian);
-    }
-    return Array.from(map.entries()).map(([tanggal, items]) => ({ tanggal, items }));
-});
-
 function formatDate(value) {
     return value ? new Date(value).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '-'
 }
@@ -116,10 +105,8 @@ function formatDate(value) {
         back-label="Penjadwalan"
     >
         <div class="space-y-6">
-            <PeriodeUjianInfo :periode-ujian="periodeUjian" :format-date="formatDate" />
-
             <DaftarSlotUjian
-                :slot-groups="slotsByDate"
+                :slots="slotUjian"
                 :format-date="formatDate"
                 @create="openCreate"
                 @edit="openEdit"

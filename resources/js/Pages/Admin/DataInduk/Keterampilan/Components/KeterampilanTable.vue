@@ -1,6 +1,7 @@
 <script setup>
 import { IconEdit, IconGripVertical, IconTrash } from '@tabler/icons-vue';
 import draggable from 'vuedraggable';
+import { ref } from 'vue';
 
 defineProps({
     keterampilan: { type: Array, default: () => [] },
@@ -8,6 +9,7 @@ defineProps({
 });
 
 const emit = defineEmits(['create', 'reorder', 'edit', 'delete']);
+const isEditingOrder = ref(false);
 
 function stripHtml(html) {
     const div = document.createElement('div');
@@ -28,10 +30,20 @@ function descriptionPreview(html) {
             <div class="min-w-0 flex-1">
                 <h2 class="text-title-lg font-semibold text-text-heading">Daftar Keterampilan</h2>
                 <span v-if="keterampilan.length" class="text-label-md text-text-muted">
-                    Seret ikon ⠿ untuk mengubah urutan
+                    {{ isEditingOrder ? 'Seret ikon ⠿ untuk mengubah urutan' : 'Aktifkan Edit urutan untuk mengatur posisi' }}
                 </span>
             </div>
             <div class="flex items-center gap-2">
+                <BaseButton
+                    v-if="keterampilan.length"
+                    variant="secondary"
+                    size="sm"
+                    :disabled="reordering"
+                    @click="isEditingOrder = !isEditingOrder"
+                >
+                    <IconEdit :size="16" />
+                    {{ isEditingOrder ? 'Selesai' : 'Edit urutan' }}
+                </BaseButton>
                 <BaseTambahData @click="emit('create')" />
             </div>
         </div>
@@ -41,7 +53,7 @@ function descriptionPreview(html) {
                 <thead>
                     <tr class="border-b border-outline-variant/30 bg-surface-container-low">
                         <th class="w-12 px-4 py-3"></th>
-                        <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-3">Kode Gabungan</th>
+                        <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-3">Kode</th>
                         <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-3">Nama</th>
                         <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-3">Deskripsi</th>
                         <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-3">Status</th>
@@ -53,13 +65,14 @@ function descriptionPreview(html) {
                     :list="keterampilan"
                     item-key="id"
                     handle=".drag-handle"
-                    :disabled="reordering"
+                    :disabled="reordering || !isEditingOrder"
                     @end="emit('reorder', $event)"
                 >
                     <template #item="{ element }">
                         <tr class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50 transition-colors">
                             <td class="px-4 py-3.5">
                                 <IconGripVertical
+                                    v-if="isEditingOrder"
                                     :size="18"
                                     class="drag-handle cursor-grab text-text-muted hover:text-secondary transition-colors"
                                 />
@@ -77,9 +90,25 @@ function descriptionPreview(html) {
                                 </div>
                             </td>
                             <td class="px-5 py-3.5">
-                                <div class="flex items-center gap-2">
-                                    <button @click="emit('edit', element)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Ubah"><IconEdit :size="18" /></button>
-                                    <button @click="emit('delete', element)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus"><IconTrash :size="18" /></button>
+                                <div class="flex items-center gap-1">
+                                    <BaseButton
+                                        variant="secondary"
+                                        icon-only
+                                        title="Ubah"
+                                        aria-label="Ubah"
+                                        @click="emit('edit', element)"
+                                    >
+                                        <IconEdit :size="16" />
+                                    </BaseButton>
+                                    <BaseButton
+                                        variant="danger"
+                                        icon-only
+                                        title="Hapus"
+                                        aria-label="Hapus"
+                                        @click="emit('delete', element)"
+                                    >
+                                        <IconTrash :size="16" />
+                                    </BaseButton>
                                 </div>
                             </td>
                         </tr>

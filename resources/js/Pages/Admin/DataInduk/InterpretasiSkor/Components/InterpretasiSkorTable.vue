@@ -1,4 +1,5 @@
 <script setup>
+import DataTable from '@/Components/Shared/DataTable.vue';
 import { IconEdit, IconTrash } from '@tabler/icons-vue';
 
 const props = defineProps({
@@ -11,55 +12,75 @@ const emit = defineEmits(['create', 'edit', 'delete']);
 function examTypeName(id) {
     return props.jenisTes.find((type) => type.id === id)?.nama || '-';
 }
+
+function scoreRange(_value, row) {
+    return `${row.skor_minimum} - ${row.skor_maksimum}`;
+}
+
+function labelSearchValue(value, row) {
+    return [value, row.deskripsi].filter(Boolean).join(' ');
+}
+
+function statusLabel(value) {
+    return value ? 'LULUS' : 'TIDAK LULUS';
+}
+
+const columns = [
+    { key: 'skor_minimum', label: 'Rentang Skor', sortable: true, searchable: true, className: 'font-medium text-text-heading', render: scoreRange, slot: 'score-range' },
+    { key: 'tingkat_cefr', label: 'CEFR', sortable: true },
+    { key: 'label_tingkat', label: 'Label', sortable: true, searchable: true, render: labelSearchValue, slot: 'label' },
+    { key: 'lulus', label: 'Kelulusan', sortable: true, searchable: true, render: statusLabel, slot: 'pass-status' },
+    { key: 'id', label: 'Aksi', slot: 'actions' },
+];
 </script>
 
 <template>
-    <BaseCard :padding="false" class="lg:col-span-2 overflow-hidden">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3.5">
-                <h2 class="text-title-lg font-semibold text-text-heading">Daftar Interpretasi Skor</h2>
-            <div class="flex items-center gap-2">
-                <BaseTambahData @click="emit('create')" />
-            </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="border-b border-outline-variant/30 bg-surface-container-low">
-                        <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Rentang Skor</th>
-                        <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">CEFR</th>
-                        <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Label</th>
-                        <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Kelulusan</th>
-                        <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="interp in props.interpretasiSkor" :key="interp.id" class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50">
-                        <td class="px-5 py-4">
-                            <p class="font-medium text-text-heading">{{ interp.skor_minimum }} - {{ interp.skor_maksimum }}</p>
-                            <p class="text-text-muted text-label-md">{{ examTypeName(interp.jenis_tes_id) }}</p>
-                        </td>
-                        <td class="px-5 py-4 text-body-md text-text-body">{{ interp.tingkat_cefr }}</td>
-                        <td class="px-5 py-4">
-                            <p class="text-body-md text-text-body">{{ interp.label_tingkat }}</p>
-                            <p v-if="interp.deskripsi" class="text-text-muted text-label-md">{{ interp.deskripsi }}</p>
-                        </td>
-                        <td class="px-5 py-4">
-                            <BaseBadge :variant="interp.lulus ? 'success' : 'danger'">
-                                {{ interp.lulus ? 'LULUS' : 'TIDAK LULUS' }}
-                            </BaseBadge>
-                        </td>
-                        <td class="px-5 py-4">
-                            <div class="flex items-center gap-2">
-                                <button @click="emit('edit', interp)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Ubah"><IconEdit :size="18" /></button>
-                                <button @click="emit('delete', interp)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus"><IconTrash :size="18" /></button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr v-if="props.interpretasiSkor.length === 0">
-                        <td colspan="5" class="px-5 py-12 text-center text-text-muted text-body-md">Belum ada data interpretasi skor.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </BaseCard>
+    <DataTable
+        :data="props.interpretasiSkor"
+        :columns="columns"
+        header-title="Daftar Interpretasi Skor"
+        class="lg:col-span-2"
+        searchable
+    >
+        <template #toolbar>
+            <BaseTambahData @click="emit('create')" />
+        </template>
+
+        <template #score-range="{ row }">
+            <p class="font-medium text-text-heading">{{ scoreRange(null, row) }}</p>
+            <p class="text-text-muted text-label-md">{{ examTypeName(row.jenis_tes_id) }}</p>
+        </template>
+
+        <template #label="{ row }">
+            <p class="text-body-md text-text-body">{{ row.label_tingkat }}</p>
+            <p v-if="row.deskripsi" class="text-text-muted text-label-md">{{ row.deskripsi }}</p>
+        </template>
+
+        <template #pass-status="{ row }">
+            <BaseBadge :variant="row.lulus ? 'success' : 'danger'">
+                {{ statusLabel(row.lulus) }}
+            </BaseBadge>
+        </template>
+
+        <template #actions="{ row }">
+            <BaseButton
+                variant="secondary"
+                icon-only
+                title="Ubah"
+                aria-label="Ubah"
+                @click="emit('edit', row)"
+            >
+                <IconEdit :size="16" />
+            </BaseButton>
+            <BaseButton
+                variant="danger"
+                icon-only
+                title="Hapus"
+                aria-label="Hapus"
+                @click="emit('delete', row)"
+            >
+                <IconTrash :size="16" />
+            </BaseButton>
+        </template>
+    </DataTable>
 </template>

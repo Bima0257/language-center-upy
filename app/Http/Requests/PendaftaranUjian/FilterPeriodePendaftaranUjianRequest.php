@@ -20,6 +20,11 @@ class FilterPeriodePendaftaranUjianRequest extends FormRequest
         return [
             'search' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', Rule::in(['upcoming', 'open', 'closed', 'inactive'])],
+            'jenis_tes_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('jenis_tes', 'id')->where(fn ($query) => $query->where('aktif', true)),
+            ],
         ];
     }
 }

@@ -19,24 +19,26 @@ const emit = defineEmits(['create', 'edit', 'delete']);
         </template>
 
         <template #actions="{ row }">
-            <div class="flex items-center gap-2">
-                <button
-                    :disabled="row.bagian_ujian_count > 0"
-                    @click="emit('edit', row)"
-                    class="p-2 text-text-muted hover:text-secondary transition-colors disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-text-muted"
-                    :title="row.bagian_ujian_count > 0 ? 'Tidak bisa diubah karena sudah digunakan di ujian' : 'Ubah'"
-                >
-                    <IconEdit :size="18" />
-                </button>
-                <button
-                    @click="emit('delete', row)"
-                    :disabled="row.soal_count > 0 || row.bagian_ujian_count > 0"
-                    class="p-2 text-text-muted hover:text-error-red transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-text-muted"
-                    :title="row.soal_count > 0 || row.bagian_ujian_count > 0 ? 'Tidak bisa dihapus karena masih memiliki soal atau digunakan di ujian' : 'Hapus'"
-                >
-                    <IconTrash :size="18" />
-                </button>
-            </div>
+            <BaseButton
+                variant="secondary"
+                icon-only
+                :disabled="row.bagian_ujian_count > 0"
+                :title="row.bagian_ujian_count > 0 ? 'Tidak bisa diubah karena sudah digunakan di ujian' : 'Ubah'"
+                :aria-label="row.bagian_ujian_count > 0 ? 'Tidak bisa diubah karena sudah digunakan di ujian' : 'Ubah'"
+                @click="emit('edit', row)"
+            >
+                <IconEdit :size="16" />
+            </BaseButton>
+            <BaseButton
+                variant="danger"
+                icon-only
+                :disabled="row.soal_count > 0 || row.bagian_ujian_count > 0"
+                :title="row.soal_count > 0 || row.bagian_ujian_count > 0 ? 'Tidak bisa dihapus karena masih memiliki soal atau digunakan di ujian' : 'Hapus'"
+                :aria-label="row.soal_count > 0 || row.bagian_ujian_count > 0 ? 'Tidak bisa dihapus karena masih memiliki soal atau digunakan di ujian' : 'Hapus'"
+                @click="emit('delete', row)"
+            >
+                <IconTrash :size="16" />
+            </BaseButton>
         </template>
     </DataTable>
 </template>

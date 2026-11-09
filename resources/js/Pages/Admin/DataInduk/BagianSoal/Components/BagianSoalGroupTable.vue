@@ -1,6 +1,7 @@
 <script setup>
 import { IconBook, IconEdit, IconGripVertical, IconTrash } from '@tabler/icons-vue';
 import draggable from 'vuedraggable';
+import { ref } from 'vue';
 
 defineProps({
     group: { type: Object, required: true },
@@ -9,19 +10,31 @@ defineProps({
 });
 
 const emit = defineEmits(['reorder', 'edit', 'delete']);
+const isEditingOrder = ref(false);
 </script>
 
 <template>
     <BaseCard :padding="false" class="overflow-hidden" :class="attached ? '!rounded-none !border-0 !shadow-none' : ''">
-        <div class="flex items-center justify-between px-5 py-4 bg-surface-container-low/60 border-b border-outline-variant/30">
+        <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 bg-surface-container-low/60 border-b border-outline-variant/30">
             <div class="flex items-center gap-2">
                 <IconBook :size="18" class="text-secondary" />
                 <p class="text-label-md font-semibold text-text-heading">{{ group.label }}</p>
                 <span class="text-label-md text-text-muted">{{ group.bagianSoal.length }} bagianSoal</span>
             </div>
-            <span v-if="group.bagianSoal.length" class="text-label-md text-text-muted">
-                Seret ikon ⠿ untuk mengubah urutan
-            </span>
+            <div v-if="group.bagianSoal.length" class="flex flex-wrap items-center justify-end gap-3">
+                <span class="text-label-md text-text-muted">
+                    {{ isEditingOrder ? 'Seret ikon ⠿ untuk mengubah urutan' : 'Aktifkan Edit urutan untuk mengatur posisi' }}
+                </span>
+                <BaseButton
+                    variant="secondary"
+                    size="sm"
+                    :disabled="reordering"
+                    @click="isEditingOrder = !isEditingOrder"
+                >
+                    <IconEdit :size="16" />
+                    {{ isEditingOrder ? 'Selesai' : 'Edit urutan' }}
+                </BaseButton>
+            </div>
         </div>
 
         <div v-if="group.bagianSoal.length === 0" class="px-5 py-10 text-center">
@@ -45,13 +58,14 @@ const emit = defineEmits(['reorder', 'edit', 'delete']);
                     :list="group.bagianSoal"
                     item-key="id"
                     handle=".drag-handle"
-                    :disabled="reordering"
+                    :disabled="reordering || !isEditingOrder"
                     @end="emit('reorder', group.value, $event)"
                 >
                     <template #item="{ element }">
                         <tr class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50 transition-colors">
                             <td class="px-4 py-3.5">
                                 <IconGripVertical
+                                    v-if="isEditingOrder"
                                     :size="18"
                                     class="drag-handle cursor-grab text-text-muted hover:text-secondary transition-colors"
                                 />
@@ -65,9 +79,25 @@ const emit = defineEmits(['reorder', 'edit', 'delete']);
                                 </BaseBadge>
                             </td>
                             <td class="px-5 py-3.5">
-                                <div class="flex items-center gap-2">
-                                    <button @click="emit('edit', element)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Ubah"><IconEdit :size="18" /></button>
-                                    <button @click="emit('delete', element)" class="p-2 text-text-muted hover:text-error-red transition-colors" title="Hapus"><IconTrash :size="18" /></button>
+                                <div class="flex items-center gap-1">
+                                    <BaseButton
+                                        variant="secondary"
+                                        icon-only
+                                        title="Ubah"
+                                        aria-label="Ubah"
+                                        @click="emit('edit', element)"
+                                    >
+                                        <IconEdit :size="16" />
+                                    </BaseButton>
+                                    <BaseButton
+                                        variant="danger"
+                                        icon-only
+                                        title="Hapus"
+                                        aria-label="Hapus"
+                                        @click="emit('delete', element)"
+                                    >
+                                        <IconTrash :size="16" />
+                                    </BaseButton>
                                 </div>
                             </td>
                         </tr>

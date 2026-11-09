@@ -38,7 +38,11 @@ defineEmits([
                 <div class="ml-auto flex items-center gap-1">
                     <Link
                         v-if="group.soal.length"
-                        :href="route('pustaka-soal.pratinjau', group.soal[0].id)"
+                        :href="route('preview.exam-take', {
+                            bank_soal_id: group.soal[0].bank_soal_id,
+                            jenis_tes_id: group.soal[0].bank_soal?.jenis_tes_id,
+                            soal_id: group.soal[0].id,
+                        })"
                         class="p-1.5 text-text-muted transition-colors hover:text-secondary"
                         title="Pratinjau soal materi ini"
                     >

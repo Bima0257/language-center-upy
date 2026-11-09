@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pengguna;
 use App\Models\SesiUjian;
 use App\Models\Ujian;
+use App\Modules\Ujian\Services\LayananSoal;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PratinjauController extends Controller
 {
+    public function __construct(
+        private LayananSoal $layananSoal,
+    ) {}
+
     /**
      * Layout ujian pratinjau: kode keterampilan => [[nama bagian, jumlah soal], ...]
      * Soal mandiri ditempatkan di Reading Part 1.
@@ -85,6 +91,30 @@ class PratinjauController extends Controller
 
     public function pratinjauPengerjaan(Request $request)
     {
+        if ($request->filled('bank_soal_id')) {
+            abort_unless($request->user()?->can('question.view'), 403);
+
+            /** @var Pengguna $pengguna */
+            $pengguna = $request->user();
+            $bankSoalId = (string) $request->query('bank_soal_id');
+            $jenisTesId = $request->filled('jenis_tes_id')
+                ? (string) $request->query('jenis_tes_id')
+                : null;
+            $soalId = $request->filled('soal_id')
+                ? (string) $request->query('soal_id')
+                : null;
+
+            return Inertia::render('Ujian/PratinjauPengerjaan/index', [
+                ...$this->layananSoal->dataPratinjauBank(
+                    $bankSoalId,
+                    $jenisTesId,
+                    $pengguna->name,
+                    $soalId,
+                ),
+                'manageUrl' => route('pustaka-soal.daftar', ['bank_soal_id' => $bankSoalId]),
+            ]);
+        }
+
         $ujian = Ujian::where('judul', 'TOEFL iBT Try Out 1')->first();
 
         $session = null;

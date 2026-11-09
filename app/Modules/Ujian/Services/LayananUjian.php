@@ -4,6 +4,7 @@ namespace App\Modules\Ujian\Services;
 
 use App\Models\BagianUjian;
 use App\Models\BankSoal;
+use App\Models\JenisTes;
 use App\Models\Keterampilan;
 use App\Models\Ujian;
 use App\Modules\DataInduk\Repositories\Contracts\BagianSoalRepositoryInterface;
@@ -29,9 +30,31 @@ class LayananUjian
         private BagianSoalRepositoryInterface $bagianSoalRepo,
     ) {}
 
-    public function dataDaftar(): Collection
+    /**
+     * @return array<string, mixed>
+     */
+    public function dataDaftar(?string $jenisTesId = null): array
     {
-        return $this->ujianRepo->semuaUntukDaftar();
+        $jenisTes = $this->jenisTesRepo->semuaAktifBerurutan();
+        $jumlahUjianPerJenisTes = $this->ujianRepo->jumlahPerJenisTes();
+        $jenisTesTerpilih = $jenisTes->first(
+            fn (JenisTes $jenis): bool => $jenis->id === $jenisTesId,
+        );
+
+        return [
+            'ujian' => $jenisTesTerpilih !== null
+                ? $this->ujianRepo->semuaUntukDaftar($jenisTesTerpilih->id)
+                : new Collection,
+            'jenisTes' => $jenisTes,
+            'ringkasanJenisTes' => $jenisTes->map(fn (JenisTes $jenis): array => [
+                'id' => $jenis->id,
+                'kode' => $jenis->kode,
+                'nama' => $jenis->nama,
+                'jumlahUjian' => (int) $jumlahUjianPerJenisTes->get($jenis->id, 0),
+            ])->values()->all(),
+            'jenisTesTerpilih' => $jenisTesTerpilih,
+            'jenisTesTerpilihId' => $jenisTesTerpilih?->id,
+        ];
     }
 
     public function temukanDenganRelasi(string $id): ?Ujian

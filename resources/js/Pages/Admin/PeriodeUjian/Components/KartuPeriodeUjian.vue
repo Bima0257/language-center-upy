@@ -33,19 +33,25 @@ const emit = defineEmits(['delete']);
                   class="flex items-center gap-1 px-3 py-2 rounded-full text-label-md font-medium text-secondary hover:bg-surface-container-low transition-colors">
                 Kelola Sesi <IconArrowRight :size="16" />
             </Link>
-            <Link :href="route('admin.periode-ujian.ubah', props.periodeUjian.id)"
-                  class="p-2 text-text-muted hover:text-secondary transition-colors">
-                <IconEdit :size="20" />
-            </Link>
-            <button @click="emit('delete', props.periodeUjian)"
-                    :disabled="props.periodeUjian.slot_ujian_count > 0"
-                    :title="props.periodeUjian.slot_ujian_count > 0 ? 'Tidak bisa dihapus — sudah punya sesi' : 'Hapus periode'"
-                    class="p-2 transition-colors"
-                    :class="props.periodeUjian.slot_ujian_count > 0
-                        ? 'text-outline-variant cursor-not-allowed'
-                        : 'text-text-muted hover:text-error-red'">
-                <IconTrash :size="20" />
-            </button>
+            <BaseButton
+                :href="route('admin.periode-ujian.ubah', props.periodeUjian.id)"
+                variant="secondary"
+                icon-only
+                title="Ubah periode"
+                aria-label="Ubah periode"
+            >
+                <IconEdit :size="16" />
+            </BaseButton>
+            <BaseButton
+                variant="danger"
+                icon-only
+                :disabled="props.periodeUjian.slot_ujian_count > 0"
+                :title="props.periodeUjian.slot_ujian_count > 0 ? 'Tidak bisa dihapus — sudah punya sesi' : 'Hapus periode'"
+                :aria-label="props.periodeUjian.slot_ujian_count > 0 ? 'Tidak bisa dihapus — sudah punya sesi' : 'Hapus periode'"
+                @click="emit('delete', props.periodeUjian)"
+            >
+                <IconTrash :size="16" />
+            </BaseButton>
         </div>
     </div>
 </template>

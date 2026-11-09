@@ -4,6 +4,7 @@ defineProps({
     subtitle: { type: String, default: "" },
     backHref: { type: String, default: null },
     backLabel: { type: String, default: "Kembali" },
+    preferHistory: { type: Boolean, default: true },
 });
 </script>
 
@@ -15,6 +16,7 @@ defineProps({
                 :href="backHref"
                 label=""
                 variant="primary"
+                :prefer-history="preferHistory"
                 :aria-label="backLabel"
                 class="!size-10 !p-0 shrink-0"
             />

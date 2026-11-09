@@ -8,11 +8,25 @@ use Illuminate\Database\Eloquent\Collection;
 
 class UjianRepository implements UjianRepositoryInterface
 {
-    public function semuaUntukDaftar(): Collection
+    public function semuaUntukDaftar(?string $jenisTesId = null): Collection
     {
         return Ujian::withCount('bagianUjian')
             ->withExists('periodeUjian')
+            ->when($jenisTesId !== null, fn ($query) => $query->where('jenis_tes_id', $jenisTesId))
+            ->orderBy('judul')
             ->get();
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<string, int>
+     */
+    public function jumlahPerJenisTes(): \Illuminate\Support\Collection
+    {
+        return Ujian::query()
+            ->select('jenis_tes_id')
+            ->selectRaw('COUNT(id) AS jumlah_ujian')
+            ->groupBy('jenis_tes_id')
+            ->pluck('jumlah_ujian', 'jenis_tes_id');
     }
 
     public function temukanDenganRelasi(string $id): ?Ujian
@@ -51,9 +65,12 @@ class UjianRepository implements UjianRepositoryInterface
         return Ujian::with('bagianUjian')->get();
     }
 
-    public function semuaAktifBerurutan(): Collection
+    public function semuaAktifBerurutan(?string $jenisTesId = null): Collection
     {
-        return Ujian::where('aktif', true)->orderBy('judul')->get();
+        return Ujian::where('aktif', true)
+            ->when($jenisTesId !== null, fn ($query) => $query->where('jenis_tes_id', $jenisTesId))
+            ->orderBy('judul')
+            ->get();
     }
 
     public function semuaAktifDenganJenisTes(): Collection

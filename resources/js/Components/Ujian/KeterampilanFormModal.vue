@@ -59,7 +59,7 @@ const emit = defineEmits(['close', 'submit']);
                     </div>
                 </BaseFormGrid>
                 <div v-if="!creating && form.kode" class="rounded-2xl bg-surface-container-low px-4 py-3">
-                    <p class="text-label-md text-text-muted">Kode Gabungan</p>
+                    <p class="text-label-md text-text-muted">Kode</p>
                     <p class="text-body-md font-semibold text-text-heading mt-1">{{ form.kode }}</p>
                 </div>
                 <div>

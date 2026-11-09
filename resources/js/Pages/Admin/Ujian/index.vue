@@ -1,8 +1,9 @@
 <script setup>
-import { Head, Link, router, useForm } from '@inertiajs/vue3'
+import { Head, router, useForm } from '@inertiajs/vue3'
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue'
 import DataTable from '@/Components/Shared/DataTable.vue'
 import TambahUjianModal from './components/TambahUjianModal.vue'
+import JenisTesSummaryTable from './components/JenisTesSummaryTable.vue'
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-vue'
 import { useConfirm } from '@/Composables/useConfirm'
 import { computed, ref, watch } from 'vue'
@@ -11,9 +12,13 @@ const props = defineProps({
     ujian: { type: Array, default: () => [] },
     jenisTes: { type: Array, default: () => [] },
     bankSoal: { type: Array, default: () => [] },
+    ringkasanJenisTes: { type: Array, default: () => [] },
+    jenisTesTerpilih: { type: Object, default: null },
+    jenisTesTerpilihId: { type: [String, null], default: null },
 })
 
 const confirm = useConfirm()
+const jenisTesFilter = computed(() => props.jenisTesTerpilihId || '')
 const showUjianModal = ref(false)
 const editingUjian = ref(null)
 const tambahForm = useForm({
@@ -52,6 +57,7 @@ function openTambahModal() {
     editingUjian.value = null
     tambahForm.reset()
     tambahForm.clearErrors()
+    tambahForm.jenis_tes_id = jenisTesFilter.value
     showUjianModal.value = true
 }
 
@@ -75,6 +81,10 @@ function closeUjianModal() {
     tambahForm.clearErrors()
     editForm.reset()
     editForm.clearErrors()
+}
+
+function jenisTesUrl(jenisTesId) {
+    return `${route('admin.ujian.daftar')}?jenis_tes_id=${encodeURIComponent(jenisTesId)}`
 }
 
 function submitTambahUjian() {
@@ -118,55 +128,71 @@ const columns = [
 </script>
 
 <template>
-    <Head title="Manajemen Ujian" />
-    <TataLetakDasbor title="Manajemen Ujian" subtitle="Atur daftar ujian, bagianUjian, dan komposisi soal">
-        <DataTable
-            :data="ujian"
-            :columns="columns"
-            searchable
-            header-title="Daftar Ujian"
-        >
-            <template #toolbar>
-                <BaseTambahData @click="openTambahModal" />
-            </template>
+    <Head :title="jenisTesTerpilih ? `Manajemen Ujian - ${jenisTesTerpilih.nama}` : 'Manajemen Ujian'" />
+    <TataLetakDasbor
+        :title="jenisTesTerpilih ? `Manajemen Ujian - ${jenisTesTerpilih.nama}` : 'Manajemen Ujian'"
+        :subtitle="jenisTesTerpilih ? 'Atur daftar ujian, bagian ujian, dan komposisi soal' : 'Pilih jenis tes untuk melihat daftar ujian'"
+        :back-href="jenisTesFilter ? route('admin.ujian.daftar') : null"
+    >
+        <template v-if="!jenisTesFilter">
+            <JenisTesSummaryTable
+                :ringkasan-jenis-tes="ringkasanJenisTes"
+                :detail-url="jenisTesUrl"
+            />
+        </template>
 
-            <template #actions="{ row }">
-                <div class="flex items-center gap-2">
-                    <button
-                        type="button"
-                        class="p-2 text-text-muted transition-colors hover:text-secondary"
+        <template v-else>
+            <DataTable
+                :data="ujian"
+                :columns="columns"
+                searchable
+                header-title="Daftar Ujian"
+            >
+                <template #toolbar>
+                    <BaseTambahData @click="openTambahModal" />
+                </template>
+
+                <template #actions="{ row }">
+                    <BaseButton
+                        variant="secondary"
+                        icon-only
                         title="Ubah"
+                        aria-label="Ubah"
                         @click="openEditModal(row)"
                     >
-                        <IconEdit :size="18" />
-                    </button>
-                    <Link :href="route('admin.ujian.detail', row.id)"
-                          class="p-2 text-text-muted hover:text-secondary transition-colors" title="Detail">
-                        <IconEye :size="18" />
-                    </Link>
-                    <button
-                        @click="destroy(row)"
+                        <IconEdit :size="16" />
+                    </BaseButton>
+                    <BaseButton
+                        :href="route('admin.ujian.detail', row.id)"
+                        variant="secondary"
+                        icon-only
+                        title="Detail"
+                        aria-label="Detail"
+                    >
+                        <IconEye :size="16" />
+                    </BaseButton>
+                    <BaseButton
+                        variant="danger"
+                        icon-only
                         :disabled="row.periode_ujian_exists"
                         :title="row.periode_ujian_exists ? 'Tidak bisa dihapus — sudah terjadwal' : 'Hapus ujian'"
-                        class="p-2 transition-colors"
-                        :class="row.periode_ujian_exists
-                            ? 'text-outline-variant cursor-not-allowed'
-                            : 'text-text-muted hover:text-error-red'"
+                        :aria-label="row.periode_ujian_exists ? 'Tidak bisa dihapus — sudah terjadwal' : 'Hapus ujian'"
+                        @click="destroy(row)"
                     >
-                        <IconTrash :size="18" />
-                    </button>
-                </div>
-            </template>
-        </DataTable>
+                        <IconTrash :size="16" />
+                    </BaseButton>
+                </template>
+            </DataTable>
 
-        <TambahUjianModal
-            :show="showUjianModal"
-            :creating="isCreating"
-            :form="modalForm"
-            :jenis-tes="jenisTes"
-            :bank-soal-tersaring="bankSoalTersaring"
-            @close="closeUjianModal"
-            @submit="isCreating ? submitTambahUjian() : submitEditUjian()"
-        />
+            <TambahUjianModal
+                :show="showUjianModal"
+                :creating="isCreating"
+                :form="modalForm"
+                :jenis-tes="jenisTes"
+                :bank-soal-tersaring="bankSoalTersaring"
+                @close="closeUjianModal"
+                @submit="isCreating ? submitTambahUjian() : submitEditUjian()"
+            />
+        </template>
     </TataLetakDasbor>
 </template>

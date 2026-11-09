@@ -3,6 +3,7 @@
 namespace App\Modules\Penjadwalan\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Penjadwalan\FilterPeriodeUjianRequest;
 use App\Http\Requests\Penjadwalan\PerbaruiPeriodeUjianRequest;
 use App\Http\Requests\Penjadwalan\PerbaruiSlotUjianRequest;
 use App\Http\Requests\Penjadwalan\SimpanPeriodeUjianRequest;
@@ -21,9 +22,17 @@ class PenjadwalanController extends Controller
         private LayananPenjadwalan $layananPenjadwalan,
     ) {}
 
-    public function daftar(): Response
+    public function daftar(FilterPeriodeUjianRequest $request): Response
     {
-        return Inertia::render('Admin/PeriodeUjian/index', $this->layananPenjadwalan->dataDaftar());
+        $filters = $request->validated();
+
+        return Inertia::render(
+            'Admin/PeriodeUjian/index',
+            $this->layananPenjadwalan->dataDaftar(
+                $filters['jenis_tes_id'] ?? null,
+                $filters['ujian_id'] ?? null,
+            ),
+        );
     }
 
     public function tambah(Ujian $ujian): Response
@@ -41,7 +50,10 @@ class PenjadwalanController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return to_route('admin.periode-ujian.daftar')
+        return to_route('admin.periode-ujian.daftar', [
+            'jenis_tes_id' => $ujian->jenis_tes_id,
+            'ujian_id' => $ujian->id,
+        ])
             ->with('success', 'Periode ujian berhasil dibuat.');
     }
 
@@ -76,8 +88,7 @@ class PenjadwalanController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return to_route('admin.periode-ujian.daftar')
-            ->with('success', 'Periode ujian dihapus.');
+        return back()->with('success', 'Periode ujian dihapus.');
     }
 
     public function simpanSlot(SimpanSlotUjianRequest $request, PeriodeUjian $periodeUjian): RedirectResponse

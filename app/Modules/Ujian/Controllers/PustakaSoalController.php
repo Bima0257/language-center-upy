@@ -48,11 +48,6 @@ class PustakaSoalController extends Controller
             ->with('success', "{$jumlah} soal berhasil ditambahkan ke bank soal.");
     }
 
-    public function pratinjau(Soal $soal): Response
-    {
-        return Inertia::render('BankSoal/PratinjauSoal/index', $this->layananSoal->dataPratinjau($soal));
-    }
-
     public function perbarui(PerbaruiSoalPustakaRequest $request, Soal $soal): RedirectResponse
     {
         $this->layananSoal->perbaruiPustaka($soal, $request->validated());
