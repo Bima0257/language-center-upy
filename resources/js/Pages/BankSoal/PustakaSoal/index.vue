@@ -6,7 +6,7 @@ import EmptyState from "@/Components/Shared/EmptyState.vue";
 import Pagination from "@/Components/Shared/Pagination.vue";
 import UserGuide from "@/Components/Shared/UserGuide.vue";
 import KeterampilanFormModal from "@/Components/Ujian/KeterampilanFormModal.vue";
-import BagianSoalFormModal from "@/Pages/Admin/DataInduk/BagianSoal/components/BagianSoalFormModal.vue";
+import BagianSoalFormModal from "@/Pages/Admin/DataInduk/BagianSoal/Components/BagianSoalFormModal.vue";
 import KelompokSoalPustaka from "@/Pages/BankSoal/PustakaSoal/Components/KelompokSoalPustaka.vue";
 import EditMateriSoalModal from "@/Pages/BankSoal/PustakaSoal/Components/EditMateriSoalModal.vue";
 import TambahSoalMateriModal from "@/Pages/BankSoal/PustakaSoal/Components/TambahSoalMateriModal.vue";
