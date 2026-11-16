@@ -8,17 +8,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * Aturan konversi skor untuk satu keterampilan dalam jenis tes.
+ * Aturan konversi skor untuk satu section dalam skema penilaian.
  *
  * @property string $id
- * @property string $jenis_tes_id
- * @property string $kode_keterampilan
- * @property array<string, int> $tabel_konversi
+ * @property string|null $skema_penilaian_id
+ * @property string $program_tes_id
+ * @property string|null $section_id
+ * @property string $kode_section
+ * @property array<int|string, int> $tabel_konversi
  * @property int $skor_mentah_maksimum
+ * @property int $skor_skala_minimum
  * @property int $skor_skala_maksimum
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read JenisTes $jenisTes
+ * @property-read ProgramTes $programTes
+ * @property-read Section|null $section
+ * @property-read SkemaPenilaian|null $skemaPenilaian
  */
 class AturanPenilaian extends Model
 {
@@ -27,10 +32,13 @@ class AturanPenilaian extends Model
     protected $table = 'aturan_penilaian';
 
     protected $fillable = [
-        'jenis_tes_id',
-        'kode_keterampilan',
+        'skema_penilaian_id',
+        'program_tes_id',
+        'section_id',
+        'kode_section',
         'tabel_konversi',
         'skor_mentah_maksimum',
+        'skor_skala_minimum',
         'skor_skala_maksimum',
     ];
 
@@ -39,12 +47,23 @@ class AturanPenilaian extends Model
         return [
             'tabel_konversi' => 'array',
             'skor_mentah_maksimum' => 'integer',
+            'skor_skala_minimum' => 'integer',
             'skor_skala_maksimum' => 'integer',
         ];
     }
 
-    public function jenisTes(): BelongsTo
+    public function programTes(): BelongsTo
     {
-        return $this->belongsTo(JenisTes::class, 'jenis_tes_id', 'id');
+        return $this->belongsTo(ProgramTes::class, 'program_tes_id', 'id');
+    }
+
+    public function section(): BelongsTo
+    {
+        return $this->belongsTo(Section::class, 'section_id', 'id');
+    }
+
+    public function skemaPenilaian(): BelongsTo
+    {
+        return $this->belongsTo(SkemaPenilaian::class, 'skema_penilaian_id', 'id');
     }
 }

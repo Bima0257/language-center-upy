@@ -1,21 +1,22 @@
 <?php
 
-use App\Modules\Ujian\Controllers\BagianUjianController;
 use App\Modules\Ujian\Controllers\BankSoalController;
+use App\Modules\Ujian\Controllers\DemoUjianController;
 use App\Modules\Ujian\Controllers\MateriSoalController;
+use App\Modules\Ujian\Controllers\PartUjianController;
 use App\Modules\Ujian\Controllers\PustakaSoalController;
 use App\Modules\Ujian\Controllers\SoalController;
 use App\Modules\Ujian\Controllers\UjianController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'permission:question.view'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('pustaka-soal')
     ->name('pustaka-soal.')
     ->group(function () {
         Route::get('/', [PustakaSoalController::class, 'daftar'])->name('daftar');
     });
 
-Route::middleware(['auth', 'permission:question.create'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('pustaka-soal')
     ->name('pustaka-soal.')
     ->group(function () {
@@ -24,7 +25,7 @@ Route::middleware(['auth', 'permission:question.create'])
         Route::post('/materi-soal', [MateriSoalController::class, 'simpan'])->name('materi-soal.simpan');
     });
 
-Route::middleware(['auth', 'permission:question.edit'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('pustaka-soal')
     ->name('pustaka-soal.')
     ->group(function () {
@@ -36,7 +37,7 @@ Route::middleware(['auth', 'permission:question.edit'])
             ->name('materi-soal.media.hapus');
     });
 
-Route::middleware(['auth', 'permission:question.delete'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('pustaka-soal')
     ->name('pustaka-soal.')
     ->group(function () {
@@ -44,38 +45,38 @@ Route::middleware(['auth', 'permission:question.delete'])
         Route::delete('/materi-soal/{materiSoal}', [MateriSoalController::class, 'hapus'])->name('materi-soal.hapus');
     });
 
-Route::middleware(['auth', 'permission:question.view'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('pustaka-soal/bank-soal')
     ->name('pustaka-soal.bank-soal.')
     ->group(function () {
-        Route::get('/kategori/{jenisTes}', [BankSoalController::class, 'daftarKategori'])
-            ->whereUuid('jenisTes')
-            ->name('kategori');
+        Route::get('/program-tes/{programTes}', [BankSoalController::class, 'daftarProgramTes'])
+            ->whereUuid('programTes')
+            ->name('program-tes');
         Route::get('/', [BankSoalController::class, 'daftar'])->name('daftar');
     });
 
-Route::middleware(['auth', 'permission:question.create'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('pustaka-soal/bank-soal')
     ->name('pustaka-soal.bank-soal.')
     ->group(function () {
         Route::post('/', [BankSoalController::class, 'simpan'])->name('simpan');
     });
 
-Route::middleware(['auth', 'permission:question.edit'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('pustaka-soal/bank-soal')
     ->name('pustaka-soal.bank-soal.')
     ->group(function () {
         Route::put('/{bankSoal}', [BankSoalController::class, 'perbarui'])->name('perbarui');
     });
 
-Route::middleware(['auth', 'permission:question.delete'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('pustaka-soal/bank-soal')
     ->name('pustaka-soal.bank-soal.')
     ->group(function () {
         Route::delete('/{bankSoal}', [BankSoalController::class, 'hapus'])->name('hapus');
     });
 
-Route::middleware(['auth', 'permission:exam.create'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/ujian')
     ->name('admin.ujian.')
     ->group(function () {
@@ -83,49 +84,59 @@ Route::middleware(['auth', 'permission:exam.create'])
         Route::post('/', [UjianController::class, 'simpan'])->name('simpan');
     });
 
-Route::middleware(['auth', 'permission:exam.manage'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/ujian')
     ->name('admin.ujian.')
     ->group(function () {
         Route::get('/', [UjianController::class, 'daftar'])->name('daftar');
+        Route::get('/{ujian}/pratinjau', [UjianController::class, 'pratinjau'])->name('pratinjau');
         Route::get('/{ujian}', [UjianController::class, 'detail'])->name('detail');
     });
 
-Route::middleware(['auth', 'permission:exam.edit'])
+Route::middleware(['auth', 'route.permission'])
+    ->prefix('admin/demo-ujian')
+    ->name('admin.demo-ujian.')
+    ->group(function () {
+        Route::get('/', [DemoUjianController::class, 'daftar'])->name('daftar');
+        Route::get('/{ujian}', [DemoUjianController::class, 'mulai'])->whereUuid('ujian')->name('mulai');
+        Route::post('/{ujian}/skor', [DemoUjianController::class, 'skor'])->whereUuid('ujian')->name('skor');
+    });
+
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/ujian')
     ->name('admin.ujian.')
     ->group(function () {
         Route::put('/{ujian}', [UjianController::class, 'perbarui'])->name('perbarui');
-        Route::post('/{ujian}/sinkronkan-bagian', [UjianController::class, 'sinkronkanBagian'])->name('sinkronkan-bagian');
-        Route::put('/{ujian}/bagian/{bagianUjian}', [BagianUjianController::class, 'perbarui'])->name('bagian.perbarui');
-        Route::patch('/{ujian}/bagian/{bagianUjian}/soal/urutan', [BagianUjianController::class, 'susunUlangSoal'])->name('bagian.soal.urutan');
-        Route::patch('/{ujian}/bagian/{bagianUjian}/bagian-soal/urutan', [BagianUjianController::class, 'susunUlangBagianSoal'])->name('bagian.bagian-soal.urutan');
-        Route::patch('/{ujian}/bagian/{bagianUjian}/susunan', [BagianUjianController::class, 'simpanSusunan'])->name('bagian.susunan');
+        Route::post('/{ujian}/sinkronkan-part', [UjianController::class, 'sinkronkanPart'])->name('sinkronkan-part');
+        Route::put('/{ujian}/part/{partUjian}', [PartUjianController::class, 'perbarui'])->name('part.perbarui');
+        Route::patch('/{ujian}/part/{partUjian}/soal/urutan', [PartUjianController::class, 'susunUlangSoal'])->name('part.soal.urutan');
+        Route::patch('/{ujian}/part/{partUjian}/part-soal/urutan', [PartUjianController::class, 'susunUlangPartSoal'])->name('part.part-soal.urutan');
+        Route::patch('/{ujian}/part/{partUjian}/susunan', [PartUjianController::class, 'simpanSusunan'])->name('part.susunan');
     });
 
-Route::middleware(['auth', 'permission:question.create'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/ujian')
     ->name('admin.ujian.')
     ->group(function () {
         Route::post('/soal', [SoalController::class, 'simpan'])->name('soal.simpan');
     });
 
-Route::middleware(['auth', 'permission:question.edit'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/ujian')
     ->name('admin.ujian.')
     ->group(function () {
         Route::put('/soal/{soal}', [SoalController::class, 'perbarui'])->whereUuid('soal')->name('soal.perbarui');
     });
 
-Route::middleware(['auth', 'permission:exam.delete'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/ujian')
     ->name('admin.ujian.')
     ->group(function () {
         Route::delete('/{ujian}', [UjianController::class, 'hapus'])->name('hapus');
-        Route::delete('/{ujian}/bagian/{bagianUjian}', [BagianUjianController::class, 'hapus'])->name('bagian.hapus');
+        Route::delete('/{ujian}/part/{partUjian}', [PartUjianController::class, 'hapus'])->name('part.hapus');
     });
 
-Route::middleware(['auth', 'permission:question.delete'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/ujian')
     ->name('admin.ujian.')
     ->group(function () {

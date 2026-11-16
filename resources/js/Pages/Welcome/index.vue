@@ -21,7 +21,7 @@ defineProps({
         <Navbar :can-login="canLogin" :can-register="canRegister" class="shrink-0" />
 
         <main class="flex-1 overflow-hidden relative">
-            <div class="h-full overflow-y-auto landing-scroll-area pt-6 md:pt-8">
+            <div class="h-full overflow-y-auto overscroll-y-contain landing-scroll-area pt-6 md:pt-8">
                 <Hero />
                 <Features />
                 <div id="pricing">

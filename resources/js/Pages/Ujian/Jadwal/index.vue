@@ -6,11 +6,12 @@ import DropDown from '@/Components/Shared/DropDown.vue';
 import BaseModal from '@/Components/Base/BaseModal.vue';
 import ContextSummaryTable from '@/Components/Ujian/ContextSummaryTable.vue';
 import { useConfirm } from '@/Composables/useConfirm';
+import { formatProgramTes } from '@/constants/programTes';
 import { IconCalendarEvent, IconClipboardCheck, IconClock, IconUpload, IconUsers } from '@tabler/icons-vue';
 
 const props = defineProps({
     periodeUjian: { type: Array, default: () => [] },
-    ringkasanJenisTes: { type: Array, default: () => [] },
+    ringkasanProgramTes: { type: Array, default: () => [] },
     ringkasanUjian: { type: Array, default: () => [] },
     ringkasanPeriode: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
@@ -33,28 +34,32 @@ const registrationForm = useForm({
 
 const context = computed(() => props.filters || {});
 
-const jenisTesColumns = [
-    { key: 'nama', label: 'Jenis Tes', sortable: true, className: 'font-medium text-text-heading' },
-    { key: 'jumlahUjian', label: 'Ujian', sortable: true },
-    { key: 'jumlahPeriode', label: 'Periode', sortable: true },
-    { key: 'jumlahSlot', label: 'Slot Tersedia', sortable: true },
+const programTesColumns = [
+    {
+        id: 'program_tes',
+        header: 'Program Tes',
+        meta: { cellClass: 'font-medium text-text-heading' },
+        accessorFn: row => formatProgramTes(row),
+    },
+    { accessorKey: 'jumlahUjian', header: 'Ujian' },
+    { accessorKey: 'jumlahPeriode', header: 'Periode' },
+    { accessorKey: 'jumlahSlot', header: 'Slot Tersedia' },
 ];
 
 const ujianColumns = [
-    { key: 'judul', label: 'Ujian', sortable: true, className: 'font-medium text-text-heading' },
-    { key: 'jumlahPeriode', label: 'Periode', sortable: true },
-    { key: 'jumlahSlot', label: 'Slot Tersedia', sortable: true },
+    { accessorKey: 'judul', header: 'Ujian', meta: { cellClass: 'font-medium text-text-heading' } },
+    { accessorKey: 'jumlahPeriode', header: 'Periode' },
+    { accessorKey: 'jumlahSlot', header: 'Slot Tersedia' },
 ];
 
 const periodeColumns = [
-    { key: 'judul', label: 'Periode', sortable: true, className: 'font-medium text-text-heading' },
+    { accessorKey: 'judul', header: 'Periode', meta: { cellClass: 'font-medium text-text-heading' } },
     {
-        key: 'tanggalMulai',
-        label: 'Tanggal',
-        sortable: true,
-        render: (_value, row) => `${formatDate(row.tanggalMulai)} - ${formatDate(row.tanggalSelesai)}`,
+        accessorKey: 'tanggalMulai',
+        header: 'Tanggal',
+        cell: info => `${formatDate(info.row.original.tanggalMulai)} - ${formatDate(info.row.original.tanggalSelesai)}`,
     },
-    { key: 'jumlahSlot', label: 'Slot Tersedia', sortable: true },
+    { accessorKey: 'jumlahSlot', header: 'Slot Tersedia' },
 ];
 
 const pageBackUrl = computed(() => {
@@ -62,16 +67,16 @@ const pageBackUrl = computed(() => {
 
     if (current.periode_ujian_id) {
         return contextUrl({
-            jenis_tes_id: current.jenis_tes_id,
+            program_tes_id: current.program_tes_id,
             ujian_id: current.ujian_id,
         });
     }
 
     if (current.ujian_id) {
-        return contextUrl({ jenis_tes_id: current.jenis_tes_id });
+        return contextUrl({ program_tes_id: current.program_tes_id });
     }
 
-    if (current.jenis_tes_id) return contextUrl();
+    if (current.program_tes_id) return contextUrl();
 
     return null;
 });
@@ -104,17 +109,17 @@ function navigate(parameters) {
     router.get(contextUrl(parameters), {}, { preserveState: true, replace: true });
 }
 
-function selectJenisTes(row) {
-    navigate({ jenis_tes_id: row.id });
+function selectProgramTes(row) {
+    navigate({ program_tes_id: row.id });
 }
 
 function selectUjian(row) {
-    navigate({ jenis_tes_id: context.value.jenis_tes_id, ujian_id: row.id });
+    navigate({ program_tes_id: context.value.program_tes_id, ujian_id: row.id });
 }
 
 function selectPeriode(row) {
     navigate({
-        jenis_tes_id: context.value.jenis_tes_id,
+        program_tes_id: context.value.program_tes_id,
         ujian_id: context.value.ujian_id,
         periode_ujian_id: row.id,
     });
@@ -205,8 +210,18 @@ function closeRegistration() {
 }
 
 function selectPaymentProof(event) {
-    registrationForm.bukti_pembayaran = event.target.files[0] || null;
+    const file = event.target.files[0] || null;
     event.target.value = '';
+
+    if (file && file.size > 2 * 1024 * 1024) {
+        registrationForm.bukti_pembayaran = null;
+        registrationForm.setError('bukti_pembayaran', 'Ukuran file maksimal 2MB.');
+
+        return;
+    }
+
+    registrationForm.clearErrors('bukti_pembayaran');
+    registrationForm.bukti_pembayaran = file;
 }
 
 function submitRegistration() {
@@ -240,16 +255,18 @@ async function cancelRegistration(slotUjian) {
         :back-href="pageBackUrl"
     >
         <ContextSummaryTable
-            v-if="!context.jenis_tes_id"
-            title="Daftar Jenis Tes"
-            :data="ringkasanJenisTes"
-            :columns="jenisTesColumns"
-            search-placeholder="Cari jenis tes..."
-            @select="selectJenisTes"
+            v-if="!context.program_tes_id"
+            table-key="ujian-jadwal-program-tes"
+            title="Daftar Program Tes"
+            :data="ringkasanProgramTes"
+            :columns="programTesColumns"
+            search-placeholder="Cari program tes..."
+            @select="selectProgramTes"
         />
 
         <ContextSummaryTable
             v-else-if="!context.ujian_id"
+            table-key="ujian-jadwal-ujian"
             title="Daftar Ujian"
             :data="ringkasanUjian"
             :columns="ujianColumns"
@@ -259,6 +276,7 @@ async function cancelRegistration(slotUjian) {
 
         <ContextSummaryTable
             v-else-if="!context.periode_ujian_id"
+            table-key="ujian-jadwal-periode"
             title="Daftar Periode Ujian"
             :data="ringkasanPeriode"
             :columns="periodeColumns"
@@ -408,10 +426,10 @@ async function cancelRegistration(slotUjian) {
                         <label class="mb-1.5 block text-label-md font-medium text-text-heading">Bukti Pembayaran</label>
                         <label class="flex cursor-pointer items-center gap-3 rounded-2xl border-2 border-dashed border-outline-variant px-4 py-4 hover:border-secondary">
                             <IconUpload :size="20" class="text-text-muted" />
-                            <span class="text-body-md text-text-body">{{ registrationForm.bukti_pembayaran?.name || 'Pilih file JPG atau PNG' }}</span>
-                            <input type="file" accept=".jpg,.jpeg,.png" class="hidden" @change="selectPaymentProof" />
+                            <span class="text-body-md text-text-body">{{ registrationForm.bukti_pembayaran?.name || 'Pilih file JPG, PNG, atau WebP' }}</span>
+                            <input type="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" @change="selectPaymentProof" />
                         </label>
-                        <p class="mt-1 text-label-md text-text-muted">Maksimal 5MB.</p>
+                        <p class="mt-1 text-label-md text-text-muted">Maksimal 2MB.</p>
                         <p v-if="registrationForm.errors.bukti_pembayaran" class="mt-1 text-xs text-error-red">{{ registrationForm.errors.bukti_pembayaran }}</p>
                     </div>
 

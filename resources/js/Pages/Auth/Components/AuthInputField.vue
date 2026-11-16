@@ -5,7 +5,7 @@ defineProps({
     id: { type: String, required: true },
     label: { type: String, required: true },
     modelValue: { type: String, default: '' },
-    icon: { type: Object, default: null },
+    icon: { type: [Object, Function], default: null },
     type: { type: String, default: 'text' },
     placeholder: { type: String, default: '' },
     autocomplete: { type: String, default: undefined },
@@ -39,7 +39,7 @@ const emit = defineEmits(['update:modelValue', 'toggle-password']);
                 :autocomplete="autocomplete"
                 :placeholder="placeholder"
                 :class="[
-                    'w-full pl-11 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md transition-all placeholder:text-text-muted focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]',
+                    'w-full pl-11 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md transition-all placeholder:text-text-muted focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]',
                     inputTextClass,
                     passwordToggle ? 'pr-12' : 'pr-4',
                 ]"

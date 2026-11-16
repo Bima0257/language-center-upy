@@ -1,13 +1,38 @@
 <script setup>
 import RichTextViewer from "@/Components/Shared/RichTextViewer.vue";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-vue";
+import { computed } from "vue";
 
-defineProps({
+const props = defineProps({
     currentBlock: { type: Object, required: true },
+    partBlocks: { type: Array, default: () => [] },
     canGoPrev: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["previous", "next"]);
+
+const ringkasan = computed(() => {
+    const blocks = props.partBlocks.length
+        ? props.partBlocks
+        : [props.currentBlock];
+    const pertama = blocks[0];
+
+    return {
+        nama:
+            pertama?.partSoal?.nama
+            ?? props.currentBlock.partSoal?.nama
+            ?? "Part Soal",
+        petunjuk:
+            pertama?.partSoal?.petunjuk
+            ?? props.currentBlock.partSoal?.petunjuk
+            ?? null,
+        nomorMulai: pertama?.nomorMulai ?? props.currentBlock.nomorMulai,
+        jumlahSoal: blocks.reduce(
+            (total, block) => total + Number(block.jumlahSoal || 0),
+            0,
+        ),
+    };
+});
 </script>
 
 <template>
@@ -20,10 +45,10 @@ const emit = defineEmits(["previous", "next"]);
             <div>
                 <span
                     class="text-xs font-semibold uppercase tracking-widest opacity-70"
-                    >{{ currentBlock.keterampilan.nama }}</span
+                    >{{ currentBlock.section.nama }}</span
                 >
                 <h1 class="text-title-lg font-bold">
-                    {{ currentBlock.bagianSoal.nama }}
+                    {{ ringkasan.nama }}
                 </h1>
             </div>
             <div class="shrink-0 text-right">
@@ -32,7 +57,7 @@ const emit = defineEmits(["previous", "next"]);
                     >Soal</span
                 >
                 <p class="text-lg font-bold">
-                    {{ currentBlock.nomorMulai }}–{{ currentBlock.nomorMulai + currentBlock.jumlahSoal - 1 }}
+                    {{ ringkasan.nomorMulai }}–{{ ringkasan.nomorMulai + ringkasan.jumlahSoal - 1 }}
                 </p>
             </div>
         </div>
@@ -41,7 +66,7 @@ const emit = defineEmits(["previous", "next"]);
                 Petunjuk Pengerjaan
             </p>
             <RichTextViewer
-                :content="currentBlock.bagianSoal.petunjuk"
+                :content="ringkasan.petunjuk"
                 class="mb-3 text-sm leading-snug [&_.rich-text-content]:leading-snug [&_.rich-text-content_p]:mb-2 [&_.rich-text-content_h1]:mb-2 [&_.rich-text-content_h2]:mb-1.5 [&_.rich-text-content_h3]:mb-1.5 [&_.rich-text-content_ul]:mb-2 [&_.rich-text-content_ol]:mb-2"
             />
             <div class="grid grid-cols-2 gap-2 border-t border-outline-variant/40 pt-3">

@@ -58,28 +58,28 @@ const emit = defineEmits(["next"]);
             </div>
 
             <p class="mb-4 text-sm leading-snug text-text-body">
-                Bacalah petunjuk setiap bagian dengan teliti sebelum mengerjakan.
-                Soal akan dimuat secara berurutan per keterampilan dan bagianSoal.
-                Nomor soal berjalan menerus dari bagian pertama sampai bagian terakhir.
+                Bacalah petunjuk setiap part dengan teliti sebelum mengerjakan.
+                Soal akan dimuat secara berurutan per section dan partSoal.
+                Nomor soal berjalan menerus dari part pertama sampai part terakhir.
             </p>
 
             <div class="mb-4 divide-y divide-outline-variant/40">
                 <div
-                    v-for="keterampilan in overview.keterampilan || []"
-                    :key="keterampilan.kode"
+                    v-for="section in overview.section || []"
+                    :key="section.kode"
                     class="py-2.5 first:pt-0 last:pb-0"
                     >
                     <div class="flex items-center gap-2">
-                        <span class="min-w-0 truncate text-sm font-bold text-text-heading">{{ keterampilan.nama }}</span>
+                        <span class="min-w-0 truncate text-sm font-bold text-text-heading">{{ section.nama }}</span>
                         <span class="ml-auto shrink-0 text-xs text-text-muted"
-                            >{{ keterampilan.jumlahSoal }} soal</span
+                            >{{ section.jumlahSoal }} soal</span
                         >
                     </div>
                     <div class="flex flex-wrap gap-x-3 gap-y-1 pt-1 text-xs text-text-muted">
                         <span
-                            v-for="bagianSoal in keterampilan.bagianSoal"
-                            :key="bagianSoal.nama"
-                            >{{ bagianSoal.nama }} <span class="tabular-nums">({{ bagianSoal.jumlahSoal }} soal)</span></span
+                            v-for="partSoal in section.partSoal"
+                            :key="partSoal.id || partSoal.nama"
+                            >{{ partSoal.nama }} <span class="tabular-nums">({{ partSoal.jumlahSoal }} soal)</span></span
                         >
                     </div>
                 </div>

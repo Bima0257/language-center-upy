@@ -157,10 +157,10 @@ const componentMeta = {
         path: "resources/js/Components/Shared/RichTextViewer.vue",
         description: "Renderer HTML yang disanitasi untuk konten rich text.",
     },
-    DataTable: {
+    AppDataTable: {
         scope: "reusable",
-        path: "resources/js/Components/Shared/DataTable.vue",
-        description: "Tabel client-side berbasis TanStack dengan search, filter, sorting, badge, page size, dan pagination.",
+        path: "resources/js/Components/Ui/AppDataTable.vue",
+        description: "Tabel generik TanStack v9 dengan search, sorting, filter, pagination, column visibility, grouped header, persistence, highlight, mobile, dan server-side.",
     },
     TableFilterBar: {
         scope: "reusable",
@@ -274,7 +274,7 @@ const componentGroups = [
         id: "data",
         title: "Data dan visualisasi",
         description: "Komponen untuk data tabular dan visualisasi metrik.",
-        components: ["DataTable", "TableFilterBar", "Pagination", "BarChart", "DoughnutChart"],
+        components: ["AppDataTable", "TableFilterBar", "Pagination", "BarChart", "DoughnutChart"],
     },
     {
         id: "feedback",
@@ -307,8 +307,6 @@ const richText = ref(
 );
 const modalOpen = ref(false);
 const progressVisible = ref(false);
-const tableLoading = ref(false);
-const tableSearch = ref("");
 
 const confirmApi = useConfirm();
 
@@ -329,18 +327,6 @@ const radioOptions = [
     { value: "reading", label: "Reading" },
     { value: "listening", label: "Listening" },
     { value: "speaking", label: "Speaking" },
-];
-
-const tableColumns = [
-    { key: "component", label: "Komponen", sortable: true },
-    { key: "scope", label: "Scope", sortable: true },
-    { key: "status", label: "Status", badge: true },
-];
-
-const tableData = [
-    { component: "BaseButton", scope: "Global", status: "Aktif" },
-    { component: "DataTable", scope: "Reusable", status: "Aktif" },
-    { component: "RichTextEditor", scope: "Reusable", status: "Aktif" },
 ];
 
 const paginationLinks = [
@@ -427,20 +413,6 @@ function showUploadProgress() {
     window.setTimeout(() => {
         progressVisible.value = false;
     }, 1800);
-}
-
-function toggleTableLoading() {
-    tableLoading.value = !tableLoading.value;
-
-    if (tableLoading.value) {
-        window.setTimeout(() => {
-            tableLoading.value = false;
-        }, 1400);
-    }
-}
-
-function updateTableSearch(value) {
-    tableSearch.value = value;
 }
 
 async function showConfirmDialog() {
@@ -545,16 +517,10 @@ async function showConfirmDialog() {
                     :group="group"
                     :component-meta="componentMeta"
                     :is-visible="isVisible"
-                    :table-columns="tableColumns"
-                    :table-data="tableData"
                     :pagination-links="paginationLinks"
-                    :table-loading="tableLoading"
-                    :table-search="tableSearch"
                     :chart-labels="chartLabels"
                     :chart-data="chartData"
                     :chart-breakdown="chartBreakdown"
-                    :toggle-table-loading="toggleTableLoading"
-                    :update-table-search="updateTableSearch"
                 />
 
                 <PratinjauFeedback

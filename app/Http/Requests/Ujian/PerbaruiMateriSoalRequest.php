@@ -20,7 +20,13 @@ class PerbaruiMateriSoalRequest extends FormRequest
             'judul' => ['required', 'string', 'max:255'],
             'isi_teks' => ['nullable', 'string'],
             'berkas_audio' => ['nullable', 'file', 'mimes:mp3,wav,ogg,m4a', 'max:51200'],
-            'berkas_gambar' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
+            'berkas_gambar' => [
+                'nullable',
+                'file',
+                'mimes:jpg,jpeg,png,webp',
+                'max:'.config('image.max_kb'),
+                'dimensions:max_width=12000,max_height=12000',
+            ],
         ];
     }
 }

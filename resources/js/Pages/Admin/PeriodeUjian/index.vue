@@ -1,30 +1,31 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3'
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue'
-import DataTable from '@/Components/Shared/DataTable.vue'
-import Pagination from '@/Components/Shared/Pagination.vue'
+import BaseBadge from '@/Components/Base/BaseBadge.vue'
+import BaseButton from '@/Components/Base/BaseButton.vue'
+import BaseTambahData from '@/Components/Base/BaseTambahData.vue'
 import ContextSummaryTable from '@/Components/Ujian/ContextSummaryTable.vue'
-import JenisTesSummaryTable from '@/Pages/Admin/PeriodeUjian/Components/JenisTesSummaryTable.vue'
+import AppDataTable from '@/Components/Ui/AppDataTable.vue'
+import ProgramTesSummaryTable from '@/Pages/Admin/PeriodeUjian/Components/ProgramTesSummaryTable.vue'
 import FormPeriodeUjianModal from '@/Pages/Admin/PeriodeUjian/Components/FormPeriodeUjianModal.vue'
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-vue'
-import { computed, ref } from 'vue'
+import { computed, h, ref } from 'vue'
 import { useConfirm } from '@/Composables/useConfirm'
 
 const confirm = useConfirm()
 
 const props = defineProps({
-    periodeUjian: { type: Object, default: () => ({ data: [], links: [], meta: {} }) },
-    ringkasanJenisTes: { type: Array, default: () => [] },
+    periodeUjian: { type: Object, default: () => ({ data: [], links: [], total: 0, per_page: 15 }) },
+    ringkasanProgramTes: { type: Array, default: () => [] },
     ringkasanUjian: { type: Array, default: () => [] },
-    jenisTesTerpilih: { type: Object, default: null },
-    jenisTesTerpilihId: { type: [String, null], default: null },
+    programTesTerpilih: { type: Object, default: null },
+    programTesTerpilihId: { type: [String, null], default: null },
     ujianTerpilih: { type: Object, default: null },
     ujianTerpilihId: { type: [String, null], default: null },
 })
 
-const jenisTesFilter = computed(() => props.jenisTesTerpilihId || '')
+const programTesFilter = computed(() => props.programTesTerpilihId || '')
 const ujianFilter = computed(() => props.ujianTerpilihId || '')
-const tablePageSize = Number(props.periodeUjian.meta?.per_page) || 15
 const showPeriodModal = ref(false)
 const creatingPeriod = ref(false)
 const editingPeriod = ref(null)
@@ -46,62 +47,139 @@ const modalForm = computed(() => creatingPeriod.value ? createForm : editForm)
 
 const pageTitle = computed(() => {
     if (props.ujianTerpilih) return `Periode Ujian - ${props.ujianTerpilih.judul}`
-    if (props.jenisTesTerpilih) return `Daftar Ujian - ${props.jenisTesTerpilih.nama}`
+    if (props.programTesTerpilih) return `Daftar Ujian - ${props.programTesTerpilih.nama}`
 
     return 'Penjadwalan Ujian'
 })
 
 const pageSubtitle = computed(() => {
     if (props.ujianTerpilih) return 'Kelola periode dan slot jadwal ujian'
-    if (props.jenisTesTerpilih) return 'Pilih ujian untuk melihat dan mengelola periode'
+    if (props.programTesTerpilih) return 'Pilih ujian untuk melihat dan mengelola periode'
 
-    return 'Pilih jenis tes untuk melihat daftar ujian'
+    return 'Pilih program tes untuk melihat daftar ujian'
 })
 
 const backHref = computed(() => {
-    if (ujianFilter.value) return jenisTesUrl(jenisTesFilter.value)
-    if (jenisTesFilter.value) return route('admin.periode-ujian.daftar')
+    if (ujianFilter.value) return programTesUrl(programTesFilter.value)
+    if (programTesFilter.value) return route('admin.periode-ujian.daftar')
 
     return null
 })
 
-const ujianColumns = [
-    { key: 'judul', label: 'Ujian', sortable: true, className: 'font-medium text-text-heading' },
-    {
-        key: 'mode',
-        label: 'Mode',
-        sortable: true,
-        badge: true,
-        render: value => value === 'tryout' ? 'Try Out' : 'Ujian Resmi',
-    },
-    { key: 'jumlahPeriode', label: 'Periode', sortable: true, render: value => value ?? 0 },
-]
-
-const periodeColumns = [
-    { key: 'judul', label: 'Periode', sortable: true, slot: 'period' },
-    {
-        key: 'tanggal_mulai',
-        label: 'Rentang Tanggal',
-        render: (_value, row) => `${formatDate(row.tanggal_mulai)} s/d ${formatDate(row.tanggal_selesai)}`,
-    },
-    { key: 'slot_ujian_count', label: 'Sesi', sortable: true, render: value => `${value ?? 0} sesi` },
+const tableFilters = [
     {
         key: 'aktif',
         label: 'Status',
-        sortable: true,
-        badge: true,
-        render: value => value ? 'Aktif' : 'Nonaktif',
+        options: [
+            { value: '1', label: 'Aktif' },
+            { value: '0', label: 'Nonaktif' },
+        ],
     },
-    { key: 'id', label: 'Aksi', slot: 'actions' },
 ]
 
-function jenisTesUrl(jenisTesId) {
-    return `${route('admin.periode-ujian.daftar')}?jenis_tes_id=${encodeURIComponent(jenisTesId)}`
+const tableFixedFilters = computed(() => {
+    const filters = {}
+
+    if (programTesFilter.value) filters.program_tes_id = programTesFilter.value
+    if (ujianFilter.value) filters.ujian_id = ujianFilter.value
+
+    return filters
+})
+
+const ujianColumns = [
+    { accessorKey: 'judul', header: 'Ujian', meta: { cellClass: 'font-medium text-text-heading' } },
+    {
+        accessorKey: 'mode',
+        header: 'Mode',
+        cell: info => h(
+            BaseBadge,
+            { variant: info.getValue() === 'tryout' ? 'pastel-blue' : 'pastel' },
+            () => (info.getValue() === 'tryout' ? 'Try Out' : 'Ujian Resmi'),
+        ),
+    },
+    { accessorKey: 'jumlahPeriode', header: 'Periode', cell: info => info.getValue() ?? 0 },
+]
+
+const periodeColumns = [
+    {
+        accessorKey: 'judul',
+        header: 'Periode',
+        cell: info => h('p', { class: 'font-semibold text-text-heading' }, info.getValue()),
+    },
+    {
+        accessorKey: 'tanggal_mulai',
+        header: 'Rentang Tanggal',
+        cell: info => `${formatDate(info.row.original.tanggal_mulai)} s/d ${formatDate(info.row.original.tanggal_selesai)}`,
+    },
+    {
+        accessorKey: 'slot_ujian_count',
+        header: 'Sesi',
+        cell: info => `${info.getValue() ?? 0} sesi`,
+    },
+    {
+        accessorKey: 'aktif',
+        header: 'Status',
+        cell: info => h(
+            BaseBadge,
+            { variant: info.getValue() ? 'success' : 'neutral' },
+            () => (info.getValue() ? 'Aktif' : 'Nonaktif'),
+        ),
+    },
+    {
+        id: 'actions',
+        header: 'Aksi',
+        meta: { align: 'center' },
+        cell: info => {
+            const row = info.row.original
+            const deleteDisabled = row.slot_ujian_count > 0
+
+            return h('div', { class: 'flex items-center justify-center gap-1' }, [
+                h(
+                    BaseButton,
+                    {
+                        href: route('admin.periode-ujian.detail', row.id),
+                        variant: 'secondary',
+                        iconOnly: true,
+                        title: 'Kelola sesi',
+                        'aria-label': 'Kelola sesi',
+                    },
+                    () => h(IconEye, { size: 16 }),
+                ),
+                h(
+                    BaseButton,
+                    {
+                        variant: 'secondary',
+                        iconOnly: true,
+                        title: 'Ubah periode',
+                        'aria-label': 'Ubah periode',
+                        onClick: () => openEditPeriod(row),
+                    },
+                    () => h(IconEdit, { size: 16 }),
+                ),
+                h(
+                    BaseButton,
+                    {
+                        variant: 'danger',
+                        iconOnly: true,
+                        disabled: deleteDisabled,
+                        title: deleteDisabled ? 'Tidak bisa dihapus - sudah punya sesi' : 'Hapus periode',
+                        'aria-label': deleteDisabled ? 'Tidak bisa dihapus - sudah punya sesi' : 'Hapus periode',
+                        onClick: () => destroy(row),
+                    },
+                    () => h(IconTrash, { size: 16 }),
+                ),
+            ])
+        },
+    },
+]
+
+function programTesUrl(programTesId) {
+    return `${route('admin.periode-ujian.daftar')}?program_tes_id=${encodeURIComponent(programTesId)}`
 }
 
 function ujianUrl(ujianId) {
     const query = new URLSearchParams({
-        jenis_tes_id: jenisTesFilter.value,
+        program_tes_id: programTesFilter.value,
         ujian_id: ujianId,
     })
 
@@ -178,15 +256,17 @@ async function destroy(periodeUjian) {
         :subtitle="pageSubtitle"
         :back-href="backHref"
     >
-        <template v-if="!jenisTesFilter">
-            <JenisTesSummaryTable
-                :ringkasan-jenis-tes="ringkasanJenisTes"
-                :detail-url="jenisTesUrl"
+        <template v-if="!programTesFilter">
+            <ProgramTesSummaryTable
+                table-key="admin-periode-ujian-program-tes"
+                :ringkasan-program-tes="ringkasanProgramTes"
+                :detail-url="programTesUrl"
             />
         </template>
 
         <ContextSummaryTable
             v-else-if="!ujianFilter"
+            table-key="admin-periode-ujian-ujian"
             title="Daftar Ujian"
             :data="ringkasanUjian"
             :columns="ujianColumns"
@@ -195,61 +275,25 @@ async function destroy(periodeUjian) {
         />
 
         <template v-else>
-            <DataTable
+            <AppDataTable
+                table-key="admin-periode-ujian"
                 :data="periodeUjian.data"
                 :columns="periodeColumns"
-                :default-page-size="tablePageSize"
-                :page-size-options="[tablePageSize]"
-                :show-page-size="false"
+                :page-size="Number(periodeUjian.per_page) || 15"
+                :page-size-options="[15, 25, 50, 100]"
+                :filters="tableFilters"
+                :fixed-filters="tableFixedFilters"
+                server-side
+                :server-total-rows="periodeUjian.total ?? 0"
+                :reload-only="['periodeUjian']"
                 searchable
                 search-placeholder="Cari periode..."
-                header-title="Daftar Periode Ujian"
+                title="Daftar Periode Ujian"
             >
-                <template #toolbar>
+                <template #actions>
                     <BaseTambahData @click="openCreatePeriod" />
                 </template>
-
-                <template #period="{ row }">
-                    <p class="font-semibold text-text-heading">{{ row.judul }}</p>
-                </template>
-
-                <template #actions="{ row }">
-                    <BaseButton
-                        :href="route('admin.periode-ujian.detail', row.id)"
-                        variant="secondary"
-                        icon-only
-                        title="Kelola sesi"
-                        aria-label="Kelola sesi"
-                    >
-                        <IconEye :size="16" />
-                    </BaseButton>
-                    <BaseButton
-                        variant="secondary"
-                        icon-only
-                        title="Ubah periode"
-                        aria-label="Ubah periode"
-                        @click="openEditPeriod(row)"
-                    >
-                        <IconEdit :size="16" />
-                    </BaseButton>
-                    <BaseButton
-                        variant="danger"
-                        icon-only
-                        :disabled="row.slot_ujian_count > 0"
-                        :title="row.slot_ujian_count > 0 ? 'Tidak bisa dihapus — sudah punya sesi' : 'Hapus periode'"
-                        :aria-label="row.slot_ujian_count > 0 ? 'Tidak bisa dihapus — sudah punya sesi' : 'Hapus periode'"
-                        @click="destroy(row)"
-                    >
-                        <IconTrash :size="16" />
-                    </BaseButton>
-                </template>
-            </DataTable>
-
-            <Pagination
-                :links="periodeUjian.links"
-                :total="periodeUjian.meta?.total ?? 0"
-                :per-page="periodeUjian.meta?.per_page ?? 0"
-            />
+            </AppDataTable>
 
             <FormPeriodeUjianModal
                 :show="showPeriodModal"

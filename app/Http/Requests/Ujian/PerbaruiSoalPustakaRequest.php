@@ -21,12 +21,12 @@ class PerbaruiSoalPustakaRequest extends FormRequest
     {
         return [
             'bank_soal_id' => ['required', 'uuid', 'exists:bank_soal,id'],
-            'keterampilan_id' => [
+            'section_id' => [
                 'required',
                 'uuid',
-                Rule::exists('keterampilan', 'id')->where(fn ($query) => $query->where('aktif', true)),
+                Rule::exists('section', 'id')->where(fn ($query) => $query->where('aktif', true)),
             ],
-            'bagian_soal_id' => ['required', 'uuid', 'exists:bagian_soal,id'],
+            'part_soal_id' => ['required', 'uuid', 'exists:part_soal,id'],
             'materi_soal_id' => ['nullable', 'uuid', 'exists:materi_soal,id'],
             'teks_soal' => ['nullable', 'string'],
             'pilihan_a' => ['nullable', 'string'],

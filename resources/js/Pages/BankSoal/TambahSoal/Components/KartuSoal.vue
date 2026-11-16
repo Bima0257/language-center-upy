@@ -50,7 +50,7 @@ function errorFor(field) {
                 <div class="space-y-4 rounded-xl border border-pastel-purple/40 bg-pastel-purple/10 p-4">
                     <p class="flex items-center gap-1.5 text-label-md text-text-muted">
                         <IconInfoCircle :size="16" class="text-secondary shrink-0" />
-                        Soal menggunakan audio materi soal sesuai policy keterampilan. Peserta hanya memilih A/B/C/D.
+                        Soal menggunakan audio materi soal sesuai policy section. Peserta hanya memilih A/B/C/D.
                     </p>
                     <div v-if="materiSoalMode === 'none'" class="flex items-center gap-2 text-label-md text-error-red">
                         <IconHeadphones :size="16" class="shrink-0" />

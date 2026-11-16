@@ -5,6 +5,7 @@ namespace App\Modules\Ujian\Services;
 use App\Enums\JenisMedia;
 use App\Models\MateriSoal;
 use App\Models\MediaMateriSoal;
+use App\Modules\Ujian\Repositories\Contracts\BankSoalRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\MateriSoalRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\MediaMateriSoalRepositoryInterface;
 use App\Services\AudioCompressionService;
@@ -19,6 +20,7 @@ use Mews\Purifier\Facades\Purifier;
 class LayananMateriSoal
 {
     public function __construct(
+        private BankSoalRepositoryInterface $bankSoalRepo,
         private MateriSoalRepositoryInterface $materiSoalRepo,
         private MediaMateriSoalRepositoryInterface $mediaMateriSoalRepo,
         private LayananKebijakanMateriSoal $kebijakanMateri,
@@ -32,6 +34,8 @@ class LayananMateriSoal
 
         try {
             DB::transaction(function () use ($validated, $request, &$storedFiles) {
+                $this->pastikanBankBelumDikunci($validated['bank_soal_id'], 'ditambahkan');
+
                 $materi = $this->materiSoalRepo->create([
                     'bank_soal_id' => $validated['bank_soal_id'],
                     'judul' => $validated['judul'],
@@ -64,6 +68,8 @@ class LayananMateriSoal
 
         try {
             DB::transaction(function () use ($materi, $validated, $request, &$storedFiles, &$staleFiles) {
+                $this->pastikanBankBelumDikunci($materi->bank_soal_id, 'diubah');
+
                 $this->materiSoalRepo->update($materi, [
                     'judul' => $validated['judul'],
                     'isi_teks' => $this->bersihkanIsi($validated['isi_teks'] ?? null),
@@ -83,7 +89,7 @@ class LayananMateriSoal
                 }
 
                 $this->kebijakanMateri->pastikanIsiMateri($materiAkhir, 'materi_soal');
-                $this->kebijakanMateri->pastikanMateriMemenuhiKeterampilan($materiAkhir);
+                $this->kebijakanMateri->pastikanMateriMemenuhiSection($materiAkhir);
             });
         } catch (\Throwable $e) {
             $this->hapusBerkasTersimpan($storedFiles);
@@ -96,19 +102,25 @@ class LayananMateriSoal
 
     public function hapus(MateriSoal $materi): void
     {
-        if ($this->materiSoalRepo->memilikiSoal($materi->id)) {
-            throw new \RuntimeException('Materi soal tidak bisa dihapus karena masih dipakai oleh soal.');
-        }
-
         $mediaFiles = $materi->mediaMateriSoal->pluck('lokasi_berkas')->all();
 
-        $this->materiSoalRepo->delete($materi);
+        DB::transaction(function () use ($materi): void {
+            $this->pastikanBankBelumDikunci($materi->bank_soal_id, 'dihapus');
+
+            if ($this->materiSoalRepo->memilikiSoal($materi->id)) {
+                throw new \RuntimeException('Materi soal tidak bisa dihapus karena masih dipakai oleh soal.');
+            }
+
+            $this->materiSoalRepo->delete($materi);
+        });
 
         $this->hapusBerkasLama($mediaFiles, $materi->id);
     }
 
     public function hapusMedia(MateriSoal $materi, string $jenisMedia): void
     {
+        $this->pastikanBankBelumDikunci($materi->bank_soal_id, 'diubah');
+
         $jenis = JenisMedia::tryFrom($jenisMedia);
 
         if ($jenis === null) {
@@ -131,7 +143,7 @@ class LayananMateriSoal
             }
 
             $this->kebijakanMateri->pastikanIsiMateri($materiAkhir, 'materi_soal');
-            $this->kebijakanMateri->pastikanMateriMemenuhiKeterampilan($materiAkhir);
+            $this->kebijakanMateri->pastikanMateriMemenuhiSection($materiAkhir);
         });
 
         $this->hapusBerkasLama([$lokasiBerkas], $materi->id);
@@ -206,6 +218,13 @@ class LayananMateriSoal
         $compressedPath = $compression->compress('public', $path);
 
         return $compressedPath ?? $path;
+    }
+
+    private function pastikanBankBelumDikunci(string $bankSoalId, string $aksi): void
+    {
+        if ($this->bankSoalRepo->digunakanDalamUjian($bankSoalId)) {
+            throw new \RuntimeException("Materi soal tidak bisa {$aksi} karena bank soal sudah digunakan di ujian.");
+        }
     }
 
     /**

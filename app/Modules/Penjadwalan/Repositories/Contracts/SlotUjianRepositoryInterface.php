@@ -28,5 +28,8 @@ interface SlotUjianRepositoryInterface
 
     public function memilikiWaktuTumpangTindih(string $periodeUjianId, Carbon $tanggal, string $waktuMulai, string $waktuSelesai, ?string $kecualiId = null): bool;
 
+    /**
+     * @return Collection<int, SlotUjian>
+     */
     public function slotTersedia(): Collection;
 }

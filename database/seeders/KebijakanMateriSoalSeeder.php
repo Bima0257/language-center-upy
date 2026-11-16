@@ -6,7 +6,7 @@ use App\Enums\JenisMedia;
 use App\Enums\KetentuanMedia;
 use App\Models\AturanMediaMateriSoal;
 use App\Models\KebijakanMateriSoal;
-use App\Models\Keterampilan;
+use App\Models\Section;
 use Illuminate\Database\Seeder;
 
 class KebijakanMateriSoalSeeder extends Seeder
@@ -42,20 +42,20 @@ class KebijakanMateriSoalSeeder extends Seeder
     {
         $definisi = self::definisi();
 
-        foreach (Keterampilan::query()->get() as $keterampilan) {
-            $kodeKeterampilan = strtolower($keterampilan->nama);
-            $definisiKeterampilan = $definisi[$kodeKeterampilan] ?? null;
+        foreach (Section::query()->get() as $section) {
+            $kodeSection = strtolower($section->nama);
+            $definisiSection = $definisi[$kodeSection] ?? null;
 
-            if ($definisiKeterampilan === null) {
+            if ($definisiSection === null) {
                 continue;
             }
 
             $kebijakan = KebijakanMateriSoal::firstOrCreate(
-                ['keterampilan_id' => $keterampilan->id],
-                ['ketentuan_materi' => $definisiKeterampilan['ketentuan_materi']],
+                ['section_id' => $section->id],
+                ['ketentuan_materi' => $definisiSection['ketentuan_materi']],
             );
 
-            foreach ($definisiKeterampilan['aturan_media'] as $jenisMedia => $ketentuan) {
+            foreach ($definisiSection['aturan_media'] as $jenisMedia => $ketentuan) {
                 AturanMediaMateriSoal::firstOrCreate(
                     ['kebijakan_materi_soal_id' => $kebijakan->id, 'jenis_media' => $jenisMedia],
                     ['ketentuan' => $ketentuan],

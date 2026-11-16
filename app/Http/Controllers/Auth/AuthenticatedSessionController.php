@@ -35,6 +35,7 @@ class AuthenticatedSessionController extends Controller
 
         $pengguna = $request->user();
 
+        $pengguna->update(['last_login' => now()]);
         $pengguna->batalkanSesiLain();
 
         cookie()->queue(cookie('_logged', '1', config('session.lifetime')));

@@ -2,221 +2,72 @@
 
 namespace Database\Seeders;
 
-use App\Models\BagianSoal;
-use App\Models\BagianUjian;
 use App\Models\BankSoal;
 use App\Models\CatatanPelanggaran;
 use App\Models\Fakultas;
-use App\Models\JenisTes;
-use App\Models\Keterampilan;
-use App\Models\MateriSoal;
+use App\Models\HasilPenilaian;
+use App\Models\PartUjian;
 use App\Models\Pengguna;
 use App\Models\PeriodePendaftaranUjian;
 use App\Models\PeriodeUjian;
 use App\Models\ProfilMahasiswa;
 use App\Models\ProgramStudi;
+use App\Models\ProgramTes;
+use App\Models\Section;
 use App\Models\SesiUjian;
+use App\Models\SkemaPenilaian;
 use App\Models\SlotUjian;
 use App\Models\Soal;
-use App\Models\SoalBagianUjian;
 use App\Models\Ujian;
+use App\Modules\Penilaian\Services\LayananAturanPenilaian;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class UjianSeeder extends Seeder
 {
     public function run(): void
     {
-        if (Ujian::where('judul', 'TOEFL iBT Try Out 1')->exists()) {
-            $this->command->info('UjianSeeder dilewati — data demo sudah ada.');
+        if (Ujian::where('judul', 'EPT Try Out 1')->exists()) {
+            $this->command->info('UjianSeeder dilewati — data EPT sudah ada.');
 
             return;
         }
 
-        $toefl = JenisTes::where('nama', 'TOEFL iBT')->firstOrFail();
+        $ept = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
+        $sectionMenyimak = Section::where('program_tes_id', $ept->id)->where('nama', 'Listening')->firstOrFail();
+        $sectionMembaca = Section::where('program_tes_id', $ept->id)->where('nama', 'Reading')->firstOrFail();
 
         $ujian = Ujian::create([
-            'jenis_tes_id' => $toefl->id,
-            'judul' => 'TOEFL iBT Try Out 1',
-            'deskripsi' => 'Try out TOEFL iBT full simulation — Reading & Listening sections.',
+            'program_tes_id' => $ept->id,
+            'judul' => 'EPT Try Out 1',
+            'deskripsi' => 'Simulasi EPT dengan 50 soal Listening dan 50 soal Reading.',
             'mode' => 'tryout',
-            'durasi_menit' => 71,
+            'durasi_menit' => 120,
             'aktif' => true,
         ]);
 
-        $bankSoal = BankSoal::firstOrCreate(['nama' => 'Bank Soal Demo'], [
-            'jenis_tes_id' => $toefl->id,
-            'aktif' => true,
-        ]);
-        $bankSoal->update(['jenis_tes_id' => $toefl->id]);
-
-        $keterampilanMembaca = Keterampilan::where('jenis_tes_id', $toefl->id)->where('nama', 'Reading')->firstOrFail();
-        $keterampilanMenyimak = Keterampilan::where('jenis_tes_id', $toefl->id)->where('nama', 'Listening')->firstOrFail();
-
-        $definisiBagian = [
-            [$keterampilanMembaca->id, 'Part 1', 1],
-            [$keterampilanMembaca->id, 'Part 2', 2],
-            [$keterampilanMenyimak->id, 'Part 1', 1],
-            [$keterampilanMenyimak->id, 'Part 2', 2],
-            [$keterampilanMenyimak->id, 'Part 3', 3],
-        ];
-
-        foreach ($definisiBagian as [$keterampilanId, $nama, $urutan]) {
-            BagianSoal::firstOrCreate(
-                ['bank_soal_id' => $bankSoal->id, 'keterampilan_id' => $keterampilanId, 'nama' => $nama],
-                ['urutan' => $urutan, 'aktif' => true],
-            );
-        }
-
-        $bagianMembaca = BagianSoal::where('bank_soal_id', $bankSoal->id)->where('keterampilan_id', $keterampilanMembaca->id)->orderBy('urutan')->first();
-        $bagianMenyimak = BagianSoal::where('bank_soal_id', $bankSoal->id)->where('keterampilan_id', $keterampilanMenyimak->id)->orderBy('urutan')->first();
-
-        $membaca = BagianUjian::create([
+        $partMenyimak = PartUjian::create([
             'ujian_id' => $ujian->id,
             'bank_soal_id' => $bankSoal->id,
-            'keterampilan_id' => $keterampilanMembaca->id,
-            'judul' => 'Reading Section',
-            'urutan' => 1,
-            'jumlah_soal' => 4,
-        ]);
-
-        $menyimak = BagianUjian::create([
-            'ujian_id' => $ujian->id,
-            'bank_soal_id' => $bankSoal->id,
-            'keterampilan_id' => $keterampilanMenyimak->id,
+            'section_id' => $sectionMenyimak->id,
             'judul' => 'Listening Section',
+            'urutan' => 1,
+            'jumlah_soal' => 50,
+        ]);
+
+        $partMembaca = PartUjian::create([
+            'ujian_id' => $ujian->id,
+            'bank_soal_id' => $bankSoal->id,
+            'section_id' => $sectionMembaca->id,
+            'judul' => 'Reading Section',
             'urutan' => 2,
-            'jumlah_soal' => 4,
+            'jumlah_soal' => 50,
         ]);
 
-        $materiMembaca = MateriSoal::create([
-            'bank_soal_id' => $bankSoal->id,
-            'judul' => 'The History of Solar Energy',
-            'isi_teks' => 'Solar energy has been used by humans for thousands of years...',
-        ]);
-
-        $materiMenyimak = MateriSoal::create([
-            'bank_soal_id' => $bankSoal->id,
-            'judul' => 'Marine Biology',
-            'isi_teks' => null,
-        ]);
-
-        $soalMembaca = [
-            [
-                'teks_soal' => 'What is the main topic of the passage?',
-                'a' => 'The invention of solar panels in the 20th century',
-                'b' => 'The history and development of solar energy',
-                'c' => 'How ancient Greeks designed their buildings',
-                'd' => 'The efficiency of modern solar cells',
-                'jawaban' => 'B',
-            ],
-            [
-                'teks_soal' => 'When was the photovoltaic effect first discovered?',
-                'a' => '7th century BC',
-                'b' => '1839',
-                'c' => '1954',
-                'd' => '2020',
-                'jawaban' => 'B',
-            ],
-            [
-                'teks_soal' => 'According to the passage, what efficiency did the first silicon solar cell achieve?',
-                'a' => 'About 2%',
-                'b' => 'About 6%',
-                'c' => 'About 15%',
-                'd' => 'About 22%',
-                'jawaban' => 'B',
-            ],
-            [
-                'teks_soal' => 'What does the passage imply about modern solar panels?',
-                'a' => 'They are less efficient than early models',
-                'b' => 'They were invented by the ancient Greeks',
-                'c' => 'They are significantly more efficient than the first solar cell',
-                'd' => 'They are no longer growing as an energy source',
-                'jawaban' => 'C',
-            ],
-        ];
-
-        $soalMenyimak = [
-            [
-                'teks_soal' => 'What is the lecture mainly about?',
-                'a' => 'The differences between coral and algae',
-                'b' => 'The relationship between coral reefs and their environment',
-                'c' => 'How climate change affects ocean temperatures',
-                'd' => 'Methods for preserving marine ecosystems',
-                'jawaban' => 'B',
-            ],
-            [
-                'teks_soal' => 'According to the professor, what causes coral bleaching?',
-                'a' => 'An increase in marine predators',
-                'b' => 'The loss of symbiotic algae due to warm water',
-                'c' => 'Pollution from coastal development',
-                'd' => 'Overfishing in reef areas',
-                'jawaban' => 'B',
-            ],
-            [
-                'teks_soal' => 'What does the professor say about the relationship between corals and algae?',
-                'a' => 'Corals provide shelter, and algae provide food through photosynthesis',
-                'b' => 'Algae compete with corals for space',
-                'c' => 'Corals eat the algae for nutrition',
-                'd' => 'Algae block sunlight from reaching the corals',
-                'jawaban' => 'A',
-            ],
-            [
-                'teks_soal' => 'What can be inferred about the professor view on coral reef preservation?',
-                'a' => 'She believes it is too late to save most reefs',
-                'b' => 'She thinks local efforts are more effective than global ones',
-                'c' => 'She believes addressing climate change is essential',
-                'd' => 'She thinks coral reefs can adapt to warmer temperatures',
-                'jawaban' => 'C',
-            ],
-        ];
-
-        foreach ($soalMembaca as $i => $q) {
-            Soal::create([
-                'bank_soal_id' => $bankSoal->id,
-                'materi_soal_id' => $materiMembaca->id,
-                'keterampilan_id' => $keterampilanMembaca->id,
-                'bagian_soal_id' => $bagianMembaca?->id,
-                'teks_soal' => $q['teks_soal'],
-                'pilihan_a' => $q['a'],
-                'pilihan_b' => $q['b'],
-                'pilihan_c' => $q['c'],
-                'pilihan_d' => $q['d'],
-                'kunci_jawaban' => $q['jawaban'],
-                'urutan' => $i + 1,
-            ]);
-        }
-
-        foreach ($soalMenyimak as $i => $q) {
-            Soal::create([
-                'bank_soal_id' => $bankSoal->id,
-                'materi_soal_id' => $materiMenyimak->id,
-                'keterampilan_id' => $keterampilanMenyimak->id,
-                'bagian_soal_id' => $bagianMenyimak?->id,
-                'teks_soal' => $q['teks_soal'],
-                'pilihan_a' => $q['a'],
-                'pilihan_b' => $q['b'],
-                'pilihan_c' => $q['c'],
-                'pilihan_d' => $q['d'],
-                'kunci_jawaban' => $q['jawaban'],
-                'urutan' => $i + 1,
-            ]);
-        }
-
-        foreach ([[$membaca, $keterampilanMembaca], [$menyimak, $keterampilanMenyimak]] as [$bagian, $keterampilan]) {
-            $soalDalamBagian = Soal::where('bank_soal_id', $bankSoal->id)
-                ->where('keterampilan_id', $keterampilan->id)
-                ->orderBy('id')
-                ->get();
-
-            foreach ($soalDalamBagian as $urutan => $soal) {
-                SoalBagianUjian::firstOrCreate(
-                    ['bagian_ujian_id' => $bagian->id, 'soal_id' => $soal->id],
-                    ['urutan' => $urutan + 1],
-                );
-            }
-
-            $bagian->update(['jumlah_soal' => $soalDalamBagian->count()]);
-        }
+        $this->lampirkanSoal($partMenyimak, $sectionMenyimak->id, $bankSoal->id);
+        $this->lampirkanSoal($partMembaca, $sectionMembaca->id, $bankSoal->id);
 
         $mahasiswaDemo = Pengguna::firstOrCreate(
             ['email' => 'demo-peserta@toefl.test'],
@@ -227,7 +78,7 @@ class UjianSeeder extends Seeder
                 'aktif' => true,
             ]
         );
-        $mahasiswaDemo->assignRole('student');
+        $mahasiswaDemo->assignRole('peserta');
 
         $fkip = Fakultas::where('kode', 'FKIP')->first();
         $pbi = ProgramStudi::where('kode', 'PBI')->first();
@@ -249,9 +100,17 @@ class UjianSeeder extends Seeder
             );
         }
 
+        $skemaPenilaian = SkemaPenilaian::where('program_tes_id', $ept->id)
+            ->where('status', 'aktif')
+            ->first();
+
+        $snapshotPenilaian = $skemaPenilaian !== null
+            ? app(LayananAturanPenilaian::class)->snapshot($skemaPenilaian)
+            : null;
+
         $periodeUjian = PeriodeUjian::create([
             'ujian_id' => $ujian->id,
-            'judul' => 'Gelombang Demo — Agustus 2026',
+            'judul' => 'Gelombang Demo EPT',
             'tanggal_mulai' => now()->subDay(),
             'tanggal_selesai' => now()->addDay(),
             'aktif' => true,
@@ -259,7 +118,7 @@ class UjianSeeder extends Seeder
 
         PeriodePendaftaranUjian::create([
             'periode_ujian_id' => $periodeUjian->id,
-            'nama' => 'Pendaftaran Try Out Demo',
+            'nama' => 'Pendaftaran Try Out EPT',
             'dibuka_pada' => now()->subDay()->startOfDay(),
             'ditutup_pada' => now()->addDay()->endOfDay(),
             'aktif' => true,
@@ -281,7 +140,10 @@ class UjianSeeder extends Seeder
             'pengguna_id' => $mahasiswaDemo->id,
             'status' => 'in_progress',
             'dimulai_pada' => now()->subMinutes(25),
-            'bagian_aktif_id' => $membaca->id,
+            'part_ujian_aktif_id' => $partMenyimak->id,
+            'skema_penilaian_id' => $skemaPenilaian?->id,
+            'snapshot_penilaian' => $snapshotPenilaian,
+            'skor_total_maksimum' => 400.0,
             'jumlah_pelanggaran' => 1,
         ]);
 
@@ -295,7 +157,7 @@ class UjianSeeder extends Seeder
 
         $periodeDitandai = PeriodeUjian::create([
             'ujian_id' => $ujian->id,
-            'judul' => 'Gelombang Flagged — Agustus 2026',
+            'judul' => 'Gelombang Flagged EPT',
             'tanggal_mulai' => now()->subDays(2),
             'tanggal_selesai' => now(),
             'aktif' => true,
@@ -349,7 +211,7 @@ class UjianSeeder extends Seeder
 
         $periodeDiserahkan = PeriodeUjian::create([
             'ujian_id' => $ujian->id,
-            'judul' => 'Gelombang Submitted — Agustus 2026',
+            'judul' => 'Gelombang Submitted EPT',
             'tanggal_mulai' => now()->subDays(3),
             'tanggal_selesai' => now()->subDays(2),
             'aktif' => false,
@@ -365,17 +227,68 @@ class UjianSeeder extends Seeder
             'aktif' => true,
         ]);
 
-        SesiUjian::create([
+        $sesiDiserahkan = SesiUjian::create([
             'slot_ujian_id' => $slotDiserahkan->id,
             'pengguna_id' => $mahasiswaDemo->id,
             'status' => 'submitted',
             'dimulai_pada' => now()->subDays(1),
-            'diserahkan_pada' => now()->subDays(1)->addMinutes(35),
+            'diserahkan_pada' => now()->subDays(1)->addMinutes(115),
+            'skema_penilaian_id' => $skemaPenilaian?->id,
+            'snapshot_penilaian' => $snapshotPenilaian,
             'jumlah_pelanggaran' => 0,
-            'skor_membaca' => 22.5,
-            'skor_menyimak' => 18.0,
-            'skor_total' => 40.5,
+            'skor_membaca' => 186.0,
+            'skor_menyimak' => 174.0,
+            'skor_total' => 360.0,
+            'skor_total_maksimum' => 400.0,
+            'lulus' => true,
+            'tingkat_cefr' => 'B2-',
+            'label_tingkat' => 'Very Good',
+            'deskripsi_tingkat' => 'Independent User',
         ]);
 
+        if ($skemaPenilaian !== null) {
+            HasilPenilaian::create([
+                'sesi_ujian_id' => $sesiDiserahkan->id,
+                'section_id' => $sectionMembaca->id,
+                'skema_penilaian_id' => $skemaPenilaian->id,
+                'jumlah_benar' => 43,
+                'jumlah_soal' => 50,
+                'skor_skala' => 186.0,
+            ]);
+
+            HasilPenilaian::create([
+                'sesi_ujian_id' => $sesiDiserahkan->id,
+                'section_id' => $sectionMenyimak->id,
+                'skema_penilaian_id' => $skemaPenilaian->id,
+                'jumlah_benar' => 37,
+                'jumlah_soal' => 50,
+                'skor_skala' => 174.0,
+            ]);
+        }
+    }
+
+    private function lampirkanSoal(PartUjian $part, string $sectionId, string $bankSoalId): void
+    {
+        $soal = Soal::where('bank_soal_id', $bankSoalId)
+            ->where('section_id', $sectionId)
+            ->orderBy('urutan')
+            ->get();
+
+        $baris = [];
+
+        foreach ($soal as $urutan => $item) {
+            $baris[] = [
+                'id' => (string) Str::uuid(),
+                'part_ujian_id' => $part->id,
+                'soal_id' => $item->id,
+                'urutan' => $urutan + 1,
+            ];
+        }
+
+        if ($baris !== []) {
+            DB::table('soal_part_ujian')->insert($baris);
+        }
+
+        $part->update(['jumlah_soal' => count($baris)]);
     }
 }

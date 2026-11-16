@@ -1,10 +1,10 @@
 <script setup>
 import { Link, router, usePage } from "@inertiajs/vue3";
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import {
     IconChevronDown,
 } from "@tabler/icons-vue";
-import { getNav } from "@/Composables/useNav";
+import { findActiveNavItem, getNav } from "@/Composables/useNav";
 
 const props = defineProps({
     collapsed: { type: Boolean, default: false },
@@ -18,17 +18,29 @@ const nav = getNav(roles, permissions);
 
 const openGroups = ref({});
 
-function aktif(routeName) {
-    if (routeName === "#") return false;
+function currentRouteName() {
     try {
-        return window.route().current(routeName);
+        const current = window.route()?.current?.();
+
+        return typeof current === "string" && current ? current : null;
     } catch {
-        return page.url?.includes(routeName.replace(".", "/"));
+        return null;
     }
 }
 
+const activeRouteName = ref(currentRouteName());
+const activeNav = computed(() => findActiveNavItem(nav, activeRouteName.value));
+
+function aktif(routeName) {
+    if (routeName === "#") return false;
+
+    return activeNav.value?.item?.route === routeName;
+}
+
 function isGroupActive(children) {
-    return (children || []).some((child) => aktif(child.route));
+    const activeChildRoute = activeNav.value?.item?.route;
+
+    return (children || []).some((child) => child.route === activeChildRoute);
 }
 
 function itemActiveClass(active) {
@@ -77,6 +89,8 @@ for (const item of nav) {
 watch(
     () => page.url,
     () => {
+        activeRouteName.value = currentRouteName();
+
         for (const item of nav) {
             if (item.children && isGroupActive(item.children)) {
                 openGroups.value[item.label] = true;
@@ -109,7 +123,7 @@ watch(
             </h1>
         </div>
 
-        <nav class="flex-1 space-y-2 overflow-y-auto scrollbar-hide">
+        <nav class="flex-1 space-y-2 overflow-y-auto overscroll-y-contain app-scrollbar">
             <template v-for="item in nav" :key="item.label">
                 <div v-if="item.children">
                     <button
@@ -218,13 +232,6 @@ watch(
 </template>
 
 <style scoped>
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
-}
 .dropdown-enter-active,
 .dropdown-leave-active {
     transition:

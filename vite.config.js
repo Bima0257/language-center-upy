@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import laravel from 'laravel-vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 
 export default defineConfig(({ mode }) => {
@@ -21,12 +22,16 @@ export default defineConfig(({ mode }) => {
             },
         },
         plugins: [
+            tailwindcss(),
             laravel({
                 input: 'resources/js/app.js',
                 refresh: true,
             }),
             vue({
                 template: {
+                    compilerOptions: {
+                        isCustomElement: tag => tag === 'phantom-ui',
+                    },
                     transformAssetUrls: {
                         base: null,
                         includeAbsolute: false,

@@ -11,17 +11,17 @@ class PerbaruiUjianRequest extends FormRequest
     public function rules(): array
     {
         $ujian = $this->route('ujian');
-        $currentJenisTesId = $ujian instanceof Ujian ? $ujian->jenis_tes_id : null;
+        $currentProgramTesId = $ujian instanceof Ujian ? $ujian->program_tes_id : null;
 
         return [
-            'jenis_tes_id' => [
+            'program_tes_id' => [
                 'required',
                 'uuid',
-                Rule::exists('jenis_tes', 'id')->where(function ($query) use ($currentJenisTesId) {
+                Rule::exists('program_tes', 'id')->where(function ($query) use ($currentProgramTesId) {
                     $query->where('aktif', true);
 
-                    if ($currentJenisTesId !== null) {
-                        $query->orWhere('id', $currentJenisTesId);
+                    if ($currentProgramTesId !== null) {
+                        $query->orWhere('id', $currentProgramTesId);
                     }
                 }),
             ],

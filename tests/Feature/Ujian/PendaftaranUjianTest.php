@@ -5,14 +5,20 @@ namespace Tests\Feature\Ujian;
 use App\Enums\ModeUjian;
 use App\Enums\StatusPendaftaranUjian;
 use App\Enums\StatusSesi;
-use App\Models\JenisTes;
+use App\Models\BankSoal;
+use App\Models\PartUjian;
 use App\Models\PendaftaranUjian;
 use App\Models\Pengguna;
 use App\Models\PeriodePendaftaranUjian;
 use App\Models\PeriodeUjian;
+use App\Models\ProgramTes;
+use App\Models\Section;
 use App\Models\SesiUjian;
+use App\Models\SkemaPenilaian;
 use App\Models\SlotUjian;
+use App\Models\Soal;
 use App\Models\Ujian;
+use App\Modules\Penilaian\Services\LayananAturanPenilaian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
@@ -45,9 +51,9 @@ class PendaftaranUjianTest extends TestCase
 
     private function buatSlot(string $mode, Carbon $tanggal, int $kapasitas = 30): SlotUjian
     {
-        $jenisTes = JenisTes::firstOrFail();
+        $programTes = ProgramTes::firstOrFail();
         $ujian = Ujian::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Pendaftaran '.strtoupper($mode),
             'mode' => $mode,
             'durasi_menit' => 60,
@@ -79,6 +85,41 @@ class PendaftaranUjianTest extends TestCase
         ]);
     }
 
+    private function lengkapiSoalUjian(Ujian $ujian): void
+    {
+        $bankSoal = BankSoal::where('program_tes_id', $ujian->program_tes_id)->firstOrFail();
+
+        foreach ([['Reading', 1], ['Listening', 2]] as [$namaSection, $urutan]) {
+            $section = Section::where('program_tes_id', $ujian->program_tes_id)
+                ->where('nama', $namaSection)
+                ->firstOrFail();
+
+            $part = PartUjian::create([
+                'ujian_id' => $ujian->id,
+                'bank_soal_id' => $bankSoal->id,
+                'section_id' => $section->id,
+                'judul' => $namaSection,
+                'urutan' => $urutan,
+                'jumlah_soal' => 1,
+            ]);
+
+            $part->soalPartUjian()->create([
+                'soal_id' => Soal::create([
+                    'bank_soal_id' => $bankSoal->id,
+                    'section_id' => $section->id,
+                    'teks_soal' => 'Soal '.$namaSection,
+                    'pilihan_a' => 'A',
+                    'pilihan_b' => 'B',
+                    'pilihan_c' => 'C',
+                    'pilihan_d' => 'D',
+                    'kunci_jawaban' => 'A',
+                    'urutan' => 1,
+                ])->id,
+                'urutan' => 1,
+            ]);
+        }
+    }
+
     public function test_admin_dapat_membuka_manajemen_pendaftaran(): void
     {
         $this->masukSebagai('admin');
@@ -88,7 +129,7 @@ class PendaftaranUjianTest extends TestCase
 
     public function test_mahasiswa_tidak_dapat_membuka_manajemen_pendaftaran_admin(): void
     {
-        $this->masukSebagai('student');
+        $this->masukSebagai('peserta');
 
         $this->get('/admin/pendaftaran-ujian')->assertForbidden();
     }
@@ -99,7 +140,7 @@ class PendaftaranUjianTest extends TestCase
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
         $periodePendaftaran = $slot->periodeUjian->periodePendaftaran;
 
-        $rootPage = $this->get('/admin/pendaftaran-ujian?jenis_tes_id='.$slot->periodeUjian->ujian->jenis_tes_id)
+        $rootPage = $this->get('/admin/pendaftaran-ujian?program_tes_id='.$slot->periodeUjian->ujian->program_tes_id)
             ->assertOk()
             ->inertiaPage();
         $this->assertArrayHasKey('periodeUjian', $rootPage['props']);
@@ -131,7 +172,52 @@ class PendaftaranUjianTest extends TestCase
         $this->assertDatabaseMissing('periode_pendaftaran_ujian', ['id' => $periodePendaftaran->id]);
     }
 
-    public function test_admin_melihat_ringkasan_periode_pendaftaran_per_jenis_tes(): void
+    public function test_daftar_periode_pendaftaran_mendukung_q_status_sort_dan_per_page(): void
+    {
+        $this->masukSebagai('admin');
+        $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
+        $periode = $slot->periodeUjian->periodePendaftaran;
+        $programTesId = $slot->periodeUjian->ujian->program_tes_id;
+
+        $page = $this->get('/admin/pendaftaran-ujian?f_program_tes_id='.$programTesId
+            .'&q='.urlencode($periode->nama)
+            .'&f_status=open&per_page=25&sort=nama&dir=asc')
+            ->assertOk()
+            ->inertiaPage();
+
+        $this->assertSame(25, $page['props']['periodePendaftaranUjian']['per_page']);
+        $this->assertTrue(collect($page['props']['periodePendaftaranUjian']['data'])->contains(
+            fn (array $item): bool => $item['id'] === $periode->id,
+        ));
+    }
+
+    public function test_peserta_pendaftaran_mendukung_q_status_dan_per_page(): void
+    {
+        $this->masukSebagai('admin');
+        $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
+        $periodePendaftaran = $slot->periodeUjian->periodePendaftaran;
+        $mahasiswa = Pengguna::where('email', 'peserta@toefl.test')->firstOrFail();
+
+        $pendaftaran = PendaftaranUjian::create([
+            'slot_ujian_id' => $slot->id,
+            'pengguna_id' => $mahasiswa->id,
+            'status' => StatusPendaftaranUjian::PENDING,
+        ]);
+
+        $page = $this->get('/admin/pendaftaran-ujian/'.$periodePendaftaran->id.'/peserta'
+            .'?slot_ujian_id='.$slot->id
+            .'&q='.urlencode($mahasiswa->name)
+            .'&f_status=pending&per_page=25')
+            ->assertOk()
+            ->inertiaPage();
+
+        $this->assertSame(25, $page['props']['pendaftaranUjian']['per_page']);
+        $this->assertTrue(collect($page['props']['pendaftaranUjian']['data'])->contains(
+            fn (array $item): bool => $item['id'] === $pendaftaran->id,
+        ));
+    }
+
+    public function test_admin_melihat_ringkasan_periode_pendaftaran_per_program_tes(): void
     {
         $this->masukSebagai('admin');
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
@@ -139,46 +225,46 @@ class PendaftaranUjianTest extends TestCase
         $page = $this->get('/admin/pendaftaran-ujian')
             ->assertOk()
             ->inertiaPage();
-        $ringkasan = collect($page['props']['ringkasanJenisTes'])
-            ->firstWhere('id', $slot->periodeUjian->ujian->jenis_tes_id);
+        $ringkasan = collect($page['props']['ringkasanProgramTes'])
+            ->firstWhere('id', $slot->periodeUjian->ujian->program_tes_id);
 
-        $this->assertNull($page['props']['jenisTesTerpilihId']);
+        $this->assertNull($page['props']['programTesTerpilihId']);
         $this->assertNotNull($ringkasan);
         $this->assertGreaterThanOrEqual(1, $ringkasan['jumlahUjian']);
         $this->assertGreaterThanOrEqual(1, $ringkasan['jumlahPeriodePendaftaran']);
     }
 
-    public function test_admin_dapat_membuka_daftar_periode_pendaftaran_per_jenis_tes(): void
+    public function test_admin_dapat_membuka_daftar_periode_pendaftaran_per_program_tes(): void
     {
         $this->masukSebagai('admin');
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
-        $jenisTesId = $slot->periodeUjian->ujian->jenis_tes_id;
+        $programTesId = $slot->periodeUjian->ujian->program_tes_id;
 
-        $page = $this->get('/admin/pendaftaran-ujian?jenis_tes_id='.$jenisTesId)
+        $page = $this->get('/admin/pendaftaran-ujian?program_tes_id='.$programTesId)
             ->assertOk()
             ->inertiaPage();
 
-        $this->assertSame($jenisTesId, $page['props']['jenisTesTerpilihId']);
+        $this->assertSame($programTesId, $page['props']['programTesTerpilihId']);
         $this->assertTrue(collect($page['props']['periodePendaftaranUjian']['data'])->every(
-            fn (array $periode): bool => $periode['periode_ujian']['ujian']['jenis_tes_id'] === $jenisTesId,
+            fn (array $periode): bool => $periode['periode_ujian']['ujian']['program_tes_id'] === $programTesId,
         ));
         $this->assertTrue(collect($page['props']['periodeUjian'])->every(
-            fn (array $periode): bool => $periode['ujian']['jenis_tes_id'] === $jenisTesId,
+            fn (array $periode): bool => $periode['ujian']['program_tes_id'] === $programTesId,
         ));
     }
 
-    public function test_jenis_tes_dengan_ujian_aktif_tanpa_periode_pendaftaran_tetap_muncul(): void
+    public function test_program_tes_dengan_ujian_aktif_tanpa_periode_pendaftaran_tetap_muncul(): void
     {
         $this->masukSebagai('admin');
 
-        $jenisTes = JenisTes::create([
+        $programTes = ProgramTes::create([
             'kode' => '010',
-            'nama' => 'Jenis Tes Tanpa Pendaftaran',
+            'nama' => 'Program Tes Tanpa Pendaftaran',
             'batas_pelanggaran' => 3,
             'aktif' => true,
         ]);
         Ujian::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Aktif Tanpa Pendaftaran',
             'mode' => ModeUjian::OFFICIAL->value,
             'durasi_menit' => 60,
@@ -188,18 +274,18 @@ class PendaftaranUjianTest extends TestCase
         $page = $this->get('/admin/pendaftaran-ujian')
             ->assertOk()
             ->inertiaPage();
-        $ringkasan = collect($page['props']['ringkasanJenisTes'])
-            ->firstWhere('id', $jenisTes->id);
+        $ringkasan = collect($page['props']['ringkasanProgramTes'])
+            ->firstWhere('id', $programTes->id);
 
         $this->assertNotNull($ringkasan);
         $this->assertSame(1, (int) $ringkasan['jumlahUjian']);
         $this->assertSame(0, (int) $ringkasan['jumlahPeriodePendaftaran']);
 
-        $detail = $this->get('/admin/pendaftaran-ujian?jenis_tes_id='.$jenisTes->id)
+        $detail = $this->get('/admin/pendaftaran-ujian?program_tes_id='.$programTes->id)
             ->assertOk()
             ->inertiaPage();
 
-        $this->assertSame($jenisTes->id, $detail['props']['jenisTesTerpilihId']);
+        $this->assertSame($programTes->id, $detail['props']['programTesTerpilihId']);
         $this->assertEmpty($detail['props']['periodePendaftaranUjian']['data']);
         $this->assertEmpty($detail['props']['periodeUjian']);
     }
@@ -229,7 +315,7 @@ class PendaftaranUjianTest extends TestCase
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
         SesiUjian::create([
             'slot_ujian_id' => $slot->id,
-            'pengguna_id' => Pengguna::where('email', 'student@toefl.test')->value('id'),
+            'pengguna_id' => Pengguna::where('email', 'peserta@toefl.test')->value('id'),
             'status' => StatusSesi::SUBMITTED,
             'dimulai_pada' => now(),
             'diserahkan_pada' => now()->addMinutes(30),
@@ -248,12 +334,12 @@ class PendaftaranUjianTest extends TestCase
     {
         $mahasiswa = Pengguna::create([
             'name' => 'Mahasiswa Tanpa Approval',
-            'email' => 'unverified-student@toefl.test',
+            'email' => 'unverified-peserta@toefl.test',
             'password' => bcrypt('password'),
             'email_verified_at' => now(),
             'aktif' => true,
         ]);
-        $mahasiswa->assignRole('student');
+        $mahasiswa->assignRole('peserta');
 
         $this->post('/login', [
             'email' => $mahasiswa->email,
@@ -265,17 +351,17 @@ class PendaftaranUjianTest extends TestCase
 
     public function test_mahasiswa_dapat_menelusuri_jadwal_dengan_konteks_ujian(): void
     {
-        $this->masukSebagai('student');
+        $this->masukSebagai('peserta');
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
         $ujian = $slot->periodeUjian->ujian;
 
         $rootPage = $this->get('/ujian/jadwal')->assertOk()->inertiaPage();
-        $this->assertTrue(collect($rootPage['props']['ringkasanJenisTes'])->contains('id', $ujian->jenis_tes_id));
+        $this->assertTrue(collect($rootPage['props']['ringkasanProgramTes'])->contains('id', $ujian->program_tes_id));
 
-        $this->get('/ujian/jadwal?jenis_tes_id='.$ujian->jenis_tes_id.'&ujian_id='.$ujian->id)
+        $this->get('/ujian/jadwal?program_tes_id='.$ujian->program_tes_id.'&ujian_id='.$ujian->id)
             ->assertOk();
 
-        $periodPage = $this->get('/ujian/jadwal?jenis_tes_id='.$ujian->jenis_tes_id
+        $periodPage = $this->get('/ujian/jadwal?program_tes_id='.$ujian->program_tes_id
             .'&ujian_id='.$ujian->id
             .'&periode_ujian_id='.$slot->periode_ujian_id)
             ->assertOk()
@@ -285,7 +371,7 @@ class PendaftaranUjianTest extends TestCase
 
     public function test_jadwal_menampilkan_jumlah_pendaftaran_yang_disetujui(): void
     {
-        $mahasiswa = $this->masukSebagai('student');
+        $mahasiswa = $this->masukSebagai('peserta');
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
         $pendaftaran = PendaftaranUjian::create([
             'slot_ujian_id' => $slot->id,
@@ -293,7 +379,7 @@ class PendaftaranUjianTest extends TestCase
             'status' => StatusPendaftaranUjian::APPROVED,
         ]);
 
-        $page = $this->get('/ujian/jadwal?jenis_tes_id='.$slot->periodeUjian->ujian->jenis_tes_id
+        $page = $this->get('/ujian/jadwal?program_tes_id='.$slot->periodeUjian->ujian->program_tes_id
             .'&ujian_id='.$slot->periodeUjian->ujian_id
             .'&periode_ujian_id='.$slot->periode_ujian_id)
             ->assertOk()
@@ -305,7 +391,7 @@ class PendaftaranUjianTest extends TestCase
 
     public function test_mahasiswa_mengajukan_pendaftaran_official_dengan_bukti_pembayaran(): void
     {
-        $mahasiswa = $this->masukSebagai('student');
+        $mahasiswa = $this->masukSebagai('peserta');
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
 
         $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
@@ -325,11 +411,21 @@ class PendaftaranUjianTest extends TestCase
             'pengguna_id' => $mahasiswa->id,
             'nim' => '2200099999',
         ]);
+
+        $pendaftaran = PendaftaranUjian::where('slot_ujian_id', $slot->id)->firstOrFail();
+
+        $this->assertNotNull($pendaftaran->lokasi_bukti_pembayaran);
+        $this->assertStringEndsWith('.webp', $pendaftaran->lokasi_bukti_pembayaran);
+        $this->assertTrue(Storage::disk('public')->exists($pendaftaran->lokasi_bukti_pembayaran));
+        $this->assertLessThanOrEqual(
+            2 * 1024 * 1024,
+            Storage::disk('public')->size($pendaftaran->lokasi_bukti_pembayaran),
+        );
     }
 
     public function test_pendaftaran_official_menolak_bukti_pembayaran_yang_tidak_diunggah(): void
     {
-        $mahasiswa = $this->masukSebagai('student');
+        $mahasiswa = $this->masukSebagai('peserta');
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
 
         $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
@@ -342,9 +438,25 @@ class PendaftaranUjianTest extends TestCase
         $this->assertDatabaseCount('pendaftaran_ujian', 0);
     }
 
+    public function test_pendaftaran_official_menolak_bukti_pembayaran_lebih_dari_dua_mb(): void
+    {
+        $mahasiswa = $this->masukSebagai('peserta');
+        $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
+
+        $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
+            'nim' => $mahasiswa->profilMahasiswa->nim,
+            'fakultas_id' => $mahasiswa->profilMahasiswa->fakultas_id,
+            'program_studi_id' => $mahasiswa->profilMahasiswa->program_studi_id,
+            'tahun_angkatan' => $mahasiswa->profilMahasiswa->tahun_angkatan,
+            'bukti_pembayaran' => UploadedFile::fake()->image('bukti.png')->size(3000),
+        ])->assertSessionHasErrors('bukti_pembayaran');
+
+        $this->assertDatabaseCount('pendaftaran_ujian', 0);
+    }
+
     public function test_pendaftaran_official_ditolak_setelah_periode_pendaftaran_ditutup(): void
     {
-        $mahasiswa = $this->masukSebagai('student');
+        $mahasiswa = $this->masukSebagai('peserta');
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
         $slot->periodeUjian->periodePendaftaran->update([
             'ditutup_pada' => now()->subMinute(),
@@ -363,7 +475,7 @@ class PendaftaranUjianTest extends TestCase
 
     public function test_admin_dapat_menyetujui_pendaftaran_dan_mahasiswa_dapat_membatalkannya(): void
     {
-        $mahasiswa = $this->masukSebagai('student');
+        $mahasiswa = $this->masukSebagai('peserta');
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
         $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
             'nim' => $mahasiswa->profilMahasiswa->nim,
@@ -386,7 +498,7 @@ class PendaftaranUjianTest extends TestCase
         ]);
 
         $this->post('/logout');
-        $this->masukSebagai('student');
+        $this->masukSebagai('peserta');
         $this->delete('/ujian/pendaftaran/'.$pendaftaran->id)->assertRedirect();
 
         $this->assertDatabaseHas('pendaftaran_ujian', [
@@ -397,7 +509,7 @@ class PendaftaranUjianTest extends TestCase
 
     public function test_official_yang_menunggu_tidak_dapat_masuk_ke_pemeriksaan_awal(): void
     {
-        $mahasiswa = $this->masukSebagai('student');
+        $mahasiswa = $this->masukSebagai('peserta');
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
 
         $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
@@ -415,8 +527,9 @@ class PendaftaranUjianTest extends TestCase
 
     public function test_tryout_membuat_pendaftaran_approved_saat_sesi_dimulai(): void
     {
-        $mahasiswa = $this->masukSebagai('student');
+        $mahasiswa = $this->masukSebagai('peserta');
         $slot = $this->buatSlot(ModeUjian::TRYOUT->value, now()->subMinutes(5));
+        $this->lengkapiSoalUjian($slot->periodeUjian->ujian);
 
         $this->post('/ujian/slot/'.$slot->id.'/mulai', [
             'jenis_perangkat' => 'desktop',
@@ -432,7 +545,76 @@ class PendaftaranUjianTest extends TestCase
         $this->assertDatabaseHas('sesi_ujian', [
             'slot_ujian_id' => $slot->id,
             'pengguna_id' => $mahasiswa->id,
-            'status' => StatusSesi::IN_PROGRESS->value,
         ]);
+
+        $sesi = SesiUjian::where('slot_ujian_id', $slot->id)
+            ->where('pengguna_id', $mahasiswa->id)
+            ->firstOrFail();
+
+        $this->assertNotNull($sesi->skema_penilaian_id);
+        $this->assertNotNull($sesi->snapshot_penilaian);
+        $this->assertSame('400.0', $sesi->skor_total_maksimum);
+    }
+
+    public function test_sesi_memakai_snapshot_walau_skema_aktif_berubah(): void
+    {
+        $mahasiswa = $this->masukSebagai('peserta');
+        $slot = $this->buatSlot(ModeUjian::TRYOUT->value, now()->subMinutes(5));
+        $ujian = $slot->periodeUjian->ujian;
+        $this->lengkapiSoalUjian($ujian);
+
+        $this->post('/ujian/slot/'.$slot->id.'/mulai', [
+            'jenis_perangkat' => 'desktop',
+            'agen_pengguna_perangkat' => 'PendaftaranUjianTest',
+            'swafoto' => UploadedFile::fake()->image('selfie.jpg'),
+        ])->assertRedirect();
+
+        $sesi = SesiUjian::where('slot_ujian_id', $slot->id)
+            ->where('pengguna_id', $mahasiswa->id)
+            ->firstOrFail();
+
+        $snapshotAwal = $sesi->snapshot_penilaian;
+        $skemaAwalId = $sesi->skema_penilaian_id;
+
+        $layanan = app(LayananAturanPenilaian::class);
+        $programTes = ProgramTes::findOrFail($ujian->program_tes_id);
+        $draft = $layanan->buatVersi($programTes);
+        $reading = Section::where('program_tes_id', $programTes->id)
+            ->where('nama', 'Reading')
+            ->firstOrFail();
+
+        $layanan->simpanAturan($draft, $reading, [
+            'tabel_konversi' => array_fill(0, 51, 200),
+            'skor_mentah_maksimum' => 50,
+            'skor_skala_minimum' => 100,
+            'skor_skala_maksimum' => 200,
+        ]);
+        $layanan->aktifkan($draft);
+
+        $this->assertSame(
+            $draft->id,
+            SkemaPenilaian::where('program_tes_id', $programTes->id)
+                ->where('status', 'aktif')
+                ->value('id'),
+        );
+
+        $soalIds = Soal::whereHas('partUjian', fn ($query) => $query->where('ujian_id', $ujian->id))
+            ->pluck('id');
+
+        foreach ($soalIds as $soalId) {
+            $this->postJson("/ujian/sesi/{$sesi->id}/jawaban", [
+                'soal_id' => $soalId,
+                'teks_jawaban' => 'A',
+            ])->assertOk();
+        }
+
+        $this->post("/ujian/sesi/{$sesi->id}/serahkan")->assertRedirect(route('dasbor'));
+
+        $sesi->refresh();
+
+        $this->assertSame($skemaAwalId, $sesi->skema_penilaian_id);
+        $this->assertSame($snapshotAwal, $sesi->snapshot_penilaian);
+        $this->assertSame('204.0', $sesi->skor_total);
+        $this->assertFalse($sesi->lulus);
     }
 }

@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
  * Ujian yang dapat dijadwalkan untuk peserta.
  *
  * @property string $id
- * @property string $jenis_tes_id
+ * @property string $program_tes_id
  * @property string $judul
  * @property string|null $deskripsi
  * @property ModeUjian $mode
@@ -23,11 +23,11 @@ use Illuminate\Support\Carbon;
  * @property bool $aktif
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read JenisTes $jenisTes
- * @property-read Collection<int, BagianUjian> $bagianUjian
+ * @property-read ProgramTes $programTes
+ * @property-read Collection<int, PartUjian> $partUjian
  * @property-read Collection<int, PeriodeUjian> $periodeUjian
  */
-#[Fillable(['jenis_tes_id', 'judul', 'deskripsi', 'mode', 'durasi_menit', 'aktif'])]
+#[Fillable(['program_tes_id', 'judul', 'deskripsi', 'mode', 'durasi_menit', 'aktif'])]
 class Ujian extends Model
 {
     use HasUuids;
@@ -43,14 +43,14 @@ class Ujian extends Model
         ];
     }
 
-    public function jenisTes(): BelongsTo
+    public function programTes(): BelongsTo
     {
-        return $this->belongsTo(JenisTes::class, 'jenis_tes_id', 'id');
+        return $this->belongsTo(ProgramTes::class, 'program_tes_id', 'id');
     }
 
-    public function bagianUjian(): HasMany
+    public function partUjian(): HasMany
     {
-        return $this->hasMany(BagianUjian::class, 'ujian_id', 'id');
+        return $this->hasMany(PartUjian::class, 'ujian_id', 'id');
     }
 
     public function periodeUjian(): HasMany

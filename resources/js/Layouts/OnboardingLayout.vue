@@ -36,7 +36,7 @@ const steps = [
                     <span class="hidden md:inline">Keluar</span>
                 </Link>
             </div>
-            <main class="flex-1 overflow-y-auto bg-canvas">
+            <main class="flex-1 overflow-y-auto overscroll-y-contain bg-canvas">
                 <slot />
             </main>
         </div>

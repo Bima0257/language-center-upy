@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\DataInduk\Providers\DataIndukModuleServiceProvider;
+use App\Modules\Identity\Providers\IdentityModuleServiceProvider;
 use App\Modules\Keamanan\Providers\KeamananModuleServiceProvider;
 use App\Modules\Laporan\Providers\LaporanModuleServiceProvider;
 use App\Modules\PelaksanaanUjian\Providers\PelaksanaanUjianModuleServiceProvider;
@@ -24,4 +25,5 @@ return [
     LaporanModuleServiceProvider::class,
     DataIndukModuleServiceProvider::class,
     PenggunaModuleServiceProvider::class,
+    IdentityModuleServiceProvider::class,
 ];

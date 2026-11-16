@@ -4,15 +4,15 @@ namespace Tests\Feature\Ujian;
 
 use App\Enums\ModeUjian;
 use App\Enums\StatusPendaftaranUjian;
-use App\Models\BagianUjian;
 use App\Models\BankSoal;
-use App\Models\JenisTes;
-use App\Models\Keterampilan;
 use App\Models\MateriSoal;
+use App\Models\PartUjian;
 use App\Models\PendaftaranUjian;
 use App\Models\Pengguna;
 use App\Models\PeriodePendaftaranUjian;
 use App\Models\PeriodeUjian;
+use App\Models\ProgramTes;
+use App\Models\Section;
 use App\Models\SesiUjian;
 use App\Models\SlotUjian;
 use App\Models\Soal;
@@ -36,7 +36,7 @@ class UjianMahasiswaTest extends TestCase
 
     private function masukSebagaiMahasiswa(): void
     {
-        $pengguna = Pengguna::where('email', 'student@toefl.test')->first();
+        $pengguna = Pengguna::where('email', 'peserta@toefl.test')->first();
 
         $this->post('/login', [
             'email' => $pengguna->email,
@@ -46,21 +46,18 @@ class UjianMahasiswaTest extends TestCase
 
     private function berkasUji(string $namaBerkas): UploadedFile
     {
-        $berkasSementara = tempnam(sys_get_temp_dir(), 'test_jpeg_');
-        file_put_contents($berkasSementara, base64_decode('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAQgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAyACgDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAAAAUGBAf/xAAsEAABAwMCAwcFAAAAAAAAAAABAAIDBBEhBRIxBhNBUWFxgZGhFCIycfD/xAAYAQADAQEAAAAAAAAAAAAAAAABAgMABP/EABsRAQEAAgMBAAAAAAAAAAAAAAEAAhEDITES/9oADAMBAAIRAxEAPwD0yC2urKltNTxGSR2waPufAekUdZT1kPnU8zJGf1Ndf8AIQHUVdT4hS+TObRvBjkb1Y4cD+D0IjYpKC8b+3t54nAO/teA62h+P6W6tLZk7FBtK8ONi3l2OxB2I+yIAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/9k='));
-
-        return new UploadedFile($berkasSementara, $namaBerkas, 'image/jpeg', null, true);
+        return UploadedFile::fake()->image($namaBerkas);
     }
 
     private function buatUjian(string $judul, string $mode): Ujian
     {
-        $jenisTes = JenisTes::firstOrCreate(['nama' => 'TOEFL iBT'], [
+        $programTes = ProgramTes::firstOrCreate(['nama' => 'EPT'], [
             'batas_pelanggaran' => 3,
             'aktif' => true,
         ]);
 
         return Ujian::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'judul' => $judul,
             'mode' => $mode,
             'durasi_menit' => 60,
@@ -153,22 +150,22 @@ class UjianMahasiswaTest extends TestCase
 
     public function test_pengerjaan_sesi_menyembunyikan_kunci_jawaban(): void
     {
-        $jenisTes = JenisTes::firstOrCreate(['nama' => 'TOEFL iBT'], [
+        $programTes = ProgramTes::firstOrCreate(['nama' => 'EPT'], [
             'batas_pelanggaran' => 3,
             'aktif' => true,
         ]);
 
         $bankSoal = BankSoal::firstOrCreate(
             ['nama' => 'Bank Ujian Resmi'],
-            ['jenis_tes_id' => $jenisTes->id, 'aktif' => true],
+            ['program_tes_id' => $programTes->id, 'aktif' => true],
         );
 
-        $keterampilan = Keterampilan::firstOrCreate(
-            ['jenis_tes_id' => $jenisTes->id, 'nama' => 'Reading'],
+        $section = Section::firstOrCreate(
+            ['program_tes_id' => $programTes->id, 'nama' => 'Reading'],
             [
                 'kode' => '001001',
                 'nama' => 'Reading',
-                'jenis_tes_id' => $jenisTes->id,
+                'program_tes_id' => $programTes->id,
                 'urutan' => 1,
                 'aktif' => true,
             ],
@@ -183,7 +180,7 @@ class UjianMahasiswaTest extends TestCase
         $soal = Soal::create([
             'bank_soal_id' => $bankSoal->id,
             'materi_soal_id' => $materiSoal->id,
-            'keterampilan_id' => $keterampilan->id,
+            'section_id' => $section->id,
             'teks_soal' => 'Apa isi passage tersebut?',
             'pilihan_a' => 'Pilihan A',
             'pilihan_b' => 'Pilihan B',
@@ -194,24 +191,61 @@ class UjianMahasiswaTest extends TestCase
         ]);
 
         $ujian = Ujian::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Resmi untuk Take Test',
             'mode' => ModeUjian::OFFICIAL->value,
             'durasi_menit' => 60,
             'aktif' => true,
         ]);
 
-        $bagianUjian = BagianUjian::create([
+        $partUjian = PartUjian::create([
             'ujian_id' => $ujian->id,
             'bank_soal_id' => $bankSoal->id,
-            'keterampilan_id' => $keterampilan->id,
+            'section_id' => $section->id,
             'judul' => 'Reading — Bank Ujian Resmi',
             'urutan' => 1,
             'jumlah_soal' => 1,
         ]);
 
-        $bagianUjian->soalBagianUjian()->create([
+        $partUjian->soalPartUjian()->create([
             'soal_id' => $soal->id,
+            'urutan' => 1,
+        ]);
+
+        $sectionMenyimak = Section::firstOrCreate(
+            ['program_tes_id' => $programTes->id, 'nama' => 'Listening'],
+            [
+                'kode' => '001002',
+                'nama' => 'Listening',
+                'program_tes_id' => $programTes->id,
+                'urutan' => 2,
+                'aktif' => true,
+            ],
+        );
+
+        $soalMenyimak = Soal::create([
+            'bank_soal_id' => $bankSoal->id,
+            'section_id' => $sectionMenyimak->id,
+            'teks_soal' => 'Apa topik percakapan tersebut?',
+            'pilihan_a' => 'Pilihan A',
+            'pilihan_b' => 'Pilihan B',
+            'pilihan_c' => 'Pilihan C',
+            'pilihan_d' => 'Pilihan D',
+            'kunci_jawaban' => 'A',
+            'urutan' => 1,
+        ]);
+
+        $partMenyimak = PartUjian::create([
+            'ujian_id' => $ujian->id,
+            'bank_soal_id' => $bankSoal->id,
+            'section_id' => $sectionMenyimak->id,
+            'judul' => 'Listening — Bank Ujian Resmi',
+            'urutan' => 2,
+            'jumlah_soal' => 1,
+        ]);
+
+        $partMenyimak->soalPartUjian()->create([
+            'soal_id' => $soalMenyimak->id,
             'urutan' => 1,
         ]);
 
@@ -244,11 +278,11 @@ class UjianMahasiswaTest extends TestCase
 
         PendaftaranUjian::create([
             'slot_ujian_id' => $slotUjian->id,
-            'pengguna_id' => Pengguna::where('email', 'student@toefl.test')->first()->id,
+            'pengguna_id' => Pengguna::where('email', 'peserta@toefl.test')->first()->id,
             'status' => StatusPendaftaranUjian::APPROVED,
         ]);
 
-        SesiUjian::where('pengguna_id', Pengguna::where('email', 'student@toefl.test')->first()->id)
+        SesiUjian::where('pengguna_id', Pengguna::where('email', 'peserta@toefl.test')->first()->id)
             ->where('status', 'in_progress')
             ->delete();
 
@@ -263,7 +297,7 @@ class UjianMahasiswaTest extends TestCase
         ]);
         $responsMulai->assertRedirect();
 
-        $sesiUjian = SesiUjian::where('pengguna_id', Pengguna::where('email', 'student@toefl.test')->first()->id)
+        $sesiUjian = SesiUjian::where('pengguna_id', Pengguna::where('email', 'peserta@toefl.test')->first()->id)
             ->where('slot_ujian_id', $slotUjian->id)
             ->first();
 
@@ -277,22 +311,22 @@ class UjianMahasiswaTest extends TestCase
 
     public function test_mulai_ujian_menolak_perangkat_seluler_atau_tablet(): void
     {
-        $jenisTes = JenisTes::firstOrCreate(['nama' => 'TOEFL iBT'], [
+        $programTes = ProgramTes::firstOrCreate(['nama' => 'EPT'], [
             'batas_pelanggaran' => 3,
             'aktif' => true,
         ]);
 
         $bankSoal = BankSoal::firstOrCreate(
             ['nama' => 'Bank Ujian Resmi'],
-            ['jenis_tes_id' => $jenisTes->id, 'aktif' => true],
+            ['program_tes_id' => $programTes->id, 'aktif' => true],
         );
 
-        $keterampilan = Keterampilan::firstOrCreate(
-            ['jenis_tes_id' => $jenisTes->id, 'nama' => 'Reading'],
+        $section = Section::firstOrCreate(
+            ['program_tes_id' => $programTes->id, 'nama' => 'Reading'],
             [
                 'kode' => '001001',
                 'nama' => 'Reading',
-                'jenis_tes_id' => $jenisTes->id,
+                'program_tes_id' => $programTes->id,
                 'urutan' => 1,
                 'aktif' => true,
             ],
@@ -307,7 +341,7 @@ class UjianMahasiswaTest extends TestCase
         $soal = Soal::create([
             'bank_soal_id' => $bankSoal->id,
             'materi_soal_id' => $materiSoal->id,
-            'keterampilan_id' => $keterampilan->id,
+            'section_id' => $section->id,
             'teks_soal' => 'Apa isi passage tersebut?',
             'pilihan_a' => 'Pilihan A',
             'pilihan_b' => 'Pilihan B',
@@ -318,23 +352,23 @@ class UjianMahasiswaTest extends TestCase
         ]);
 
         $ujian = Ujian::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Resmi untuk Device Test',
             'mode' => ModeUjian::OFFICIAL->value,
             'durasi_menit' => 60,
             'aktif' => true,
         ]);
 
-        $bagianUjian = BagianUjian::create([
+        $partUjian = PartUjian::create([
             'ujian_id' => $ujian->id,
             'bank_soal_id' => $bankSoal->id,
-            'keterampilan_id' => $keterampilan->id,
+            'section_id' => $section->id,
             'judul' => 'Reading — Bank Ujian Resmi',
             'urutan' => 1,
             'jumlah_soal' => 1,
         ]);
 
-        $bagianUjian->soalBagianUjian()->create([
+        $partUjian->soalPartUjian()->create([
             'soal_id' => $soal->id,
             'urutan' => 1,
         ]);
@@ -366,7 +400,7 @@ class UjianMahasiswaTest extends TestCase
 
         $this->masukSebagaiMahasiswa();
 
-        SesiUjian::where('pengguna_id', Pengguna::where('email', 'student@toefl.test')->first()->id)
+        SesiUjian::where('pengguna_id', Pengguna::where('email', 'peserta@toefl.test')->first()->id)
             ->where('status', 'in_progress')
             ->delete();
 
@@ -379,7 +413,7 @@ class UjianMahasiswaTest extends TestCase
         ]);
         $responsMulai->assertSessionHas('error', 'Ujian hanya dapat diakses dari laptop atau komputer. HP dan tablet tidak diperbolehkan.');
 
-        $sesiUjian = SesiUjian::where('pengguna_id', Pengguna::where('email', 'student@toefl.test')->first()->id)
+        $sesiUjian = SesiUjian::where('pengguna_id', Pengguna::where('email', 'peserta@toefl.test')->first()->id)
             ->where('slot_ujian_id', $slotUjian->id)
             ->first();
         $this->assertNull($sesiUjian);
@@ -387,22 +421,22 @@ class UjianMahasiswaTest extends TestCase
 
     public function test_mulai_ujian_mewajibkan_foto_swafoto(): void
     {
-        $jenisTes = JenisTes::firstOrCreate(['nama' => 'TOEFL iBT'], [
+        $programTes = ProgramTes::firstOrCreate(['nama' => 'EPT'], [
             'batas_pelanggaran' => 3,
             'aktif' => true,
         ]);
 
         $bankSoal = BankSoal::firstOrCreate(
             ['nama' => 'Bank Ujian Resmi'],
-            ['jenis_tes_id' => $jenisTes->id, 'aktif' => true],
+            ['program_tes_id' => $programTes->id, 'aktif' => true],
         );
 
-        $keterampilan = Keterampilan::firstOrCreate(
-            ['jenis_tes_id' => $jenisTes->id, 'nama' => 'Reading'],
+        $section = Section::firstOrCreate(
+            ['program_tes_id' => $programTes->id, 'nama' => 'Reading'],
             [
                 'kode' => '001001',
                 'nama' => 'Reading',
-                'jenis_tes_id' => $jenisTes->id,
+                'program_tes_id' => $programTes->id,
                 'urutan' => 1,
                 'aktif' => true,
             ],
@@ -417,7 +451,7 @@ class UjianMahasiswaTest extends TestCase
         $soal = Soal::create([
             'bank_soal_id' => $bankSoal->id,
             'materi_soal_id' => $materiSoal->id,
-            'keterampilan_id' => $keterampilan->id,
+            'section_id' => $section->id,
             'teks_soal' => 'Apa isi passage tersebut?',
             'pilihan_a' => 'Pilihan A',
             'pilihan_b' => 'Pilihan B',
@@ -428,23 +462,23 @@ class UjianMahasiswaTest extends TestCase
         ]);
 
         $ujian = Ujian::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Resmi untuk Selfie Test',
             'mode' => ModeUjian::OFFICIAL->value,
             'durasi_menit' => 60,
             'aktif' => true,
         ]);
 
-        $bagianUjian = BagianUjian::create([
+        $partUjian = PartUjian::create([
             'ujian_id' => $ujian->id,
             'bank_soal_id' => $bankSoal->id,
-            'keterampilan_id' => $keterampilan->id,
+            'section_id' => $section->id,
             'judul' => 'Reading — Bank Ujian Resmi',
             'urutan' => 1,
             'jumlah_soal' => 1,
         ]);
 
-        $bagianUjian->soalBagianUjian()->create([
+        $partUjian->soalPartUjian()->create([
             'soal_id' => $soal->id,
             'urutan' => 1,
         ]);
@@ -476,7 +510,7 @@ class UjianMahasiswaTest extends TestCase
 
         $this->masukSebagaiMahasiswa();
 
-        SesiUjian::where('pengguna_id', Pengguna::where('email', 'student@toefl.test')->first()->id)
+        SesiUjian::where('pengguna_id', Pengguna::where('email', 'peserta@toefl.test')->first()->id)
             ->where('status', 'in_progress')
             ->delete();
 

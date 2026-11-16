@@ -167,7 +167,7 @@ const errorInputValue = ref("");
             <div class="space-y-4">
                 <BaseRadio
                     :model-value="radioValue"
-                    name="preview-keterampilan"
+                    name="preview-section"
                     :options="radioOptions"
                     inline
                     @update:model-value="emit('update:radio-value', $event)"
@@ -188,7 +188,7 @@ const errorInputValue = ref("");
             <div class="space-y-3">
                 <DropDown
                     :model-value="dropdownValue"
-                    label="Pilih keterampilan"
+                    label="Pilih section"
                     :options="dropdownOptions"
                     option-label="name"
                     option-value="id"

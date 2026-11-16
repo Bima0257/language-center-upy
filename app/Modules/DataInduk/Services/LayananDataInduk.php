@@ -2,23 +2,24 @@
 
 namespace App\Modules\DataInduk\Services;
 
-use App\Models\BagianSoal;
 use App\Models\Fakultas;
 use App\Models\InterpretasiSkor;
-use App\Models\JenisTes;
-use App\Models\Keterampilan;
+use App\Models\PartSoal;
 use App\Models\ProgramStudi;
+use App\Models\ProgramTes;
+use App\Models\Section;
 use App\Models\Sertifikat;
-use App\Modules\DataInduk\Repositories\Contracts\BagianSoalRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\FakultasRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\InterpretasiSkorRepositoryInterface;
-use App\Modules\DataInduk\Repositories\Contracts\JenisTesRepositoryInterface;
-use App\Modules\DataInduk\Repositories\Contracts\KeterampilanRepositoryInterface;
+use App\Modules\DataInduk\Repositories\Contracts\PartSoalRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\ProgramStudiRepositoryInterface;
+use App\Modules\DataInduk\Repositories\Contracts\ProgramTesRepositoryInterface;
+use App\Modules\DataInduk\Repositories\Contracts\SectionRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\SertifikatRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\UrutanKodeRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\BankSoalRepositoryInterface;
 use App\Modules\Ujian\Services\LayananKebijakanMateriSoal;
+use App\Modules\Ujian\Services\LayananUjian;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -27,9 +28,9 @@ use Mews\Purifier\Facades\Purifier;
 class LayananDataInduk
 {
     public function __construct(
-        private JenisTesRepositoryInterface $jenisTesRepo,
-        private KeterampilanRepositoryInterface $keterampilanRepo,
-        private BagianSoalRepositoryInterface $bagianSoalRepo,
+        private ProgramTesRepositoryInterface $programTesRepo,
+        private SectionRepositoryInterface $sectionRepo,
+        private PartSoalRepositoryInterface $partSoalRepo,
         private FakultasRepositoryInterface $fakultasRepo,
         private ProgramStudiRepositoryInterface $programStudiRepo,
         private InterpretasiSkorRepositoryInterface $interpretasiSkorRepo,
@@ -37,217 +38,376 @@ class LayananDataInduk
         private UrutanKodeRepositoryInterface $urutanKodeRepo,
         private BankSoalRepositoryInterface $bankSoalRepo,
         private LayananKebijakanMateriSoal $kebijakanMateri,
+        private LayananUjian $layananUjian,
     ) {}
 
-    // ===== Skills =====
-    public function dataDaftarKeterampilan(): array
+    // ===== Sections =====
+    public function dataDaftarSection(): array
     {
         return [
-            'jenisTes' => $this->jenisTesRepo->semuaDenganJumlahBankSoal(),
+            'programTes' => $this->programTesRepo->semuaDenganJumlahBankSoal(),
         ];
     }
 
-    public function dataDaftarKeterampilanPerJenisTes(JenisTes $jenisTes): array
+    public function dataDaftarSectionPerProgramTes(ProgramTes $programTes): array
     {
         return [
-            'jenisTes' => $jenisTes,
-            'keterampilan' => $this->keterampilanRepo->semuaBerurutan($jenisTes->id),
+            'programTes' => $programTes,
+            'section' => $this->sectionRepo->semuaBerurutan($programTes->id),
             'kebijakanMateriSoal' => $this->kebijakanMateri->semuaUntukFrontend(),
         ];
     }
 
-    public function buatKeterampilan(array $data): Keterampilan
+    public function buatSection(array $data): Section
     {
-        return DB::transaction(function () use ($data): Keterampilan {
+        return DB::transaction(function () use ($data): Section {
             $data = $this->bersihkanTeksOpsional($data);
-            $jenisTes = $this->jenisTesRepo->find($data['jenis_tes_id']);
+            $bankSoalKonteksId = $data['bank_soal_konteks_id'] ?? null;
+            unset($data['bank_soal_konteks_id']);
+            $programTes = $this->programTesRepo->find($data['program_tes_id']);
 
-            if ($jenisTes === null || ! $jenisTes->aktif) {
-                throw new \RuntimeException('Jenis tes tidak aktif atau tidak ditemukan.');
+            if ($programTes === null || ! $programTes->aktif) {
+                throw new \RuntimeException('Program tes tidak aktif atau tidak ditemukan.');
             }
 
-            $ruangKode = 'keterampilan:'.$jenisTes->kode;
+            $this->pastikanBankSoalKonteks($bankSoalKonteksId, null, $programTes->id);
+
+            $ruangKode = 'section:'.$programTes->kode;
             $nomorKode = $this->urutanKodeRepo->nilaiBerikutnya($ruangKode);
-            $data['kode'] = $jenisTes->kode.str_pad((string) $nomorKode, 3, '0', STR_PAD_LEFT);
-            $data['urutan'] = $data['urutan'] ?? $this->keterampilanRepo->urutanBerikutnya($jenisTes->id);
+            $data['kode'] = $programTes->kode.str_pad((string) $nomorKode, 3, '0', STR_PAD_LEFT);
+            $data['urutan'] = $data['urutan'] ?? $this->sectionRepo->urutanBerikutnya($programTes->id);
 
-            $dataKeterampilan = $data;
-            unset($dataKeterampilan['ketentuan_materi'], $dataKeterampilan['aturan_media']);
+            $dataSection = $data;
+            unset($dataSection['ketentuan_materi'], $dataSection['aturan_media']);
 
-            $keterampilan = $this->keterampilanRepo->create($dataKeterampilan);
-            $this->simpanKebijakanJikaDikirim($keterampilan, $data);
+            $section = $this->sectionRepo->create($dataSection);
+            $this->simpanKebijakanJikaDikirim($section, $data);
 
-            return $keterampilan;
+            if (auth()->check()) {
+                activity()
+                    ->performedOn($section)
+                    ->withProperties([
+                        'program_tes_id' => $section->program_tes_id,
+                        'kode' => $section->kode,
+                        'nama' => $section->nama,
+                        'policy_configured' => $section->kebijakanMateriSoal()->exists(),
+                    ])
+                    ->log('section_created');
+            }
+
+            return $section;
         });
     }
 
-    public function perbaruiKeterampilan(Keterampilan $keterampilan, array $data): void
+    public function perbaruiSection(Section $section, array $data): void
     {
         $data = $this->bersihkanTeksOpsional($data);
 
-        DB::transaction(function () use ($keterampilan, $data): void {
-            $dataKeterampilan = $data;
-            unset($dataKeterampilan['ketentuan_materi'], $dataKeterampilan['aturan_media']);
+        DB::transaction(function () use ($section, $data): void {
+            $bankSoalKonteksId = $data['bank_soal_konteks_id'] ?? null;
+            unset($data['bank_soal_konteks_id']);
+            $this->pastikanBankSoalKonteks($bankSoalKonteksId, null, $section->program_tes_id);
 
-            $this->keterampilanRepo->update($keterampilan, $dataKeterampilan);
-            $this->simpanKebijakanJikaDikirim($keterampilan, $data);
+            $dataSection = $data;
+            unset($dataSection['ketentuan_materi'], $dataSection['aturan_media']);
+
+            $this->sectionRepo->update($section, $dataSection);
+            $this->simpanKebijakanJikaDikirim($section, $data);
+
+            if (auth()->check()) {
+                activity()
+                    ->performedOn($section)
+                    ->withProperties([
+                        'changed_fields' => array_keys($data),
+                    ])
+                    ->log('section_updated');
+            }
         });
     }
 
-    public function hapusKeterampilan(Keterampilan $keterampilan): void
+    public function hapusSection(Section $section, ?string $bankSoalKonteksId = null): void
     {
-        $memilikiAturanPenilaian = $keterampilan->jenisTes()
-            ->whereHas('aturanPenilaian', fn ($query) => $query->where('kode_keterampilan', $keterampilan->kode))
-            ->exists();
+        DB::transaction(function () use ($section, $bankSoalKonteksId): void {
+            $this->pastikanBankSoalKonteks($bankSoalKonteksId, null, $section->program_tes_id);
 
-        if ($keterampilan->bagianSoal()->exists()
-            || $keterampilan->soal()->exists()
-            || $keterampilan->bagianUjian()->exists()
-            || $keterampilan->kebijakanMateriSoal()->exists()
-            || $memilikiAturanPenilaian) {
-            throw new \RuntimeException('Skill tidak bisa dihapus karena masih digunakan di part soal, soal, atau section ujian.');
-        }
+            $memilikiAturanPenilaian = $section->programTes()
+                ->whereHas('aturanPenilaian', fn ($query) => $query->where('section_id', $section->id))
+                ->exists();
 
-        $this->keterampilanRepo->delete($keterampilan);
+            if ($section->partSoal()->exists()
+                || $section->soal()->exists()
+                || $section->partUjian()->exists()
+                || $memilikiAturanPenilaian) {
+                throw new \RuntimeException('Section tidak bisa dihapus karena masih digunakan di part soal, soal, atau section ujian.');
+            }
+
+            $this->kebijakanMateri->hapusUntukSection($section->id);
+
+            if (auth()->check()) {
+                activity()
+                    ->performedOn($section)
+                    ->withProperties([
+                        'program_tes_id' => $section->program_tes_id,
+                        'kode' => $section->kode,
+                        'nama' => $section->nama,
+                    ])
+                    ->log('section_deleted');
+            }
+
+            $this->sectionRepo->delete($section);
+        });
     }
 
     /**
-     * Terima daftar id skill dalam urutan baru; order dihitung ulang berdasarkan posisi.
+     * Terima daftar id section dalam urutan baru; order dihitung ulang berdasarkan posisi.
      *
      * @param  array<string>  $ids
      */
-    public function susunUlangKeterampilan(array $ids, string $jenisTesId): void
+    public function susunUlangSection(array $ids, string $programTesId): void
     {
-        $keterampilan = $this->keterampilanRepo->temukanBanyak($ids, $jenisTesId);
+        DB::transaction(function () use ($ids, $programTesId): void {
+            $ids = array_values($ids);
+            $section = $this->sectionRepo->semuaBerurutan($programTesId);
+            $idsDiminta = collect($ids)->sort()->values()->all();
+            $idsTersedia = $section->pluck('id')->sort()->values()->all();
 
-        foreach ($ids as $index => $id) {
-            $dataKeterampilan = $keterampilan->firstWhere('id', $id);
-            if (! $dataKeterampilan) {
-                continue;
+            if ($idsDiminta !== $idsTersedia) {
+                throw ValidationException::withMessages([
+                    'section' => 'Daftar section harus lengkap dan berasal dari program tes yang dipilih.',
+                ]);
             }
 
-            $urutanBaru = $index + 1;
-            if ($dataKeterampilan->urutan !== $urutanBaru) {
-                $this->keterampilanRepo->update($dataKeterampilan, ['urutan' => $urutanBaru]);
+            $sectionById = $section->keyBy('id');
+
+            // Clear current positions first so swapping two positions cannot hit the unique index.
+            foreach ($ids as $index => $id) {
+                $this->sectionRepo->update($sectionById[$id], ['urutan' => -($index + 1)]);
             }
-        }
+
+            foreach ($ids as $index => $id) {
+                $this->sectionRepo->update($sectionById[$id], ['urutan' => $index + 1]);
+            }
+
+            $programTes = $this->programTesRepo->find($programTesId);
+            if ($programTes !== null && auth()->check()) {
+                activity()
+                    ->performedOn($programTes)
+                    ->withProperties([
+                        'section' => $ids,
+                    ])
+                    ->log('section_reordered');
+            }
+        });
     }
 
     // ===== Exam Types =====
-    public function dataDaftarJenisTes(): array
+    public function dataDaftarProgramTes(): array
     {
         return [
-            'jenisTes' => $this->jenisTesRepo->semuaDenganJumlahBankSoal(),
+            'programTes' => $this->programTesRepo->semuaDenganJumlahBankSoal(),
         ];
     }
 
-    public function buatJenisTes(array $data): JenisTes
+    public function buatProgramTes(array $data): ProgramTes
     {
-        return DB::transaction(function () use ($data): JenisTes {
+        return DB::transaction(function () use ($data): ProgramTes {
             $data = $this->bersihkanTeksOpsional($data);
-            $data['kode'] = str_pad((string) $this->urutanKodeRepo->nilaiBerikutnya('jenis_tes'), 3, '0', STR_PAD_LEFT);
-            $jenisTes = $this->jenisTesRepo->create($data);
+            $data['kode'] = str_pad((string) $this->urutanKodeRepo->nilaiBerikutnya('program_tes'), 3, '0', STR_PAD_LEFT);
+            $programTes = $this->programTesRepo->create($data);
 
-            $this->urutanKodeRepo->pastikanRuang('keterampilan:'.$jenisTes->kode);
+            $this->urutanKodeRepo->pastikanRuang('section:'.$programTes->kode);
 
-            return $jenisTes;
+            return $programTes;
         });
     }
 
-    public function perbaruiJenisTes(JenisTes $jenisTes, array $data): void
+    public function perbaruiProgramTes(ProgramTes $programTes, array $data): void
     {
-        $this->jenisTesRepo->update($jenisTes, $this->bersihkanTeksOpsional($data));
+        $this->programTesRepo->update($programTes, $this->bersihkanTeksOpsional($data));
     }
 
-    public function hapusJenisTes(JenisTes $jenisTes): void
+    public function hapusProgramTes(ProgramTes $programTes): void
     {
-        if ($jenisTes->bankSoal()->exists()
-            || $jenisTes->keterampilan()->exists()
-            || $jenisTes->ujian()->exists()
-            || $jenisTes->aturanPenilaian()->exists()
-            || $jenisTes->interpretasiSkor()->exists()) {
-            throw new \RuntimeException('Jenis tes tidak bisa dihapus karena masih digunakan konfigurasi ujian.');
+        if ($programTes->bankSoal()->exists()
+            || $programTes->section()->exists()
+            || $programTes->ujian()->exists()
+            || $programTes->aturanPenilaian()->exists()
+            || $programTes->interpretasiSkor()->exists()
+            || $programTes->skemaPenilaian()->exists()) {
+            throw new \RuntimeException('Program tes tidak bisa dihapus karena masih digunakan konfigurasi ujian.');
         }
 
-        $this->jenisTesRepo->delete($jenisTes);
+        $this->programTesRepo->delete($programTes);
     }
 
-    public function dataDaftarBagianSoal(?string $bankSoalId = null, ?string $jenisTesId = null): array
+    public function dataDaftarPartSoal(?string $bankSoalId = null, ?string $programTesId = null): array
     {
-        $bagianSoal = $this->bagianSoalRepo->semuaDenganJumlahSoal();
+        $partSoal = $this->partSoalRepo->semuaDenganJumlahSoal();
+        $partSoalDalamUjianAktif = array_fill_keys(
+            $this->layananUjian->idPartSoalDalamUjianAktif($partSoal->pluck('id')->all()),
+            true,
+        );
+        $partSoal->each(fn (PartSoal $part): mixed => $part->setAttribute(
+            'dipakai_ujian_aktif',
+            isset($partSoalDalamUjianAktif[$part->id]),
+        ));
         $bankSoalTerpilih = $bankSoalId !== null ? $this->bankSoalRepo->find($bankSoalId) : null;
-        $jenisTesId = $bankSoalTerpilih !== null ? $bankSoalTerpilih->jenis_tes_id : $jenisTesId;
-        $bankSoal = $this->bankSoalRepo->semuaAktifDenganJenisTesBerurutan($jenisTesId);
+        $programTesId = $bankSoalTerpilih !== null ? $bankSoalTerpilih->program_tes_id : $programTesId;
+        $bankSoal = $this->bankSoalRepo->semuaAktifDenganProgramTesBerurutan($programTesId);
 
         if ($bankSoalId !== null) {
-            $bagianSoal = $bagianSoal->where('bank_soal_id', $bankSoalId)->values();
-        } elseif ($jenisTesId !== null) {
-            $bagianSoal = $bagianSoal->whereIn('bank_soal_id', $bankSoal->pluck('id'))->values();
+            $partSoal = $partSoal->where('bank_soal_id', $bankSoalId)->values();
+        } elseif ($programTesId !== null) {
+            $partSoal = $partSoal->whereIn('bank_soal_id', $bankSoal->pluck('id'))->values();
         }
 
         return [
-            'bagianSoal' => $bagianSoal,
+            'partSoal' => $partSoal,
             'bankSoal' => $bankSoal,
-            'jenisTes' => $this->jenisTesRepo->semuaAktifBerurutan(),
+            'programTes' => $this->programTesRepo->semuaAktifBerurutan(),
             'bankSoalTerpilihId' => $bankSoalId,
-            'jenisTesTerpilihId' => $jenisTesId,
-            'opsiKeterampilan' => $this->keterampilanRepo->semuaAktifBerurutan($jenisTesId)->map(fn (Keterampilan $keterampilan) => ['value' => $keterampilan->id, 'label' => $keterampilan->nama, 'kode' => $keterampilan->kode])->toArray(),
+            'programTesTerpilihId' => $programTesId,
+            'opsiSection' => $this->sectionRepo->semuaAktifBerurutan($programTesId)->map(fn (Section $section) => ['value' => $section->id, 'label' => $section->nama, 'kode' => $section->kode])->toArray(),
         ];
     }
 
-    public function buatBagianSoal(array $data): void
+    public function buatPartSoal(array $data): void
     {
-        $data = $this->bersihkanTeksOpsional($data);
-        $this->pastikanKeterampilanMilikBank($data['bank_soal_id'], $data['keterampilan_id']);
-        $data['urutan'] = $this->bagianSoalRepo->urutanBerikutnya($data['bank_soal_id'], $data['keterampilan_id']);
+        DB::transaction(function () use ($data): void {
+            $data = $this->bersihkanTeksOpsional($data);
+            $bankSoalKonteksId = $data['bank_soal_konteks_id'] ?? null;
+            unset($data['bank_soal_konteks_id']);
+            $this->pastikanBankSoalKonteks($bankSoalKonteksId, $data['bank_soal_id']);
+            $this->pastikanSectionMilikBank($data['bank_soal_id'], $data['section_id']);
+            $data['urutan'] = $this->partSoalRepo->urutanBerikutnya($data['bank_soal_id'], $data['section_id']);
+            $data['aktif'] = $data['aktif'] ?? true;
 
-        $this->bagianSoalRepo->create($data);
+            $partSoal = $this->partSoalRepo->create($data);
+            $this->layananUjian->sinkronkanPartSoalGlobal(new Collection([$partSoal]));
+        });
     }
 
-    public function perbaruiBagianSoal(BagianSoal $bagianSoal, array $data): void
+    public function perbaruiPartSoal(PartSoal $partSoal, array $data): void
     {
         $data = $this->bersihkanTeksOpsional($data);
+        $bankSoalKonteksId = $data['bank_soal_konteks_id'] ?? null;
+        unset($data['bank_soal_konteks_id']);
 
-        // Pindah bank/skill → urutan otomatis di akhir grup baru (hindari tabrakan urutan)
-        $bankSoalId = $data['bank_soal_id'] ?? $bagianSoal->bank_soal_id;
-        $keterampilanId = $data['keterampilan_id'] ?? $bagianSoal->keterampilan_id;
-        $this->pastikanKeterampilanMilikBank($bankSoalId, $keterampilanId);
+        DB::transaction(function () use ($partSoal, $data, $bankSoalKonteksId): void {
+            $partSoalSaatIni = $this->partSoalRepo->find($partSoal->id) ?? $partSoal;
+            $partSoalSaatIni->fill($data);
+            $kolomBerubah = array_keys($partSoalSaatIni->getDirty());
 
-        if ($bankSoalId !== $bagianSoal->bank_soal_id || $keterampilanId !== $bagianSoal->keterampilan_id) {
-            $data['urutan'] = $this->bagianSoalRepo->urutanBerikutnya($bankSoalId, $keterampilanId);
-        }
+            if ($kolomBerubah === []) {
+                return;
+            }
 
-        $this->bagianSoalRepo->update($bagianSoal, $data);
+            $bankSoalId = $data['bank_soal_id'];
+            $sectionId = $data['section_id'];
+            $this->pastikanBankSoalKonteks($bankSoalKonteksId, $bankSoalId);
+            $this->pastikanSectionMilikBank($bankSoalId, $sectionId);
+
+            $partSoalDipakaiUjianAktif = $this->layananUjian
+                ->idPartSoalDalamUjianAktif([$partSoalSaatIni->id]) !== [];
+            $kolomDilindungi = ['bank_soal_id', 'section_id', 'nama', 'petunjuk', 'aktif'];
+
+            if ($partSoalDipakaiUjianAktif && array_intersect($kolomBerubah, $kolomDilindungi) !== []) {
+                throw ValidationException::withMessages([
+                    'part_soal' => 'Part soal tidak dapat mengubah metadata karena sedang dipakai ujian aktif.',
+                ]);
+            }
+
+            $pindahGrup = $bankSoalId !== $partSoalSaatIni->bank_soal_id
+                || $sectionId !== $partSoalSaatIni->section_id;
+
+            if ($pindahGrup && $partSoalSaatIni->soal()->exists()) {
+                throw ValidationException::withMessages([
+                    'part_soal' => 'Part soal yang sudah memiliki soal tidak dapat dipindahkan bank atau sectionnya.',
+                ]);
+            }
+
+            // Pindah bank/section menempatkan part di akhir grup tujuan.
+            if ($pindahGrup) {
+                $data['urutan'] = $this->partSoalRepo->urutanBerikutnya($bankSoalId, $sectionId);
+            }
+
+            $partSoalDiperbarui = $this->partSoalRepo->update($partSoalSaatIni, $data);
+            $this->layananUjian->sinkronkanPartSoalGlobal(new Collection([$partSoalDiperbarui]));
+        });
     }
 
     /**
-     * Terima daftar id part dalam urutan baru; order dihitung ulang per (bank, skill).
+     * Terima daftar id part dalam urutan baru; order dihitung ulang per (bank, section).
      *
      * @param  array<string>  $ids
      */
-    public function susunUlangBagianSoal(array $ids): void
+    public function susunUlangPartSoal(array $ids): void
     {
-        $bagianSoal = $this->bagianSoalRepo->temukanBanyak($ids);
-        $peringkat = [];
+        DB::transaction(function () use ($ids): void {
+            $ids = array_values($ids);
+            $partSoal = $this->partSoalRepo->temukanBanyak($ids);
 
-        foreach ($ids as $index => $id) {
-            $dataBagianSoal = $bagianSoal->firstWhere('id', $id);
-            if (! $dataBagianSoal) {
-                continue;
+            if (count($ids) !== $partSoal->count()) {
+                throw ValidationException::withMessages([
+                    'part_soal' => 'Daftar part soal mengandung data yang tidak ditemukan.',
+                ]);
             }
 
-            $kunciKelompok = $dataBagianSoal->bank_soal_id.'|'.$dataBagianSoal->keterampilan_id;
-            $peringkat[$kunciKelompok] = ($peringkat[$kunciKelompok] ?? 0) + 1;
+            $kelompok = $partSoal
+                ->groupBy(fn (PartSoal $part): string => $part->bank_soal_id.'|'.$part->section_id);
 
-            if ($dataBagianSoal->urutan !== $peringkat[$kunciKelompok]) {
-                $this->bagianSoalRepo->update($dataBagianSoal, ['urutan' => $peringkat[$kunciKelompok]]);
+            if ($kelompok->count() !== 1) {
+                throw ValidationException::withMessages([
+                    'part_soal' => 'Urutan hanya dapat diubah untuk satu grup bank soal dan section.',
+                ]);
             }
-        }
+
+            $partGrup = $kelompok->first();
+            $partPertama = $partGrup->first();
+            $idsTersedia = $this->partSoalRepo->idBerurutanDenganBankDanSection(
+                $partPertama->bank_soal_id,
+                $partPertama->section_id,
+            );
+
+            if (collect($ids)->sort()->values()->all() !== collect($idsTersedia)->sort()->values()->all()) {
+                throw ValidationException::withMessages([
+                    'part_soal' => 'Daftar part soal harus lengkap untuk grup yang dipilih.',
+                ]);
+            }
+
+            $partSoalById = $partSoal->keyBy('id');
+            foreach ($ids as $index => $id) {
+                $this->partSoalRepo->update($partSoalById[$id], ['urutan' => -($index + 1)]);
+            }
+
+            $partSoalDiperbarui = new Collection;
+            foreach ($ids as $index => $id) {
+                $partSoalDiperbarui->push(
+                    $this->partSoalRepo->update($partSoalById[$id], ['urutan' => $index + 1]),
+                );
+            }
+
+            $this->layananUjian->sinkronkanPartSoalGlobal($partSoalDiperbarui);
+        });
     }
 
-    public function hapusBagianSoal(BagianSoal $bagianSoal): void
+    public function hapusPartSoal(PartSoal $partSoal, ?string $bankSoalKonteksId = null): void
     {
-        $this->bagianSoalRepo->delete($bagianSoal);
+        DB::transaction(function () use ($partSoal, $bankSoalKonteksId): void {
+            $partSoalSaatIni = $this->partSoalRepo->find($partSoal->id) ?? $partSoal;
+            $this->pastikanBankSoalKonteks($bankSoalKonteksId, $partSoalSaatIni->bank_soal_id);
+
+            if ($this->layananUjian->idPartSoalDalamUjianAktif([$partSoalSaatIni->id]) !== []) {
+                throw new \RuntimeException('Part soal tidak bisa dihapus karena sedang dipakai ujian aktif.');
+            }
+
+            if ($partSoalSaatIni->soal()->exists()) {
+                throw new \RuntimeException('Part soal tidak bisa dihapus karena masih memiliki soal.');
+            }
+
+            $this->layananUjian->hapusPartSoalDariUjianNonaktif([$partSoalSaatIni->id]);
+            $this->partSoalRepo->delete($partSoalSaatIni);
+        });
     }
 
     public function dataDaftarFakultas(): array
@@ -334,15 +494,15 @@ class LayananDataInduk
     public function dataDaftarInterpretasiSkor(): array
     {
         return [
-            'jenisTes' => $this->jenisTesRepo->semuaDenganJumlahBankSoal(),
+            'programTes' => $this->programTesRepo->semuaDenganJumlahBankSoal(),
         ];
     }
 
-    public function dataDaftarInterpretasiSkorPerJenisTes(JenisTes $jenisTes): array
+    public function dataDaftarInterpretasiSkorPerProgramTes(ProgramTes $programTes): array
     {
         return [
-            'jenisTes' => $jenisTes,
-            'interpretasiSkor' => $this->interpretasiSkorRepo->semuaDenganJenisTes($jenisTes->id),
+            'programTes' => $programTes,
+            'interpretasiSkor' => $this->interpretasiSkorRepo->semuaDenganProgramTes($programTes->id),
         ];
     }
 
@@ -354,11 +514,15 @@ class LayananDataInduk
     /**
      * @param  array<int, array<string, mixed>>  $data
      */
-    public function buatBanyakInterpretasiSkor(JenisTes $jenisTes, array $data): void
-    {
+    public function buatBanyakInterpretasiSkor(
+        ProgramTes $programTes,
+        array $data,
+        ?string $skemaPenilaianId = null,
+    ): void {
         $interpretasiSkor = array_map(
             static fn (array $row): array => [
-                'jenis_tes_id' => $jenisTes->id,
+                'skema_penilaian_id' => $skemaPenilaianId,
+                'program_tes_id' => $programTes->id,
                 'skor_minimum' => $row['skor_minimum'],
                 'skor_maksimum' => $row['skor_maksimum'],
                 'tingkat_cefr' => $row['tingkat_cefr'],
@@ -411,19 +575,19 @@ class LayananDataInduk
         return $this->programStudiRepo->semuaAktifBerurutan();
     }
 
-    public function bagianSoalAktif(): Collection
+    public function partSoalAktif(): Collection
     {
-        return $this->bagianSoalRepo->semuaAktifBerurutan();
+        return $this->partSoalRepo->semuaAktifBerurutan();
     }
 
-    public function keterampilanAktif(): Collection
+    public function sectionAktif(): Collection
     {
-        return $this->keterampilanRepo->semuaAktifBerurutan();
+        return $this->sectionRepo->semuaAktifBerurutan();
     }
 
-    public function jenisTesAktif(): Collection
+    public function programTesAktif(): Collection
     {
-        return $this->jenisTesRepo->semuaAktifBerurutan();
+        return $this->programTesRepo->semuaAktifBerurutan();
     }
 
     private function bersihkanTeksOpsional(array $data): array
@@ -440,7 +604,7 @@ class LayananDataInduk
     /**
      * @param  array<string, mixed>  $data
      */
-    private function simpanKebijakanJikaDikirim(Keterampilan $keterampilan, array $data): void
+    private function simpanKebijakanJikaDikirim(Section $section, array $data): void
     {
         if (! array_key_exists('ketentuan_materi', $data)
             && ! array_key_exists('aturan_media', $data)) {
@@ -453,7 +617,7 @@ class LayananDataInduk
             || (is_array($aturanMedia) && count(array_filter($aturanMedia, fn ($value): bool => $value !== null)) > 0);
 
         if (! $adaNilaiPolicy) {
-            $this->kebijakanMateri->hapusUntukKeterampilan($keterampilan->id);
+            $this->kebijakanMateri->hapusUntukSection($section->id);
 
             return;
         }
@@ -468,21 +632,46 @@ class LayananDataInduk
             ]);
         }
 
-        $this->kebijakanMateri->simpanUntukKeterampilan(
-            $keterampilan->id,
+        $this->kebijakanMateri->simpanUntukSection(
+            $section->id,
             $ketentuanMateri,
             $aturanMedia,
         );
     }
 
-    private function pastikanKeterampilanMilikBank(string $bankSoalId, string $keterampilanId): void
+    private function pastikanBankSoalKonteks(
+        ?string $bankSoalKonteksId,
+        ?string $bankSoalId = null,
+        ?string $programTesId = null,
+    ): void {
+        if ($bankSoalKonteksId === null) {
+            return;
+        }
+
+        $bankSoalKonteks = $this->bankSoalRepo->find($bankSoalKonteksId);
+        if ($bankSoalKonteks === null
+            || ($bankSoalId !== null && $bankSoalKonteksId !== $bankSoalId)
+            || ($programTesId !== null && $bankSoalKonteks->program_tes_id !== $programTesId)) {
+            throw ValidationException::withMessages([
+                'bank_soal_konteks_id' => 'Konteks bank soal tidak sesuai dengan data yang diubah.',
+            ]);
+        }
+
+        if ($this->bankSoalRepo->digunakanDalamUjian($bankSoalKonteksId)) {
+            throw ValidationException::withMessages([
+                'bank_soal_konteks_id' => 'Data bank soal tidak dapat diubah karena sudah digunakan di ujian.',
+            ]);
+        }
+    }
+
+    private function pastikanSectionMilikBank(string $bankSoalId, string $sectionId): void
     {
         $bankSoal = $this->bankSoalRepo->find($bankSoalId);
-        $keterampilan = $this->keterampilanRepo->find($keterampilanId);
+        $section = $this->sectionRepo->find($sectionId);
 
-        if ($bankSoal === null || $keterampilan === null || $keterampilan->jenis_tes_id !== $bankSoal->jenis_tes_id) {
+        if ($bankSoal === null || $section === null || $section->program_tes_id !== $bankSoal->program_tes_id) {
             throw ValidationException::withMessages([
-                'keterampilan_id' => 'Keterampilan harus berasal dari jenis tes yang sama dengan bank soal.',
+                'section_id' => 'Section harus berasal dari program tes yang sama dengan bank soal.',
             ]);
         }
     }

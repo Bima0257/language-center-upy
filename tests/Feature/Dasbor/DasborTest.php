@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Dasbor;
 
-use App\Models\JenisTes;
 use App\Models\Pengguna;
 use App\Models\PeriodeUjian;
+use App\Models\ProgramTes;
 use App\Models\SlotUjian;
 use App\Models\Ujian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,20 +54,20 @@ class DasborTest extends TestCase
 
     public function test_mahasiswa_dapat_mengakses_dasbor(): void
     {
-        $this->masukSebagai('student');
+        $this->masukSebagai('peserta');
 
         $this->get('/dasbor')->assertOk();
     }
 
     public function test_dasbor_mahasiswa_dengan_waktu_slot_memuat_detik(): void
     {
-        $jenisTes = JenisTes::firstOrCreate(['nama' => 'TOEFL iBT'], [
+        $programTes = ProgramTes::firstOrCreate(['nama' => 'EPT'], [
             'batas_pelanggaran' => 3,
             'aktif' => true,
         ]);
 
         $ujian = Ujian::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'judul' => 'Test Carbon',
             'deskripsi' => 'Regression test',
             'mode' => 'tryout',
@@ -93,7 +93,7 @@ class DasborTest extends TestCase
             'aktif' => true,
         ]);
 
-        $this->masukSebagai('student');
+        $this->masukSebagai('peserta');
 
         $this->get('/dasbor')->assertOk();
     }

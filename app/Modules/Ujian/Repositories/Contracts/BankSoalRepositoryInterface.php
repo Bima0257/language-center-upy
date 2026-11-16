@@ -7,13 +7,13 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface BankSoalRepositoryInterface
 {
-    public function semuaDenganJenisTesDanJumlah(?string $jenisTesId = null): Collection;
+    public function semuaDenganProgramTesDanJumlah(?string $programTesId = null): Collection;
 
     public function semuaAktifBerurutan(): Collection;
 
-    public function semuaAktifDenganJenisTesDanJumlah(?string $jenisTesId = null): Collection;
+    public function semuaAktifDenganProgramTesDanJumlah(?string $programTesId = null): Collection;
 
-    public function semuaAktifDenganJenisTesBerurutan(?string $jenisTesId = null): Collection;
+    public function semuaAktifDenganProgramTesBerurutan(?string $programTesId = null): Collection;
 
     public function find(string $id): ?BankSoal;
 

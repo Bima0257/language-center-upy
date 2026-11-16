@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Ujian;
 
-use App\Models\BagianSoal;
 use App\Models\BankSoal;
-use App\Models\JenisTes;
 use App\Models\KebijakanMateriSoal;
-use App\Models\Keterampilan;
 use App\Models\MateriSoal;
+use App\Models\PartSoal;
 use App\Models\Pengguna;
+use App\Models\ProgramTes;
+use App\Models\Section;
 use App\Models\Soal;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -38,40 +38,45 @@ class PustakaSoalTest extends TestCase
 
     private function bankSoal(): BankSoal
     {
-        return BankSoal::firstOrCreate(['nama' => 'Bank Soal 2022'], [
-            'jenis_tes_id' => JenisTes::first()->id,
+        return BankSoal::firstOrCreate(['nama' => 'Bank Soal Latihan'], [
+            'program_tes_id' => ProgramTes::first()->id,
             'aktif' => true,
         ]);
     }
 
-    private function bagianMembaca(): BagianSoal
+    private function bankSoalTerkunci(): BankSoal
     {
-        $keterampilan = Keterampilan::where('nama', 'Reading')->first();
+        return BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
+    }
 
-        return BagianSoal::where('bank_soal_id', $this->bankSoal()->id)
-            ->where('keterampilan_id', $keterampilan->id)
+    private function partMembaca(): PartSoal
+    {
+        $section = Section::where('nama', 'Reading')->first();
+
+        return PartSoal::where('bank_soal_id', $this->bankSoal()->id)
+            ->where('section_id', $section->id)
             ->orderBy('urutan')
             ->first();
     }
 
-    private function bagianMenyimak(): BagianSoal
+    private function partMenyimak(): PartSoal
     {
-        $keterampilan = Keterampilan::where('nama', 'Listening')->first();
+        $section = Section::where('nama', 'Listening')->first();
 
-        return BagianSoal::where('bank_soal_id', $this->bankSoal()->id)
-            ->where('keterampilan_id', $keterampilan->id)
+        return PartSoal::where('bank_soal_id', $this->bankSoal()->id)
+            ->where('section_id', $section->id)
             ->first();
     }
 
-    private function bagianMembacaLain(): BagianSoal
+    private function partMembacaLain(): PartSoal
     {
-        $bagianMembaca = $this->bagianMembaca();
+        $partMembaca = $this->partMembaca();
 
-        return BagianSoal::create([
-            'bank_soal_id' => $bagianMembaca->bank_soal_id,
-            'keterampilan_id' => $bagianMembaca->keterampilan_id,
-            'nama' => 'Bagian Membaca Alternatif',
-            'urutan' => $bagianMembaca->urutan + 1,
+        return PartSoal::create([
+            'bank_soal_id' => $partMembaca->bank_soal_id,
+            'section_id' => $partMembaca->section_id,
+            'nama' => 'Part Membaca Alternatif',
+            'urutan' => $partMembaca->urutan + 1,
             'aktif' => true,
         ]);
     }
@@ -114,7 +119,7 @@ class PustakaSoalTest extends TestCase
 
     public function test_peran_tanpa_izin_ditolak(): void
     {
-        $this->masukSebagai('student');
+        $this->masukSebagai('peserta');
 
         $this->get('/pustaka-soal')->assertForbidden();
     }
@@ -126,129 +131,243 @@ class PustakaSoalTest extends TestCase
         $this->get('/pustaka-soal')->assertOk();
     }
 
-    public function test_pustaka_soal_memilih_keterampilan_dan_bagian_pertama_secara_default(): void
+    public function test_bank_yang_dipakai_ujian_ditandai_terkunci_di_pustaka(): void
+    {
+        $this->masukSebagai('admin');
+        $bankSoal = $this->bankSoalTerkunci();
+
+        $halaman = $this->get('/pustaka-soal?bank_soal_id='.$bankSoal->id)
+            ->assertOk()
+            ->inertiaPage();
+
+        $this->assertTrue($halaman['props']['bankTerkunci']);
+    }
+
+    public function test_section_tidak_dapat_diubah_dari_pustaka_bank_terkunci(): void
+    {
+        $this->masukSebagai('admin');
+        $bankSoal = $this->bankSoalTerkunci();
+        $section = Section::where('program_tes_id', $bankSoal->program_tes_id)
+            ->where('nama', 'Reading')
+            ->firstOrFail();
+
+        $this->put(route('admin.data-induk.section.perbarui', $section), [
+            'bank_soal_konteks_id' => $bankSoal->id,
+            'nama' => 'Reading Terkunci',
+            'deskripsi' => $section->deskripsi,
+            'aktif' => $section->aktif,
+        ])->assertSessionHasErrors('bank_soal_konteks_id');
+
+        $this->assertDatabaseHas('section', [
+            'id' => $section->id,
+            'nama' => 'Reading',
+        ]);
+    }
+
+    public function test_section_baru_tidak_dapat_dibuat_dari_pustaka_bank_terkunci(): void
+    {
+        $this->masukSebagai('admin');
+        $bankSoal = $this->bankSoalTerkunci();
+
+        $this->post(route('admin.data-induk.section.simpan'), [
+            'bank_soal_konteks_id' => $bankSoal->id,
+            'program_tes_id' => $bankSoal->program_tes_id,
+            'nama' => 'Section Terkunci Baru',
+            'aktif' => true,
+        ])->assertSessionHasErrors('bank_soal_konteks_id');
+
+        $this->assertDatabaseMissing('section', ['nama' => 'Section Terkunci Baru']);
+    }
+
+    public function test_penghapusan_section_dari_pustaka_bank_terkunci_ditolak(): void
+    {
+        $this->masukSebagai('admin');
+        $bankSoal = $this->bankSoalTerkunci();
+        $section = Section::where('program_tes_id', $bankSoal->program_tes_id)
+            ->where('nama', 'Reading')
+            ->firstOrFail();
+
+        $this->delete(route('admin.data-induk.section.hapus', $section), [
+            'bank_soal_konteks_id' => $bankSoal->id,
+        ])->assertSessionHasErrors('bank_soal_konteks_id');
+
+        $this->assertDatabaseHas('section', ['id' => $section->id]);
+    }
+
+    public function test_part_soal_tidak_dapat_diubah_dari_pustaka_bank_terkunci(): void
+    {
+        $this->masukSebagai('admin');
+        $bankSoal = $this->bankSoalTerkunci();
+        $partSoal = PartSoal::where('bank_soal_id', $bankSoal->id)->firstOrFail();
+
+        $this->put(route('admin.data-induk.part-soal.perbarui', $partSoal), [
+            'bank_soal_konteks_id' => $bankSoal->id,
+            'bank_soal_id' => $partSoal->bank_soal_id,
+            'section_id' => $partSoal->section_id,
+            'nama' => 'Part Terkunci',
+            'petunjuk' => $partSoal->petunjuk,
+            'aktif' => $partSoal->aktif,
+        ])->assertSessionHasErrors('bank_soal_konteks_id');
+
+        $this->assertDatabaseHas('part_soal', [
+            'id' => $partSoal->id,
+            'nama' => $partSoal->nama,
+        ]);
+    }
+
+    public function test_part_soal_baru_tidak_dapat_dibuat_dari_pustaka_bank_terkunci(): void
+    {
+        $this->masukSebagai('admin');
+        $bankSoal = $this->bankSoalTerkunci();
+        $partSoal = PartSoal::where('bank_soal_id', $bankSoal->id)->firstOrFail();
+
+        $this->post(route('admin.data-induk.part-soal.simpan'), [
+            'bank_soal_konteks_id' => $bankSoal->id,
+            'bank_soal_id' => $bankSoal->id,
+            'section_id' => $partSoal->section_id,
+            'nama' => 'Part Terkunci Baru',
+            'aktif' => true,
+        ])->assertSessionHasErrors('bank_soal_konteks_id');
+
+        $this->assertDatabaseMissing('part_soal', ['nama' => 'Part Terkunci Baru']);
+    }
+
+    public function test_penghapusan_part_soal_dari_pustaka_bank_terkunci_ditolak(): void
+    {
+        $this->masukSebagai('admin');
+        $bankSoal = $this->bankSoalTerkunci();
+        $partSoal = PartSoal::where('bank_soal_id', $bankSoal->id)->firstOrFail();
+
+        $this->delete(route('admin.data-induk.part-soal.hapus', $partSoal), [
+            'bank_soal_konteks_id' => $bankSoal->id,
+        ])->assertSessionHasErrors('bank_soal_konteks_id');
+
+        $this->assertDatabaseHas('part_soal', ['id' => $partSoal->id]);
+    }
+
+    public function test_pustaka_soal_memilih_section_dan_part_pertama_secara_default(): void
     {
         $this->masukSebagai('admin');
 
-        $bankSoal = BankSoal::where('nama', 'Bank Soal 2022')->firstOrFail();
-        $keterampilanPertama = Keterampilan::where('jenis_tes_id', $bankSoal->jenis_tes_id)
+        $bankSoal = BankSoal::where('nama', 'Bank Soal Latihan')->firstOrFail();
+        $sectionPertama = Section::where('program_tes_id', $bankSoal->program_tes_id)
             ->where('aktif', true)
             ->orderBy('urutan')
             ->firstOrFail();
-        $bagianSoalPertama = BagianSoal::where('bank_soal_id', $bankSoal->id)
-            ->where('keterampilan_id', $keterampilanPertama->id)
+        $partSoalPertama = PartSoal::where('bank_soal_id', $bankSoal->id)
+            ->where('section_id', $sectionPertama->id)
             ->where('aktif', true)
             ->orderBy('urutan')
             ->firstOrFail();
 
-        $page = $this->get('/pustaka-soal?bank_soal_id='.$bankSoal->id.'&jenis_tes_id='.$bankSoal->jenis_tes_id)
+        $page = $this->get('/pustaka-soal?bank_soal_id='.$bankSoal->id.'&program_tes_id='.$bankSoal->program_tes_id)
             ->assertOk()
             ->inertiaPage();
 
         $this->assertSame($bankSoal->id, $page['props']['bankSoalTerpilih']['id']);
         $this->assertSame($bankSoal->nama, $page['props']['bankSoalTerpilih']['nama']);
-        $this->assertSame($keterampilanPertama->id, $page['props']['filter']['keterampilan']);
-        $this->assertSame($bagianSoalPertama->id, $page['props']['filter']['bagian_soal_id']);
+        $this->assertSame($sectionPertama->id, $page['props']['filter']['section']);
+        $this->assertSame($partSoalPertama->id, $page['props']['filter']['part_soal_id']);
         $this->assertTrue(collect($page['props']['soal']['data'])->every(
-            fn (array $soal): bool => $soal['keterampilan_id'] === $keterampilanPertama->id
-                && $soal['bagian_soal_id'] === $bagianSoalPertama->id,
+            fn (array $soal): bool => $soal['section_id'] === $sectionPertama->id
+                && $soal['part_soal_id'] === $partSoalPertama->id,
         ));
 
-        $keterampilanLain = Keterampilan::where('jenis_tes_id', $bankSoal->jenis_tes_id)
+        $sectionLain = Section::where('program_tes_id', $bankSoal->program_tes_id)
             ->where('aktif', true)
-            ->where('id', '!=', $keterampilanPertama->id)
+            ->where('id', '!=', $sectionPertama->id)
             ->orderBy('urutan')
             ->firstOrFail();
-        $bagianSoalLain = BagianSoal::where('bank_soal_id', $bankSoal->id)
-            ->where('keterampilan_id', $keterampilanLain->id)
+        $partSoalLain = PartSoal::where('bank_soal_id', $bankSoal->id)
+            ->where('section_id', $sectionLain->id)
             ->where('aktif', true)
             ->orderBy('urutan')
             ->firstOrFail();
         $filteredPage = $this->get(
             '/pustaka-soal?bank_soal_id='.$bankSoal->id
-                .'&jenis_tes_id='.$bankSoal->jenis_tes_id
-                .'&keterampilan='.$keterampilanLain->id
-                .'&bagian_soal_id='.$bagianSoalLain->id,
+                .'&program_tes_id='.$bankSoal->program_tes_id
+                .'&section='.$sectionLain->id
+                .'&part_soal_id='.$partSoalLain->id,
         )->assertOk()->inertiaPage();
 
-        $this->assertSame($keterampilanLain->id, $filteredPage['props']['filter']['keterampilan']);
-        $this->assertSame($bagianSoalLain->id, $filteredPage['props']['filter']['bagian_soal_id']);
+        $this->assertSame($sectionLain->id, $filteredPage['props']['filter']['section']);
+        $this->assertSame($partSoalLain->id, $filteredPage['props']['filter']['part_soal_id']);
     }
 
-    public function test_pustaka_soal_menentukan_bank_dari_filter_bagian_soal(): void
+    public function test_pustaka_soal_menentukan_bank_dari_filter_part_soal(): void
     {
         $this->masukSebagai('admin');
 
-        $bankSoal = BankSoal::where('nama', 'Bank Soal 2022')->firstOrFail();
-        $keterampilan = Keterampilan::where('jenis_tes_id', $bankSoal->jenis_tes_id)
+        $bankSoal = BankSoal::where('nama', 'Bank Soal Latihan')->firstOrFail();
+        $section = Section::where('program_tes_id', $bankSoal->program_tes_id)
             ->where('aktif', true)
             ->orderBy('urutan')
             ->firstOrFail();
-        $bagianSoal = BagianSoal::where('bank_soal_id', $bankSoal->id)
-            ->where('keterampilan_id', $keterampilan->id)
+        $partSoal = PartSoal::where('bank_soal_id', $bankSoal->id)
+            ->where('section_id', $section->id)
             ->where('aktif', true)
             ->orderBy('urutan')
             ->firstOrFail();
 
-        $page = $this->get('/pustaka-soal?bagian_soal_id='.$bagianSoal->id)
+        $page = $this->get('/pustaka-soal?part_soal_id='.$partSoal->id)
             ->assertOk()
             ->inertiaPage();
 
-        $this->assertSame($bagianSoal->bank_soal_id, $page['props']['bankSoalTerpilihId']);
-        $this->assertSame($bagianSoal->bank_soal_id, $page['props']['filter']['bank_soal_id']);
-        $this->assertSame($bagianSoal->keterampilan_id, $page['props']['filter']['keterampilan']);
-        $this->assertSame($bagianSoal->id, $page['props']['filter']['bagian_soal_id']);
+        $this->assertSame($partSoal->bank_soal_id, $page['props']['bankSoalTerpilihId']);
+        $this->assertSame($partSoal->bank_soal_id, $page['props']['filter']['bank_soal_id']);
+        $this->assertSame($partSoal->section_id, $page['props']['filter']['section']);
+        $this->assertSame($partSoal->id, $page['props']['filter']['part_soal_id']);
     }
 
-    public function test_pustaka_soal_fallback_ke_keterampilan_aktif_jika_filter_tidak_valid(): void
+    public function test_pustaka_soal_fallback_ke_section_aktif_jika_filter_tidak_valid(): void
     {
         $this->masukSebagai('admin');
 
-        $bankSoal = BankSoal::where('nama', 'Bank Soal 2022')->firstOrFail();
-        $keterampilanNonaktif = Keterampilan::where('jenis_tes_id', $bankSoal->jenis_tes_id)
+        $bankSoal = BankSoal::where('nama', 'Bank Soal Latihan')->firstOrFail();
+        $sectionNonaktif = Section::where('program_tes_id', $bankSoal->program_tes_id)
             ->where('aktif', true)
             ->orderBy('urutan')
             ->firstOrFail();
-        $keterampilanNonaktif->update(['aktif' => false]);
+        $sectionNonaktif->update(['aktif' => false]);
 
-        $keterampilanAktif = Keterampilan::where('jenis_tes_id', $bankSoal->jenis_tes_id)
+        $sectionAktif = Section::where('program_tes_id', $bankSoal->program_tes_id)
             ->where('aktif', true)
             ->orderBy('urutan')
             ->firstOrFail();
 
         $page = $this->get(
             '/pustaka-soal?bank_soal_id='.$bankSoal->id
-                .'&jenis_tes_id='.$bankSoal->jenis_tes_id
-                .'&keterampilan='.$keterampilanNonaktif->id,
+                .'&program_tes_id='.$bankSoal->program_tes_id
+                .'&section='.$sectionNonaktif->id,
         )->assertOk()->inertiaPage();
 
-        $this->assertSame($keterampilanAktif->id, $page['props']['filter']['keterampilan']);
+        $this->assertSame($sectionAktif->id, $page['props']['filter']['section']);
     }
 
-    public function test_bulk_create_membawa_filter_keterampilan_dan_bagian_soal_dari_pustaka(): void
+    public function test_bulk_create_membawa_filter_section_dan_part_soal_dari_pustaka(): void
     {
         $this->masukSebagai('admin');
 
-        $bankSoal = BankSoal::where('nama', 'Bank Soal 2022')->firstOrFail();
-        $keterampilan = Keterampilan::where('jenis_tes_id', $bankSoal->jenis_tes_id)
+        $bankSoal = BankSoal::where('nama', 'Bank Soal Latihan')->firstOrFail();
+        $section = Section::where('program_tes_id', $bankSoal->program_tes_id)
             ->where('nama', 'Reading')
             ->where('aktif', true)
             ->firstOrFail();
-        $bagianSoal = BagianSoal::where('bank_soal_id', $bankSoal->id)
-            ->where('keterampilan_id', $keterampilan->id)
+        $partSoal = PartSoal::where('bank_soal_id', $bankSoal->id)
+            ->where('section_id', $section->id)
             ->where('aktif', true)
             ->orderBy('urutan')
             ->firstOrFail();
 
         $page = $this->get(
             '/pustaka-soal/tambah?bank_soal_id='.$bankSoal->id
-                .'&keterampilan='.$keterampilan->id
-                .'&bagian_soal_id='.$bagianSoal->id,
+                .'&section='.$section->id
+                .'&part_soal_id='.$partSoal->id,
         )->assertOk()->inertiaPage();
 
         $this->assertSame($bankSoal->id, $page['props']['bankSoalTerpilih']);
-        $this->assertSame($keterampilan->id, $page['props']['filterKembali']['keterampilan']);
-        $this->assertSame($bagianSoal->id, $page['props']['filterKembali']['bagian_soal_id']);
+        $this->assertSame($section->id, $page['props']['filterKembali']['section']);
+        $this->assertSame($partSoal->id, $page['props']['filterKembali']['part_soal_id']);
         $this->assertArrayHasKey('materiSoal', $page['props']);
         $this->assertTrue(collect($page['props']['materiSoal'])->every(
             fn (array $materi): bool => $materi['bank_soal_id'] === $bankSoal->id,
@@ -256,20 +375,20 @@ class PustakaSoalTest extends TestCase
         $this->assertArrayNotHasKey('grupMateriSoal', $page['props']);
     }
 
-    public function test_admin_dapat_menavigasi_hierarki_jenis_tes_dan_bank_soal(): void
+    public function test_admin_dapat_menavigasi_hierarki_program_tes_dan_bank_soal(): void
     {
         $this->masukSebagai('admin');
 
-        $bankSoal = BankSoal::where('nama', 'Bank Soal 2022')->firstOrFail();
-        $jenisTes = $bankSoal->jenisTes;
-        $jenisTesLain = JenisTes::create([
+        $bankSoal = BankSoal::where('nama', 'Bank Soal Latihan')->firstOrFail();
+        $programTes = $bankSoal->programTes;
+        $programTesLain = ProgramTes::create([
             'kode' => '010',
-            'nama' => 'Jenis Tes Navigasi Lain',
+            'nama' => 'Program Tes Navigasi Lain',
             'batas_pelanggaran' => 3,
             'aktif' => true,
         ]);
         $bankSoalLain = BankSoal::create([
-            'jenis_tes_id' => $jenisTesLain->id,
+            'program_tes_id' => $programTesLain->id,
             'nama' => 'Bank Soal Navigasi Lain',
             'aktif' => true,
         ]);
@@ -277,92 +396,92 @@ class PustakaSoalTest extends TestCase
         $root = $this->get('/pustaka-soal')
             ->assertOk()
             ->inertiaPage();
-        $bank = $this->get('/pustaka-soal?jenis_tes_id='.$jenisTes->id)
+        $bank = $this->get('/pustaka-soal?program_tes_id='.$programTes->id)
             ->assertOk()
             ->inertiaPage();
-        $detail = $this->get('/pustaka-soal?jenis_tes_id='.$jenisTes->id.'&bank_soal_id='.$bankSoal->id)
+        $detail = $this->get('/pustaka-soal?program_tes_id='.$programTes->id.'&bank_soal_id='.$bankSoal->id)
             ->assertOk()
             ->inertiaPage();
 
         $rootBank = collect($root['props']['bankSoal'])->firstWhere('id', $bankSoal->id);
         $bankIds = collect($bank['props']['bankSoal'])->pluck('id');
 
-        $this->assertNull($root['props']['jenisTesTerpilihId']);
+        $this->assertNull($root['props']['programTesTerpilihId']);
         $this->assertNull($root['props']['bankSoalTerpilihId']);
         $this->assertNotNull($rootBank);
         $this->assertSame($bankSoal->soal()->count(), (int) $rootBank['soal_count']);
-        $this->assertSame($jenisTes->id, $bank['props']['jenisTesTerpilihId']);
+        $this->assertSame($programTes->id, $bank['props']['programTesTerpilihId']);
         $this->assertTrue($bankIds->contains($bankSoal->id));
         $this->assertFalse($bankIds->contains($bankSoalLain->id));
-        $this->assertSame($jenisTes->id, $detail['props']['jenisTesTerpilihId']);
+        $this->assertSame($programTes->id, $detail['props']['programTesTerpilihId']);
         $this->assertSame($bankSoal->id, $detail['props']['bankSoalTerpilihId']);
     }
 
-    public function test_admin_dapat_melihat_bank_soal_hanya_dari_kategori_terpilih(): void
+    public function test_admin_dapat_melihat_bank_soal_hanya_dari_program_tes_terpilih(): void
     {
         $this->masukSebagai('admin');
 
-        $jenisTes = JenisTes::create([
+        $programTes = ProgramTes::create([
             'kode' => '010',
-            'nama' => 'Kategori Bank Soal Detail',
+            'nama' => 'Program Tes Bank Soal Detail',
             'batas_pelanggaran' => 3,
             'aktif' => true,
         ]);
-        $jenisTesLain = JenisTes::create([
+        $programTesLain = ProgramTes::create([
             'kode' => '011',
-            'nama' => 'Kategori Bank Soal Lain',
+            'nama' => 'Program Tes Bank Soal Lain',
             'batas_pelanggaran' => 3,
             'aktif' => true,
         ]);
         $bankSoalTerpilih = BankSoal::create([
-            'jenis_tes_id' => $jenisTes->id,
-            'nama' => 'Bank Soal Dalam Kategori',
+            'program_tes_id' => $programTes->id,
+            'nama' => 'Bank Soal Dalam Program Tes',
             'aktif' => true,
         ]);
         $bankSoalLain = BankSoal::create([
-            'jenis_tes_id' => $jenisTesLain->id,
-            'nama' => 'Bank Soal Di Luar Kategori',
+            'program_tes_id' => $programTesLain->id,
+            'nama' => 'Bank Soal Di Luar Program Tes',
             'aktif' => true,
         ]);
 
-        $page = $this->get("/pustaka-soal/bank-soal/kategori/{$jenisTes->id}")
+        $page = $this->get("/pustaka-soal/bank-soal/program-tes/{$programTes->id}")
             ->assertOk()
             ->inertiaPage();
 
         $bankSoalIds = collect($page['props']['bankSoal'])->pluck('id');
 
         $this->assertSame('BankSoal/KelolaBankSoal/index', $page['component']);
-        $this->assertSame($jenisTes->id, $page['props']['kategori']['id']);
+        $this->assertSame($programTes->id, $page['props']['programTesTerpilih']['id']);
         $this->assertTrue($bankSoalIds->contains($bankSoalTerpilih->id));
         $this->assertFalse($bankSoalIds->contains($bankSoalLain->id));
     }
 
-    public function test_bank_soal_tidak_dapat_dipindah_ke_jenis_tes_nonaktif(): void
+    public function test_bank_soal_tidak_dapat_dipindah_ke_program_tes_nonaktif(): void
     {
         $this->masukSebagai('admin');
 
-        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->first();
-        $jenisTesNonaktif = JenisTes::create([
+        $programTes = ProgramTes::where('nama', 'EPT')->first();
+        $programTesNonaktif = ProgramTes::create([
             'kode' => '010',
-            'nama' => 'Jenis Tes Nonaktif Untuk Bank',
+            'nama' => 'Program Tes Nonaktif Untuk Bank',
             'batas_pelanggaran' => 3,
             'aktif' => false,
         ]);
         $bankSoal = BankSoal::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'nama' => 'Bank Untuk Uji Perpindahan',
             'aktif' => true,
         ]);
 
         $this->put("/pustaka-soal/bank-soal/{$bankSoal->id}", [
-            'jenis_tes_id' => $jenisTesNonaktif->id,
+            'program_tes_id' => $programTesNonaktif->id,
             'nama' => $bankSoal->nama,
             'aktif' => true,
-        ])->assertSessionHasErrors('jenis_tes_id');
+        ])->assertSessionHasErrors('program_tes_id');
 
         $this->assertDatabaseHas('bank_soal', [
             'id' => $bankSoal->id,
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
         ]);
     }
 
@@ -371,15 +490,15 @@ class PustakaSoalTest extends TestCase
         $this->masukSebagai('admin');
 
         $materiSoal = $this->buatMateriTeks();
-        $keterampilan = Keterampilan::where('nama', 'Reading')->first();
+        $section = Section::where('nama', 'Reading')->first();
 
         $this->post('/pustaka-soal', [
             'bank_soal_id' => $this->bankSoal()->id,
             'materi_soal_id' => $materiSoal->id,
             'soal' => [
                 [
-                    'keterampilan_id' => $keterampilan->id,
-                    'bagian_soal_id' => $this->bagianMembaca()->id,
+                    'section_id' => $section->id,
+                    'part_soal_id' => $this->partMembaca()->id,
                     'teks_soal' => 'What is the main topic?',
                     'pilihan_a' => 'A',
                     'pilihan_b' => 'B',
@@ -392,7 +511,7 @@ class PustakaSoalTest extends TestCase
 
         $this->assertDatabaseHas('soal', [
             'teks_soal' => 'What is the main topic?',
-            'keterampilan_id' => $keterampilan->id,
+            'section_id' => $section->id,
             'materi_soal_id' => $materiSoal->id,
         ]);
     }
@@ -402,16 +521,16 @@ class PustakaSoalTest extends TestCase
         $this->masukSebagai('admin');
 
         $materiSoal = $this->buatMateriTeks();
-        $keterampilan = Keterampilan::where('nama', 'Reading')->first();
-        $bagianSoal = $this->bagianMembaca();
+        $section = Section::where('nama', 'Reading')->first();
+        $partSoal = $this->partMembaca();
 
         foreach (['Soal pertama dalam group', 'Soal kedua dalam group'] as $teksSoal) {
             $this->post('/pustaka-soal', [
                 'bank_soal_id' => $this->bankSoal()->id,
                 'materi_soal_id' => $materiSoal->id,
                 'soal' => [[
-                    'keterampilan_id' => $keterampilan->id,
-                    'bagian_soal_id' => $bagianSoal->id,
+                    'section_id' => $section->id,
+                    'part_soal_id' => $partSoal->id,
                     'teks_soal' => $teksSoal,
                     'pilihan_a' => 'A',
                     'pilihan_b' => 'B',
@@ -430,15 +549,15 @@ class PustakaSoalTest extends TestCase
         $this->masukSebagai('admin');
 
         $materiSoal = $this->buatMateriTeks();
-        $keterampilan = Keterampilan::where('nama', 'Reading')->first();
-        $bagianSoalLain = $this->bagianMembacaLain();
+        $section = Section::where('nama', 'Reading')->first();
+        $partSoalLain = $this->partMembacaLain();
 
         $this->post('/pustaka-soal', [
             'bank_soal_id' => $this->bankSoal()->id,
             'materi_soal_id' => $materiSoal->id,
             'soal' => [[
-                'keterampilan_id' => $keterampilan->id,
-                'bagian_soal_id' => $this->bagianMembaca()->id,
+                'section_id' => $section->id,
+                'part_soal_id' => $this->partMembaca()->id,
                 'teks_soal' => 'Soal group pertama',
                 'pilihan_a' => 'A',
                 'pilihan_b' => 'B',
@@ -452,8 +571,8 @@ class PustakaSoalTest extends TestCase
             'bank_soal_id' => $this->bankSoal()->id,
             'materi_soal_id' => $materiSoal->id,
             'soal' => [[
-                'keterampilan_id' => $keterampilan->id,
-                'bagian_soal_id' => $bagianSoalLain->id,
+                'section_id' => $section->id,
+                'part_soal_id' => $partSoalLain->id,
                 'teks_soal' => 'Soal group kedua',
                 'pilihan_a' => 'A',
                 'pilihan_b' => 'B',
@@ -474,14 +593,14 @@ class PustakaSoalTest extends TestCase
 
         $bankSoal = $this->bankSoal();
         $materiSoal = $this->buatMateriTeks($bankSoal);
-        $keterampilan = Keterampilan::where('nama', 'Reading')->first();
-        $bagianSoalLain = $this->bagianMembacaLain();
+        $section = Section::where('nama', 'Reading')->first();
+        $partSoalLain = $this->partMembacaLain();
 
         Soal::create([
             'bank_soal_id' => $bankSoal->id,
             'materi_soal_id' => $materiSoal->id,
-            'keterampilan_id' => $keterampilan->id,
-            'bagian_soal_id' => $this->bagianMembaca()->id,
+            'section_id' => $section->id,
+            'part_soal_id' => $this->partMembaca()->id,
             'teks_soal' => 'Soal existing group pertama',
             'pilihan_a' => 'A',
             'pilihan_b' => 'B',
@@ -494,8 +613,8 @@ class PustakaSoalTest extends TestCase
         $response = $this->post('/admin/ujian/soal', [
             'bank_soal_id' => $bankSoal->id,
             'materi_soal_id' => $materiSoal->id,
-            'keterampilan_id' => $keterampilan->id,
-            'bagian_soal_id' => $bagianSoalLain->id,
+            'section_id' => $section->id,
+            'part_soal_id' => $partSoalLain->id,
             'teks_soal' => 'Soal satuan group kedua',
             'pilihan_a' => 'A',
             'pilihan_b' => 'B',
@@ -516,15 +635,15 @@ class PustakaSoalTest extends TestCase
 
         $bankSoal = $this->bankSoal();
         $materiSoal = $this->buatMateriTeks($bankSoal);
-        $keterampilan = Keterampilan::where('nama', 'Reading')->first();
-        $bagianMembaca = $this->bagianMembaca();
-        $bagianSoalLain = $this->bagianMembacaLain();
+        $section = Section::where('nama', 'Reading')->first();
+        $partMembaca = $this->partMembaca();
+        $partSoalLain = $this->partMembacaLain();
 
         $soalPertama = Soal::create([
             'bank_soal_id' => $bankSoal->id,
             'materi_soal_id' => $materiSoal->id,
-            'keterampilan_id' => $keterampilan->id,
-            'bagian_soal_id' => $bagianMembaca->id,
+            'section_id' => $section->id,
+            'part_soal_id' => $partMembaca->id,
             'teks_soal' => 'Soal edit pertama',
             'pilihan_a' => 'A',
             'pilihan_b' => 'B',
@@ -537,8 +656,8 @@ class PustakaSoalTest extends TestCase
         Soal::create([
             'bank_soal_id' => $bankSoal->id,
             'materi_soal_id' => $materiSoal->id,
-            'keterampilan_id' => $keterampilan->id,
-            'bagian_soal_id' => $bagianMembaca->id,
+            'section_id' => $section->id,
+            'part_soal_id' => $partMembaca->id,
             'teks_soal' => 'Soal edit kedua',
             'pilihan_a' => 'A',
             'pilihan_b' => 'B',
@@ -551,8 +670,8 @@ class PustakaSoalTest extends TestCase
         $this->put("/pustaka-soal/soal/{$soalPertama->id}", [
             'bank_soal_id' => $bankSoal->id,
             'materi_soal_id' => $materiSoal->id,
-            'keterampilan_id' => $keterampilan->id,
-            'bagian_soal_id' => $bagianSoalLain->id,
+            'section_id' => $section->id,
+            'part_soal_id' => $partSoalLain->id,
             'teks_soal' => 'Soal edit pertama diperbarui',
             'pilihan_a' => 'A',
             'pilihan_b' => 'B',
@@ -563,7 +682,7 @@ class PustakaSoalTest extends TestCase
 
         $this->assertDatabaseHas('soal', [
             'id' => $soalPertama->id,
-            'bagian_soal_id' => $bagianMembaca->id,
+            'part_soal_id' => $partMembaca->id,
         ]);
     }
 
@@ -574,13 +693,13 @@ class PustakaSoalTest extends TestCase
         $bankSoal = $this->bankSoal();
         $materiSoal = $this->buatMateriTeks($bankSoal);
         $materiSoalLain = $this->buatMateriTeks($bankSoal);
-        $keterampilan = Keterampilan::where('nama', 'Reading')->first();
-        $bagianSoal = $this->bagianMembaca();
+        $section = Section::where('nama', 'Reading')->first();
+        $partSoal = $this->partMembaca();
         $soal = Soal::create([
             'bank_soal_id' => $bankSoal->id,
             'materi_soal_id' => $materiSoal->id,
-            'keterampilan_id' => $keterampilan->id,
-            'bagian_soal_id' => $bagianSoal->id,
+            'section_id' => $section->id,
+            'part_soal_id' => $partSoal->id,
             'teks_soal' => 'Soal yang tidak boleh pindah materi',
             'pilihan_a' => 'A',
             'pilihan_b' => 'B',
@@ -593,8 +712,8 @@ class PustakaSoalTest extends TestCase
         $this->put("/pustaka-soal/soal/{$soal->id}", [
             'bank_soal_id' => $bankSoal->id,
             'materi_soal_id' => $materiSoalLain->id,
-            'keterampilan_id' => $keterampilan->id,
-            'bagian_soal_id' => $bagianSoal->id,
+            'section_id' => $section->id,
+            'part_soal_id' => $partSoal->id,
             'teks_soal' => 'Percobaan mengganti materi',
             'pilihan_a' => 'A',
             'pilihan_b' => 'B',
@@ -623,15 +742,15 @@ class PustakaSoalTest extends TestCase
         $this->masukSebagai('admin');
 
         $materiTeks = $this->buatMateriTeks();
-        $keterampilan = Keterampilan::where('nama', 'Listening')->first();
+        $section = Section::where('nama', 'Listening')->first();
 
         $this->post('/pustaka-soal', [
             'bank_soal_id' => $this->bankSoal()->id,
             'materi_soal_id' => $materiTeks->id,
             'soal' => [
                 [
-                    'keterampilan_id' => $keterampilan->id,
-                    'bagian_soal_id' => $this->bagianMenyimak()->id,
+                    'section_id' => $section->id,
+                    'part_soal_id' => $this->partMenyimak()->id,
                     'teks_soal' => null,
                     'pilihan_a' => null,
                     'pilihan_b' => null,
@@ -644,7 +763,7 @@ class PustakaSoalTest extends TestCase
 
         $this->assertDatabaseMissing('soal', [
             'materi_soal_id' => $materiTeks->id,
-            'keterampilan_id' => $keterampilan->id,
+            'section_id' => $section->id,
         ]);
     }
 
@@ -653,15 +772,15 @@ class PustakaSoalTest extends TestCase
         $this->masukSebagai('admin');
 
         $materiAudio = $this->buatMateriAudio();
-        $keterampilan = Keterampilan::where('nama', 'Listening')->first();
+        $section = Section::where('nama', 'Listening')->first();
 
         $this->post('/pustaka-soal', [
             'bank_soal_id' => $this->bankSoal()->id,
             'materi_soal_id' => $materiAudio->id,
             'soal' => [
                 [
-                    'keterampilan_id' => $keterampilan->id,
-                    'bagian_soal_id' => $this->bagianMenyimak()->id,
+                    'section_id' => $section->id,
+                    'part_soal_id' => $this->partMenyimak()->id,
                     'teks_soal' => null,
                     'pilihan_a' => null,
                     'pilihan_b' => null,
@@ -674,7 +793,7 @@ class PustakaSoalTest extends TestCase
 
         $this->assertDatabaseHas('soal', [
             'materi_soal_id' => $materiAudio->id,
-            'keterampilan_id' => $keterampilan->id,
+            'section_id' => $section->id,
         ]);
     }
 
@@ -683,13 +802,13 @@ class PustakaSoalTest extends TestCase
         $this->masukSebagai('admin');
 
         $bankSoal = $this->bankSoal();
-        $keterampilan = Keterampilan::where('nama', 'Reading')->firstOrFail();
-        $bagianSoal = $this->bagianMembaca();
+        $section = Section::where('nama', 'Reading')->firstOrFail();
+        $partSoal = $this->partMembaca();
 
         $this->post('/admin/ujian/soal', [
             'bank_soal_id' => $bankSoal->id,
-            'keterampilan_id' => $keterampilan->id,
-            'bagian_soal_id' => $bagianSoal->id,
+            'section_id' => $section->id,
+            'part_soal_id' => $partSoal->id,
             'teks_soal' => null,
             'pilihan_a' => null,
             'pilihan_b' => null,
@@ -701,23 +820,23 @@ class PustakaSoalTest extends TestCase
 
         $this->assertDatabaseMissing('soal', [
             'bank_soal_id' => $bankSoal->id,
-            'bagian_soal_id' => $bagianSoal->id,
+            'part_soal_id' => $partSoal->id,
         ]);
     }
 
-    public function test_jalur_tambah_soal_satuan_menolak_keterampilan_dari_jenis_tes_lain(): void
+    public function test_jalur_tambah_soal_satuan_menolak_section_dari_program_tes_lain(): void
     {
         $this->masukSebagai('admin');
 
         $bankSoal = $this->bankSoal();
-        $jenisTesLain = JenisTes::create([
+        $programTesLain = ProgramTes::create([
             'kode' => '010',
-            'nama' => 'Jenis Tes Relasi Soal',
+            'nama' => 'Program Tes Relasi Soal',
             'batas_pelanggaran' => 3,
             'aktif' => true,
         ]);
-        $keterampilanLain = Keterampilan::create([
-            'jenis_tes_id' => $jenisTesLain->id,
+        $sectionLain = Section::create([
+            'program_tes_id' => $programTesLain->id,
             'kode' => '010001',
             'nama' => 'Reading',
             'urutan' => 1,
@@ -726,18 +845,18 @@ class PustakaSoalTest extends TestCase
 
         $this->post('/admin/ujian/soal', [
             'bank_soal_id' => $bankSoal->id,
-            'keterampilan_id' => $keterampilanLain->id,
-            'bagian_soal_id' => $this->bagianMembaca()->id,
-            'teks_soal' => 'Soal lintas jenis tes',
+            'section_id' => $sectionLain->id,
+            'part_soal_id' => $this->partMembaca()->id,
+            'teks_soal' => 'Soal lintas program tes',
             'pilihan_a' => 'A',
             'pilihan_b' => 'B',
             'pilihan_c' => 'C',
             'pilihan_d' => 'D',
             'kunci_jawaban' => 'A',
             'urutan' => 1,
-        ])->assertSessionHasErrors('keterampilan_id');
+        ])->assertSessionHasErrors('section_id');
 
-        $this->assertDatabaseMissing('soal', ['teks_soal' => 'Soal lintas jenis tes']);
+        $this->assertDatabaseMissing('soal', ['teks_soal' => 'Soal lintas program tes']);
     }
 
     public function test_materi_dari_bank_lain_ditolak(): void
@@ -746,20 +865,20 @@ class PustakaSoalTest extends TestCase
 
         $bankSoalLain = BankSoal::create([
             'nama' => 'Bank Soal Lain',
-            'jenis_tes_id' => JenisTes::first()->id,
+            'program_tes_id' => ProgramTes::first()->id,
             'aktif' => true,
         ]);
 
         $materiBankLain = $this->buatMateriTeks($bankSoalLain);
-        $keterampilan = Keterampilan::where('nama', 'Reading')->first();
+        $section = Section::where('nama', 'Reading')->first();
 
         $this->post('/pustaka-soal', [
             'bank_soal_id' => $this->bankSoal()->id,
             'materi_soal_id' => $materiBankLain->id,
             'soal' => [
                 [
-                    'keterampilan_id' => $keterampilan->id,
-                    'bagian_soal_id' => $this->bagianMembaca()->id,
+                    'section_id' => $section->id,
+                    'part_soal_id' => $this->partMembaca()->id,
                     'teks_soal' => 'Soal memakai passage bank lain',
                     'pilihan_a' => 'A',
                     'pilihan_b' => 'B',
@@ -792,6 +911,23 @@ class PustakaSoalTest extends TestCase
         ]);
     }
 
+    public function test_materi_soal_tidak_dapat_diperbarui_jika_bank_sudah_dipakai_ujian(): void
+    {
+        $this->masukSebagai('admin');
+
+        $materiSoal = $this->buatMateriTeks($this->bankSoalTerkunci());
+
+        $this->put("/pustaka-soal/materi-soal/{$materiSoal->id}", [
+            'judul' => 'Judul Materi Terkunci',
+            'isi_teks' => '<p>Perubahan tidak boleh tersimpan.</p>',
+        ])->assertRedirect()->assertSessionHas('error');
+
+        $this->assertDatabaseHas('materi_soal', [
+            'id' => $materiSoal->id,
+            'judul' => 'Passage Teks Uji',
+        ]);
+    }
+
     public function test_media_materi_soal_dapat_dihapus_jika_materi_tetap_valid(): void
     {
         $this->masukSebagai('admin');
@@ -809,6 +945,52 @@ class PustakaSoalTest extends TestCase
         $this->assertDatabaseMissing('media_materi_soal', [
             'materi_soal_id' => $materiSoal->id,
             'jenis_media' => 'audio',
+        ]);
+    }
+
+    public function test_media_materi_tidak_dapat_dihapus_jika_bank_sudah_dipakai_ujian(): void
+    {
+        $this->masukSebagai('admin');
+
+        $materiSoal = $this->buatMateriAudio($this->bankSoalTerkunci());
+
+        $this->delete("/pustaka-soal/materi-soal/{$materiSoal->id}/media/audio")
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('media_materi_soal', [
+            'materi_soal_id' => $materiSoal->id,
+            'jenis_media' => 'audio',
+        ]);
+    }
+
+    public function test_materi_soal_tidak_dapat_dihapus_jika_bank_sudah_dipakai_ujian(): void
+    {
+        $this->masukSebagai('admin');
+
+        $materiSoal = $this->buatMateriTeks($this->bankSoalTerkunci());
+
+        $this->delete("/pustaka-soal/materi-soal/{$materiSoal->id}")
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('materi_soal', ['id' => $materiSoal->id]);
+    }
+
+    public function test_materi_soal_baru_tidak_dapat_dibuat_di_bank_yang_sudah_dipakai_ujian(): void
+    {
+        $this->masukSebagai('admin');
+        $bankSoal = $this->bankSoalTerkunci();
+
+        $this->post('/pustaka-soal/materi-soal', [
+            'bank_soal_id' => $bankSoal->id,
+            'judul' => 'Materi Baru Terkunci',
+            'isi_teks' => '<p>Materi tidak boleh dibuat.</p>',
+        ])->assertRedirect()->assertSessionHas('error');
+
+        $this->assertDatabaseMissing('materi_soal', [
+            'bank_soal_id' => $bankSoal->id,
+            'judul' => 'Materi Baru Terkunci',
         ]);
     }
 
@@ -832,15 +1014,15 @@ class PustakaSoalTest extends TestCase
         $this->masukSebagai('admin');
 
         $materiAudio = $this->buatMateriAudio();
-        $keterampilan = Keterampilan::where('nama', 'Reading')->first();
+        $section = Section::where('nama', 'Reading')->first();
 
         $this->post('/pustaka-soal', [
             'bank_soal_id' => $this->bankSoal()->id,
             'materi_soal_id' => $materiAudio->id,
             'soal' => [
                 [
-                    'keterampilan_id' => $keterampilan->id,
-                    'bagian_soal_id' => $this->bagianMembaca()->id,
+                    'section_id' => $section->id,
+                    'part_soal_id' => $this->partMembaca()->id,
                     'teks_soal' => 'Soal reading memakai passage audio',
                     'pilihan_a' => 'A',
                     'pilihan_b' => 'B',
@@ -856,21 +1038,21 @@ class PustakaSoalTest extends TestCase
         ]);
     }
 
-    public function test_keterampilan_tanpa_kebijakan_ditolak(): void
+    public function test_section_tanpa_kebijakan_ditolak(): void
     {
         $this->masukSebagai('admin');
 
-        $berbicara = Keterampilan::create([
-            'jenis_tes_id' => $this->bankSoal()->jenis_tes_id,
+        $berbicara = Section::create([
+            'program_tes_id' => $this->bankSoal()->program_tes_id,
             'kode' => '001003',
             'nama' => 'Speaking',
             'urutan' => 3,
             'aktif' => true,
         ]);
 
-        $bagianSoal = BagianSoal::create([
+        $partSoal = PartSoal::create([
             'bank_soal_id' => $this->bankSoal()->id,
-            'keterampilan_id' => $berbicara->id,
+            'section_id' => $berbicara->id,
             'nama' => 'Part 1',
             'urutan' => 1,
             'aktif' => true,
@@ -880,9 +1062,9 @@ class PustakaSoalTest extends TestCase
             'bank_soal_id' => $this->bankSoal()->id,
             'soal' => [
                 [
-                    'keterampilan_id' => $berbicara->id,
-                    'bagian_soal_id' => $bagianSoal->id,
-                    'teks_soal' => 'Soal skill tanpa policy',
+                    'section_id' => $berbicara->id,
+                    'part_soal_id' => $partSoal->id,
+                    'teks_soal' => 'Soal section tanpa policy',
                     'pilihan_a' => 'A',
                     'pilihan_b' => 'B',
                     'pilihan_c' => 'C',
@@ -893,25 +1075,25 @@ class PustakaSoalTest extends TestCase
         ])->assertSessionHasErrors('soal');
 
         $this->assertDatabaseMissing('soal', [
-            'teks_soal' => 'Soal skill tanpa policy',
+            'teks_soal' => 'Soal section tanpa policy',
         ]);
     }
 
-    public function test_keterampilan_dinamis_dengan_kebijakan_audio_menerima_soal_menyimak(): void
+    public function test_section_dinamis_dengan_kebijakan_audio_menerima_soal_menyimak(): void
     {
         $this->masukSebagai('admin');
 
-        $berbicara = Keterampilan::create([
-            'jenis_tes_id' => $this->bankSoal()->jenis_tes_id,
+        $berbicara = Section::create([
+            'program_tes_id' => $this->bankSoal()->program_tes_id,
             'kode' => '001003',
             'nama' => 'Speaking Dinamis',
             'urutan' => 3,
             'aktif' => true,
         ]);
 
-        $bagianSoal = BagianSoal::create([
+        $partSoal = PartSoal::create([
             'bank_soal_id' => $this->bankSoal()->id,
-            'keterampilan_id' => $berbicara->id,
+            'section_id' => $berbicara->id,
             'nama' => 'Part 1',
             'urutan' => 1,
             'aktif' => true,
@@ -919,7 +1101,7 @@ class PustakaSoalTest extends TestCase
 
         // Policy dinamis: audio wajib — dibuat lewat data, bukan kode hardcoded.
         $kebijakan = KebijakanMateriSoal::create([
-            'keterampilan_id' => $berbicara->id,
+            'section_id' => $berbicara->id,
             'ketentuan_materi' => 'required',
         ]);
         $kebijakan->aturanMedia()->create(['jenis_media' => 'audio', 'ketentuan' => 'required']);
@@ -933,8 +1115,8 @@ class PustakaSoalTest extends TestCase
             'materi_soal_id' => $materiAudio->id,
             'soal' => [
                 [
-                    'keterampilan_id' => $berbicara->id,
-                    'bagian_soal_id' => $bagianSoal->id,
+                    'section_id' => $berbicara->id,
+                    'part_soal_id' => $partSoal->id,
                     'teks_soal' => null,
                     'pilihan_a' => null,
                     'pilihan_b' => null,
@@ -947,25 +1129,25 @@ class PustakaSoalTest extends TestCase
 
         $this->assertDatabaseHas('soal', [
             'materi_soal_id' => $materiAudio->id,
-            'keterampilan_id' => $berbicara->id,
+            'section_id' => $berbicara->id,
         ]);
     }
 
-    public function test_soal_tidak_dapat_memakai_bagian_dari_bank_lain(): void
+    public function test_soal_tidak_dapat_memakai_part_dari_bank_lain(): void
     {
         $this->masukSebagai('admin');
 
         $bankSoalLain = BankSoal::create([
             'nama' => 'Bank Soal Lain',
-            'jenis_tes_id' => JenisTes::first()->id,
+            'program_tes_id' => ProgramTes::first()->id,
             'aktif' => true,
         ]);
 
-        $keterampilan = Keterampilan::where('nama', 'Reading')->first();
+        $section = Section::where('nama', 'Reading')->first();
 
-        $bagianBankLain = BagianSoal::create([
+        $partBankLain = PartSoal::create([
             'bank_soal_id' => $bankSoalLain->id,
-            'keterampilan_id' => $keterampilan->id,
+            'section_id' => $section->id,
             'nama' => 'Part 1',
             'urutan' => 1,
             'aktif' => true,
@@ -975,8 +1157,8 @@ class PustakaSoalTest extends TestCase
             'bank_soal_id' => $this->bankSoal()->id,
             'soal' => [
                 [
-                    'keterampilan_id' => $keterampilan->id,
-                    'bagian_soal_id' => $bagianBankLain->id,
+                    'section_id' => $section->id,
+                    'part_soal_id' => $partBankLain->id,
                     'teks_soal' => 'Soal memakai part bank lain',
                     'pilihan_a' => 'A',
                     'pilihan_b' => 'B',
@@ -996,14 +1178,14 @@ class PustakaSoalTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $keterampilan = Keterampilan::where('nama', 'Reading')->first();
+        $section = Section::where('nama', 'Reading')->first();
 
         $this->post('/pustaka-soal', [
             'bank_soal_id' => $this->bankSoal()->id,
             'soal' => [
                 [
-                    'keterampilan_id' => $keterampilan->id,
-                    'bagian_soal_id' => $this->bagianMembaca()->id,
+                    'section_id' => $section->id,
+                    'part_soal_id' => $this->partMembaca()->id,
                     'teks_soal' => 'Pertanyaan tanpa opsi lengkap',
                     'pilihan_a' => 'A',
                     'pilihan_b' => 'B',
@@ -1014,7 +1196,10 @@ class PustakaSoalTest extends TestCase
             ],
         ])->assertSessionHasErrors('soal');
 
-        $this->assertDatabaseCount('soal', 8);
+        $this->assertSame(
+            0,
+            Soal::where('bank_soal_id', $this->bankSoal()->id)->count(),
+        );
     }
 
     public function test_media_materi_ditampilkan_sebagai_atribut(): void

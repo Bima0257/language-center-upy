@@ -1,44 +1,70 @@
 <script setup>
-import DataTable from '@/Components/Shared/DataTable.vue';
+import { computed, h } from 'vue';
 import { IconEdit, IconTrash } from '@tabler/icons-vue';
+import BaseButton from '@/Components/Base/BaseButton.vue';
+import BaseTambahData from '@/Components/Base/BaseTambahData.vue';
+import AppDataTable from '@/Components/Ui/AppDataTable.vue';
 
-defineProps({
+const props = defineProps({
     data: { type: Array, default: () => [] },
     columns: { type: Array, required: true },
+    tableKey: { type: String, default: 'admin-bank-soal' },
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
+
+const tableColumns = computed(() => [
+    ...props.columns,
+    {
+        id: 'actions',
+        header: 'Aksi',
+        meta: { align: 'center' },
+        cell: info => {
+            const row = info.row.original;
+            const editDisabled = row.part_ujian_count > 0;
+            const deleteDisabled = row.soal_count > 0 || row.part_ujian_count > 0;
+
+            return h('div', { class: 'flex items-center justify-center gap-1' }, [
+                h(
+                    BaseButton,
+                    {
+                        variant: 'secondary',
+                        iconOnly: true,
+                        disabled: editDisabled,
+                        title: editDisabled ? 'Tidak bisa diubah karena sudah digunakan di ujian' : 'Ubah',
+                        'aria-label': editDisabled ? 'Tidak bisa diubah karena sudah digunakan di ujian' : 'Ubah',
+                        onClick: () => emit('edit', row),
+                    },
+                    () => h(IconEdit, { size: 16 }),
+                ),
+                h(
+                    BaseButton,
+                    {
+                        variant: 'danger',
+                        iconOnly: true,
+                        disabled: deleteDisabled,
+                        title: deleteDisabled ? 'Tidak bisa dihapus karena masih memiliki soal atau digunakan di ujian' : 'Hapus',
+                        'aria-label': deleteDisabled ? 'Tidak bisa dihapus karena masih memiliki soal atau digunakan di ujian' : 'Hapus',
+                        onClick: () => emit('delete', row),
+                    },
+                    () => h(IconTrash, { size: 16 }),
+                ),
+            ]);
+        },
+    },
+]);
 </script>
 
 <template>
-    <DataTable :data="data" :columns="columns" header-title="Daftar Bank Soal" searchable>
-        <template #toolbar>
-            <div class="flex items-center gap-2">
-                <BaseTambahData @click="emit('create')" />
-            </div>
+    <AppDataTable
+        :table-key="props.tableKey"
+        :data="data"
+        :columns="tableColumns"
+        title="Daftar Bank Soal"
+        searchable
+    >
+        <template #actions>
+            <BaseTambahData @click="emit('create')" />
         </template>
-
-        <template #actions="{ row }">
-            <BaseButton
-                variant="secondary"
-                icon-only
-                :disabled="row.bagian_ujian_count > 0"
-                :title="row.bagian_ujian_count > 0 ? 'Tidak bisa diubah karena sudah digunakan di ujian' : 'Ubah'"
-                :aria-label="row.bagian_ujian_count > 0 ? 'Tidak bisa diubah karena sudah digunakan di ujian' : 'Ubah'"
-                @click="emit('edit', row)"
-            >
-                <IconEdit :size="16" />
-            </BaseButton>
-            <BaseButton
-                variant="danger"
-                icon-only
-                :disabled="row.soal_count > 0 || row.bagian_ujian_count > 0"
-                :title="row.soal_count > 0 || row.bagian_ujian_count > 0 ? 'Tidak bisa dihapus karena masih memiliki soal atau digunakan di ujian' : 'Hapus'"
-                :aria-label="row.soal_count > 0 || row.bagian_ujian_count > 0 ? 'Tidak bisa dihapus karena masih memiliki soal atau digunakan di ujian' : 'Hapus'"
-                @click="emit('delete', row)"
-            >
-                <IconTrash :size="16" />
-            </BaseButton>
-        </template>
-    </DataTable>
+    </AppDataTable>
 </template>

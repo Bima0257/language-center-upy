@@ -40,7 +40,7 @@ function formatDate(date) {
                         </div>
                         <div v-if="cert.sesi_ujian?.skor_total !== null" class="mt-2">
                             <span class="inline-flex items-center gap-1.5 bg-success-container text-on-success-container px-3 py-1 rounded-full text-label-md font-medium">
-                                Skor: {{ cert.sesi_ujian.skor_total }}/120
+                                Skor: {{ cert.sesi_ujian.skor_total }}/{{ cert.sesi_ujian.skor_total_maksimum ?? '-' }}
                             </span>
                         </div>
                     </div>

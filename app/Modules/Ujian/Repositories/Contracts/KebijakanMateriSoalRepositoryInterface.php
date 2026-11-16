@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface KebijakanMateriSoalRepositoryInterface
 {
-    public function temukanDenganKeterampilan(string $keterampilanId): ?KebijakanMateriSoal;
+    public function temukanDenganSection(string $sectionId): ?KebijakanMateriSoal;
 
     public function create(array $data): KebijakanMateriSoal;
 

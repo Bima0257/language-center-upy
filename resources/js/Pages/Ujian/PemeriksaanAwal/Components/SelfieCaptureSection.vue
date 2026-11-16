@@ -18,21 +18,39 @@ function attachStream(stream) {
     videoRef.value.play().catch(() => {});
 }
 
+const MAX_DIMENSION = 1920;
+const MAX_BYTES = 2 * 1024 * 1024;
+
 function captureFrame() {
     const video = videoRef.value;
     const canvas = canvasRef.value;
     if (!video || !canvas) return Promise.resolve(null);
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    const sourceWidth = video.videoWidth;
+    const sourceHeight = video.videoHeight;
+    const longest = Math.max(sourceWidth, sourceHeight) || 1;
+    const scale = longest > MAX_DIMENSION ? MAX_DIMENSION / longest : 1;
+
+    canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+    canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+
     const context = canvas.getContext('2d');
     if (!context) return Promise.resolve(null);
 
-    context.drawImage(video, 0, 0);
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    return new Promise((resolve) => {
-        canvas.toBlob(resolve, 'image/jpeg', 0.9);
-    });
+    const encode = (quality) =>
+        new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+
+    return (async () => {
+        for (const quality of [0.8, 0.65, 0.5, 0.4]) {
+            const blob = await encode(quality);
+            if (!blob) return null;
+            if (blob.size <= MAX_BYTES) return blob;
+        }
+
+        return encode(0.3);
+    })();
 }
 
 defineExpose({ attachStream, captureFrame });

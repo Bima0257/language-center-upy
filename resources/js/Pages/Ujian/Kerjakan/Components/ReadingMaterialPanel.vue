@@ -3,20 +3,20 @@ import RichTextViewer from '@/Components/Shared/RichTextViewer.vue';
 
 defineProps({
     materiSoal: { type: Object, default: null },
-    bagianSoalLabel: { type: String, default: '' },
+    partSoalLabel: { type: String, default: '' },
     imageLoading: { type: Object, required: true },
 });
 </script>
 
 <template>
     <section
-        class="w-3/5 border-r border-outline-variant overflow-y-auto scroll-hide p-8 bg-surface-bright"
+        class="w-3/5 border-r border-outline-variant overflow-y-auto overscroll-y-contain scroll-hide p-8 bg-surface-bright"
     >
         <div class="max-w-2xl mx-auto">
             <div class="mb-8">
                 <span
                     class="bg-pastel-blue text-text-heading px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
-                    >{{ bagianSoalLabel || 'Materi' }}</span
+                    >{{ partSoalLabel || 'Materi' }}</span
                 >
                 <h1
                     v-if="materiSoal"

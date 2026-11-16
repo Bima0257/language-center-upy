@@ -1,28 +1,53 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3'
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue'
-import DataTable from '@/Components/Shared/DataTable.vue'
+import AppDataTable from '@/Components/Ui/AppDataTable.vue'
 
 defineProps({
     sesiUjian: { type: Array, default: () => [] },
 })
 
+const statusLabels = {
+    submitted: 'Selesai',
+    terminated: 'Dihentikan',
+    in_progress: 'Berlangsung',
+    pending: 'Menunggu',
+}
+
 const columns = [
-    { key: 'pengguna', label: 'Peserta', sortable: true, className: 'font-medium text-text-heading',
-      render: (val, row) => row.pengguna?.name || '-' },
-    { key: 'ujian', label: 'Ujian',
-      render: (val, row) => row.slot_ujian?.periode_ujian?.ujian?.judul || '-' },
-    { key: 'status', label: 'Status', sortable: true, badge: true,
-      render: (val) => {
-          const m = { submitted: 'Selesai', terminated: 'Dihentikan', in_progress: 'Berlangsung', pending: 'Menunggu' }
-          return m[val] || val
-      }},
-    { key: 'skor_total', label: 'Skor', sortable: true,
-      render: (val) => val !== null ? `${val}/120` : '-' },
-    { key: 'jumlah_pelanggaran', label: 'Pelanggaran', sortable: true,
-      render: (val) => val || 0 },
-    { key: 'created_at', label: 'Tanggal', sortable: true,
-      render: (val) => val ? new Date(val).toLocaleDateString('id-ID') : '-' },
+    {
+        accessorKey: 'pengguna',
+        header: 'Peserta',
+        meta: { cellClass: 'font-medium text-text-heading' },
+        cell: info => info.row.original.pengguna?.name || '-',
+    },
+    {
+        accessorKey: 'ujian',
+        header: 'Ujian',
+        cell: info => info.row.original.slot_ujian?.periode_ujian?.ujian?.judul || '-',
+    },
+    {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: info => statusLabels[info.getValue()] || info.getValue(),
+    },
+    {
+        accessorKey: 'skor_total',
+        header: 'Skor',
+        cell: info => (info.getValue() !== null
+            ? `${info.getValue()}/${info.row.original.skor_total_maksimum ?? '-'}`
+            : '-'),
+    },
+    {
+        accessorKey: 'jumlah_pelanggaran',
+        header: 'Pelanggaran',
+        cell: info => info.getValue() || 0,
+    },
+    {
+        accessorKey: 'created_at',
+        header: 'Tanggal',
+        cell: info => (info.getValue() ? new Date(info.getValue()).toLocaleDateString('id-ID') : '-'),
+    },
 ]
 
 function goToSession(sesiUjian) {
@@ -33,10 +58,11 @@ function goToSession(sesiUjian) {
 <template>
     <Head title="Laporan Sesi" />
     <TataLetakDasbor title="Laporan Sesi" subtitle="Tinjau hasil, skor, dan pelanggaran sesi ujian">
-        <DataTable
+        <AppDataTable
+            table-key="admin-laporan-sesi"
             :data="sesiUjian"
             :columns="columns"
-            :row-link="goToSession"
+            :row-click="goToSession"
             searchable
             search-placeholder="Cari peserta atau ujian..."
         />

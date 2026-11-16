@@ -37,7 +37,7 @@ const currentYear = new Date().getFullYear();
         <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
             <TopBar @toggle-sidebar="sidebarCollapsed = !sidebarCollapsed" />
             <div
-                class="flex-1 overflow-y-auto scrollbar-hide dashboard-scroll-area bg-surface"
+                class="flex-1 overflow-y-auto overscroll-y-contain app-scrollbar dashboard-scroll-area bg-surface"
             >
                 <div class="min-h-full flex flex-col p-8">
                     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -56,7 +56,11 @@ const currentYear = new Date().getFullYear();
                         :back-href="backHref"
                         :back-label="backLabel"
                         :prefer-history="preferHistory"
-                    />
+                    >
+                        <template #actions>
+                            <slot name="header-actions" />
+                        </template>
+                    </PageHeader>
                     <BaseBackButton
                         v-else-if="backHref"
                         :href="backHref"
@@ -81,13 +85,3 @@ const currentYear = new Date().getFullYear();
         <ConfirmDialog />
     </div>
 </template>
-
-<style scoped>
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
-}
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-</style>

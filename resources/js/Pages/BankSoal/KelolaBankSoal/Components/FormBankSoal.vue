@@ -7,7 +7,7 @@ defineProps({
     show: { type: Boolean, default: false },
     creating: { type: Boolean, default: false },
     form: { type: Object, required: true },
-    jenisTes: { type: Array, default: () => [] },
+    programTes: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(['close', 'submit']);
@@ -37,14 +37,14 @@ const emit = defineEmits(['close', 'submit']);
                 <BaseFormGrid>
                     <div>
                         <DropDown
-                            v-model="form.jenis_tes_id"
-                            :options="jenisTes"
-                            label="Kategori Tes *"
-                            placeholder="Pilih kategori tes"
+                            v-model="form.program_tes_id"
+                            :options="programTes"
+                            label="Program Tes *"
+                            placeholder="Pilih program tes"
                             option-label="nama"
                             option-value="id"
                         />
-                        <p v-if="form.errors.jenis_tes_id" class="text-error-red text-xs mt-1">{{ form.errors.jenis_tes_id }}</p>
+                        <p v-if="form.errors.program_tes_id" class="text-error-red text-xs mt-1">{{ form.errors.program_tes_id }}</p>
                     </div>
                     <div>
                         <label class="text-label-md font-medium text-text-heading block mb-1.5">Nama Bank Soal *</label>

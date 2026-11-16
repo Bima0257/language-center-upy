@@ -30,12 +30,12 @@ defineProps({
                 <p
                     class="text-title-lg font-bold"
                     :class="
-                        (sesi.skor_total ?? 0) >= 80
+                        sesi.lulus
                             ? 'text-success'
                             : 'text-warning'
                     "
                 >
-                    {{ sesi.skor_total ?? "-" }}/120
+                    {{ sesi.skor_total ?? "-" }}/{{ sesi.skor_total_maksimum ?? "-" }}
                 </p>
             </div>
         </div>

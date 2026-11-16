@@ -4,8 +4,8 @@ import { IconPlus } from '@tabler/icons-vue';
 
 const props = defineProps({
     form: { type: Object, required: true },
-    jenisTes: { type: Array, default: () => [] },
-    lockJenisTes: { type: Boolean, default: false },
+    programTes: { type: Array, default: () => [] },
+    lockProgramTes: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['submit']);
@@ -17,15 +17,15 @@ const emit = defineEmits(['submit']);
         <form @submit.prevent="emit('submit')" class="space-y-4">
             <div>
                 <DropDown
-                    v-model="props.form.jenis_tes_id"
-                    :options="props.jenisTes"
+                    v-model="props.form.program_tes_id"
+                    :options="props.programTes"
                     label="Tipe Ujian"
                     placeholder="Pilih tipe ujian"
                     option-label="nama"
                     option-value="id"
-                    :disabled="lockJenisTes"
+                    :disabled="lockProgramTes"
                 />
-                <p v-if="props.form.errors.jenis_tes_id" class="text-error-red text-xs mt-1">{{ props.form.errors.jenis_tes_id }}</p>
+                <p v-if="props.form.errors.program_tes_id" class="text-error-red text-xs mt-1">{{ props.form.errors.program_tes_id }}</p>
             </div>
             <BaseFormGrid>
                 <div>

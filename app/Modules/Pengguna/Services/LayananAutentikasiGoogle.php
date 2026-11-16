@@ -39,7 +39,7 @@ class LayananAutentikasiGoogle
                 'email_verified_at' => now(),
             ]);
 
-            $pengguna->assignRole('student');
+            $pengguna->assignRole('peserta');
 
             return $pengguna;
         });

@@ -11,12 +11,19 @@ class SesiUjianRepository implements SesiUjianRepositoryInterface
 {
     public function findOrFail(string $id): SesiUjian
     {
-        return SesiUjian::with(['catatanPelanggaran', 'slotUjian.periodeUjian.ujian', 'slotUjian', 'bagianAktif'])->findOrFail($id);
+        return SesiUjian::with([
+            'catatanPelanggaran',
+            'slotUjian.periodeUjian.ujian',
+            'slotUjian',
+            'partUjianAktif',
+            'skemaPenilaian',
+            'hasilPenilaian.section',
+        ])->findOrFail($id);
     }
 
     public function temukanDenganJawaban(string $id): ?SesiUjian
     {
-        return SesiUjian::with(['jawaban', 'slotUjian.periodeUjian.ujian.bagianUjian'])->find($id);
+        return SesiUjian::with(['jawaban', 'slotUjian.periodeUjian.ujian.partUjian'])->find($id);
     }
 
     public function create(array $data): SesiUjian

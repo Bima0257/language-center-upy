@@ -14,11 +14,30 @@ const props = defineProps({
     previewInDropzone: { type: Boolean, default: false },
     required: { type: Boolean, default: false },
     error: { type: String, default: null },
+    maxSizeMb: { type: Number, default: null },
+    previewHeightClass: { type: String, default: "max-h-40" },
 });
 
 const emit = defineEmits(["update:modelValue"]);
 
 const inputRef = ref(null);
+const sizeError = ref(null);
+
+const errorMessage = computed(() => props.error || sizeError.value);
+
+function validateSize(file) {
+    if (!file || !props.maxSizeMb) return true;
+
+    if (file.size > props.maxSizeMb * 1024 * 1024) {
+        sizeError.value = `Ukuran file maksimal ${props.maxSizeMb}MB.`;
+
+        return false;
+    }
+
+    sizeError.value = null;
+
+    return true;
+}
 
 const displayName = computed(
     () =>
@@ -36,11 +55,20 @@ const showInlineImagePreview = computed(
 );
 
 function onSelect(e) {
-    emit("update:modelValue", e.target.files[0] || null);
+    const file = e.target.files[0] || null;
     e.target.value = "";
+
+    if (!validateSize(file)) {
+        emit("update:modelValue", null);
+
+        return;
+    }
+
+    emit("update:modelValue", file);
 }
 
 function remove() {
+    sizeError.value = null;
     emit("update:modelValue", null);
     if (inputRef.value) inputRef.value.value = "";
 }
@@ -90,7 +118,7 @@ function remove() {
             <div
                 class="relative border-2 border-dashed border-outline-variant rounded-2xl text-center hover:border-secondary transition-colors cursor-pointer"
                 :class="[
-                    { 'border-error-red': error },
+                    { 'border-error-red': errorMessage },
                     showInlineImagePreview ? 'p-3' : 'p-6',
                 ]"
                 @click="inputRef?.click()"
@@ -98,7 +126,8 @@ function remove() {
                 <template v-if="showInlineImagePreview">
                     <img
                         :src="displayPreview"
-                        class="mx-auto max-h-40 max-w-full rounded-xl object-contain"
+                        class="mx-auto h-auto w-auto max-w-full rounded-xl object-contain"
+                        :class="previewHeightClass"
                         alt="Pratinjau gambar pendukung"
                     />
                     <button
@@ -149,6 +178,8 @@ function remove() {
             </div>
         </template>
 
-        <p v-if="error" class="text-error-red text-xs mt-1">{{ error }}</p>
+        <p v-if="errorMessage" class="text-error-red text-xs mt-1">
+            {{ errorMessage }}
+        </p>
     </div>
 </template>

@@ -12,7 +12,7 @@ use App\Models\SlotUjian;
 use App\Modules\Keamanan\Actions\CatatPelanggaran;
 use App\Modules\PelaksanaanUjian\Actions\Keaktifan;
 use App\Modules\PelaksanaanUjian\Actions\MulaiSesiUjian;
-use App\Modules\PelaksanaanUjian\Actions\SelesaikanBagian;
+use App\Modules\PelaksanaanUjian\Actions\SelesaikanPart;
 use App\Modules\PelaksanaanUjian\Actions\SerahkanUjian;
 use App\Modules\PelaksanaanUjian\Actions\SimpanJawaban;
 use App\Modules\PelaksanaanUjian\Services\LayananPelaksanaanUjian;
@@ -30,7 +30,7 @@ class SesiUjianController extends Controller
     public function __construct(
         private MulaiSesiUjian $mulaiSesi,
         private SimpanJawaban $simpanJawaban,
-        private SelesaikanBagian $selesaikanBagian,
+        private SelesaikanPart $selesaikanPart,
         private SerahkanUjian $serahkanUjian,
         private Keaktifan $keaktifan,
         private CatatPelanggaran $catatPelanggaran,
@@ -83,7 +83,7 @@ class SesiUjianController extends Controller
 
     public function pemeriksaanAwal(SlotUjian $slotUjian): Response|RedirectResponse
     {
-        $slotUjian->load('periodeUjian.ujian.jenisTes');
+        $slotUjian->load('periodeUjian.ujian.programTes');
 
         /** @var Pengguna $pengguna */
         $pengguna = auth()->user();
@@ -104,7 +104,13 @@ class SesiUjianController extends Controller
         $tervalidasi = request()->validate([
             'jenis_perangkat' => ['required', 'in:desktop,mobile,tablet'],
             'agen_pengguna_perangkat' => ['required', 'string', 'max:1000'],
-            'swafoto' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+            'swafoto' => [
+                'required',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:'.config('image.max_kb'),
+                'dimensions:max_width=12000,max_height=12000',
+            ],
         ]);
 
         if (in_array($tervalidasi['jenis_perangkat'], ['mobile', 'tablet'])) {
@@ -129,9 +135,9 @@ class SesiUjianController extends Controller
     public function kerjakan(SesiUjian $sesiUjian): Response
     {
         $sesi = $sesiUjian->load([
-            'slotUjian.periodeUjian.ujian.bagianUjian',
+            'slotUjian.periodeUjian.ujian.partUjian',
             'jawaban.soal',
-            'bagianAktif.keterampilan',
+            'partUjianAktif.section',
         ]);
 
         $sesi->jawaban->each(function ($jawaban) {
@@ -152,7 +158,7 @@ class SesiUjianController extends Controller
         ]);
 
         $this->simpanJawaban->execute(
-            sesiId: $sesiUjian->id,
+            sesi: $sesiUjian,
             soalId: $tervalidasi['soal_id'],
             jawaban: $tervalidasi['teks_jawaban'] ?? null,
         );
@@ -160,9 +166,9 @@ class SesiUjianController extends Controller
         return response()->json(['status' => 'saved', 'timestamp' => now()->toIso8601String()]);
     }
 
-    public function selesaikanBagian(Request $request, SesiUjian $sesiUjian): JsonResponse
+    public function selesaikanPart(Request $request, SesiUjian $sesiUjian): JsonResponse
     {
-        $this->selesaikanBagian->execute($sesiUjian);
+        $this->selesaikanPart->execute($sesiUjian);
 
         return response()->json(['status' => 'section_completed']);
     }
@@ -175,8 +181,14 @@ class SesiUjianController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
+        $statusKelulusan = $hasil->lulus ? 'Lulus' : 'Tidak Lulus';
+        $labelTingkat = $hasil->labelTingkat !== null ? ' — '.$hasil->labelTingkat : '';
+
         return to_route('dasbor')
-            ->with('success', "Ujian berhasil disubmit. Skor Anda: Reading {$hasil->skorMembaca}/30, Listening {$hasil->skorMenyimak}/30");
+            ->with(
+                'success',
+                "Ujian berhasil disubmit. Total skor: {$hasil->skorTotal}/{$hasil->skorTotalMaksimum}{$labelTingkat} ({$statusKelulusan})",
+            );
     }
 
     public function keaktifan(SesiUjian $sesiUjian): JsonResponse

@@ -1,62 +1,82 @@
 <script setup>
-import DataTable from '@/Components/Shared/DataTable.vue';
+import { h } from 'vue';
 import { IconEdit, IconTrash } from '@tabler/icons-vue';
+import BaseBadge from '@/Components/Base/BaseBadge.vue';
+import BaseButton from '@/Components/Base/BaseButton.vue';
+import BaseTambahData from '@/Components/Base/BaseTambahData.vue';
+import AppDataTable from '@/Components/Ui/AppDataTable.vue';
 
 const props = defineProps({
     programStudi: { type: Array, default: () => [] },
     maxRows: { type: Number, default: 10 },
+    tableKey: { type: String, default: 'admin-program-studi-bulk' },
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
 
 const columns = [
-    { key: '_index', label: 'No.', render: (_value, row) => props.programStudi.indexOf(row) + 1 },
-    { key: 'nama', label: 'Nama', sortable: true, className: 'font-medium text-text-heading' },
-    { key: 'kode', label: 'Kode', sortable: true },
-    { key: 'aktif', label: 'Status', sortable: true, badge: true, render: (value) => value ? 'Aktif' : 'Nonaktif' },
-    { key: 'id', label: 'Aksi', slot: 'actions' },
-];
+    { accessorKey: 'nama', header: 'Nama', meta: { cellClass: 'font-medium text-text-heading' } },
+    { accessorKey: 'kode', header: 'Kode' },
+    {
+        accessorKey: 'aktif',
+        header: 'Status',
+        cell: info => h(
+            BaseBadge,
+            { variant: info.getValue() ? 'success' : 'neutral' },
+            () => (info.getValue() ? 'Aktif' : 'Nonaktif'),
+        ),
+    },
+    {
+        id: 'actions',
+        header: 'Aksi',
+        meta: { align: 'center' },
+        cell: info => {
+            const index = props.programStudi.indexOf(info.row.original);
 
-function rowIndex(program) {
-    return props.programStudi.indexOf(program);
-}
+            return h('div', { class: 'flex items-center justify-center gap-1' }, [
+                h(
+                    BaseButton,
+                    {
+                        variant: 'secondary',
+                        iconOnly: true,
+                        title: 'Ubah',
+                        'aria-label': 'Ubah',
+                        onClick: () => emit('edit', index),
+                    },
+                    () => h(IconEdit, { size: 16 }),
+                ),
+                h(
+                    BaseButton,
+                    {
+                        variant: 'danger',
+                        iconOnly: true,
+                        title: 'Hapus',
+                        'aria-label': 'Hapus',
+                        onClick: () => emit('delete', index),
+                    },
+                    () => h(IconTrash, { size: 16 }),
+                ),
+            ]);
+        },
+    },
+];
 </script>
 
 <template>
-    <DataTable
+    <AppDataTable
+        :table-key="props.tableKey"
         :data="props.programStudi"
         :columns="columns"
-        header-title="Daftar Program Studi Baru"
-        :show-page-size="false"
+        title="Daftar Program Studi Baru"
         searchable
+        :show-page-size="false"
     >
-        <template #toolbar>
+        <template #actions>
             <span class="text-label-md text-text-muted">{{ props.programStudi.length }}/{{ props.maxRows }} data</span>
             <BaseTambahData
                 :disabled="props.programStudi.length >= props.maxRows"
                 @click="emit('create')"
             />
         </template>
-
-        <template #actions="{ row }">
-            <BaseButton
-                variant="secondary"
-                icon-only
-                title="Ubah"
-                aria-label="Ubah"
-                @click="emit('edit', rowIndex(row))"
-            >
-                <IconEdit :size="16" />
-            </BaseButton>
-            <BaseButton
-                variant="danger"
-                icon-only
-                title="Hapus"
-                aria-label="Hapus"
-                @click="emit('delete', rowIndex(row))"
-            >
-                <IconTrash :size="16" />
-            </BaseButton>
-        </template>
-    </DataTable>
+    </AppDataTable>
 </template>

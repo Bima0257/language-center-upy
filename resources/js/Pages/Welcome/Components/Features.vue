@@ -18,7 +18,7 @@ const features = [
         iconClass: 'text-icon-pastel',
     },
     {
-        title: 'Pelajaran Keterampilan',
+        title: 'Pelajaran Section',
         description: 'Modul kurasi yang berfokus pada tata bahasa, kosakata, dan teknik membaca akademik.',
         icon: h(IconSchool),
         bgClass: 'bg-pastel-peach',
@@ -40,7 +40,7 @@ const features = [
     },
     {
         title: 'Sesi Langsung',
-        description: 'Lokakarya kelompok interaktif harian untuk membahas bagian tes tersulit bersama.',
+        description: 'Lokakarya kelompok interaktif harian untuk membahas part tes tersulit bersama.',
         icon: h(IconBroadcast),
         bgClass: 'bg-pastel-purple',
         iconClass: 'text-icon-pastel',

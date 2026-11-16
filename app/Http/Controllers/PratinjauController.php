@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pengguna;
 use App\Models\SesiUjian;
 use App\Models\Ujian;
+use App\Modules\Identity\Contracts\IdentityContract;
 use App\Modules\Ujian\Services\LayananSoal;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,10 +14,11 @@ class PratinjauController extends Controller
 {
     public function __construct(
         private LayananSoal $layananSoal,
+        private IdentityContract $identity,
     ) {}
 
     /**
-     * Layout ujian pratinjau: kode keterampilan => [[nama bagian, jumlah soal], ...]
+     * Layout ujian pratinjau: kode section => [[nama part, jumlah soal], ...]
      * Soal mandiri ditempatkan di Reading Part 1.
      */
     private const PREVIEW_LAYOUT = [
@@ -31,7 +33,7 @@ class PratinjauController extends Controller
         ],
     ];
 
-    private const SKILL_META = [
+    private const SECTION_META = [
         'listening' => [
             'urutan' => 1,
             'nama' => 'Listening',
@@ -40,15 +42,15 @@ class PratinjauController extends Controller
         'reading' => [
             'urutan' => 2,
             'nama' => 'Reading',
-            'deskripsi' => '<p>Dalam bagian Reading, Anda akan membaca beberapa bacaan akademik dan menjawab pertanyaan berdasarkan isi bacaan. Bacalah setiap bacaan dengan cermat sebelum menjawab. Sebagian soal bersifat stand alone dan tidak terkait dengan bacaan mana pun.</p>',
+            'deskripsi' => '<p>Dalam part Reading, Anda akan membaca beberapa bacaan akademik dan menjawab pertanyaan berdasarkan isi bacaan. Bacalah setiap bacaan dengan cermat sebelum menjawab. Sebagian soal bersifat stand alone dan tidak terkait dengan bacaan mana pun.</p>',
         ],
     ];
 
     private const PART_DIRECTIONS = [
         'listening' => [
-            'Part 1' => '<p><strong>Short Conversations.</strong> Pada bagian ini Anda akan mendengar percakapan pendek antara dua pembicara. Setiap percakapan diikuti satu pertanyaan. Putar audio, lalu pilih jawaban terbaik dari empat pilihan (A–D).</p>',
-            'Part 2' => '<p><strong>Long Conversations.</strong> Pada bagian ini Anda akan mendengar percakapan panjang. Setiap percakapan diikuti beberapa pertanyaan. Jawablah berdasarkan apa yang Anda dengar.</p>',
-            'Part 3' => '<p><strong>Lectures.</strong> Pada bagian ini Anda akan mendengar ceramah akademik. Setiap ceramah diikuti beberapa pertanyaan. Catat poin-poin penting saat mendengarkan.</p>',
+            'Part 1' => '<p><strong>Short Conversations.</strong> Pada part ini Anda akan mendengar percakapan pendek antara dua pembicara. Setiap percakapan diikuti satu pertanyaan. Putar audio, lalu pilih jawaban terbaik dari empat pilihan (A–D).</p>',
+            'Part 2' => '<p><strong>Long Conversations.</strong> Pada part ini Anda akan mendengar percakapan panjang. Setiap percakapan diikuti beberapa pertanyaan. Jawablah berdasarkan apa yang Anda dengar.</p>',
+            'Part 3' => '<p><strong>Lectures.</strong> Pada part ini Anda akan mendengar ceramah akademik. Setiap ceramah diikuti beberapa pertanyaan. Catat poin-poin penting saat mendengarkan.</p>',
         ],
         'reading' => [
             'Part 1' => '<p>Bacalah bacaan berikut dengan saksama, kemudian jawablah pertanyaan yang tersedia. Beberapa soal bersifat <strong>stand alone</strong> (tidak memerlukan bacaan). Pilih satu jawaban terbaik dari empat pilihan (A–D).</p>',
@@ -91,14 +93,19 @@ class PratinjauController extends Controller
 
     public function pratinjauPengerjaan(Request $request)
     {
+        $pengguna = $request->user();
+
         if ($request->filled('bank_soal_id')) {
-            abort_unless($request->user()?->can('question.view'), 403);
+            abort_unless(
+                $pengguna instanceof Pengguna
+                    && $this->identity->userHasPermission($pengguna, 'pustaka-soal.daftar'),
+                403,
+            );
 
             /** @var Pengguna $pengguna */
-            $pengguna = $request->user();
             $bankSoalId = (string) $request->query('bank_soal_id');
-            $jenisTesId = $request->filled('jenis_tes_id')
-                ? (string) $request->query('jenis_tes_id')
+            $programTesId = $request->filled('program_tes_id')
+                ? (string) $request->query('program_tes_id')
                 : null;
             $soalId = $request->filled('soal_id')
                 ? (string) $request->query('soal_id')
@@ -107,7 +114,7 @@ class PratinjauController extends Controller
             return Inertia::render('Ujian/PratinjauPengerjaan/index', [
                 ...$this->layananSoal->dataPratinjauBank(
                     $bankSoalId,
-                    $jenisTesId,
+                    $programTesId,
                     $pengguna->name,
                     $soalId,
                 ),
@@ -121,7 +128,7 @@ class PratinjauController extends Controller
 
         if ($ujian) {
             $session = SesiUjian::where('status', 'in_progress')
-                ->with(['slotUjian.periodeUjian.ujian.bagianUjian', 'jawaban.soal', 'bagianAktif.keterampilan'])
+                ->with(['slotUjian.periodeUjian.ujian.partUjian', 'jawaban.soal', 'partUjianAktif.section'])
                 ->first();
 
             if ($session) {
@@ -133,7 +140,7 @@ class PratinjauController extends Controller
 
         if (! $session) {
             $pengguna = $request->user();
-            $bagianUjian = $ujian?->bagianUjian()->with('keterampilan')->first();
+            $partUjian = $ujian?->partUjian()->with('section')->first();
 
             $session = new \stdClass;
             $session->id = 0;
@@ -142,7 +149,7 @@ class PratinjauController extends Controller
             $session->dimulai_pada = now()->subMinutes(25)->toIso8601String();
             $session->jumlah_pelanggaran = 0;
             $session->jawaban = collect();
-            $session->bagianAktif = $bagianUjian;
+            $session->partUjianAktif = $partUjian;
             $session->slotUjian = (object) [
                 'periodeUjian' => (object) [
                     'ujian' => $ujian ? (object) [
@@ -170,49 +177,49 @@ class PratinjauController extends Controller
         $blocks = [];
         $startNumber = 1;
 
-        foreach ($layout as $skillCode => $parts) {
-            $meta = self::SKILL_META[$skillCode];
+        foreach ($layout as $sectionCode => $parts) {
+            $meta = self::SECTION_META[$sectionCode];
 
             foreach ($parts as $index => $partConfig) {
                 $partName = $partConfig['nama'];
                 $count = $partConfig['jumlahSoal'];
-                $passage = $this->makePassage($skillCode, $partName, $index);
+                $passage = $this->makePassage($sectionCode, $partName, $index);
                 $soal = [];
                 $soalMandiri = $partConfig['mandiri'] ?? 0;
 
                 if ($soalMandiri > 0) {
-                    // Soal berbasis materi lebih dulu, soal mandiri ditaruh di akhir bagian.
+                    // Soal berbasis materi lebih dulu, soal mandiri ditaruh di akhir part.
                     $jumlahSoalMateri = $count - $soalMandiri;
 
                     for ($i = 0; $i < $jumlahSoalMateri; $i++) {
-                        $soal[] = $this->makeQuestion($skillCode, "{$startNumber}", $passage, $i, false);
+                        $soal[] = $this->makeQuestion($sectionCode, "{$startNumber}", $passage, $i, false);
                         $startNumber++;
                     }
 
                     for ($i = 0; $i < $soalMandiri; $i++) {
-                        $soal[] = $this->makeQuestion($skillCode, "{$startNumber}", null, $i, true);
+                        $soal[] = $this->makeQuestion($sectionCode, "{$startNumber}", null, $i, true);
                         $startNumber++;
                     }
                 } else {
                     for ($i = 0; $i < $count; $i++) {
-                        $soal[] = $this->makeQuestion($skillCode, "{$startNumber}", $passage, $i, false);
+                        $soal[] = $this->makeQuestion($sectionCode, "{$startNumber}", $passage, $i, false);
                         $startNumber++;
                     }
                 }
 
-                $directions = self::PART_DIRECTIONS[$skillCode][$partName]
+                $directions = self::PART_DIRECTIONS[$sectionCode][$partName]
                     ?? '<p>Pilih satu jawaban terbaik dari empat pilihan (A–D).</p>';
 
                 $blocks[] = [
                     'nomorMulai' => 0,
                     'jumlahSoal' => count($soal),
-                    'materi' => $skillCode === 'listening' ? 'audio' : 'text',
-                    'keterampilan' => [
-                        'kode' => $skillCode,
+                    'materi' => $sectionCode === 'listening' ? 'audio' : 'text',
+                    'section' => [
+                        'kode' => $sectionCode,
                         'nama' => $meta['nama'],
                         'deskripsi' => $meta['deskripsi'],
                     ],
-                    'bagianSoal' => [
+                    'partSoal' => [
                         'nama' => $partName,
                         'petunjuk' => $directions,
                     ],
@@ -238,19 +245,19 @@ class PratinjauController extends Controller
             'judulUjian' => $ujian->judul ?? 'Pratinjau Ujian',
             'durasiMenit' => $ujian->durasi_menit ?? 71,
             'jumlahSoal' => $startNumber - 1,
-            'keterampilan' => collect($blocks)
-                ->groupBy(fn ($b) => $b['keterampilan']['kode'])
+            'section' => collect($blocks)
+                ->groupBy(fn ($b) => $b['section']['kode'])
                 ->map(fn ($items, $code) => [
                     'kode' => $code,
-                    'nama' => $items->first()['keterampilan']['nama'],
+                    'nama' => $items->first()['section']['nama'],
                     'materi' => $items->first()['materi'],
                     'jumlahSoal' => $items->sum('jumlahSoal'),
-                    'bagianSoal' => $items->values()->map(fn ($b) => [
-                        'nama' => $b['bagianSoal']['nama'],
+                    'partSoal' => $items->values()->map(fn ($b) => [
+                        'nama' => $b['partSoal']['nama'],
                         'jumlahSoal' => $b['jumlahSoal'],
                     ])->all(),
                 ])
-                ->sortBy(fn ($s) => self::SKILL_META[$s['kode']]['urutan'])
+                ->sortBy(fn ($s) => self::SECTION_META[$s['kode']]['urutan'])
                 ->values()
                 ->all(),
         ];
@@ -271,25 +278,25 @@ class PratinjauController extends Controller
 
         $layout = [];
 
-        foreach (self::PREVIEW_LAYOUT as $skillCode => $parts) {
-            $skillBase = array_sum(array_column($parts, 'jumlahSoal'));
-            $skillTotal = (int) round($total * ($skillBase / $baseTotal));
+        foreach (self::PREVIEW_LAYOUT as $sectionCode => $parts) {
+            $sectionBase = array_sum(array_column($parts, 'jumlahSoal'));
+            $sectionTotal = (int) round($total * ($sectionBase / $baseTotal));
 
-            if ($skillCode === 'reading') {
+            if ($sectionCode === 'reading') {
                 // pastikan total pas
                 $listeningTotal = array_sum(array_column($layout['listening'] ?? [], 'jumlahSoal'));
-                $skillTotal = max(1, $total - $listeningTotal);
+                $sectionTotal = max(1, $total - $listeningTotal);
             }
 
-            $layout[$skillCode] = [];
+            $layout[$sectionCode] = [];
             $allocated = 0;
             $lastIndex = count($parts) - 1;
 
             foreach ($parts as $i => $part) {
                 if ($i === $lastIndex) {
-                    $count = max(1, $skillTotal - $allocated);
+                    $count = max(1, $sectionTotal - $allocated);
                 } else {
-                    $count = max(1, (int) round($skillTotal * ($part['jumlahSoal'] / $skillBase)));
+                    $count = max(1, (int) round($sectionTotal * ($part['jumlahSoal'] / $sectionBase)));
                     $allocated += $count;
                 }
 
@@ -299,16 +306,16 @@ class PratinjauController extends Controller
                     $entry['mandiri'] = min(3, max(1, (int) floor($count / 4)));
                 }
 
-                $layout[$skillCode][] = $entry;
+                $layout[$sectionCode][] = $entry;
             }
         }
 
         return $layout;
     }
 
-    private function makePassage(string $skillCode, string $partName, int $partIndex): array
+    private function makePassage(string $sectionCode, string $partName, int $partIndex): array
     {
-        if ($skillCode === 'listening') {
+        if ($sectionCode === 'listening') {
             return [
                 'id' => "gen-listening-{$partIndex}",
                 'judul' => self::LISTENING_TITLES[$partName] ?? 'Audio Materi',
@@ -340,18 +347,18 @@ class PratinjauController extends Controller
         ];
     }
 
-    private function makeQuestion(string $skillCode, string $id, ?array $passage, int $offset, bool $standalone): array
+    private function makeQuestion(string $sectionCode, string $id, ?array $passage, int $offset, bool $standalone): array
     {
         if ($standalone) {
             $template = self::STANDALONE_QUESTIONS[$offset % count(self::STANDALONE_QUESTIONS)];
-        } elseif ($skillCode === 'listening') {
+        } elseif ($sectionCode === 'listening') {
             $template = self::LISTENING_QUESTIONS[$offset % count(self::LISTENING_QUESTIONS)];
         } else {
             $template = self::READING_QUESTIONS[$offset % count(self::READING_QUESTIONS)];
         }
 
         return [
-            'id' => "gen-{$skillCode}-{$id}".($standalone ? '-sa' : ''),
+            'id' => "gen-{$sectionCode}-{$id}".($standalone ? '-sa' : ''),
             'teks_soal' => $template['q'],
             'pilihan_a' => $template['a'],
             'pilihan_b' => $template['b'],
@@ -359,12 +366,12 @@ class PratinjauController extends Controller
             'pilihan_d' => $template['d'],
             'urutan' => $offset + 1,
             'materiSoal' => $passage,
-            'materi' => $skillCode === 'listening' ? 'audio' : 'text',
-            'keterampilan' => [
-                'kode' => $skillCode,
-                'nama' => self::SKILL_META[$skillCode]['nama'],
+            'materi' => $sectionCode === 'listening' ? 'audio' : 'text',
+            'section' => [
+                'kode' => $sectionCode,
+                'nama' => self::SECTION_META[$sectionCode]['nama'],
             ],
-            'bagianSoal' => null,
+            'partSoal' => null,
         ];
     }
 }

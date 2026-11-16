@@ -1,11 +1,12 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, h, ref } from 'vue';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import DataTable from '@/Components/Shared/DataTable.vue';
-import Pagination from '@/Components/Shared/Pagination.vue';
+import BaseButton from '@/Components/Base/BaseButton.vue';
+import BaseTambahData from '@/Components/Base/BaseTambahData.vue';
+import AppDataTable from '@/Components/Ui/AppDataTable.vue';
 import FormPeriodePendaftaranModal from '@/Pages/Admin/PendaftaranUjian/Components/FormPeriodePendaftaranModal.vue';
-import JenisTesSummaryTable from '@/Pages/Admin/PendaftaranUjian/Components/JenisTesSummaryTable.vue';
+import ProgramTesSummaryTable from '@/Pages/Admin/PendaftaranUjian/Components/ProgramTesSummaryTable.vue';
 import { useConfirm } from '@/Composables/useConfirm';
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-vue';
 
@@ -13,16 +14,16 @@ const props = defineProps({
     periodePendaftaranUjian: { type: Object, default: () => ({ data: [], links: [], total: 0, per_page: 15 }) },
     periodeUjian: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
-    ringkasanJenisTes: { type: Array, default: () => [] },
-    jenisTesTerpilih: { type: Object, default: null },
-    jenisTesTerpilihId: { type: [String, null], default: null },
+    ringkasanProgramTes: { type: Array, default: () => [] },
+    programTesTerpilih: { type: Object, default: null },
+    programTesTerpilihId: { type: [String, null], default: null },
 });
 
 const confirm = useConfirm();
 const showModal = ref(false);
 const creating = ref(false);
 const editingPeriod = ref(null);
-const jenisTesFilter = computed(() => props.jenisTesTerpilihId || '');
+const programTesFilter = computed(() => props.programTesTerpilihId || '');
 
 const form = useForm({
     periode_ujian_id: '',
@@ -40,6 +41,27 @@ const editForm = useForm({
     aktif: true,
     catatan: '',
 });
+
+const tableFilters = [
+    {
+        key: 'status',
+        label: 'Status',
+        options: [
+            { value: 'upcoming', label: 'Akan Dibuka' },
+            { value: 'open', label: 'Sedang Dibuka' },
+            { value: 'closed', label: 'Ditutup' },
+            { value: 'inactive', label: 'Nonaktif' },
+        ],
+    },
+];
+
+const tableFixedFilters = computed(() => (
+    programTesFilter.value ? { program_tes_id: programTesFilter.value } : {}
+));
+
+const tableInitialFilters = computed(() => (
+    props.filters.status ? { status: props.filters.status } : {}
+));
 
 function formatDateTime(value) {
     return value
@@ -72,25 +94,92 @@ function statusClass(value) {
 }
 
 const columns = [
-    { key: 'nama', label: 'Periode', sortable: true, slot: 'period' },
-    { key: 'periode_ujian', label: 'Ujian', slot: 'exam' },
     {
-        key: 'dibuka_pada',
-        label: 'Pendaftaran',
-        sortable: true,
-        render: (_value, row) => `${formatDateTime(row.dibuka_pada)} s/d ${formatDateTime(row.ditutup_pada)}`,
+        accessorKey: 'nama',
+        header: 'Periode',
+        cell: info => h('p', { class: 'font-semibold text-text-heading' }, info.getValue()),
     },
-    { key: 'slot_ujian_count', label: 'Slot', sortable: true, render: (value) => `${value || 0} slot` },
-    { key: 'status_pendaftaran', label: 'Status', slot: 'status' },
-    { key: 'id', label: 'Aksi', slot: 'actions' },
-];
+    {
+        accessorKey: 'periode_ujian',
+        header: 'Ujian',
+        enableSorting: false,
+        cell: info => h('div', [
+            h('p', { class: 'text-label-md text-text-muted' }, info.row.original.periode_ujian?.ujian?.judul || '-'),
+            h('p', { class: 'text-label-md text-text-muted' }, info.row.original.periode_ujian?.judul || '-'),
+        ]),
+    },
+    {
+        accessorKey: 'dibuka_pada',
+        header: 'Pendaftaran',
+        cell: info => `${formatDateTime(info.row.original.dibuka_pada)} s/d ${formatDateTime(info.row.original.ditutup_pada)}`,
+    },
+    {
+        accessorKey: 'slot_ujian_count',
+        header: 'Slot',
+        cell: info => `${info.getValue() || 0} slot`,
+    },
+    {
+        accessorKey: 'status_pendaftaran',
+        header: 'Status',
+        enableSorting: false,
+        cell: info => h(
+            'span',
+            {
+                class: `inline-flex rounded-full px-3 py-1 text-label-md font-medium ${statusClass(info.getValue())}`,
+            },
+            statusLabel(info.getValue()),
+        ),
+    },
+    {
+        id: 'actions',
+        header: 'Aksi',
+        meta: { align: 'center' },
+        cell: info => {
+            const row = info.row.original;
 
-const tablePageSize = Number(props.periodePendaftaranUjian.per_page) || 15;
+            return h('div', { class: 'flex items-center justify-center gap-1' }, [
+                h(
+                    BaseButton,
+                    {
+                        href: route('admin.pendaftaran-ujian.detail', row.id),
+                        variant: 'secondary',
+                        iconOnly: true,
+                        title: 'Lihat detail',
+                        'aria-label': 'Lihat detail',
+                    },
+                    () => h(IconEye, { size: 16 }),
+                ),
+                h(
+                    BaseButton,
+                    {
+                        variant: 'secondary',
+                        iconOnly: true,
+                        title: 'Ubah periode',
+                        'aria-label': 'Ubah periode',
+                        onClick: () => openEdit(row),
+                    },
+                    () => h(IconEdit, { size: 16 }),
+                ),
+                h(
+                    BaseButton,
+                    {
+                        variant: 'danger',
+                        iconOnly: true,
+                        title: 'Hapus periode',
+                        'aria-label': 'Hapus periode',
+                        onClick: () => destroy(row),
+                    },
+                    () => h(IconTrash, { size: 16 }),
+                ),
+            ]);
+        },
+    },
+];
 
 const modalForm = computed(() => (creating.value ? form : editForm));
 
-function jenisTesUrl(jenisTesId) {
-    return `${route('admin.pendaftaran-ujian.daftar')}?jenis_tes_id=${encodeURIComponent(jenisTesId)}`;
+function programTesUrl(programTesId) {
+    return `${route('admin.pendaftaran-ujian.daftar')}?program_tes_id=${encodeURIComponent(programTesId)}`;
 }
 
 function localDateTime(value) {
@@ -154,82 +243,39 @@ async function destroy(period) {
 <template>
     <Head title="Periode Pendaftaran Ujian" />
     <TataLetakDasbor
-        :title="jenisTesTerpilih ? `Periode Pendaftaran - ${jenisTesTerpilih.nama}` : 'Periode Pendaftaran Ujian'"
-        :subtitle="jenisTesTerpilih ? 'Atur pembukaan pendaftaran dan slot peserta' : 'Pilih jenis tes untuk melihat periode pendaftaran'"
-        :back-href="jenisTesFilter ? route('admin.pendaftaran-ujian.daftar') : null"
+        :title="programTesTerpilih ? `Periode Pendaftaran - ${programTesTerpilih.nama}` : 'Periode Pendaftaran Ujian'"
+        :subtitle="programTesTerpilih ? 'Atur pembukaan pendaftaran dan slot peserta' : 'Pilih program tes untuk melihat periode pendaftaran'"
+        :back-href="programTesFilter ? route('admin.pendaftaran-ujian.daftar') : null"
     >
-        <template v-if="!jenisTesFilter">
-            <JenisTesSummaryTable
-                :ringkasan-jenis-tes="ringkasanJenisTes"
-                :detail-url="jenisTesUrl"
+        <template v-if="!programTesFilter">
+            <ProgramTesSummaryTable
+                table-key="admin-pendaftaran-ujian-program-tes"
+                :ringkasan-program-tes="ringkasanProgramTes"
+                :detail-url="programTesUrl"
             />
         </template>
 
         <template v-else>
-            <DataTable
+            <AppDataTable
+                table-key="admin-pendaftaran-ujian"
                 :data="periodePendaftaranUjian.data"
                 :columns="columns"
-                :default-page-size="tablePageSize"
-                :page-size-options="[tablePageSize]"
-                :show-page-size="false"
-                header-title="Daftar Periode Pendaftaran"
+                :page-size="Number(periodePendaftaranUjian.per_page) || 15"
+                :page-size-options="[15, 25, 50, 100]"
+                :filters="tableFilters"
+                :initial-filters="tableInitialFilters"
+                :fixed-filters="tableFixedFilters"
+                server-side
+                :server-total-rows="periodePendaftaranUjian.total ?? 0"
+                :reload-only="['periodePendaftaranUjian', 'filters']"
+                searchable
+                search-placeholder="Cari periode atau ujian..."
+                title="Daftar Periode Pendaftaran"
             >
-            <template #toolbar>
-                <BaseTambahData @click="openCreate" />
-            </template>
-
-            <template #period="{ row }">
-                <p class="font-semibold text-text-heading">{{ row.nama }}</p>
-            </template>
-
-            <template #exam="{ row }">
-                <p class="font-medium text-text-heading">{{ row.periode_ujian?.ujian?.jenis_tes?.nama || '-' }}</p>
-                <p class="text-label-md text-text-muted">{{ row.periode_ujian?.ujian?.judul || '-' }}</p>
-                <p class="text-label-md text-text-muted">{{ row.periode_ujian?.judul || '-' }}</p>
-            </template>
-
-            <template #status="{ row }">
-                <span class="inline-flex rounded-full px-3 py-1 text-label-md font-medium" :class="statusClass(row.status_pendaftaran)">
-                    {{ statusLabel(row.status_pendaftaran) }}
-                </span>
-            </template>
-
-            <template #actions="{ row }">
-                <BaseButton
-                    :href="route('admin.pendaftaran-ujian.detail', row.id)"
-                    variant="secondary"
-                    icon-only
-                    title="Lihat detail"
-                    aria-label="Lihat detail"
-                >
-                    <IconEye :size="16" />
-                </BaseButton>
-                <BaseButton
-                    variant="secondary"
-                    icon-only
-                    title="Ubah periode"
-                    aria-label="Ubah periode"
-                    @click="openEdit(row)"
-                >
-                    <IconEdit :size="16" />
-                </BaseButton>
-                <BaseButton
-                    variant="danger"
-                    icon-only
-                    title="Hapus periode"
-                    aria-label="Hapus periode"
-                    @click="destroy(row)"
-                >
-                    <IconTrash :size="16" />
-                </BaseButton>
-            </template>
-            </DataTable>
-
-            <Pagination
-                :links="periodePendaftaranUjian.links"
-                :total="periodePendaftaranUjian.total"
-                :per-page="periodePendaftaranUjian.per_page"
-            />
+                <template #actions>
+                    <BaseTambahData @click="openCreate" />
+                </template>
+            </AppDataTable>
 
             <FormPeriodePendaftaranModal
                 :show="showModal"

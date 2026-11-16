@@ -2,11 +2,11 @@
 
 namespace App\Modules\Penjadwalan\Services;
 
-use App\Models\JenisTes;
 use App\Models\PeriodeUjian;
+use App\Models\ProgramTes;
 use App\Models\SlotUjian;
 use App\Models\Ujian;
-use App\Modules\DataInduk\Repositories\Contracts\JenisTesRepositoryInterface;
+use App\Modules\DataInduk\Repositories\Contracts\ProgramTesRepositoryInterface;
 use App\Modules\Penjadwalan\Repositories\Contracts\PenjadwalanRepositoryInterface;
 use App\Modules\Penjadwalan\Repositories\Contracts\SlotUjianRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\UjianRepositoryInterface;
@@ -19,60 +19,71 @@ class LayananPenjadwalan
         private PenjadwalanRepositoryInterface $penjadwalanRepo,
         private SlotUjianRepositoryInterface $slotRepo,
         private UjianRepositoryInterface $ujianRepo,
-        private JenisTesRepositoryInterface $jenisTesRepo,
+        private ProgramTesRepositoryInterface $programTesRepo,
     ) {}
 
-    public function dataDaftar(
-        ?string $jenisTesId = null,
-        ?string $ujianId = null,
-        int $perPage = 15,
-    ): array {
-        $jenisTes = $this->jenisTesRepo->semuaAktifBerurutan();
-        $ujianAktif = $this->ujianRepo->semuaAktifDenganJenisTes();
-        $jumlahUjianPerJenisTes = $ujianAktif->groupBy('jenis_tes_id')->map->count();
-        $jumlahPeriodePerJenisTes = $this->penjadwalanRepo->jumlahPeriodePerJenisTes();
-        $ringkasanJenisTes = $jenisTes
-            ->filter(fn (JenisTes $jenis): bool => $jumlahUjianPerJenisTes->has($jenis->id))
-            ->map(fn (JenisTes $jenis): array => [
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    public function dataDaftar(array $filters = []): array
+    {
+        $programTesId = $filters['f_program_tes_id'] ?? $filters['program_tes_id'] ?? null;
+        $ujianId = $filters['f_ujian_id'] ?? $filters['ujian_id'] ?? null;
+        $perPage = (int) ($filters['per_page'] ?? 15);
+        $tableFilters = [
+            'search' => $filters['q'] ?? $filters['search'] ?? null,
+            'aktif' => $filters['f_aktif'] ?? $filters['aktif'] ?? null,
+            'sort' => $filters['sort'] ?? 'tanggal_mulai',
+            'dir' => $filters['dir'] ?? 'desc',
+        ];
+
+        $programTes = $this->programTesRepo->semuaAktifBerurutan();
+        $ujianAktif = $this->ujianRepo->semuaAktifDenganProgramTes();
+        $jumlahUjianPerProgramTes = $ujianAktif->groupBy('program_tes_id')->map->count();
+        $jumlahPeriodePerProgramTes = $this->penjadwalanRepo->jumlahPeriodePerProgramTes();
+        $ringkasanProgramTes = $programTes
+            ->filter(fn (ProgramTes $jenis): bool => $jumlahUjianPerProgramTes->has($jenis->id))
+            ->map(fn (ProgramTes $jenis): array => [
                 'id' => $jenis->id,
                 'kode' => $jenis->kode,
                 'nama' => $jenis->nama,
-                'jumlahUjian' => (int) $jumlahUjianPerJenisTes->get($jenis->id, 0),
-                'jumlahPeriode' => (int) $jumlahPeriodePerJenisTes->get($jenis->id, 0),
+                'jumlahUjian' => (int) $jumlahUjianPerProgramTes->get($jenis->id, 0),
+                'jumlahPeriode' => (int) $jumlahPeriodePerProgramTes->get($jenis->id, 0),
             ])
             ->values()
             ->all();
 
-        $jenisTesTerpilih = $jenisTes->first(
-            fn (JenisTes $jenis): bool => $jenis->id === $jenisTesId
-                && $jumlahUjianPerJenisTes->has($jenis->id),
+        $programTesTerpilih = $programTes->first(
+            fn (ProgramTes $jenis): bool => $jenis->id === $programTesId
+                && $jumlahUjianPerProgramTes->has($jenis->id),
         );
-        $ujianUntukJenisTes = $jenisTesTerpilih !== null
-            ? $ujianAktif->where('jenis_tes_id', $jenisTesTerpilih->id)->values()
+        $ujianUntukProgramTes = $programTesTerpilih !== null
+            ? $ujianAktif->where('program_tes_id', $programTesTerpilih->id)->values()
             : new Collection;
-        $jumlahPeriodePerUjian = $jenisTesTerpilih !== null
-            ? $this->penjadwalanRepo->jumlahPeriodePerUjian($jenisTesTerpilih->id)
+        $jumlahPeriodePerUjian = $programTesTerpilih !== null
+            ? $this->penjadwalanRepo->jumlahPeriodePerUjian($programTesTerpilih->id)
             : collect();
-        $ringkasanUjian = $ujianUntukJenisTes
+        $ringkasanUjian = $ujianUntukProgramTes
             ->map(fn (Ujian $ujian): array => [
                 'id' => $ujian->id,
-                'jenisTesId' => $ujian->jenis_tes_id,
+                'programTesId' => $ujian->program_tes_id,
                 'judul' => $ujian->judul,
                 'mode' => $ujian->mode->value,
                 'jumlahPeriode' => (int) $jumlahPeriodePerUjian->get($ujian->id, 0),
             ])
             ->values()
             ->all();
-        $ujianTerpilih = $ujianUntukJenisTes->firstWhere('id', $ujianId);
+        $ujianTerpilih = $ujianUntukProgramTes->firstWhere('id', $ujianId);
 
         return [
             'periodeUjian' => $ujianTerpilih !== null
-                ? $this->penjadwalanRepo->paginateSemua($perPage, $jenisTesTerpilih->id, $ujianTerpilih->id)
+                ? $this->penjadwalanRepo->paginateSemua($tableFilters, $perPage, $programTesTerpilih->id, $ujianTerpilih->id)
                 : $this->penjadwalanRepo->paginatorKosong($perPage),
-            'ringkasanJenisTes' => $ringkasanJenisTes,
+            'ringkasanProgramTes' => $ringkasanProgramTes,
             'ringkasanUjian' => $ringkasanUjian,
-            'jenisTesTerpilih' => $jenisTesTerpilih,
-            'jenisTesTerpilihId' => $jenisTesTerpilih?->id,
+            'programTesTerpilih' => $programTesTerpilih,
+            'programTesTerpilihId' => $programTesTerpilih?->id,
             'ujianTerpilih' => $ujianTerpilih,
             'ujianTerpilihId' => $ujianTerpilih?->id,
         ];

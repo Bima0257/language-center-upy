@@ -4,12 +4,11 @@ namespace App\Modules\Penilaian\Actions;
 
 class HitungSkorTotal
 {
-    public function execute(
-        float $membaca,
-        float $menyimak,
-        float $berbicara = 0,
-        float $menulis = 0,
-    ): float {
-        return round($membaca + $menyimak + $berbicara + $menulis, 1);
+    /**
+     * @param  array<int, float>  $skorSection
+     */
+    public function execute(array $skorSection): float
+    {
+        return round(array_sum($skorSection), 1);
     }
 }

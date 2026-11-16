@@ -3,8 +3,10 @@
 namespace Tests\Feature\DataInduk;
 
 use App\Models\InterpretasiSkor;
-use App\Models\JenisTes;
 use App\Models\Pengguna;
+use App\Models\ProgramTes;
+use App\Models\SkemaPenilaian;
+use App\Modules\Penilaian\Services\LayananAturanPenilaian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -31,6 +33,11 @@ class InterpretasiSkorTest extends TestCase
         return $pengguna;
     }
 
+    private function skemaDraft(ProgramTes $programTes): SkemaPenilaian
+    {
+        return app(LayananAturanPenilaian::class)->buatVersi($programTes);
+    }
+
     public function test_tamu_diarahkan_ke_login(): void
     {
         $this->get('/admin/data-induk/interpretasi-skor')->assertRedirect('/login');
@@ -38,36 +45,42 @@ class InterpretasiSkorTest extends TestCase
 
     public function test_peran_tanpa_izin_ditolak(): void
     {
-        $this->masukSebagai('student');
+        $this->masukSebagai('peserta');
 
         $this->get('/admin/data-induk/interpretasi-skor')->assertForbidden();
     }
 
-    public function test_admin_dapat_melihat_ringkasan_dan_detail_per_jenis_tes(): void
+    public function test_admin_dapat_melihat_ringkasan_dan_detail_per_program_tes(): void
     {
         $this->masukSebagai('admin');
-        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->firstOrFail();
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
 
         $this->get('/admin/data-induk/interpretasi-skor')->assertOk();
-        $this->get("/admin/data-induk/interpretasi-skor/jenis-tes/{$jenisTes->id}")->assertOk();
+        $this->get("/admin/data-induk/interpretasi-skor/program-tes/{$programTes->id}")->assertOk();
     }
 
     public function test_admin_dapat_membuka_halaman_tambah_massal(): void
     {
         $this->masukSebagai('admin');
-        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->firstOrFail();
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $skema = $this->skemaDraft($programTes);
 
-        $this->get("/admin/data-induk/interpretasi-skor/jenis-tes/{$jenisTes->id}/tambah-massal")
+        $this->get("/admin/data-induk/interpretasi-skor/program-tes/{$programTes->id}/tambah-massal?skema={$skema->id}")
             ->assertOk();
     }
 
     public function test_admin_dapat_memperbarui_interpretasi_skor(): void
     {
         $this->masukSebagai('admin');
-        $interpretasiSkor = InterpretasiSkor::where('skor_minimum', 380)->firstOrFail();
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $skema = $this->skemaDraft($programTes);
+        $interpretasiSkor = InterpretasiSkor::where('skema_penilaian_id', $skema->id)
+            ->where('skor_minimum', 380)
+            ->firstOrFail();
 
         $this->put("/admin/data-induk/interpretasi-skor/{$interpretasiSkor->id}", [
-            'jenis_tes_id' => $interpretasiSkor->jenis_tes_id,
+            'skema_penilaian_id' => $skema->id,
+            'program_tes_id' => $programTes->id,
             'skor_minimum' => 381,
             'skor_maksimum' => 400,
             'tingkat_cefr' => 'B2',
@@ -87,10 +100,15 @@ class InterpretasiSkorTest extends TestCase
     public function test_rentang_skor_tidak_valid_ditolak_saat_memperbarui(): void
     {
         $this->masukSebagai('admin');
-        $interpretasiSkor = InterpretasiSkor::where('skor_minimum', 380)->firstOrFail();
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $skema = $this->skemaDraft($programTes);
+        $interpretasiSkor = InterpretasiSkor::where('skema_penilaian_id', $skema->id)
+            ->where('skor_minimum', 380)
+            ->firstOrFail();
 
         $this->put("/admin/data-induk/interpretasi-skor/{$interpretasiSkor->id}", [
-            'jenis_tes_id' => $interpretasiSkor->jenis_tes_id,
+            'skema_penilaian_id' => $skema->id,
+            'program_tes_id' => $programTes->id,
             'skor_minimum' => 400,
             'skor_maksimum' => 399,
             'tingkat_cefr' => 'B2',
@@ -101,11 +119,13 @@ class InterpretasiSkorTest extends TestCase
 
     public function test_peran_tanpa_izin_tidak_dapat_memperbarui_interpretasi_skor(): void
     {
-        $this->masukSebagai('student');
+        $this->masukSebagai('peserta');
         $interpretasiSkor = InterpretasiSkor::where('skor_minimum', 380)->firstOrFail();
+        $skema = SkemaPenilaian::findOrFail($interpretasiSkor->skema_penilaian_id);
 
         $this->put("/admin/data-induk/interpretasi-skor/{$interpretasiSkor->id}", [
-            'jenis_tes_id' => $interpretasiSkor->jenis_tes_id,
+            'skema_penilaian_id' => $skema->id,
+            'program_tes_id' => $skema->program_tes_id,
             'skor_minimum' => 381,
             'skor_maksimum' => 400,
             'tingkat_cefr' => 'B2',
@@ -117,46 +137,52 @@ class InterpretasiSkorTest extends TestCase
     public function test_admin_dapat_menyimpan_interpretasi_skor_secara_massal(): void
     {
         $this->masukSebagai('admin');
-        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->firstOrFail();
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $skema = $this->skemaDraft($programTes);
 
-        $this->post("/admin/data-induk/interpretasi-skor/jenis-tes/{$jenisTes->id}/tambah-massal", [
+        $this->post("/admin/data-induk/interpretasi-skor/program-tes/{$programTes->id}/tambah-massal", [
+            'skema_penilaian_id' => $skema->id,
             'interpretasi_skor' => [
                 [
-                    'skor_minimum' => 100,
-                    'skor_maksimum' => 149,
-                    'tingkat_cefr' => 'A1-',
-                    'label_tingkat' => 'Starter',
-                    'lulus' => false,
-                    'deskripsi' => 'Starter level',
+                    'skor_minimum' => 401,
+                    'skor_maksimum' => 449,
+                    'tingkat_cefr' => 'C1',
+                    'label_tingkat' => 'Advanced',
+                    'lulus' => true,
+                    'deskripsi' => 'Advanced level',
                 ],
                 [
-                    'skor_minimum' => 150,
-                    'skor_maksimum' => 199,
-                    'tingkat_cefr' => 'A1',
-                    'label_tingkat' => 'Beginner Plus',
-                    'lulus' => false,
+                    'skor_minimum' => 450,
+                    'skor_maksimum' => 499,
+                    'tingkat_cefr' => 'C2',
+                    'label_tingkat' => 'Proficient',
+                    'lulus' => true,
                 ],
             ],
-        ])->assertRedirect(route('admin.data-induk.interpretasi-skor.jenis-tes.daftar', $jenisTes));
+        ])->assertRedirect(route('admin.data-induk.interpretasi-skor.program-tes.daftar', [
+            'programTes' => $programTes->id,
+            'skema' => $skema->id,
+        ]));
 
         $this->assertDatabaseHas('interpretasi_skor', [
-            'jenis_tes_id' => $jenisTes->id,
-            'skor_minimum' => 100,
-            'skor_maksimum' => 149,
-            'label_tingkat' => 'Starter',
+            'skema_penilaian_id' => $skema->id,
+            'skor_minimum' => 401,
+            'skor_maksimum' => 449,
+            'label_tingkat' => 'Advanced',
         ]);
         $this->assertDatabaseHas('interpretasi_skor', [
-            'jenis_tes_id' => $jenisTes->id,
-            'skor_minimum' => 150,
-            'skor_maksimum' => 199,
-            'label_tingkat' => 'Beginner Plus',
+            'skema_penilaian_id' => $skema->id,
+            'skor_minimum' => 450,
+            'skor_maksimum' => 499,
+            'label_tingkat' => 'Proficient',
         ]);
     }
 
     public function test_bulk_interpretasi_skor_maksimal_sepuluh_data(): void
     {
         $this->masukSebagai('admin');
-        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->firstOrFail();
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $skema = $this->skemaDraft($programTes);
         $interpretasiSkor = [];
 
         for ($index = 1; $index <= 11; $index++) {
@@ -170,12 +196,13 @@ class InterpretasiSkorTest extends TestCase
             ];
         }
 
-        $this->post("/admin/data-induk/interpretasi-skor/jenis-tes/{$jenisTes->id}/tambah-massal", [
+        $this->post("/admin/data-induk/interpretasi-skor/program-tes/{$programTes->id}/tambah-massal", [
+            'skema_penilaian_id' => $skema->id,
             'interpretasi_skor' => $interpretasiSkor,
         ])->assertSessionHasErrors('interpretasi_skor');
 
         $this->assertDatabaseMissing('interpretasi_skor', [
-            'jenis_tes_id' => $jenisTes->id,
+            'skema_penilaian_id' => $skema->id,
             'skor_minimum' => 510,
         ]);
     }

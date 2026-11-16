@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Ujian;
 
-use App\Models\BagianSoal;
-use App\Models\BagianUjian;
 use App\Models\BankSoal;
-use App\Models\JenisTes;
-use App\Models\Keterampilan;
+use App\Models\PartSoal;
+use App\Models\PartUjian;
 use App\Models\Pengguna;
 use App\Models\PeriodeUjian;
+use App\Models\ProgramTes;
+use App\Models\Section;
 use App\Models\Soal;
 use App\Models\Ujian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -46,7 +46,7 @@ class UjianTest extends TestCase
 
     public function test_peran_tanpa_izin_ditolak(): void
     {
-        $this->masukSebagai('student');
+        $this->masukSebagai('peserta');
 
         $this->get('/admin/ujian')->assertForbidden();
     }
@@ -64,38 +64,38 @@ class UjianTest extends TestCase
 
         $this->get('/admin/ujian')->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Ujian/index')
-            ->has('jenisTes')
+            ->has('programTes')
             ->has('bankSoal'));
     }
 
-    public function test_halaman_daftar_menampilkan_grouping_semua_jenis_tes_aktif(): void
+    public function test_halaman_daftar_menampilkan_grouping_semua_program_tes_aktif(): void
     {
         $this->masukSebagai('admin');
 
         $this->get('/admin/ujian')->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Ujian/index')
-            ->where('jenisTesTerpilihId', null)
-            ->has('ringkasanJenisTes', JenisTes::where('aktif', true)->count())
+            ->where('programTesTerpilihId', null)
+            ->has('ringkasanProgramTes', ProgramTes::where('aktif', true)->count())
             ->has('ujian', 0));
     }
 
-    public function test_halaman_daftar_memfilter_ujian_berdasarkan_jenis_tes(): void
+    public function test_halaman_daftar_memfilter_ujian_berdasarkan_program_tes(): void
     {
         $this->masukSebagai('admin');
 
-        $jenisTes = JenisTes::where('aktif', true)
+        $programTes = ProgramTes::where('aktif', true)
             ->whereHas('ujian')
             ->firstOrFail();
-        $jumlahUjian = Ujian::where('jenis_tes_id', $jenisTes->id)->count();
+        $jumlahUjian = Ujian::where('program_tes_id', $programTes->id)->count();
 
-        $this->get('/admin/ujian?jenis_tes_id='.$jenisTes->id)->assertInertia(fn (Assert $page) => $page
+        $this->get('/admin/ujian?program_tes_id='.$programTes->id)->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Ujian/index')
-            ->where('jenisTesTerpilihId', $jenisTes->id)
-            ->where('jenisTesTerpilih.id', $jenisTes->id)
+            ->where('programTesTerpilihId', $programTes->id)
+            ->where('programTesTerpilih.id', $programTes->id)
             ->has('ujian', $jumlahUjian)
-            ->where('ujian', function (Collection $ujian) use ($jenisTes): bool {
+            ->where('ujian', function (Collection $ujian) use ($programTes): bool {
                 return $ujian->every(
-                    fn (array $item): bool => $item['jenis_tes_id'] === $jenisTes->id,
+                    fn (array $item): bool => $item['program_tes_id'] === $programTes->id,
                 );
             }));
     }
@@ -104,11 +104,11 @@ class UjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $ujian = Ujian::whereHas('bagianUjian')->firstOrFail();
+        $ujian = Ujian::whereHas('partUjian')->firstOrFail();
 
         $this->put(route('admin.ujian.perbarui', $ujian), [
-            'jenis_tes_id' => $ujian->jenis_tes_id,
-            'judul' => 'Try Out TOEFL iBT Diperbarui',
+            'program_tes_id' => $ujian->program_tes_id,
+            'judul' => 'Try Out EPT Diperbarui',
             'deskripsi' => 'Deskripsi ujian yang diperbarui.',
             'mode' => 'tryout',
             'durasi_menit' => 71,
@@ -117,20 +117,20 @@ class UjianTest extends TestCase
 
         $this->assertDatabaseHas('ujian', [
             'id' => $ujian->id,
-            'judul' => 'Try Out TOEFL iBT Diperbarui',
+            'judul' => 'Try Out EPT Diperbarui',
             'durasi_menit' => 71,
         ]);
     }
 
-    public function test_pembuatan_ujian_membentuk_bagian_per_keterampilan_dan_bank(): void
+    public function test_pembuatan_ujian_membentuk_part_per_section_dan_bank(): void
     {
         $this->masukSebagai('admin');
 
-        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->first();
-        $bankSoal = BankSoal::where('nama', 'Bank Soal Demo')->first();
+        $programTes = ProgramTes::where('nama', 'EPT')->first();
+        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->first();
 
         $this->post('/admin/ujian', [
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'bank_soal_id' => $bankSoal->id,
             'judul' => 'Ujian Baru 2026',
             'deskripsi' => 'Deskripsi',
@@ -142,22 +142,22 @@ class UjianTest extends TestCase
 
         $this->assertNotNull($ujian);
 
-        $this->assertGreaterThanOrEqual(1, $ujian->bagianUjian->count());
+        $this->assertGreaterThanOrEqual(1, $ujian->partUjian->count());
 
-        foreach ($ujian->bagianUjian as $bagianUjian) {
-            $this->assertEquals($bankSoal->id, $bagianUjian->bank_soal_id);
+        foreach ($ujian->partUjian as $partUjian) {
+            $this->assertEquals($bankSoal->id, $partUjian->bank_soal_id);
             $this->assertEquals(
-                $bagianUjian->soalBagianUjian()->count(),
-                $bagianUjian->jumlah_soal,
+                $partUjian->soalPartUjian()->count(),
+                $partUjian->jumlah_soal,
             );
 
             $soalBank = Soal::where('bank_soal_id', $bankSoal->id)
-                ->where('keterampilan_id', $bagianUjian->keterampilan_id)
+                ->where('section_id', $partUjian->section_id)
                 ->pluck('id')
                 ->sort()
                 ->values()
                 ->all();
-            $soalUjian = $bagianUjian->soalBagianUjian()
+            $soalUjian = $partUjian->soalPartUjian()
                 ->orderBy('soal_id')
                 ->pluck('soal_id')
                 ->all();
@@ -170,10 +170,10 @@ class UjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $bankSoal = BankSoal::where('nama', 'Bank Soal Demo')->firstOrFail();
+        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
 
         $this->put(route('pustaka-soal.bank-soal.perbarui', $bankSoal->id), [
-            'jenis_tes_id' => $bankSoal->jenis_tes_id,
+            'program_tes_id' => $bankSoal->program_tes_id,
             'nama' => 'Nama Bank Baru',
             'deskripsi' => $bankSoal->deskripsi,
             'aktif' => $bankSoal->aktif,
@@ -181,7 +181,7 @@ class UjianTest extends TestCase
 
         $this->assertDatabaseHas('bank_soal', [
             'id' => $bankSoal->id,
-            'nama' => 'Bank Soal Demo',
+            'nama' => 'Bank Soal EPT',
         ]);
     }
 
@@ -189,12 +189,12 @@ class UjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $soal = Soal::whereHas('bagianUjian')->firstOrFail();
+        $soal = Soal::whereHas('partUjian')->firstOrFail();
 
         $this->post(route('admin.ujian.soal.simpan'), [
             'bank_soal_id' => $soal->bank_soal_id,
-            'keterampilan_id' => $soal->keterampilan_id,
-            'bagian_soal_id' => $soal->bagian_soal_id,
+            'section_id' => $soal->section_id,
+            'part_soal_id' => $soal->part_soal_id,
             'teks_soal' => 'Soal baru yang seharusnya ditolak',
             'pilihan_a' => 'A',
             'pilihan_b' => 'B',
@@ -209,12 +209,12 @@ class UjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $soal = Soal::whereHas('bagianUjian')->firstOrFail();
+        $soal = Soal::whereHas('partUjian')->firstOrFail();
 
         $this->put(route('pustaka-soal.perbarui', $soal->id), [
             'bank_soal_id' => $soal->bank_soal_id,
-            'keterampilan_id' => $soal->keterampilan_id,
-            'bagian_soal_id' => $soal->bagian_soal_id,
+            'section_id' => $soal->section_id,
+            'part_soal_id' => $soal->part_soal_id,
             'materi_soal_id' => $soal->materi_soal_id,
             'teks_soal' => $soal->teks_soal,
             'pilihan_a' => $soal->pilihan_a,
@@ -234,7 +234,7 @@ class UjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $bankSoal = BankSoal::where('nama', 'Bank Soal Demo')->firstOrFail();
+        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
 
         $this->delete(route('pustaka-soal.bank-soal.hapus', $bankSoal->id))
             ->assertSessionHas('error');
@@ -246,24 +246,25 @@ class UjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $ujian = Ujian::whereHas('bagianUjian')->firstOrFail();
-        $bagianUjian = BagianUjian::where('ujian_id', $ujian->id)->firstOrFail();
-        $soalId = $bagianUjian->soalBagianUjian()->value('soal_id');
+        $ujian = Ujian::whereHas('partUjian')->firstOrFail();
+        $ujian->update(['aktif' => false]);
+        $partUjian = PartUjian::where('ujian_id', $ujian->id)->firstOrFail();
+        $soalId = $partUjian->soalPartUjian()->value('soal_id');
         $this->assertIsString($soalId);
 
-        $bagianUjian->soalBagianUjian()->where('soal_id', $soalId)->delete();
-        $bagianUjian->update(['jumlah_soal' => 0]);
+        $partUjian->soalPartUjian()->where('soal_id', $soalId)->delete();
+        $partUjian->update(['jumlah_soal' => 0]);
 
         $this->get(route('admin.ujian.detail', $ujian->id))->assertOk();
 
-        $this->assertDatabaseHas('soal_bagian_ujian', [
-            'bagian_ujian_id' => $bagianUjian->id,
+        $this->assertDatabaseHas('soal_part_ujian', [
+            'part_ujian_id' => $partUjian->id,
             'soal_id' => $soalId,
         ]);
-        $this->assertDatabaseHas('bagian_ujian', [
-            'id' => $bagianUjian->id,
-            'jumlah_soal' => Soal::where('bank_soal_id', $bagianUjian->bank_soal_id)
-                ->where('keterampilan_id', $bagianUjian->keterampilan_id)
+        $this->assertDatabaseHas('part_ujian', [
+            'id' => $partUjian->id,
+            'jumlah_soal' => Soal::where('bank_soal_id', $partUjian->bank_soal_id)
+                ->where('section_id', $partUjian->section_id)
                 ->count(),
         ]);
     }
@@ -272,44 +273,48 @@ class UjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $bagianUjian = BagianUjian::where('judul', 'Reading Section')->firstOrFail();
-        $soalIds = $bagianUjian->soalBagianUjian()->orderBy('urutan')->pluck('soal_id')->all();
+        $partUjian = PartUjian::where('judul', 'Reading Section')->firstOrFail();
+        $barisSoal = $partUjian->soalPartUjian()->with('soal')->orderBy('urutan')->get();
+        $soalIds = $barisSoal->pluck('soal_id')->all();
         $urutanSoal = [];
+        $nomor = 1;
 
-        foreach (array_reverse($soalIds) as $indeks => $soalId) {
-            $urutanSoal[] = [
-                'soal_id' => $soalId,
-                'nomor' => $indeks + 1,
-            ];
+        foreach ($barisSoal->groupBy(fn ($baris): string => (string) ($baris->soal?->part_soal_id ?? 'none')) as $kelompok) {
+            foreach ($kelompok->reverse() as $baris) {
+                $urutanSoal[] = [
+                    'soal_id' => $baris->soal_id,
+                    'nomor' => $nomor++,
+                ];
+            }
         }
 
-        $this->patch(route('admin.ujian.bagian.susunan', [$bagianUjian->ujian_id, $bagianUjian->id]), [
+        $this->patch(route('admin.ujian.part.susunan', [$partUjian->ujian_id, $partUjian->id]), [
             'urutan_soal' => $urutanSoal,
         ])->assertRedirect();
 
         $this->assertSame(
             collect($urutanSoal)->pluck('soal_id')->all(),
-            $bagianUjian->soalBagianUjian()->orderBy('urutan')->pluck('soal_id')->all(),
+            $partUjian->soalPartUjian()->orderBy('urutan')->pluck('soal_id')->all(),
         );
-        $this->assertSame(count($soalIds), $bagianUjian->soalBagianUjian()->count());
+        $this->assertSame(count($soalIds), $partUjian->soalPartUjian()->count());
     }
 
     public function test_admin_tidak_dapat_memindahkan_soal_ke_part_lain(): void
     {
         $this->masukSebagai('admin');
 
-        $bagianUjian = BagianUjian::where('judul', 'Reading Section')->firstOrFail();
-        $partIds = BagianSoal::where('bank_soal_id', $bagianUjian->bank_soal_id)
-            ->where('keterampilan_id', $bagianUjian->keterampilan_id)
+        $partUjian = PartUjian::where('judul', 'Reading Section')->firstOrFail();
+        $partIds = PartSoal::where('bank_soal_id', $partUjian->bank_soal_id)
+            ->where('section_id', $partUjian->section_id)
             ->orderBy('urutan')
             ->pluck('id')
             ->all();
-        $soalIds = $bagianUjian->soalBagianUjian()->orderBy('urutan')->pluck('soal_id')->all();
+        $soalIds = $partUjian->soalPartUjian()->orderBy('urutan')->pluck('soal_id')->all();
 
         $this->assertGreaterThanOrEqual(2, count($partIds));
         $this->assertGreaterThanOrEqual(2, count($soalIds));
 
-        Soal::whereKey($soalIds[0])->update(['bagian_soal_id' => $partIds[1]]);
+        Soal::whereKey($soalIds[0])->update(['part_soal_id' => $partIds[1]]);
 
         $urutanSoal = $soalIds;
         [$urutanSoal[0], $urutanSoal[1]] = [$urutanSoal[1], $urutanSoal[0]];
@@ -322,13 +327,13 @@ class UjianTest extends TestCase
             ];
         }
 
-        $this->patch(route('admin.ujian.bagian.susunan', [$bagianUjian->ujian_id, $bagianUjian->id]), [
+        $this->patch(route('admin.ujian.part.susunan', [$partUjian->ujian_id, $partUjian->id]), [
             'urutan_soal' => $payload,
         ])->assertSessionHasErrors('urutan_soal');
 
         $this->assertSame(
             $soalIds,
-            $bagianUjian->soalBagianUjian()->orderBy('urutan')->pluck('soal_id')->all(),
+            $partUjian->soalPartUjian()->orderBy('urutan')->pluck('soal_id')->all(),
         );
     }
 
@@ -336,15 +341,15 @@ class UjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->first();
+        $programTes = ProgramTes::where('nama', 'EPT')->first();
         $bankSoal = BankSoal::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'nama' => 'Bank Soal Nonaktif',
             'aktif' => false,
         ]);
 
         $this->post('/admin/ujian', [
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'bank_soal_id' => $bankSoal->id,
             'judul' => 'Ujian Dengan Bank Nonaktif',
             'mode' => 'tryout',
@@ -354,19 +359,19 @@ class UjianTest extends TestCase
         $this->assertDatabaseMissing('ujian', ['judul' => 'Ujian Dengan Bank Nonaktif']);
     }
 
-    public function test_ujian_tidak_dapat_dipindah_ke_jenis_tes_nonaktif(): void
+    public function test_ujian_tidak_dapat_dipindah_ke_program_tes_nonaktif(): void
     {
         $this->masukSebagai('admin');
 
-        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->first();
-        $jenisTesNonaktif = JenisTes::create([
+        $programTes = ProgramTes::where('nama', 'EPT')->first();
+        $programTesNonaktif = ProgramTes::create([
             'kode' => '010',
-            'nama' => 'Jenis Tes Nonaktif Untuk Ujian',
+            'nama' => 'Program Tes Nonaktif Untuk Ujian',
             'batas_pelanggaran' => 3,
             'aktif' => false,
         ]);
         $ujian = Ujian::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Yang Tidak Dipindahkan',
             'mode' => 'tryout',
             'durasi_menit' => 60,
@@ -374,46 +379,46 @@ class UjianTest extends TestCase
         ]);
 
         $this->put("/admin/ujian/{$ujian->id}", [
-            'jenis_tes_id' => $jenisTesNonaktif->id,
+            'program_tes_id' => $programTesNonaktif->id,
             'judul' => $ujian->judul,
             'mode' => 'tryout',
             'durasi_menit' => 60,
             'aktif' => true,
-        ])->assertSessionHasErrors('jenis_tes_id');
+        ])->assertSessionHasErrors('program_tes_id');
 
         $this->assertDatabaseHas('ujian', [
             'id' => $ujian->id,
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
         ]);
     }
 
-    public function test_bagian_ujian_dari_parent_lain_tidak_dapat_diakses(): void
+    public function test_part_ujian_dari_parent_lain_tidak_dapat_diakses(): void
     {
         $this->masukSebagai('admin');
 
-        $bagianUjian = BagianUjian::where('judul', 'Reading Section')->firstOrFail();
+        $partUjian = PartUjian::where('judul', 'Reading Section')->firstOrFail();
         $ujianLain = Ujian::create([
-            'jenis_tes_id' => $bagianUjian->ujian->jenis_tes_id,
+            'program_tes_id' => $partUjian->ujian->program_tes_id,
             'judul' => 'Ujian Parent Lain',
             'mode' => 'tryout',
             'durasi_menit' => 60,
             'aktif' => true,
         ]);
 
-        $this->delete("/admin/ujian/{$ujianLain->id}/bagian/{$bagianUjian->id}")
+        $this->delete("/admin/ujian/{$ujianLain->id}/part/{$partUjian->id}")
             ->assertNotFound();
 
-        $this->assertDatabaseHas('bagian_ujian', ['id' => $bagianUjian->id]);
+        $this->assertDatabaseHas('part_ujian', ['id' => $partUjian->id]);
     }
 
     public function test_admin_dapat_menghapus_ujian_tanpa_periode(): void
     {
         $this->masukSebagai('admin');
 
-        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->first();
+        $programTes = ProgramTes::where('nama', 'EPT')->first();
 
         $ujian = Ujian::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Tanpa Jadwal',
             'mode' => 'tryout',
             'durasi_menit' => 60,
@@ -429,10 +434,10 @@ class UjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->first();
+        $programTes = ProgramTes::where('nama', 'EPT')->first();
 
         $ujian = Ujian::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Terjadwal',
             'mode' => 'tryout',
             'durasi_menit' => 60,
@@ -452,44 +457,57 @@ class UjianTest extends TestCase
         $this->assertDatabaseHas('ujian', ['id' => $ujian->id]);
     }
 
-    public function test_sinkronisasi_membuat_bagian_keterampilan_yang_belum_ada_dan_menambahkan_soal(): void
+    public function test_sinkronisasi_membuat_part_section_yang_belum_ada_dan_menambahkan_soal(): void
     {
         $this->masukSebagai('admin');
 
-        $ujian = Ujian::whereHas('bagianUjian')->first();
-        $keterampilanMembaca = Keterampilan::where('nama', 'Reading')->first();
+        $ujian = Ujian::whereHas('partUjian')->first();
+        $ujian->update(['aktif' => false]);
+        $sectionMembaca = Section::where('nama', 'Reading')->first();
 
         // Hapus section reading agar mirip ujian yang dibuat sebelum soal reading tersedia
-        $ujian->bagianUjian()->where('keterampilan_id', $keterampilanMembaca->id)->delete();
-        $this->assertFalse($ujian->fresh()->bagianUjian()->where('keterampilan_id', $keterampilanMembaca->id)->exists());
+        $ujian->partUjian()->where('section_id', $sectionMembaca->id)->delete();
+        $this->assertFalse($ujian->fresh()->partUjian()->where('section_id', $sectionMembaca->id)->exists());
 
-        $bankSoalId = BagianUjian::where('ujian_id', $ujian->id)->value('bank_soal_id');
+        $bankSoalId = PartUjian::where('ujian_id', $ujian->id)->value('bank_soal_id');
         $this->assertIsString($bankSoalId);
         $soalMembaca = Soal::where('bank_soal_id', $bankSoalId)
-            ->where('keterampilan_id', $keterampilanMembaca->id)
+            ->where('section_id', $sectionMembaca->id)
             ->firstOrFail();
 
-        $this->post("/admin/ujian/{$ujian->id}/sinkronkan-bagian")->assertRedirect();
+        $this->post("/admin/ujian/{$ujian->id}/sinkronkan-part")->assertRedirect();
 
-        $bagianBaru = BagianUjian::where('ujian_id', $ujian->id)
-            ->where('keterampilan_id', $keterampilanMembaca->id)
+        $partBaru = PartUjian::where('ujian_id', $ujian->id)
+            ->where('section_id', $sectionMembaca->id)
             ->firstOrFail();
-        $this->assertDatabaseHas('soal_bagian_ujian', [
-            'bagian_ujian_id' => $bagianBaru->id,
+        $this->assertDatabaseHas('soal_part_ujian', [
+            'part_ujian_id' => $partBaru->id,
             'soal_id' => $soalMembaca->id,
         ]);
     }
 
-    public function test_sinkronisasi_idempoten_saat_semua_bagian_tersedia(): void
+    public function test_sinkronisasi_idempoten_saat_semua_part_tersedia(): void
     {
         $this->masukSebagai('admin');
 
-        $ujian = Ujian::whereHas('bagianUjian')->first();
+        $ujian = Ujian::whereHas('partUjian')->first();
+        $ujian->update(['aktif' => false]);
 
-        $before = $ujian->bagianUjian()->count();
+        $before = $ujian->partUjian()->count();
 
-        $this->post("/admin/ujian/{$ujian->id}/sinkronkan-bagian")->assertRedirect();
+        $this->post("/admin/ujian/{$ujian->id}/sinkronkan-part")->assertRedirect();
 
-        $this->assertEquals($before, $ujian->fresh()->bagianUjian()->count());
+        $this->assertEquals($before, $ujian->fresh()->partUjian()->count());
+    }
+
+    public function test_sinkronisasi_ujian_aktif_ditolak(): void
+    {
+        $this->masukSebagai('admin');
+
+        $ujian = Ujian::whereHas('partUjian')->where('aktif', true)->firstOrFail();
+
+        $this->post(route('admin.ujian.sinkronkan-part', $ujian))
+            ->assertRedirect()
+            ->assertSessionHasErrors('ujian');
     }
 }

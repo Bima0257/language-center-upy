@@ -13,12 +13,12 @@ class SlotUjianRepository implements SlotUjianRepositoryInterface
 {
     public function findOrFail(string $id): SlotUjian
     {
-        return SlotUjian::with('periodeUjian.periodePendaftaran', 'periodeUjian.ujian.jenisTes')->findOrFail($id);
+        return SlotUjian::with('periodeUjian.periodePendaftaran', 'periodeUjian.ujian.programTes')->findOrFail($id);
     }
 
     public function temukanUntukUpdate(string $id): SlotUjian
     {
-        return SlotUjian::with('periodeUjian.periodePendaftaran', 'periodeUjian.ujian.jenisTes')
+        return SlotUjian::with('periodeUjian.periodePendaftaran', 'periodeUjian.ujian.programTes')
             ->lockForUpdate()
             ->findOrFail($id);
     }
@@ -41,7 +41,7 @@ class SlotUjianRepository implements SlotUjianRepositoryInterface
 
     public function semuaDenganPeriodeUjian(): Collection
     {
-        return SlotUjian::with('periodeUjian.ujian.jenisTes')
+        return SlotUjian::with('periodeUjian.ujian.programTes')
             ->orderByDesc('tanggal')
             ->orderBy('waktu_mulai')
             ->get();
@@ -84,6 +84,9 @@ class SlotUjianRepository implements SlotUjianRepositoryInterface
             ->exists();
     }
 
+    /**
+     * @return Collection<int, SlotUjian>
+     */
     public function slotTersedia(): Collection
     {
         $today = now()->toDateString();

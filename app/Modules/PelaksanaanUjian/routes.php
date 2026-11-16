@@ -3,7 +3,7 @@
 use App\Modules\PelaksanaanUjian\Controllers\SesiUjianController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'permission:exam_session.take'])
+Route::middleware(['auth', 'verified', 'route.permission'])
     ->prefix('ujian')
     ->name('ujian.')
     ->group(function () {
@@ -15,9 +15,9 @@ Route::middleware(['auth', 'verified', 'permission:exam_session.take'])
         Route::post('/slot/{slotUjian}/mulai', [SesiUjianController::class, 'mulai'])->name('mulai');
 
         Route::middleware('exam.session.active')->group(function () {
-            Route::get('/sesi/{sesiUjian}/{bagianUjian?}', [SesiUjianController::class, 'kerjakan'])->name('kerjakan');
+            Route::get('/sesi/{sesiUjian}/{partUjian?}', [SesiUjianController::class, 'kerjakan'])->name('kerjakan');
             Route::post('/sesi/{sesiUjian}/jawaban', [SesiUjianController::class, 'simpanJawaban'])->name('simpan-jawaban');
-            Route::post('/sesi/{sesiUjian}/selesaikan-bagian', [SesiUjianController::class, 'selesaikanBagian'])->name('selesaikan-bagian');
+            Route::post('/sesi/{sesiUjian}/selesaikan-part', [SesiUjianController::class, 'selesaikanPart'])->name('selesaikan-part');
             Route::post('/sesi/{sesiUjian}/serahkan', [SesiUjianController::class, 'serahkan'])->name('serahkan');
             Route::post('/sesi/{sesiUjian}/keaktifan', [SesiUjianController::class, 'keaktifan'])->name('keaktifan');
             Route::post('/sesi/{sesiUjian}/catat-pelanggaran', [SesiUjianController::class, 'catatPelanggaran'])->name('catat-pelanggaran');

@@ -55,8 +55,8 @@ return new class extends Migration
             'profil_mahasiswa',
             'program_studi',
             'fakultas',
-            'keterampilan',
-            'jenis_tes',
+            'section',
+            'program_tes',
             'pengaturan',
             'model_has_permissions',
             'model_has_roles',
@@ -135,7 +135,7 @@ return new class extends Migration
             $table->primary(['permission_id', 'role_id'], 'role_has_permissions_permission_id_role_id_primary');
         });
 
-        Schema::create('jenis_tes', function (Blueprint $table) use ($uuid): void {
+        Schema::create('program_tes', function (Blueprint $table) use ($uuid): void {
             $this->id($table, $uuid);
             $table->string('nama', 100)->unique();
             $table->integer('batas_pelanggaran')->default(3);
@@ -152,7 +152,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('keterampilan', function (Blueprint $table) use ($uuid): void {
+        Schema::create('section', function (Blueprint $table) use ($uuid): void {
             $this->id($table, $uuid);
             $table->string('kode', 50)->unique();
             $table->string('nama', 100);
@@ -189,7 +189,7 @@ return new class extends Migration
 
         Schema::create('bank_soal', function (Blueprint $table) use ($uuid): void {
             $this->id($table, $uuid);
-            $this->foreignColumn($table, 'jenis_tes_id', 'jenis_tes', $uuid, 'restrict');
+            $this->foreignColumn($table, 'program_tes_id', 'program_tes', $uuid, 'restrict');
             $table->string('nama');
             $table->text('deskripsi')->nullable();
             $table->boolean('aktif')->default(true);
@@ -207,20 +207,20 @@ return new class extends Migration
         Schema::create('bagian_soal', function (Blueprint $table) use ($uuid): void {
             $this->id($table, $uuid);
             $this->foreignColumn($table, 'bank_soal_id', 'bank_soal', $uuid, 'cascade');
-            $this->foreignColumn($table, 'keterampilan_id', 'keterampilan', $uuid, 'restrict');
+            $this->foreignColumn($table, 'section_id', 'section', $uuid, 'restrict');
             $table->string('nama', 100);
             $table->integer('urutan')->default(1);
             $table->text('petunjuk')->nullable();
             $table->boolean('aktif')->default(true);
             $table->timestamps();
-            $table->unique(['bank_soal_id', 'keterampilan_id', 'nama']);
+            $table->unique(['bank_soal_id', 'section_id', 'nama']);
         });
 
         Schema::create('soal', function (Blueprint $table) use ($uuid): void {
             $this->id($table, $uuid);
             $this->foreignColumn($table, 'bank_soal_id', 'bank_soal', $uuid, 'cascade');
             $this->foreignColumn($table, 'materi_soal_id', 'materi_soal', $uuid, 'null', true);
-            $this->foreignColumn($table, 'keterampilan_id', 'keterampilan', $uuid, 'restrict');
+            $this->foreignColumn($table, 'section_id', 'section', $uuid, 'restrict');
             $this->foreignColumn($table, 'bagian_soal_id', 'bagian_soal', $uuid, 'restrict', true);
             $table->text('teks_soal');
             $table->text('pilihan_a');
@@ -237,7 +237,7 @@ return new class extends Migration
             $table->text('catatan_tinjauan')->nullable();
             $table->timestamps();
             $table->index('bank_soal_id');
-            $table->index('keterampilan_id');
+            $table->index('section_id');
             $table->index('status');
             $table->index('bagian_soal_id');
             $table->index('materi_soal_id');
@@ -246,10 +246,10 @@ return new class extends Migration
         Schema::create('kebijakan_materi_soal', function (Blueprint $table) use ($uuid): void {
             $this->id($table, $uuid);
             $this->foreignColumn($table, 'bank_soal_id', 'bank_soal', $uuid, 'cascade');
-            $this->foreignColumn($table, 'keterampilan_id', 'keterampilan', $uuid, 'restrict');
+            $this->foreignColumn($table, 'section_id', 'section', $uuid, 'restrict');
             $table->string('ketentuan_materi', 20)->default('optional');
             $table->timestamps();
-            $table->unique(['bank_soal_id', 'keterampilan_id'], 'kebijakan_materi_soal_bank_skill_unique');
+            $table->unique(['bank_soal_id', 'section_id'], 'kebijakan_materi_soal_bank_section_unique');
         });
 
         Schema::create('aturan_media_materi_soal', function (Blueprint $table) use ($uuid): void {
@@ -277,7 +277,7 @@ return new class extends Migration
 
         Schema::create('ujian', function (Blueprint $table) use ($uuid): void {
             $this->id($table, $uuid);
-            $this->foreignColumn($table, 'jenis_tes_id', 'jenis_tes', $uuid, 'restrict');
+            $this->foreignColumn($table, 'program_tes_id', 'program_tes', $uuid, 'restrict');
             $table->string('judul');
             $table->text('deskripsi')->nullable();
             $table->enum('mode', ['tryout', 'official'])->default('tryout');
@@ -290,12 +290,12 @@ return new class extends Migration
             $this->id($table, $uuid);
             $this->foreignColumn($table, 'ujian_id', 'ujian', $uuid, 'cascade');
             $this->foreignColumn($table, 'bank_soal_id', 'bank_soal', $uuid, 'restrict');
-            $this->foreignColumn($table, 'keterampilan_id', 'keterampilan', $uuid, 'restrict');
+            $this->foreignColumn($table, 'section_id', 'section', $uuid, 'restrict');
             $table->string('judul');
             $table->integer('urutan');
             $table->integer('jumlah_soal')->default(0);
             $table->timestamps();
-            $table->index('keterampilan_id');
+            $table->index('section_id');
         });
 
         Schema::create('soal_bagian_ujian', function (Blueprint $table) use ($uuid): void {
@@ -372,18 +372,18 @@ return new class extends Migration
 
         Schema::create('aturan_penilaian', function (Blueprint $table) use ($uuid): void {
             $this->id($table, $uuid);
-            $this->foreignColumn($table, 'jenis_tes_id', 'jenis_tes', $uuid, 'cascade');
-            $table->string('kode_keterampilan', 50);
+            $this->foreignColumn($table, 'program_tes_id', 'program_tes', $uuid, 'cascade');
+            $table->string('kode_section', 50);
             $table->json('tabel_konversi');
             $table->integer('skor_mentah_maksimum');
             $table->integer('skor_skala_maksimum');
             $table->timestamps();
-            $table->unique(['jenis_tes_id', 'kode_keterampilan']);
+            $table->unique(['program_tes_id', 'kode_section']);
         });
 
         Schema::create('interpretasi_skor', function (Blueprint $table) use ($uuid): void {
             $this->id($table, $uuid);
-            $this->foreignColumn($table, 'jenis_tes_id', 'jenis_tes', $uuid, 'cascade');
+            $this->foreignColumn($table, 'program_tes_id', 'program_tes', $uuid, 'cascade');
             $table->integer('skor_minimum');
             $table->integer('skor_maksimum');
             $table->string('tingkat_cefr', 10);
@@ -391,7 +391,7 @@ return new class extends Migration
             $table->boolean('lulus')->default(false);
             $table->text('deskripsi')->nullable();
             $table->timestamps();
-            $table->unique(['jenis_tes_id', 'skor_minimum']);
+            $table->unique(['program_tes_id', 'skor_minimum']);
         });
 
         Schema::create('jawaban', function (Blueprint $table) use ($uuid): void {

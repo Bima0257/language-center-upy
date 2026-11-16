@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
 
         $this->buatPengguna();
 
+        $this->call(SoalEptSeeder::class);
         $this->call(UjianSeeder::class);
     }
 
@@ -44,32 +45,14 @@ class DatabaseSeeder extends Seeder
         ]);
         $admin->assignRole('admin');
 
-        $proctor = Pengguna::create([
-            'name' => 'Proctor Ujian',
-            'email' => 'proctor@toefl.test',
-            'password' => bcrypt('password'),
-            'email_verified_at' => now(),
-            'aktif' => true,
-        ]);
-        $proctor->assignRole('proctor');
-
-        $instructor = Pengguna::create([
-            'name' => 'Instruktur',
-            'email' => 'instructor@toefl.test',
-            'password' => bcrypt('password'),
-            'email_verified_at' => now(),
-            'aktif' => true,
-        ]);
-        $instructor->assignRole('instructor');
-
         $mahasiswa = Pengguna::create([
             'name' => 'Peserta Demo',
-            'email' => 'student@toefl.test',
+            'email' => 'peserta@toefl.test',
             'password' => bcrypt('password'),
             'email_verified_at' => now(),
             'aktif' => true,
         ]);
-        $mahasiswa->assignRole('student');
+        $mahasiswa->assignRole('peserta');
 
         $fkip = Fakultas::where('kode', 'FKIP')->first();
         $pbi = ProgramStudi::where('kode', 'PBI')->first();
@@ -86,6 +69,8 @@ class DatabaseSeeder extends Seeder
                 'diverifikasi_pada' => now(),
                 'verifikator_id' => $admin->id,
             ]);
+
+            $mahasiswa->programStudis()->sync([$pbi->id]);
         }
     }
 }

@@ -4,10 +4,21 @@ namespace App\Modules\Pengguna\Repositories\Contracts;
 
 use App\Models\Pengguna;
 use App\Models\ProfilMahasiswa;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
 interface PenggunaRepositoryInterface
 {
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function paginateDaftar(array $filters): LengthAwarePaginator;
+
+    /**
+     * @return array<int, string>
+     */
+    public function daftarNamaRole(): array;
+
     public function count(): int;
 
     public function findOrFail(string $id): Pengguna;

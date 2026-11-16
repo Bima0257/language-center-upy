@@ -9,9 +9,13 @@ use Illuminate\Support\Carbon;
 
 interface PenjadwalanRepositoryInterface
 {
+    /**
+     * @param  array<string, mixed>  $filters
+     */
     public function paginateSemua(
+        array $filters = [],
         int $perPage = 15,
-        ?string $jenisTesId = null,
+        ?string $programTesId = null,
         ?string $ujianId = null,
     ): LengthAwarePaginator;
 
@@ -20,12 +24,12 @@ interface PenjadwalanRepositoryInterface
     /**
      * @return \Illuminate\Support\Collection<string, int>
      */
-    public function jumlahPeriodePerJenisTes(): \Illuminate\Support\Collection;
+    public function jumlahPeriodePerProgramTes(): \Illuminate\Support\Collection;
 
     /**
      * @return \Illuminate\Support\Collection<string, int>
      */
-    public function jumlahPeriodePerUjian(?string $jenisTesId = null): \Illuminate\Support\Collection;
+    public function jumlahPeriodePerUjian(?string $programTesId = null): \Illuminate\Support\Collection;
 
     public function findOrFail(string $id): PeriodeUjian;
 
@@ -39,7 +43,7 @@ interface PenjadwalanRepositoryInterface
      */
     public function semuaAktifUntukPendaftaran(
         ?string $kecualiPeriodePendaftaranId = null,
-        ?string $jenisTesId = null,
+        ?string $programTesId = null,
     ): Collection;
 
     /**

@@ -20,9 +20,9 @@ class LayananKebijakanMateriSoal
         private SoalRepositoryInterface $soalRepo,
     ) {}
 
-    public function selesaikan(string $keterampilanId): ?KonfigurasiKebijakanMateriSoal
+    public function selesaikan(string $sectionId): ?KonfigurasiKebijakanMateriSoal
     {
-        $kebijakan = $this->kebijakanRepo->temukanDenganKeterampilan($keterampilanId);
+        $kebijakan = $this->kebijakanRepo->temukanDenganSection($sectionId);
 
         if ($kebijakan === null) {
             return null;
@@ -37,43 +37,43 @@ class LayananKebijakanMateriSoal
         return $this->buatKonfigurasi($kebijakan->ketentuan_materi->value, $aturanMedia);
     }
 
-    public function selesaikanAtauGagal(string $keterampilanId): KonfigurasiKebijakanMateriSoal
+    public function selesaikanAtauGagal(string $sectionId): KonfigurasiKebijakanMateriSoal
     {
-        $konfigurasi = $this->selesaikan($keterampilanId);
+        $konfigurasi = $this->selesaikan($sectionId);
 
         if ($konfigurasi === null) {
-            throw new \RuntimeException('Skill ini belum memiliki konfigurasi aturan materi soal. Atur kebijakan materi soal terlebih dahulu.');
+            throw new \RuntimeException('Section ini belum memiliki konfigurasi aturan materi soal. Atur kebijakan materi soal terlebih dahulu.');
         }
 
         return $konfigurasi;
     }
 
     /**
-     * Material soal untuk skill: 'audio' atau 'text'. Null jika skill belum memiliki policy.
+     * Material soal untuk section: 'audio' atau 'text'. Null jika section belum memiliki policy.
      */
-    public function materiUntuk(string $keterampilanId): ?string
+    public function materiUntuk(string $sectionId): ?string
     {
-        return $this->selesaikan($keterampilanId)?->materi();
+        return $this->selesaikan($sectionId)?->materi();
     }
 
     /**
-     * Simpan policy materi dan seluruh aturan media untuk satu keterampilan.
+     * Simpan policy materi dan seluruh aturan media untuk satu section.
      *
      * @param  array<string, string>  $aturanMedia
      */
-    public function simpanUntukKeterampilan(string $keterampilanId, string $ketentuanMateri, array $aturanMedia): void
+    public function simpanUntukSection(string $sectionId, string $ketentuanMateri, array $aturanMedia): void
     {
         $konfigurasi = $this->buatKonfigurasi($ketentuanMateri, $aturanMedia);
 
-        DB::transaction(function () use ($keterampilanId, $konfigurasi): void {
-            $kebijakan = $this->kebijakanRepo->temukanDenganKeterampilan($keterampilanId);
+        DB::transaction(function () use ($sectionId, $konfigurasi): void {
+            $kebijakan = $this->kebijakanRepo->temukanDenganSection($sectionId);
             $dataKebijakan = ['ketentuan_materi' => $konfigurasi->ketentuanMateri];
 
-            $this->pastikanPerubahanTidakMerusakSoal($keterampilanId, $konfigurasi);
+            $this->pastikanPerubahanTidakMerusakSoal($sectionId, $konfigurasi);
 
             if ($kebijakan === null) {
                 $kebijakan = $this->kebijakanRepo->create([
-                    'keterampilan_id' => $keterampilanId,
+                    'section_id' => $sectionId,
                     ...$dataKebijakan,
                 ]);
             } else {
@@ -90,17 +90,17 @@ class LayananKebijakanMateriSoal
         });
     }
 
-    public function hapusUntukKeterampilan(string $keterampilanId): void
+    public function hapusUntukSection(string $sectionId): void
     {
-        $kebijakan = $this->kebijakanRepo->temukanDenganKeterampilan($keterampilanId);
+        $kebijakan = $this->kebijakanRepo->temukanDenganSection($sectionId);
 
         if ($kebijakan === null) {
             return;
         }
 
-        if ($this->soalRepo->memilikiSoalDenganKeterampilan($keterampilanId)) {
+        if ($this->soalRepo->memilikiSoalDenganSection($sectionId)) {
             throw ValidationException::withMessages([
-                'ketentuan_materi' => 'Policy materi tidak dapat dikosongkan karena keterampilan ini sudah dipakai oleh soal.',
+                'ketentuan_materi' => 'Policy materi tidak dapat dikosongkan karena section ini sudah dipakai oleh soal.',
             ]);
         }
 
@@ -166,9 +166,9 @@ class LayananKebijakanMateriSoal
         return new KonfigurasiKebijakanMateriSoal($ketentuan, $aturan);
     }
 
-    private function pastikanPerubahanTidakMerusakSoal(string $keterampilanId, KonfigurasiKebijakanMateriSoal $konfigurasi): void
+    private function pastikanPerubahanTidakMerusakSoal(string $sectionId, KonfigurasiKebijakanMateriSoal $konfigurasi): void
     {
-        foreach ($this->soalRepo->soalUntukKeterampilan($keterampilanId) as $soal) {
+        foreach ($this->soalRepo->soalUntukSection($sectionId) as $soal) {
             try {
                 $this->pastikanMateriDiizinkan($konfigurasi, $soal->materiSoal, 'aturan_media');
 
@@ -188,9 +188,9 @@ class LayananKebijakanMateriSoal
     }
 
     /**
-     * Seluruh policy dalam bentuk payload frontend (per jenis tes + skill).
+     * Seluruh policy dalam bentuk payload frontend (per program tes + section).
      *
-     * @return array<int, array{jenis_tes_id: string, keterampilan_id: string, ketentuan_materi: string, materi: string, aturan_media: array<string, string>}>
+     * @return array<int, array{program_tes_id: string, section_id: string, ketentuan_materi: string, materi: string, aturan_media: array<string, string>}>
      */
     public function semuaUntukFrontend(): array
     {
@@ -205,8 +205,8 @@ class LayananKebijakanMateriSoal
                 $konfigurasi = $this->buatKonfigurasi($kebijakan->ketentuan_materi->value, $aturanMedia);
 
                 return [
-                    'jenis_tes_id' => $kebijakan->keterampilan->jenis_tes_id,
-                    'keterampilan_id' => $kebijakan->keterampilan_id,
+                    'program_tes_id' => $kebijakan->section->program_tes_id,
+                    'section_id' => $kebijakan->section_id,
                     'ketentuan_materi' => $kebijakan->ketentuan_materi->value,
                     'materi' => $konfigurasi->materi(),
                     'aturan_media' => $aturanMedia,
@@ -220,14 +220,14 @@ class LayananKebijakanMateriSoal
     {
         if ($konfigurasi->ketentuanMateri === KetentuanMedia::FORBIDDEN) {
             if ($materi !== null) {
-                throw ValidationException::withMessages([$kunciKesalahan => 'Skill ini tidak menggunakan materi soal.']);
+                throw ValidationException::withMessages([$kunciKesalahan => 'Section ini tidak menggunakan materi soal.']);
             }
 
             return;
         }
 
         if ($konfigurasi->ketentuanMateri === KetentuanMedia::REQUIRED && $materi === null) {
-            throw ValidationException::withMessages([$kunciKesalahan => 'Skill ini wajib menggunakan materi soal.']);
+            throw ValidationException::withMessages([$kunciKesalahan => 'Section ini wajib menggunakan materi soal.']);
         }
 
         if ($materi === null) {
@@ -259,28 +259,28 @@ class LayananKebijakanMateriSoal
             };
 
             if ($ketentuan === KetentuanMedia::REQUIRED && ! $tersedia) {
-                throw ValidationException::withMessages([$kunciKesalahan => 'Materi soal wajib memiliki '.$jenis->label().' sesuai aturan skill.']);
+                throw ValidationException::withMessages([$kunciKesalahan => 'Materi soal wajib memiliki '.$jenis->label().' sesuai aturan section.']);
             }
 
             if ($ketentuan === KetentuanMedia::FORBIDDEN && $tersedia) {
-                throw ValidationException::withMessages([$kunciKesalahan => 'Materi soal tidak boleh memiliki '.$jenis->label().' sesuai aturan skill.']);
+                throw ValidationException::withMessages([$kunciKesalahan => 'Materi soal tidak boleh memiliki '.$jenis->label().' sesuai aturan section.']);
             }
         }
     }
 
     /**
-     * Pastikan passage tetap memenuhi policy setiap skill dari soal yang memakainya.
+     * Pastikan passage tetap memenuhi policy setiap section dari soal yang memakainya.
      * Dipakai saat mengubah isi/media passage agar soal existing tidak rusak.
      */
-    public function pastikanMateriMemenuhiKeterampilan(MateriSoal $materi): void
+    public function pastikanMateriMemenuhiSection(MateriSoal $materi): void
     {
-        $keterampilanIds = $materi->soal()->distinct()->pluck('keterampilan_id');
+        $sectionIds = $materi->soal()->distinct()->pluck('section_id');
 
-        foreach ($keterampilanIds as $keterampilanId) {
-            $konfigurasi = $this->selesaikan($keterampilanId);
+        foreach ($sectionIds as $sectionId) {
+            $konfigurasi = $this->selesaikan($sectionId);
 
             if ($konfigurasi === null) {
-                throw new \RuntimeException('Skill pada soal yang memakai materi ini belum memiliki konfigurasi aturan materi soal.');
+                throw new \RuntimeException('Section pada soal yang memakai materi ini belum memiliki konfigurasi aturan materi soal.');
             }
 
             try {
@@ -288,7 +288,7 @@ class LayananKebijakanMateriSoal
             } catch (ValidationException $exception) {
                 $messages = $exception->errors()['materi_soal'] ?? [];
 
-                throw new \RuntimeException($messages[0] ?? 'Materi soal melanggar aturan skill yang memakainya.');
+                throw new \RuntimeException($messages[0] ?? 'Materi soal melanggar aturan section yang memakainya.');
             }
         }
     }

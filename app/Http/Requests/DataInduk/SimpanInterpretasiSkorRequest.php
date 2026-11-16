@@ -17,7 +17,8 @@ class SimpanInterpretasiSkorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jenis_tes_id' => ['required', 'uuid', 'exists:jenis_tes,id'],
+            'skema_penilaian_id' => ['required', 'uuid', 'exists:skema_penilaian,id'],
+            'program_tes_id' => ['required', 'uuid', 'exists:program_tes,id'],
             'skor_minimum' => ['required', 'integer', 'min:0'],
             'skor_maksimum' => ['required', 'integer', 'gte:skor_minimum'],
             'tingkat_cefr' => ['required', 'string', 'max:10'],

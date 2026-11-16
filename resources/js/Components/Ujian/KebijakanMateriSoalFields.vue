@@ -17,7 +17,7 @@ const ketentuanOptions = [
         <div>
             <p class="text-body-md font-semibold text-text-heading">Aturan Materi Soal</p>
             <p class="mt-1 text-label-md leading-relaxed text-text-muted">
-                Aturan ini berlaku untuk semua bank soal dalam jenis tes keterampilan ini.
+                Aturan ini berlaku untuk semua bank soal dalam program tes section ini.
                 Kosongkan jika policy belum ingin dikonfigurasi.
             </p>
         </div>

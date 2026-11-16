@@ -2,95 +2,96 @@
 import { Head, router } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import { computed, ref, watch } from 'vue';
+import { IconEye } from '@tabler/icons-vue';
 import QuestionArrangement from './Components/QuestionArrangement.vue';
 
 const props = defineProps({
     ujian: { type: Object, required: true },
-    bagianSoal: { type: Array, default: () => [] },
-    bagianSoalPerBagian: { type: Object, default: () => ({}) },
-    soalPerBagian: { type: Object, default: () => ({}) },
+    partSoal: { type: Array, default: () => [] },
+    partSoalPerPart: { type: Object, default: () => ({}) },
+    soalPerPart: { type: Object, default: () => ({}) },
 });
 
-const activeSkillId = ref(String(props.ujian.bagian_ujian?.[0]?.id || ''));
+const activeSectionId = ref(String(props.ujian.part_ujian?.[0]?.id || ''));
 const activePartId = ref('all');
 const localOrders = ref({});
 const itemsBySection = ref({});
 const dirtySections = ref({});
 
-const skillTabs = computed(() => (props.ujian.bagian_ujian || []).map((bagianUjian) => ({
-    value: String(bagianUjian.id),
-    label: `${bagianUjian.keterampilan?.nama || bagianUjian.judul || 'Keterampilan'} (${questionRowsFor(bagianUjian.id).length})`,
+const sectionTabs = computed(() => (props.ujian.part_ujian || []).map((partUjian) => ({
+    value: String(partUjian.id),
+    label: `${partUjian.section?.nama || partUjian.judul || 'Section'} (${questionRowsFor(partUjian.id).length})`,
 })));
 
-const activeSection = computed(() => (props.ujian.bagian_ujian || []).find(
-    (bagianUjian) => String(bagianUjian.id) === activeSkillId.value,
+const activeSection = computed(() => (props.ujian.part_ujian || []).find(
+    (partUjian) => String(partUjian.id) === activeSectionId.value,
 ));
 
-function questionRowsFor(bagianUjianId) {
-    return props.soalPerBagian[bagianUjianId] || [];
+function questionRowsFor(partUjianId) {
+    return props.soalPerPart[partUjianId] || [];
 }
 
-function partIdsFor(bagianUjianId) {
-    const pivotPartIds = (props.bagianSoalPerBagian[bagianUjianId] || [])
+function partIdsFor(partUjianId) {
+    const pivotPartIds = (props.partSoalPerPart[partUjianId] || [])
         .slice()
         .sort((left, right) => (left.urutan || 0) - (right.urutan || 0))
-        .map((row) => String(row.bagian_soal_id));
-    const questionPartIds = questionRowsFor(bagianUjianId)
-        .map((row) => String(row.soal?.bagian_soal_id || 'none'));
+        .map((row) => String(row.part_soal_id));
+    const questionPartIds = questionRowsFor(partUjianId)
+        .map((row) => String(row.soal?.part_soal_id || 'none'));
 
     return [...new Set([...pivotPartIds, ...questionPartIds])];
 }
 
 function partNameFor(partId) {
-    if (partId === 'none') return 'Tanpa Bagian';
+    if (partId === 'none') return 'Tanpa Part';
 
-    return props.bagianSoal.find((part) => String(part.id) === partId)?.nama || 'Bagian Soal';
+    return props.partSoal.find((part) => String(part.id) === partId)?.nama || 'Part Soal';
 }
 
-function firstPartIdFor(bagianUjianId) {
-    return partIdsFor(bagianUjianId)[0] || 'all';
+function firstPartIdFor(partUjianId) {
+    return partIdsFor(partUjianId)[0] || 'all';
 }
 
 const partTabs = computed(() => {
     if (!activeSection.value) return [];
 
-    const bagianUjianId = activeSection.value.id;
-    const questionRows = questionRowsFor(bagianUjianId);
+    const partUjianId = activeSection.value.id;
+    const questionRows = questionRowsFor(partUjianId);
 
     return [
         {
             value: 'all',
             label: `Semua (${questionRows.length})`,
         },
-        ...partIdsFor(bagianUjianId).map((partId) => ({
+        ...partIdsFor(partUjianId).map((partId) => ({
             value: partId,
-            label: `${partNameFor(partId)} (${questionRows.filter((row) => String(row.soal?.bagian_soal_id || 'none') === partId).length})`,
+            label: `${partNameFor(partId)} (${questionRows.filter((row) => String(row.soal?.part_soal_id || 'none') === partId).length})`,
         })),
     ];
 });
 
-function savedOrderFor(bagianUjianId) {
-    return (props.soalPerBagian[bagianUjianId] || [])
+function savedOrderFor(partUjianId) {
+    return (props.soalPerPart[partUjianId] || [])
         .slice()
         .sort((a, b) => (a.urutan || 0) - (b.urutan || 0))
         .map((row) => row.soal_id);
 }
 
-function updateDirty(bagianUjianId) {
-    const current = localOrders.value[bagianUjianId] || [];
-    const saved = savedOrderFor(bagianUjianId);
-    dirtySections.value[bagianUjianId] = JSON.stringify(current) !== JSON.stringify(saved);
+function updateDirty(partUjianId) {
+    const current = localOrders.value[partUjianId] || [];
+    const saved = savedOrderFor(partUjianId);
+    dirtySections.value[partUjianId] = JSON.stringify(current) !== JSON.stringify(saved);
 }
 
-function initLocalOrders(bagianUjianId) {
-    localOrders.value[bagianUjianId] = savedOrderFor(bagianUjianId);
+function initLocalOrders(partUjianId) {
+    localOrders.value[partUjianId] = savedOrderFor(partUjianId);
 }
 
-function buildItems(bagianUjianId) {
-    const urutan = localOrders.value[bagianUjianId] || [];
+function buildItems(partUjianId) {
+    const urutan = localOrders.value[partUjianId] || [];
     const byId = {};
 
-    for (const row of props.soalPerBagian[bagianUjianId] || []) {
+    for (const row of props.soalPerPart[partUjianId] || []) {
         byId[row.soal_id] = row;
     }
 
@@ -101,114 +102,114 @@ function buildItems(bagianUjianId) {
         const row = byId[questionId];
         if (!row) continue;
 
-        const bagianSoalId = row.soal?.bagian_soal_id ? String(row.soal.bagian_soal_id) : 'none';
-        if (bagianSoalId !== currentPartKey) {
-            currentPartKey = bagianSoalId;
-            const bagianSoal = bagianSoalId === 'none'
+        const partSoalId = row.soal?.part_soal_id ? String(row.soal.part_soal_id) : 'none';
+        if (partSoalId !== currentPartKey) {
+            currentPartKey = partSoalId;
+            const partSoal = partSoalId === 'none'
                 ? null
-                : props.bagianSoal.find((part) => String(part.id) === bagianSoalId);
+                : props.partSoal.find((part) => String(part.id) === partSoalId);
 
             items.push({
-                type: 'bagianSoal',
-                key: bagianSoalId === 'none' ? 'bagianSoal-none' : `bagianSoal-${bagianSoalId}`,
-                bagianSoalId,
-                nama: bagianSoal?.nama || (bagianSoalId === 'none' ? 'Tanpa Bagian Soal' : 'Bagian Soal'),
+                type: 'partSoal',
+                key: partSoalId === 'none' ? 'partSoal-none' : `partSoal-${partSoalId}`,
+                partSoalId,
+                nama: partSoal?.nama || (partSoalId === 'none' ? 'Tanpa Part Soal' : 'Part Soal'),
                 jumlahSoal: 0,
             });
         }
 
-        items.push({ type: 'soal', key: `q-${questionId}`, bagianSoalId, soalId: questionId, row });
+        items.push({ type: 'soal', key: `q-${questionId}`, partSoalId, soalId: questionId, row });
     }
 
     const counts = {};
     for (const item of items) {
         if (item.type !== 'soal') continue;
-        const partId = item.row.soal?.bagian_soal_id ? String(item.row.soal.bagian_soal_id) : 'none';
+        const partId = item.row.soal?.part_soal_id ? String(item.row.soal.part_soal_id) : 'none';
         counts[partId] = (counts[partId] || 0) + 1;
     }
 
     for (const item of items) {
-        if (item.type === 'bagianSoal') {
-            item.jumlahSoal = counts[item.key.replace('bagianSoal-', '')] || 0;
+        if (item.type === 'partSoal') {
+            item.jumlahSoal = counts[item.key.replace('partSoal-', '')] || 0;
         }
     }
 
     return items;
 }
 
-function initItems(bagianUjianId) {
-    itemsBySection.value[bagianUjianId] = buildItems(bagianUjianId);
+function initItems(partUjianId) {
+    itemsBySection.value[partUjianId] = buildItems(partUjianId);
 }
 
-function initializeSection(bagianUjianId) {
-    if (!bagianUjianId) return;
+function initializeSection(partUjianId) {
+    if (!partUjianId) return;
 
-    initLocalOrders(bagianUjianId);
-    initItems(bagianUjianId);
-    dirtySections.value[bagianUjianId] = false;
+    initLocalOrders(partUjianId);
+    initItems(partUjianId);
+    dirtySections.value[partUjianId] = false;
 }
 
 function selectSection(value) {
-    activeSkillId.value = String(value);
+    activeSectionId.value = String(value);
 }
 
 function selectPart(value) {
     activePartId.value = String(value);
 }
 
-function questionPartId(bagianUjianId, questionId) {
-    const row = questionRowsFor(bagianUjianId).find((item) => item.soal_id === questionId);
+function questionPartId(partUjianId, questionId) {
+    const row = questionRowsFor(partUjianId).find((item) => item.soal_id === questionId);
 
-    return String(row?.soal?.bagian_soal_id || 'none');
+    return String(row?.soal?.part_soal_id || 'none');
 }
 
 const visibleItems = computed(() => {
-    const items = itemsBySection.value[activeSkillId.value] || [];
+    const items = itemsBySection.value[activeSectionId.value] || [];
 
     if (activePartId.value === 'all') return items;
 
     return items.filter((item) => item.type === 'soal'
-        && item.bagianSoalId === activePartId.value);
+        && item.partSoalId === activePartId.value);
 });
 
-function onSectionSort(bagianUjianId, partId, orderedQuestionIds) {
+function onSectionSort(partUjianId, partId, orderedQuestionIds) {
     if (partId === 'all') {
-        localOrders.value[bagianUjianId] = orderedQuestionIds;
+        localOrders.value[partUjianId] = orderedQuestionIds;
     } else {
         let questionIndex = 0;
-        localOrders.value[bagianUjianId] = (localOrders.value[bagianUjianId] || []).map((questionId) => {
-            if (questionPartId(bagianUjianId, questionId) !== partId) return questionId;
+        localOrders.value[partUjianId] = (localOrders.value[partUjianId] || []).map((questionId) => {
+            if (questionPartId(partUjianId, questionId) !== partId) return questionId;
 
             return orderedQuestionIds[questionIndex++];
         });
     }
 
-    initItems(bagianUjianId);
-    updateDirty(bagianUjianId);
+    initItems(partUjianId);
+    updateDirty(partUjianId);
 }
 
-function cancelArrangement(bagianUjian) {
-    initializeSection(bagianUjian.id);
+function cancelArrangement(partUjian) {
+    initializeSection(partUjian.id);
 }
 
-function saveArrangement(bagianUjian) {
-    const urutan = localOrders.value[bagianUjian.id] || [];
+function saveArrangement(partUjian) {
+    const urutan = localOrders.value[partUjian.id] || [];
     const soalOrders = urutan.map((soalId, index) => ({
         soal_id: soalId,
         nomor: index + 1,
     }));
 
-    router.patch(route('admin.ujian.bagian.susunan', [props.ujian.id, bagianUjian.id]), {
+    router.patch(route('admin.ujian.part.susunan', [props.ujian.id, partUjian.id]), {
         urutan_soal: soalOrders,
     }, {
         preserveScroll: true,
         onSuccess: () => {
-            initializeSection(bagianUjian.id);
+            initializeSection(partUjian.id);
         },
     });
 }
 
-watch(activeSkillId, (value) => {
+watch(activeSectionId, (value) => {
     activePartId.value = firstPartIdFor(value);
     initializeSection(value);
 }, { immediate: true });
@@ -225,24 +226,35 @@ watch(partTabs, (tabs) => {
     <TataLetakDasbor
         :title="ujian.judul"
     >
+        <template #header-actions>
+            <BaseButton
+                :href="route('admin.ujian.pratinjau', ujian.id)"
+                variant="secondary"
+                size="sm"
+            >
+                <IconEye :size="16" />
+                Pratinjau Ujian
+            </BaseButton>
+        </template>
+
         <div>
             <div class="relative">
                 <div class="mb-4">
                     <h2 class="text-title-lg font-semibold text-text-heading">Soal Ujian</h2>
                     <p class="mt-1 text-body-md text-text-muted">
-                        Pilih keterampilan dan bagian soal. Soal hanya dapat diurutkan di dalam bagian aktif.
+                        Pilih section dan part soal. Soal hanya dapat diurutkan di dalam part aktif.
                     </p>
                 </div>
 
                 <div
-                    v-if="skillTabs.length"
+                    v-if="sectionTabs.length"
                     class="flex min-w-0 items-end gap-1"
                 >
                     <div class="min-w-0 flex-1">
                         <BaseTabsChrome
-                            :items="skillTabs"
-                            :model-value="activeSkillId"
-                            aria-label="Keterampilan ujian"
+                            :items="sectionTabs"
+                            :model-value="activeSectionId"
+                            aria-label="Section ujian"
                             class="relative z-10 -mb-px px-5"
                             @update:model-value="selectSection"
                         />
@@ -257,7 +269,7 @@ watch(partTabs, (tabs) => {
                             <BaseTabs
                                 :items="partTabs"
                                 :model-value="activePartId"
-                                aria-label="Bagian soal"
+                                aria-label="Part soal"
                                 class="min-w-0 max-w-full"
                                 @update:model-value="selectPart"
                             />
@@ -266,8 +278,8 @@ watch(partTabs, (tabs) => {
 
                     <QuestionArrangement
                         :ujian="ujian"
-                        :bagian-ujian="activeSection"
-                        :soal-per-bagian="soalPerBagian"
+                        :part-ujian="activeSection"
+                        :soal-per-part="soalPerPart"
                         :items="visibleItems"
                         :part-id="activePartId"
                         :items-by-section="itemsBySection"
@@ -281,7 +293,7 @@ watch(partTabs, (tabs) => {
             </div>
 
             <div v-else class="py-10 text-center text-body-md text-text-muted">
-                Belum ada bagian ujian.
+                Belum ada part ujian.
             </div>
         </div>
     </TataLetakDasbor>

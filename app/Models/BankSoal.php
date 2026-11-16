@@ -9,19 +9,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Bank soal untuk satu jenis tes.
+ * Bank soal untuk satu program tes.
  *
  * @property string $id
- * @property string $jenis_tes_id
+ * @property string $program_tes_id
  * @property string $nama
  * @property string|null $deskripsi
  * @property bool $aktif
  * @property-read int $soal_count
- * @property-read int $bagian_ujian_count
- * @property-read JenisTes $jenisTes
+ * @property-read int $part_ujian_count
+ * @property-read ProgramTes $programTes
  * @property-read Collection<int, Soal> $soal
- * @property-read Collection<int, BagianSoal> $bagianSoal
- * @property-read Collection<int, BagianUjian> $bagianUjian
+ * @property-read Collection<int, PartSoal> $partSoal
+ * @property-read Collection<int, PartUjian> $partUjian
  */
 class BankSoal extends Model
 {
@@ -30,7 +30,7 @@ class BankSoal extends Model
     protected $table = 'bank_soal';
 
     protected $fillable = [
-        'jenis_tes_id',
+        'program_tes_id',
         'nama',
         'deskripsi',
         'aktif',
@@ -43,9 +43,9 @@ class BankSoal extends Model
         ];
     }
 
-    public function jenisTes(): BelongsTo
+    public function programTes(): BelongsTo
     {
-        return $this->belongsTo(JenisTes::class, 'jenis_tes_id', 'id');
+        return $this->belongsTo(ProgramTes::class, 'program_tes_id', 'id');
     }
 
     public function soal(): HasMany
@@ -53,13 +53,13 @@ class BankSoal extends Model
         return $this->hasMany(Soal::class, 'bank_soal_id', 'id');
     }
 
-    public function bagianSoal(): HasMany
+    public function partSoal(): HasMany
     {
-        return $this->hasMany(BagianSoal::class, 'bank_soal_id', 'id');
+        return $this->hasMany(PartSoal::class, 'bank_soal_id', 'id');
     }
 
-    public function bagianUjian(): HasMany
+    public function partUjian(): HasMany
     {
-        return $this->hasMany(BagianUjian::class, 'bank_soal_id', 'id');
+        return $this->hasMany(PartUjian::class, 'bank_soal_id', 'id');
     }
 }

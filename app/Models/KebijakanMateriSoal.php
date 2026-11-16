@@ -12,18 +12,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
- * Kebijakan penggunaan materi soal untuk satu keterampilan dalam jenis tesnya.
+ * Kebijakan penggunaan materi soal untuk satu section dalam program tesnya.
  *
  * @property string $id
- * @property string $keterampilan_id
+ * @property string $section_id
  * @property KetentuanMedia $ketentuan_materi
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Keterampilan $keterampilan
+ * @property-read Section $section
  * @property-read Collection<int, AturanMediaMateriSoal> $aturanMedia
  */
 #[Fillable([
-    'keterampilan_id',
+    'section_id',
     'ketentuan_materi',
 ])]
 class KebijakanMateriSoal extends Model
@@ -39,9 +39,9 @@ class KebijakanMateriSoal extends Model
         ];
     }
 
-    public function keterampilan(): BelongsTo
+    public function section(): BelongsTo
     {
-        return $this->belongsTo(Keterampilan::class, 'keterampilan_id', 'id');
+        return $this->belongsTo(Section::class, 'section_id', 'id');
     }
 
     public function aturanMedia(): HasMany

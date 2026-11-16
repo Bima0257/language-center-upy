@@ -4,6 +4,7 @@ defineProps({
     loading: { type: Boolean, default: false },
     label: { type: String, required: true },
     loadingLabel: { type: String, default: 'Mengarahkan...' },
+    spacingClass: { type: String, default: 'mb-4' },
 });
 
 defineEmits(['click']);
@@ -12,8 +13,8 @@ defineEmits(['click']);
 <template>
     <a
         :href="href"
-        :class="{ 'pointer-events-none opacity-50': loading }"
-        class="w-full border border-outline-variant bg-surface-white text-primary text-label-md font-medium py-3.5 rounded-full flex items-center justify-center gap-3 hover:bg-surface-container-low transition-colors mb-4"
+        :class="[{ 'pointer-events-none opacity-50': loading }, spacingClass]"
+        class="w-full border border-outline-variant bg-surface-white text-primary text-label-md font-medium py-3.5 rounded-full flex items-center justify-center gap-3 hover:bg-surface-container-low transition-colors"
         @click="$emit('click', $event)"
     >
         <svg v-if="loading" class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

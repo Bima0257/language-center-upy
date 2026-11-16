@@ -3,7 +3,7 @@ import AudioPlayer from '@/Components/Ujian/AudioPlayer.vue';
 
 defineProps({
     materiSoal: { type: Object, default: null },
-    bagianSoalLabel: { type: String, default: '' },
+    partSoalLabel: { type: String, default: '' },
     imageSrc: { type: String, default: null },
     audioSrc: { type: String, default: null },
     imageLoading: { type: Object, required: true },
@@ -14,12 +14,12 @@ defineProps({
     <section
         class="w-3/5 border-r border-outline-variant bg-surface-bright flex flex-col overflow-hidden"
     >
-        <div class="flex-1 min-h-0 overflow-y-auto scroll-hide p-8">
+        <div class="flex-1 min-h-0 overflow-y-auto overscroll-y-contain scroll-hide p-8">
             <div class="max-w-2xl mx-auto">
                 <div class="mb-8">
                     <span
                         class="bg-pastel-purple text-text-heading px-3 py-1 rounded-full text-[12px] font-bold uppercase tracking-widest mb-4 inline-block"
-                        >{{ bagianSoalLabel || 'Audio' }}</span
+                        >{{ partSoalLabel || 'Audio' }}</span
                     >
                     <h1
                         v-if="materiSoal"
@@ -31,7 +31,7 @@ defineProps({
                         v-else
                         class="font-serif text-2xl leading-tight text-text-heading font-bold mb-6"
                     >
-                        {{ bagianSoalLabel || 'Audio' }}
+                        {{ partSoalLabel || 'Audio' }}
                     </h1>
                 </div>
                 <p class="text-label-md text-text-muted mb-4">

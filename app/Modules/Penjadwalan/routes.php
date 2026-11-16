@@ -3,7 +3,7 @@
 use App\Modules\Penjadwalan\Controllers\PenjadwalanController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'permission:schedule.view'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/periode-ujian')
     ->name('admin.periode-ujian.')
     ->group(function () {
@@ -11,14 +11,14 @@ Route::middleware(['auth', 'permission:schedule.view'])
         Route::get('/{periodeUjian}', [PenjadwalanController::class, 'detail'])->name('detail');
     });
 
-Route::middleware(['auth', 'permission:schedule.create'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/periode-ujian')
     ->name('admin.periode-ujian.')
     ->group(function () {
         Route::post('/{periodeUjian}/slot', [PenjadwalanController::class, 'simpanSlot'])->name('slot.simpan');
     });
 
-Route::middleware(['auth', 'permission:schedule.edit'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/periode-ujian')
     ->name('admin.periode-ujian.')
     ->group(function () {
@@ -27,7 +27,7 @@ Route::middleware(['auth', 'permission:schedule.edit'])
         Route::put('/slot/{slotUjian}', [PenjadwalanController::class, 'perbaruiSlot'])->name('slot.perbarui');
     });
 
-Route::middleware(['auth', 'permission:schedule.delete'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/periode-ujian')
     ->name('admin.periode-ujian.')
     ->group(function () {
@@ -35,7 +35,7 @@ Route::middleware(['auth', 'permission:schedule.delete'])
         Route::delete('/slot/{slotUjian}', [PenjadwalanController::class, 'hapusSlot'])->name('slot.hapus');
     });
 
-Route::middleware(['auth', 'permission:schedule.create'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/ujian/{ujian}/periode-ujian')
     ->name('admin.periode-ujian.')
     ->group(function () {

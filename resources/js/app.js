@@ -1,12 +1,19 @@
 import '../css/app.css';
 import './bootstrap.js';
+import '@aejkatappaja/phantom-ui';
+import 'floating-vue/dist/style.css';
 
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
+import FloatingVue from 'floating-vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { toast } from 'vue-sonner';
 import ToastProvider from './Components/ToastProvider.vue';
+
+if (typeof window !== 'undefined' && typeof route !== 'undefined') {
+    window.route = window.route || route;
+}
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -37,6 +44,7 @@ createInertiaApp({
         return app
             .use(plugin)
             .use(ZiggyVue)
+            .use(FloatingVue)
             .mount(el);
     },
     progress: {

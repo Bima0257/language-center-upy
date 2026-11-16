@@ -24,6 +24,9 @@ defineProps({
                 <h1 class="text-headline-md font-bold text-text-heading">{{ title }}</h1>
                 <p v-if="subtitle" class="text-body-md text-text-muted mt-1">{{ subtitle }}</p>
             </div>
+            <div v-if="$slots.actions" class="ml-auto shrink-0">
+                <slot name="actions" />
+            </div>
         </div>
     </BaseCard>
 </template>

@@ -28,10 +28,7 @@ class PenjadwalanController extends Controller
 
         return Inertia::render(
             'Admin/PeriodeUjian/index',
-            $this->layananPenjadwalan->dataDaftar(
-                $filters['jenis_tes_id'] ?? null,
-                $filters['ujian_id'] ?? null,
-            ),
+            $this->layananPenjadwalan->dataDaftar($filters),
         );
     }
 
@@ -51,7 +48,7 @@ class PenjadwalanController extends Controller
         }
 
         return to_route('admin.periode-ujian.daftar', [
-            'jenis_tes_id' => $ujian->jenis_tes_id,
+            'program_tes_id' => $ujian->program_tes_id,
             'ujian_id' => $ujian->id,
         ])
             ->with('success', 'Periode ujian berhasil dibuat.');

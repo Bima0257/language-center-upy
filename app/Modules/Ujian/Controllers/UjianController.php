@@ -23,7 +23,7 @@ class UjianController extends Controller
     public function daftar(FilterUjianRequest $request): Response
     {
         return Inertia::render('Admin/Ujian/index', $this->layananUjian->dataDaftar(
-            $request->validated()['jenis_tes_id'] ?? null,
+            $request->validated()['program_tes_id'] ?? null,
         ) + [
             'bankSoal' => $this->layananUjian->bankSoalAktif(),
         ]);
@@ -32,17 +32,17 @@ class UjianController extends Controller
     public function tambah(): Response
     {
         return Inertia::render('Admin/Ujian/create', $this->layananUjian->dataTambah() + [
-            'jenisTes' => $this->layananDataInduk->jenisTesAktif(),
+            'programTes' => $this->layananDataInduk->programTesAktif(),
             'bankSoal' => $this->layananUjian->bankSoalAktif(),
         ]);
     }
 
     public function simpan(SimpanUjianRequest $request): RedirectResponse
     {
-        $ujian = $this->layananUjian->buatDenganBagian($request->validated());
+        $ujian = $this->layananUjian->buatDenganPart($request->validated());
 
         return to_route('admin.ujian.detail', $ujian)
-            ->with('success', "Ujian berhasil dibuat. {$ujian->bagianUjian->count()} bagian otomatis dibuat.");
+            ->with('success', "Ujian berhasil dibuat. {$ujian->partUjian->count()} part otomatis dibuat.");
     }
 
     public function detail(Ujian $ujian): Response
@@ -50,15 +50,23 @@ class UjianController extends Controller
         return Inertia::render('Admin/Ujian/show', $this->layananUjian->dataDetail($ujian));
     }
 
-    public function sinkronkanBagian(Ujian $ujian): RedirectResponse
+    public function pratinjau(Ujian $ujian): Response
     {
-        $dibuat = $this->layananUjian->sinkronkanBagian($ujian);
+        return Inertia::render('Ujian/PratinjauPengerjaan/index', $this->layananUjian->dataPratinjau($ujian) + [
+            'backUrl' => route('admin.ujian.detail', $ujian),
+            'manageUrl' => route('admin.ujian.detail', $ujian),
+        ]);
+    }
+
+    public function sinkronkanPart(Ujian $ujian): RedirectResponse
+    {
+        $dibuat = $this->layananUjian->sinkronkanPart($ujian);
 
         return back()->with(
             'success',
             $dibuat
-                ? "{$dibuat} bagian baru berhasil disinkronkan."
-                : 'Tidak ada bagian baru yang perlu disinkronkan.',
+                ? "{$dibuat} part baru berhasil disinkronkan."
+                : 'Tidak ada part baru yang perlu disinkronkan.',
         );
     }
 

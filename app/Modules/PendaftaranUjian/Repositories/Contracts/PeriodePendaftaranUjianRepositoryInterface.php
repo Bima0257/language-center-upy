@@ -18,7 +18,7 @@ interface PeriodePendaftaranUjianRepositoryInterface
     /**
      * @return Collection<string, int>
      */
-    public function jumlahPeriodePerJenisTes(): Collection;
+    public function jumlahPeriodePerProgramTes(): Collection;
 
     public function temukan(string $id): PeriodePendaftaranUjian;
 

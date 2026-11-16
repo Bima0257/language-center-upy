@@ -5,10 +5,10 @@ import { ref, watch } from 'vue';
 
 const props = defineProps({
     ujian: { type: Object, required: true },
-    bagianUjian: { type: Object, required: true },
+    partUjian: { type: Object, required: true },
     items: { type: Array, default: () => [] },
     partId: { type: String, default: 'all' },
-    soalPerBagian: { type: Object, default: () => ({}) },
+    soalPerPart: { type: Object, default: () => ({}) },
     itemsBySection: { type: Object, default: () => ({}) },
     dirtySections: { type: Object, default: () => ({}) },
     embedded: { type: Boolean, default: false },
@@ -23,32 +23,32 @@ watch(() => props.items, (items) => {
 }, { immediate: true });
 
 watch(
-    () => props.dirtySections[props.bagianUjian.id],
+    () => props.dirtySections[props.partUjian.id],
     (isDirty) => {
         if (!isDirty) isEditing.value = false;
     },
 );
 
 watch(
-    [() => props.bagianUjian.id, () => props.partId],
+    [() => props.partUjian.id, () => props.partId],
     () => {
-        isEditing.value = !!props.dirtySections[props.bagianUjian.id];
+        isEditing.value = !!props.dirtySections[props.partUjian.id];
     },
 );
 
 function sectionOffset() {
     let offset = 0;
 
-    for (const section of props.ujian.bagian_ujian || []) {
-        if (section.id === props.bagianUjian.id) break;
-        offset += (props.soalPerBagian[section.id] || []).length;
+    for (const section of props.ujian.part_ujian || []) {
+        if (section.id === props.partUjian.id) break;
+        offset += (props.soalPerPart[section.id] || []).length;
     }
 
     return offset;
 }
 
 function positionOf(soalId) {
-    const currentOrder = (props.itemsBySection[props.bagianUjian.id] || [])
+    const currentOrder = (props.itemsBySection[props.partUjian.id] || [])
         .filter((item) => item.type === 'soal')
         .map((item) => item.soalId);
 
@@ -58,7 +58,7 @@ function positionOf(soalId) {
 function onSort() {
     emit(
         'sort',
-        props.bagianUjian.id,
+        props.partUjian.id,
         props.partId,
         displayItems.value
             .filter((item) => item.type === 'soal')
@@ -69,9 +69,9 @@ function onSort() {
 
 <template>
     <section
-        :id="`bagian-ujian-panel-${bagianUjian.id}`"
+        :id="`part-ujian-panel-${partUjian.id}`"
         role="tabpanel"
-        :aria-label="bagianUjian.judul"
+        :aria-label="partUjian.judul"
     >
         <BaseCard
             :padding="embedded ? 'p-6' : true"
@@ -88,7 +88,7 @@ function onSort() {
                     Edit urutan
                 </BaseButton>
                 <BaseButton
-                    v-else-if="!dirtySections[bagianUjian.id]"
+                    v-else-if="!dirtySections[partUjian.id]"
                     variant="secondary"
                     size="sm"
                     @click="isEditing = false"
@@ -98,14 +98,14 @@ function onSort() {
             </div>
 
             <p v-if="displayItems.length === 0" class="py-2 text-label-md text-text-muted">
-                Belum ada soal di bagian ujian ini.
+                Belum ada soal di part ujian ini.
             </p>
 
             <draggable
                 v-else
                 :list="displayItems"
                 item-key="key"
-                :filter="'.bagianSoal-header'"
+                :filter="'.partSoal-header'"
                 handle=".drag-handle"
                 :disabled="!isEditing"
                 ghost-class="opacity-40"
@@ -113,13 +113,13 @@ function onSort() {
                 @sort="onSort"
             >
                 <template #item="{ element }">
-                    <div :class="element.type === 'bagianSoal'
-                        ? 'bagianSoal-header select-none'
+                    <div :class="element.type === 'partSoal'
+                        ? 'partSoal-header select-none'
                         : [
                             'flex items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-white px-3 py-3 transition-colors',
                             isEditing ? 'cursor-grab active:cursor-grabbing hover:border-secondary/50' : '',
                         ]">
-                        <div v-if="element.type === 'bagianSoal'" class="flex items-center gap-2 pt-1">
+                        <div v-if="element.type === 'partSoal'" class="flex items-center gap-2 pt-1">
                             <span class="inline-block rounded-full bg-pastel-purple/40 px-3 py-1 text-label-md font-semibold text-text-heading">
                                 {{ element.nama }}
                             </span>
@@ -148,11 +148,11 @@ function onSort() {
                 </template>
             </draggable>
 
-            <div v-if="dirtySections[bagianUjian.id]" class="pt-4">
+            <div v-if="dirtySections[partUjian.id]" class="pt-4">
                 <BaseFormActions
                     save-type="button"
-                    @save="emit('save-arrangement', bagianUjian)"
-                    @cancel="emit('cancel-arrangement', bagianUjian)"
+                    @save="emit('save-arrangement', partUjian)"
+                    @cancel="emit('cancel-arrangement', partUjian)"
                 />
             </div>
         </BaseCard>

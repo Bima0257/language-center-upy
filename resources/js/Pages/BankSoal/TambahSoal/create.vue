@@ -11,8 +11,8 @@ import { computed, nextTick, ref, watch } from 'vue';
 
 const props = defineProps({
     bankSoal: { type: Array, default: () => [] },
-    opsiKeterampilan: { type: Array, default: () => [] },
-    bagianSoal: { type: Array, default: () => [] },
+    opsiSection: { type: Array, default: () => [] },
+    partSoal: { type: Array, default: () => [] },
     kebijakanMateriSoal: { type: Array, default: () => [] },
     bankSoalTerpilih: { type: String, default: null },
     filterKembali: { type: Object, default: () => ({}) },
@@ -23,27 +23,27 @@ const optionKeys = ['A', 'B', 'C', 'D'];
 const materiSoalMode = ref('none');
 const daftarSoalRef = ref(null);
 
-const keterampilanGlobal = ref(String(props.filterKembali?.keterampilan || ''));
-const globalPart = ref(String(props.filterKembali?.bagian_soal_id || ''));
+const sectionGlobal = ref(String(props.filterKembali?.section || ''));
+const globalPart = ref(String(props.filterKembali?.part_soal_id || ''));
 
-function policyForSkill(bankId, keterampilanId) {
+function policyForSection(bankId, sectionId) {
     const bank = props.bankSoal.find((item) => String(item.id) === String(bankId));
 
     return props.kebijakanMateriSoal.find((policy) =>
-        String(policy.jenis_tes_id) === String(bank?.jenis_tes_id) &&
-        String(policy.keterampilan_id) === String(keterampilanId),
+        String(policy.program_tes_id) === String(bank?.program_tes_id) &&
+        String(policy.section_id) === String(sectionId),
     ) || null;
 }
 
-const isAudioQuestion = (q) => policyForSkill(form.bank_soal_id, q.keterampilan_id)?.materi === 'audio';
+const isAudioQuestion = (q) => policyForSection(form.bank_soal_id, q.section_id)?.materi === 'audio';
 
-const selectedPolicy = computed(() => policyForSkill(form.bank_soal_id, keterampilanGlobal.value));
+const selectedPolicy = computed(() => policyForSection(form.bank_soal_id, sectionGlobal.value));
 const hasListeningQuestion = computed(() => selectedPolicy.value?.materi === 'audio');
 
 function newQuestion() {
     return {
-        keterampilan_id: keterampilanGlobal.value,
-        bagian_soal_id: globalPart.value,
+        section_id: sectionGlobal.value,
+        part_soal_id: globalPart.value,
         teks_soal: '',
         pilihan_a: '',
         pilihan_b: '',
@@ -59,8 +59,8 @@ const form = useForm({
     materi_baru_isi_teks: '',
     materi_baru_berkas_audio: null,
     materi_baru_berkas_gambar: null,
-    _kembali_keterampilan: props.filterKembali?.keterampilan || '',
-    _kembali_bagian_soal_id: props.filterKembali?.bagian_soal_id || '',
+    _kembali_section: props.filterKembali?.section || '',
+    _kembali_part_soal_id: props.filterKembali?.part_soal_id || '',
     soal: [newQuestion()],
 });
 
@@ -99,24 +99,24 @@ const selectedBank = computed(() =>
     props.bankSoal.find(b => String(b.id) === String(form.bank_soal_id)) || null,
 );
 
-const bankIsLocked = computed(() => Number(selectedBank.value?.bagian_ujian_count || 0) > 0);
+const bankIsLocked = computed(() => Number(selectedBank.value?.part_ujian_count || 0) > 0);
 
-const selectedKeterampilan = computed(() =>
-    props.opsiKeterampilan.find((skill) => String(skill.value) === String(keterampilanGlobal.value)) || null,
+const selectedSection = computed(() =>
+    props.opsiSection.find((section) => String(section.value) === String(sectionGlobal.value)) || null,
 );
 
-const selectedBagianSoal = computed(() =>
-    props.bagianSoal.find((part) =>
+const selectedPartSoal = computed(() =>
+    props.partSoal.find((part) =>
         String(part.id) === String(globalPart.value) &&
         String(part.bank_soal_id) === String(form.bank_soal_id),
     ) || null,
 );
 
-watch(keterampilanGlobal, (keterampilan) => {
+watch(sectionGlobal, (section) => {
     globalPart.value = '';
     for (const q of form.soal) {
-        q.keterampilan_id = keterampilan;
-        q.bagian_soal_id = '';
+        q.section_id = section;
+        q.part_soal_id = '';
     }
 
     if (selectedPolicy.value?.aturan_media?.audio === 'forbidden') {
@@ -131,11 +131,11 @@ watch(keterampilanGlobal, (keterampilan) => {
 });
 
 watch(() => form.bank_soal_id, () => {
-    keterampilanGlobal.value = '';
+    sectionGlobal.value = '';
     globalPart.value = '';
     for (const q of form.soal) {
-        q.keterampilan_id = '';
-        q.bagian_soal_id = '';
+        q.section_id = '';
+        q.part_soal_id = '';
     }
     if (form.materi_baru_judul) {
         form.materi_baru_judul = '';
@@ -148,7 +148,7 @@ watch(() => form.bank_soal_id, () => {
 
 watch(globalPart, (value) => {
     for (const q of form.soal) {
-        q.bagian_soal_id = value;
+        q.part_soal_id = value;
     }
 });
 
@@ -169,7 +169,7 @@ const canSubmit = computed(() => {
     if (bankIsLocked.value) return false;
     if (!form.bank_soal_id) return false;
     if (form.soal.length === 0) return false;
-    if (!keterampilanGlobal.value) return false;
+    if (!sectionGlobal.value) return false;
     if (!globalPart.value) return false;
     if (!selectedPolicy.value) return false;
 
@@ -185,7 +185,7 @@ const canSubmit = computed(() => {
     }
 
     return form.soal.every(q => {
-        if (!q.keterampilan_id || !q.bagian_soal_id || !q.kunci_jawaban) return false;
+        if (!q.section_id || !q.part_soal_id || !q.kunci_jawaban) return false;
 
         if (isAudioQuestion(q)) {
             return materiSoalMode.value !== 'none';
@@ -208,8 +208,8 @@ const { showUploadProgress, uploadLabel, mediaType } = useUploadProgress(form, {
 const indexUrl = computed(() => {
     const p = {};
     if (form.bank_soal_id) p.bank_soal_id = form.bank_soal_id;
-    if (form._kembali_keterampilan) p.keterampilan = form._kembali_keterampilan;
-    if (form._kembali_bagian_soal_id) p.bagian_soal_id = form._kembali_bagian_soal_id;
+    if (form._kembali_section) p.section = form._kembali_section;
+    if (form._kembali_part_soal_id) p.part_soal_id = form._kembali_part_soal_id;
     return p;
 });
 </script>
@@ -228,8 +228,8 @@ const indexUrl = computed(() => {
             <UserGuide
                 title="Panduan Tambah Soal"
                 :steps="[
-                    { title: 'Tinjau konteks soal', desc: 'Bank soal, keterampilan, dan bagian mengikuti filter Pustaka Soal.' },
-                    { title: 'Tentukan materi soal', desc: 'Gunakan tanpa materi atau buat materi baru sesuai tipe keterampilan.' },
+                    { title: 'Tinjau konteks soal', desc: 'Bank soal, section, dan part mengikuti filter Pustaka Soal.' },
+                    { title: 'Tentukan materi soal', desc: 'Gunakan tanpa materi atau buat materi baru sesuai tipe section.' },
                     { title: 'Isi soal & kunci', desc: 'Tambahkan pertanyaan, pilihan jawaban, dan kunci jawaban.' },
                 ]"
                 :rules="[
@@ -268,9 +268,9 @@ const indexUrl = computed(() => {
                                     <IconBook :size="20" />
                                 </span>
                                 <div class="min-w-0">
-                                    <p class="text-label-md text-text-muted mb-1">Keterampilan</p>
-                                    <span v-if="selectedKeterampilan" class="inline-flex max-w-full truncate rounded-lg bg-pastel-blue px-3 py-1 text-label-md font-semibold text-secondary">
-                                        {{ selectedKeterampilan.label }}
+                                    <p class="text-label-md text-text-muted mb-1">Section</p>
+                                    <span v-if="selectedSection" class="inline-flex max-w-full truncate rounded-lg bg-pastel-blue px-3 py-1 text-label-md font-semibold text-secondary">
+                                        {{ selectedSection.label }}
                                     </span>
                                     <p v-else class="text-body-md font-semibold text-text-heading">Belum dipilih</p>
                                 </div>
@@ -281,9 +281,9 @@ const indexUrl = computed(() => {
                                     <IconFileDescription :size="20" />
                                 </span>
                                 <div class="min-w-0">
-                                    <p class="text-label-md text-text-muted mb-1">Bagian Soal</p>
-                                    <span v-if="selectedBagianSoal" class="inline-flex max-w-full truncate rounded-lg bg-success-container px-3 py-1 text-label-md font-semibold text-on-success-container">
-                                        {{ selectedBagianSoal.nama }}
+                                    <p class="text-label-md text-text-muted mb-1">Part Soal</p>
+                                    <span v-if="selectedPartSoal" class="inline-flex max-w-full truncate rounded-lg bg-success-container px-3 py-1 text-label-md font-semibold text-on-success-container">
+                                        {{ selectedPartSoal.nama }}
                                     </span>
                                     <p v-else class="text-body-md font-semibold text-text-heading">Belum dipilih</p>
                                 </div>

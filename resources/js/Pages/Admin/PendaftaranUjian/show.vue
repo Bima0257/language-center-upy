@@ -66,7 +66,7 @@ function pesertaUrl(slotId) {
             <BaseCard>
                 <div class="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
                     <div>
-                        <p class="text-label-md font-semibold uppercase tracking-wide text-secondary">{{ periodePendaftaranUjian.periode_ujian?.ujian?.jenis_tes?.nama || 'Ujian' }}</p>
+                        <p class="text-label-md font-semibold uppercase tracking-wide text-secondary">{{ periodePendaftaranUjian.periode_ujian?.ujian?.program_tes?.nama || 'Ujian' }}</p>
                         <h2 class="mt-1 text-headline-md font-bold text-text-heading">{{ periodePendaftaranUjian.periode_ujian?.ujian?.judul || '-' }}</h2>
                         <p class="mt-1 text-body-md text-text-muted">{{ periodePendaftaranUjian.periode_ujian?.judul || '-' }}</p>
                     </div>

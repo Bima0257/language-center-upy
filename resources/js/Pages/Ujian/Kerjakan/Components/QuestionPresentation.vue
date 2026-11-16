@@ -26,7 +26,7 @@ function selectAnswer(key) {
 </script>
 
 <template>
-    <div class="flex-1 overflow-y-auto p-8 scroll-hide">
+    <div class="flex-1 overflow-y-auto overscroll-y-contain p-8 scroll-hide">
         <div class="max-w-lg mx-auto">
             <div class="flex items-center gap-2 mb-8">
                 <div

@@ -10,13 +10,13 @@ const props = defineProps({
 const emit = defineEmits(['delete']);
 
 function isLocked(question) {
-    return props.bankLocked || Number(question.bagian_ujian_count || 0) > 0;
+    return props.bankLocked || Number(question.part_ujian_count || 0) > 0;
 }
 
 function previewUrl(question) {
     return route('preview.exam-take', {
         bank_soal_id: question.bank_soal_id,
-        jenis_tes_id: question.bank_soal?.jenis_tes_id,
+        program_tes_id: question.bank_soal?.program_tes_id,
         soal_id: question.id,
     });
 }

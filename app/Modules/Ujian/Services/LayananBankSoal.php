@@ -3,7 +3,7 @@
 namespace App\Modules\Ujian\Services;
 
 use App\Models\BankSoal;
-use App\Modules\DataInduk\Repositories\Contracts\JenisTesRepositoryInterface;
+use App\Modules\DataInduk\Repositories\Contracts\ProgramTesRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\BankSoalRepositoryInterface;
 use Illuminate\Validation\ValidationException;
 use Mews\Purifier\Facades\Purifier;
@@ -12,20 +12,20 @@ class LayananBankSoal
 {
     public function __construct(
         private BankSoalRepositoryInterface $bankSoalRepo,
-        private JenisTesRepositoryInterface $jenisTesRepo,
+        private ProgramTesRepositoryInterface $programTesRepo,
     ) {}
 
-    public function dataDaftar(?string $jenisTesId = null): array
+    public function dataDaftar(?string $programTesId = null): array
     {
         return [
-            'bankSoal' => $this->bankSoalRepo->semuaDenganJenisTesDanJumlah($jenisTesId),
-            'jenisTes' => $this->jenisTesRepo->semuaAktifBerurutan(),
+            'bankSoal' => $this->bankSoalRepo->semuaDenganProgramTesDanJumlah($programTesId),
+            'programTes' => $this->programTesRepo->semuaAktifBerurutan(),
         ];
     }
 
     public function simpan(array $validated): void
     {
-        $this->pastikanJenisTesAktif($validated['jenis_tes_id']);
+        $this->pastikanProgramTesAktif($validated['program_tes_id']);
 
         $this->bankSoalRepo->create($this->bersihkan($validated));
     }
@@ -38,13 +38,13 @@ class LayananBankSoal
             ]);
         }
 
-        $jenisTesId = $validated['jenis_tes_id'];
+        $programTesId = $validated['program_tes_id'];
 
-        if ($jenisTesId !== $bankSoal->jenis_tes_id) {
-            $this->pastikanJenisTesAktif($jenisTesId);
+        if ($programTesId !== $bankSoal->program_tes_id) {
+            $this->pastikanProgramTesAktif($programTesId);
 
-            if ($bankSoal->soal()->exists() || $bankSoal->bagianUjian()->exists()) {
-                throw new \RuntimeException('Bank soal tidak bisa dipindahkan ke jenis tes lain karena sudah digunakan.');
+            if ($bankSoal->soal()->exists() || $bankSoal->partUjian()->exists()) {
+                throw new \RuntimeException('Bank soal tidak bisa dipindahkan ke program tes lain karena sudah digunakan.');
             }
         }
 
@@ -70,13 +70,13 @@ class LayananBankSoal
         return $data;
     }
 
-    private function pastikanJenisTesAktif(string $jenisTesId): void
+    private function pastikanProgramTesAktif(string $programTesId): void
     {
-        $jenisTes = $this->jenisTesRepo->find($jenisTesId);
+        $programTes = $this->programTesRepo->find($programTesId);
 
-        if ($jenisTes === null || ! $jenisTes->aktif) {
+        if ($programTes === null || ! $programTes->aktif) {
             throw ValidationException::withMessages([
-                'jenis_tes_id' => 'Jenis tes tidak aktif atau tidak ditemukan.',
+                'program_tes_id' => 'Program tes tidak aktif atau tidak ditemukan.',
             ]);
         }
     }

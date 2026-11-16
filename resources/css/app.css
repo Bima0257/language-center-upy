@@ -1,8 +1,80 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source "../../resources/js";
+@source "../../resources/views";
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views";
+@source "../../storage/framework/views";
+
+@theme inline {
+    --color-brand-blue: var(--color-brand-blue);
+    --color-sidebar: var(--color-sidebar);
+    --color-sidebar-text: var(--color-sidebar-text);
+    --color-sidebar-text-muted: var(--color-sidebar-text-muted);
+    --color-sidebar-text-hover: var(--color-sidebar-text-hover);
+    --color-primary: var(--color-primary);
+    --color-primary-container: var(--color-primary-container);
+    --color-secondary: var(--color-secondary);
+    --color-secondary-container: var(--color-secondary-container);
+    --color-deep-space: var(--color-deep-space);
+    --color-pastel-blue: var(--color-pastel-blue);
+    --color-pastel-purple: var(--color-pastel-purple);
+    --color-pastel-peach: var(--color-pastel-peach);
+    --color-text-heading: var(--color-text-heading);
+    --color-text-body: var(--color-text-body);
+    --color-text-muted: var(--color-text-muted);
+    --color-surface: var(--color-surface);
+    --color-surface-white: var(--color-surface-white);
+    --color-surface-container: var(--color-surface-container);
+    --color-surface-container-low: var(--color-surface-container-low);
+    --color-surface-container-high: var(--color-surface-container-high);
+    --color-surface-container-highest: var(--color-surface-container-highest);
+    --color-surface-container-lowest: var(--color-surface-container-lowest);
+    --color-surface-bright: var(--color-surface-bright);
+    --color-outline-variant: var(--color-outline-variant);
+    --color-on-primary: var(--color-on-primary);
+    --color-on-primary-container: var(--color-on-primary-container);
+    --color-on-secondary: var(--color-on-secondary);
+    --color-on-secondary-container: var(--color-on-secondary-container);
+    --color-background: var(--color-background);
+    --color-canvas: var(--color-canvas);
+    --color-track-neutral: var(--color-track-neutral);
+    --color-error-red: var(--color-error-red);
+    --color-error-container: var(--color-error-container);
+    --color-on-error: var(--color-on-error);
+    --color-on-error-container: var(--color-on-error-container);
+    --color-success: var(--color-success);
+    --color-on-success: var(--color-on-success);
+    --color-success-container: var(--color-success-container);
+    --color-on-success-container: var(--color-on-success-container);
+    --color-warning: var(--color-warning);
+    --color-on-warning: var(--color-on-warning);
+    --color-warning-container: var(--color-warning-container);
+    --color-on-warning-container: var(--color-on-warning-container);
+    --color-info: var(--color-info);
+    --color-on-info: var(--color-on-info);
+    --color-info-container: var(--color-info-container);
+    --color-on-info-container: var(--color-on-info-container);
+    --color-neutral-container: var(--color-neutral-container);
+    --color-on-neutral-container: var(--color-on-neutral-container);
+    --color-scrim: var(--color-scrim);
+    --color-text-pastel: var(--color-text-pastel);
+    --color-icon-pastel: var(--color-icon-pastel);
+}
 
 @layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-surface-container-high);
+    }
+
     :root {
         color-scheme: light;
         --color-brand-blue: #4F6F9F;
@@ -124,6 +196,11 @@
         --shadow-standard: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
 
+    html,
+    body {
+        overscroll-behavior-y: none;
+    }
+
     body {
         font-family: 'Plus Jakarta Sans', sans-serif;
         background-color: var(--color-canvas);
@@ -168,12 +245,29 @@
     .modal-scrollbar::-webkit-scrollbar-thumb:hover {
         background: var(--color-secondary);
     }
+    .app-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-scrollbar-thumb) transparent;
+    }
+    .app-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    .app-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .app-scrollbar::-webkit-scrollbar-thumb {
+        background: var(--color-scrollbar-thumb);
+        border-radius: 9999px;
+    }
+    .app-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: var(--color-secondary);
+    }
     .modal-scroll-container .base-form-actions {
         position: sticky;
         bottom: 0;
         z-index: 20;
         background-color: var(--color-surface-white);
-        box-shadow: 0 -2px 8px rgba(15, 23, 42, 0.06);
     }
     .dark .shadow-soft {
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
@@ -196,10 +290,6 @@
     .dark .modal-scroll-container .modal-header,
     .dark .modal-scroll-container .modal-footer {
         border-color: var(--color-outline-variant) !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-    }
-    .dark .modal-scroll-container .modal-footer {
-        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.35);
     }
     .dark .modal-scroll-container {
         background-color: color-mix(in srgb, var(--color-surface-container) 78%, transparent) !important;

@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * Interpretasi rentang skor untuk satu jenis tes.
+ * Interpretasi rentang skor untuk satu program tes.
  *
  * @property string $id
- * @property string $jenis_tes_id
+ * @property string|null $skema_penilaian_id
+ * @property string $program_tes_id
  * @property int $skor_minimum
  * @property int $skor_maksimum
  * @property string $tingkat_cefr
@@ -20,7 +21,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $deskripsi
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read JenisTes $jenisTes
+ * @property-read ProgramTes $programTes
+ * @property-read SkemaPenilaian|null $skemaPenilaian
  */
 class InterpretasiSkor extends Model
 {
@@ -29,7 +31,8 @@ class InterpretasiSkor extends Model
     protected $table = 'interpretasi_skor';
 
     protected $fillable = [
-        'jenis_tes_id',
+        'skema_penilaian_id',
+        'program_tes_id',
         'skor_minimum',
         'skor_maksimum',
         'tingkat_cefr',
@@ -47,8 +50,13 @@ class InterpretasiSkor extends Model
         ];
     }
 
-    public function jenisTes(): BelongsTo
+    public function programTes(): BelongsTo
     {
-        return $this->belongsTo(JenisTes::class, 'jenis_tes_id', 'id');
+        return $this->belongsTo(ProgramTes::class, 'program_tes_id', 'id');
+    }
+
+    public function skemaPenilaian(): BelongsTo
+    {
+        return $this->belongsTo(SkemaPenilaian::class, 'skema_penilaian_id', 'id');
     }
 }

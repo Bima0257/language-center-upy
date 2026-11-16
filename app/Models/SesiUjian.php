@@ -22,7 +22,9 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $diserahkan_pada
  * @property Carbon|null $dihentikan_pada
  * @property string|null $alasan_penghentian
- * @property string|null $bagian_aktif_id
+ * @property string|null $part_ujian_aktif_id
+ * @property string|null $skema_penilaian_id
+ * @property array<string, mixed>|null $snapshot_penilaian
  * @property Carbon|null $keaktifan_terakhir_pada
  * @property string|null $status_tinjauan
  * @property string|null $catatan_tinjauan
@@ -33,6 +35,11 @@ use Illuminate\Support\Carbon;
  * @property string|null $skor_berbicara
  * @property string|null $skor_menulis
  * @property string|null $skor_total
+ * @property string|null $skor_total_maksimum
+ * @property bool|null $lulus
+ * @property string|null $tingkat_cefr
+ * @property string|null $label_tingkat
+ * @property string|null $deskripsi_tingkat
  * @property bool $ditandai
  * @property string|null $alasan_penandaan
  * @property int $jumlah_pelanggaran
@@ -44,17 +51,21 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read SlotUjian|null $slotUjian
  * @property-read Pengguna $pengguna
- * @property-read BagianUjian|null $bagianAktif
+ * @property-read PartUjian|null $partUjianAktif
+ * @property-read SkemaPenilaian|null $skemaPenilaian
  * @property-read Pengguna|null $peninjau
  * @property-read Collection<int, Jawaban> $jawaban
  * @property-read Collection<int, CatatanPelanggaran> $catatanPelanggaran
+ * @property-read Collection<int, HasilPenilaian> $hasilPenilaian
  */
 #[Fillable([
     'slot_ujian_id', 'pengguna_id', 'status', 'dimulai_pada', 'diserahkan_pada',
-    'dihentikan_pada', 'alasan_penghentian', 'bagian_aktif_id',
+    'dihentikan_pada', 'alasan_penghentian', 'part_ujian_aktif_id',
+    'skema_penilaian_id', 'snapshot_penilaian',
     'keaktifan_terakhir_pada', 'status_tinjauan', 'catatan_tinjauan',
     'peninjau_id', 'ditinjau_pada', 'skor_membaca', 'skor_menyimak',
-    'skor_berbicara', 'skor_menulis', 'skor_total', 'ditandai',
+    'skor_berbicara', 'skor_menulis', 'skor_total', 'skor_total_maksimum',
+    'lulus', 'tingkat_cefr', 'label_tingkat', 'deskripsi_tingkat', 'ditandai',
     'alasan_penandaan', 'jumlah_pelanggaran', 'jenis_perangkat',
     'agen_pengguna_perangkat', 'lokasi_swafoto', 'swafoto_diambil_pada',
 ])]
@@ -81,6 +92,9 @@ class SesiUjian extends Model
             'skor_berbicara' => 'decimal:1',
             'skor_menulis' => 'decimal:1',
             'skor_total' => 'decimal:1',
+            'skor_total_maksimum' => 'decimal:1',
+            'snapshot_penilaian' => 'array',
+            'lulus' => 'boolean',
         ];
     }
 
@@ -94,9 +108,14 @@ class SesiUjian extends Model
         return $this->belongsTo(Pengguna::class, 'pengguna_id', 'id');
     }
 
-    public function bagianAktif(): BelongsTo
+    public function partUjianAktif(): BelongsTo
     {
-        return $this->belongsTo(BagianUjian::class, 'bagian_aktif_id', 'id');
+        return $this->belongsTo(PartUjian::class, 'part_ujian_aktif_id', 'id');
+    }
+
+    public function skemaPenilaian(): BelongsTo
+    {
+        return $this->belongsTo(SkemaPenilaian::class, 'skema_penilaian_id', 'id');
     }
 
     public function peninjau(): BelongsTo
@@ -109,6 +128,11 @@ class SesiUjian extends Model
         return $this->hasMany(Jawaban::class, 'sesi_ujian_id', 'id');
     }
 
+    public function hasilPenilaian(): HasMany
+    {
+        return $this->hasMany(HasilPenilaian::class, 'sesi_ujian_id', 'id');
+    }
+
     public function catatanPelanggaran(): HasMany
     {
         return $this->hasMany(CatatanPelanggaran::class, 'sesi_ujian_id', 'id');
@@ -116,8 +140,8 @@ class SesiUjian extends Model
 
     public function batasPelanggaranMaksimum(): int
     {
-        $jenisTes = $this->slotUjian?->periodeUjian?->ujian?->jenisTes;
+        $programTes = $this->slotUjian?->periodeUjian?->ujian?->programTes;
 
-        return $jenisTes !== null ? $jenisTes->batas_pelanggaran : 3;
+        return $programTes !== null ? $programTes->batas_pelanggaran : 3;
     }
 }

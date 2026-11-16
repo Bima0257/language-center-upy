@@ -19,17 +19,17 @@ class PerbaruiBankSoalRequest extends FormRequest
     public function rules(): array
     {
         $bankSoal = $this->route('bankSoal');
-        $currentJenisTesId = $bankSoal instanceof BankSoal ? $bankSoal->jenis_tes_id : null;
+        $currentProgramTesId = $bankSoal instanceof BankSoal ? $bankSoal->program_tes_id : null;
 
         return [
-            'jenis_tes_id' => [
+            'program_tes_id' => [
                 'required',
                 'uuid',
-                Rule::exists('jenis_tes', 'id')->where(function ($query) use ($currentJenisTesId) {
+                Rule::exists('program_tes', 'id')->where(function ($query) use ($currentProgramTesId) {
                     $query->where('aktif', true);
 
-                    if ($currentJenisTesId !== null) {
-                        $query->orWhere('id', $currentJenisTesId);
+                    if ($currentProgramTesId !== null) {
+                        $query->orWhere('id', $currentProgramTesId);
                     }
                 }),
             ],

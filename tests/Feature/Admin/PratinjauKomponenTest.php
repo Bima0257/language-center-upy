@@ -36,7 +36,7 @@ class PratinjauKomponenTest extends TestCase
 
     public function test_non_admin_tidak_dapat_mengakses_pratinjau_komponen(): void
     {
-        $this->masukSebagai('student');
+        $this->masukSebagai('peserta');
 
         $this->get('/admin/komponen')->assertForbidden();
     }

@@ -2,49 +2,34 @@
 
 namespace App\Modules\Penilaian\Services;
 
-use App\Models\AturanPenilaian;
-
 class LayananKonversiSkor
 {
-    public function konversi(?string $jenisTesId, string $keterampilan, int $skorMentah, int $maksMentah): float
+    /**
+     * @param  array<string, mixed>  $aturan
+     */
+    public function konversi(array $aturan, int $jumlahBenar): float
     {
-        if (! $jenisTesId) {
-            return 0;
+        $skorMentahMaksimum = (int) ($aturan['skor_mentah_maksimum'] ?? 0);
+
+        if ($jumlahBenar < 0 || $jumlahBenar > $skorMentahMaksimum) {
+            throw new \RuntimeException(
+                "Jumlah jawaban benar ({$jumlahBenar}) berada di luar rentang tabel konversi 0-{$skorMentahMaksimum}.",
+            );
         }
 
-        $aturan = AturanPenilaian::where('jenis_tes_id', $jenisTesId)
-            ->where('kode_keterampilan', $keterampilan)
-            ->first();
+        $tabelKonversi = $aturan['tabel_konversi'] ?? [];
 
-        if (! $aturan || $maksMentah <= 0) {
-            return 0;
+        if (! is_array($tabelKonversi)) {
+            throw new \RuntimeException('Tabel konversi skor tidak valid.');
         }
 
-        $tabelKonversi = $aturan->tabel_konversi;
+        if (! array_key_exists($jumlahBenar, $tabelKonversi)
+            && ! array_key_exists((string) $jumlahBenar, $tabelKonversi)) {
+            throw new \RuntimeException(
+                "Tabel konversi belum memiliki nilai untuk skor mentah {$jumlahBenar}.",
+            );
+        }
 
-        $persentase = round($skorMentah / $maksMentah * $aturan->skor_mentah_maksimum);
-        $persentase = min($persentase, $aturan->skor_mentah_maksimum);
-
-        return (float) ($tabelKonversi[(string) $persentase] ?? 0);
-    }
-
-    public function mentahKeSkalaMembaca(string $jenisTesId, int $mentah, int $maksMentah): float
-    {
-        return $this->konversi($jenisTesId, 'reading', $mentah, $maksMentah);
-    }
-
-    public function mentahKeSkalaMenyimak(string $jenisTesId, int $mentah, int $maksMentah): float
-    {
-        return $this->konversi($jenisTesId, 'listening', $mentah, $maksMentah);
-    }
-
-    public function rataRataBerbicaraKeSkala(float $rataRata): float
-    {
-        return round($rataRata / 4 * 30, 1);
-    }
-
-    public function rataRataMenulisKeSkala(float $rataRata): float
-    {
-        return round($rataRata / 5 * 30, 1);
+        return (float) ($tabelKonversi[$jumlahBenar] ?? $tabelKonversi[(string) $jumlahBenar]);
     }
 }

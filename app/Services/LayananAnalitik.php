@@ -13,7 +13,7 @@ class LayananAnalitik
         return [
             'penggunaDenganPeran' => $this->penggunaDenganPeran(),
             'sesiDenganBulan' => $this->sesiDenganBulan(),
-            'skorDenganKeterampilan' => $this->skorDenganKeterampilan(),
+            'skorDenganSection' => $this->skorDenganSection(),
             'tingkatLulus' => $this->tingkatLulus(),
             'mahasiswaTeratas' => $this->mahasiswaTeratas(),
             'partisipasiDenganFakultas' => $this->partisipasiDenganFakultas(),
@@ -41,34 +41,35 @@ class LayananAnalitik
             ->toArray();
     }
 
-    private function skorDenganKeterampilan(): array
+    private function skorDenganSection(): array
     {
-        $membaca = SesiUjian::where('status', 'submitted')
-            ->whereNotNull('skor_membaca')
-            ->avg('skor_membaca');
-
-        $menyimak = SesiUjian::where('status', 'submitted')
-            ->whereNotNull('skor_menyimak')
-            ->avg('skor_menyimak');
-
-        return [
-            ['label' => 'Reading', 'count' => round($membaca ?? 0, 1)],
-            ['label' => 'Listening', 'count' => round($menyimak ?? 0, 1)],
-        ];
+        return DB::table('hasil_penilaian')
+            ->join('sesi_ujian', 'sesi_ujian.id', '=', 'hasil_penilaian.sesi_ujian_id')
+            ->join('section', 'section.id', '=', 'hasil_penilaian.section_id')
+            ->where('sesi_ujian.status', 'submitted')
+            ->select('section.nama as label', DB::raw('round(avg(hasil_penilaian.skor_skala), 1) as count'))
+            ->groupBy('section.nama')
+            ->orderBy('section.nama')
+            ->get()
+            ->toArray();
     }
 
     private function tingkatLulus(): array
     {
-        $diserahkan = SesiUjian::where('status', 'submitted')->count();
-        $passing = config('settings.passing_score', 300);
-        $lulus = SesiUjian::where('status', 'submitted')
-            ->where('skor_total', '>=', $passing)
-            ->count();
+        $lulus = SesiUjian::where('status', 'submitted')->where('lulus', true)->count();
+        $tidakLulus = SesiUjian::where('status', 'submitted')->where('lulus', false)->count();
+        $belumTerinterpretasi = SesiUjian::where('status', 'submitted')->whereNull('lulus')->count();
 
-        return [
+        $data = [
             ['label' => 'Lulus', 'count' => $lulus],
-            ['label' => 'Tidak Lulus', 'count' => max(0, $diserahkan - $lulus)],
+            ['label' => 'Tidak Lulus', 'count' => $tidakLulus],
         ];
+
+        if ($belumTerinterpretasi > 0) {
+            $data[] = ['label' => 'Belum Terinterpretasi', 'count' => $belumTerinterpretasi];
+        }
+
+        return $data;
     }
 
     private function mahasiswaTeratas(): array

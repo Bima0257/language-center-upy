@@ -5,7 +5,6 @@ use App\Http\Controllers\Admin\CatatanAktivitasController;
 use App\Http\Controllers\Admin\DataIndukController;
 use App\Http\Controllers\Admin\InterpretasiSkorController;
 use App\Http\Controllers\Admin\PengaturanController;
-use App\Http\Controllers\Admin\PenggunaController;
 use App\Http\Controllers\Admin\PratinjauKomponenController;
 use App\Http\Controllers\Admin\SertifikatController;
 use App\Http\Controllers\DasborController;
@@ -22,6 +21,10 @@ Route::middleware('auth')->get('/media/{path}', [MediaController::class, 'serve'
     ->name('media.serve');
 
 Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dasbor');
+    }
+
     return Inertia::render('Welcome/index', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
@@ -41,43 +44,33 @@ Route::middleware('auth')->prefix('onboarding')->name('onboarding.')->group(func
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dasbor', [DasborController::class, 'index'])->name('dasbor');
 
-    Route::prefix('admin')->name('admin.')->group(function () {
-        Route::middleware('permission:user.view')->group(function () {
-            Route::get('/pengguna', [PenggunaController::class, 'index'])->name('pengguna.daftar');
-        });
-
-        Route::middleware('permission:user.edit')->group(function () {
-            Route::patch('/pengguna/{pengguna}', [PenggunaController::class, 'update'])->name('pengguna.perbarui');
-            Route::patch('/pengguna/{pengguna}/ubah-keaktifan', [PenggunaController::class, 'ubahKeaktifan'])->name('pengguna.ubah-keaktifan');
-            Route::patch('/pengguna/{pengguna}/atur-ulang-sandi', [PenggunaController::class, 'aturUlangSandi'])->name('pengguna.atur-ulang-sandi');
-        });
-
-        Route::middleware('permission:master_data.view')->group(function () {
-            Route::get('/data-induk/jenis-tes', [DataIndukController::class, 'daftarJenisTes'])->name('data-induk.jenis-tes.daftar');
-            Route::get('/data-induk/keterampilan', [DataIndukController::class, 'daftarKeterampilan'])->name('data-induk.keterampilan.daftar');
-            Route::get('/data-induk/keterampilan/jenis-tes/{jenisTes}', [DataIndukController::class, 'daftarKeterampilanPerJenisTes'])->name('data-induk.keterampilan.jenis-tes.daftar');
-            Route::get('/data-induk/bagian-soal', [DataIndukController::class, 'daftarBagianSoal'])->name('data-induk.bagian-soal.daftar');
+    Route::middleware('route.permission')->prefix('admin')->name('admin.')->group(function () {
+        Route::middleware('route.permission')->group(function () {
+            Route::get('/data-induk/program-tes', [DataIndukController::class, 'daftarProgramTes'])->name('data-induk.program-tes.daftar');
+            Route::get('/data-induk/section', [DataIndukController::class, 'daftarSection'])->name('data-induk.section.daftar');
+            Route::get('/data-induk/section/program-tes/{programTes}', [DataIndukController::class, 'daftarSectionPerProgramTes'])->name('data-induk.section.program-tes.daftar');
+            Route::get('/data-induk/part-soal', [DataIndukController::class, 'daftarPartSoal'])->name('data-induk.part-soal.daftar');
             Route::get('/data-induk/fakultas', [DataIndukController::class, 'daftarFakultas'])->name('data-induk.fakultas.daftar');
             Route::get('/data-induk/program-studi', [DataIndukController::class, 'daftarProgramStudi'])->name('data-induk.program-studi.daftar');
             Route::get('/data-induk/program-studi/fakultas/{fakultas}', [DataIndukController::class, 'daftarProgramStudiPerFakultas'])->name('data-induk.program-studi.fakultas.daftar');
             Route::get('/data-induk/program-studi/fakultas/{fakultas}/tambah-massal', [DataIndukController::class, 'tambahProgramStudiMassal'])->name('data-induk.program-studi.fakultas.tambah-massal');
             Route::get('/data-induk/interpretasi-skor', [InterpretasiSkorController::class, 'index'])->name('data-induk.interpretasi-skor.daftar');
-            Route::get('/data-induk/interpretasi-skor/jenis-tes/{jenisTes}', [InterpretasiSkorController::class, 'detailPerJenisTes'])->name('data-induk.interpretasi-skor.jenis-tes.daftar');
-            Route::get('/data-induk/interpretasi-skor/jenis-tes/{jenisTes}/tambah-massal', [InterpretasiSkorController::class, 'tambahMassal'])->name('data-induk.interpretasi-skor.jenis-tes.tambah-massal');
+            Route::get('/data-induk/interpretasi-skor/program-tes/{programTes}', [InterpretasiSkorController::class, 'detailPerProgramTes'])->name('data-induk.interpretasi-skor.program-tes.daftar');
+            Route::get('/data-induk/interpretasi-skor/program-tes/{programTes}/tambah-massal', [InterpretasiSkorController::class, 'tambahMassal'])->name('data-induk.interpretasi-skor.program-tes.tambah-massal');
         });
 
-        Route::middleware('permission:master_data.manage')->group(function () {
-            Route::post('/data-induk/jenis-tes', [DataIndukController::class, 'simpanJenisTes'])->name('data-induk.jenis-tes.simpan');
-            Route::put('/data-induk/jenis-tes/{jenisTes}', [DataIndukController::class, 'perbaruiJenisTes'])->name('data-induk.jenis-tes.perbarui');
-            Route::delete('/data-induk/jenis-tes/{jenisTes}', [DataIndukController::class, 'hapusJenisTes'])->name('data-induk.jenis-tes.hapus');
-            Route::post('/data-induk/keterampilan', [DataIndukController::class, 'simpanKeterampilan'])->name('data-induk.keterampilan.simpan');
-            Route::post('/data-induk/keterampilan/urutkan', [DataIndukController::class, 'susunUlangKeterampilan'])->name('data-induk.keterampilan.urutkan');
-            Route::put('/data-induk/keterampilan/{keterampilan}', [DataIndukController::class, 'perbaruiKeterampilan'])->name('data-induk.keterampilan.perbarui');
-            Route::delete('/data-induk/keterampilan/{keterampilan}', [DataIndukController::class, 'hapusKeterampilan'])->name('data-induk.keterampilan.hapus');
-            Route::post('/data-induk/bagian-soal', [DataIndukController::class, 'simpanBagianSoal'])->name('data-induk.bagian-soal.simpan');
-            Route::post('/data-induk/bagian-soal/urutkan', [DataIndukController::class, 'susunUlangBagianSoal'])->name('data-induk.bagian-soal.urutkan');
-            Route::put('/data-induk/bagian-soal/{bagianSoal}', [DataIndukController::class, 'perbaruiBagianSoal'])->name('data-induk.bagian-soal.perbarui');
-            Route::delete('/data-induk/bagian-soal/{bagianSoal}', [DataIndukController::class, 'hapusBagianSoal'])->name('data-induk.bagian-soal.hapus');
+        Route::middleware('route.permission')->group(function () {
+            Route::post('/data-induk/program-tes', [DataIndukController::class, 'simpanProgramTes'])->name('data-induk.program-tes.simpan');
+            Route::put('/data-induk/program-tes/{programTes}', [DataIndukController::class, 'perbaruiProgramTes'])->name('data-induk.program-tes.perbarui');
+            Route::delete('/data-induk/program-tes/{programTes}', [DataIndukController::class, 'hapusProgramTes'])->name('data-induk.program-tes.hapus');
+            Route::post('/data-induk/section', [DataIndukController::class, 'simpanSection'])->name('data-induk.section.simpan');
+            Route::post('/data-induk/section/urutkan', [DataIndukController::class, 'susunUlangSection'])->name('data-induk.section.urutkan');
+            Route::put('/data-induk/section/{section}', [DataIndukController::class, 'perbaruiSection'])->name('data-induk.section.perbarui');
+            Route::delete('/data-induk/section/{section}', [DataIndukController::class, 'hapusSection'])->name('data-induk.section.hapus');
+            Route::post('/data-induk/part-soal', [DataIndukController::class, 'simpanPartSoal'])->name('data-induk.part-soal.simpan');
+            Route::post('/data-induk/part-soal/urutkan', [DataIndukController::class, 'susunUlangPartSoal'])->name('data-induk.part-soal.urutkan');
+            Route::put('/data-induk/part-soal/{partSoal}', [DataIndukController::class, 'perbaruiPartSoal'])->name('data-induk.part-soal.perbarui');
+            Route::delete('/data-induk/part-soal/{partSoal}', [DataIndukController::class, 'hapusPartSoal'])->name('data-induk.part-soal.hapus');
             Route::post('/data-induk/fakultas', [DataIndukController::class, 'simpanFakultas'])->name('data-induk.fakultas.simpan');
             Route::put('/data-induk/fakultas/{fakultas}', [DataIndukController::class, 'perbaruiFakultas'])->name('data-induk.fakultas.perbarui');
             Route::delete('/data-induk/fakultas/{fakultas}', [DataIndukController::class, 'hapusFakultas'])->name('data-induk.fakultas.hapus');
@@ -86,24 +79,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/data-induk/program-studi/{programStudi}', [DataIndukController::class, 'perbaruiProgramStudi'])->name('data-induk.program-studi.perbarui');
             Route::delete('/data-induk/program-studi/{programStudi}', [DataIndukController::class, 'hapusProgramStudi'])->name('data-induk.program-studi.hapus');
             Route::post('/data-induk/interpretasi-skor', [InterpretasiSkorController::class, 'store'])->name('data-induk.interpretasi-skor.simpan');
-            Route::post('/data-induk/interpretasi-skor/jenis-tes/{jenisTes}/tambah-massal', [InterpretasiSkorController::class, 'simpanMassal'])->name('data-induk.interpretasi-skor.jenis-tes.simpan-massal');
+            Route::post('/data-induk/interpretasi-skor/program-tes/{programTes}/tambah-massal', [InterpretasiSkorController::class, 'simpanMassal'])->name('data-induk.interpretasi-skor.program-tes.simpan-massal');
             Route::put('/data-induk/interpretasi-skor/{interpretasiSkor}', [InterpretasiSkorController::class, 'update'])->name('data-induk.interpretasi-skor.perbarui');
             Route::delete('/data-induk/interpretasi-skor/{interpretasiSkor}', [InterpretasiSkorController::class, 'destroy'])->name('data-induk.interpretasi-skor.hapus');
         });
 
-        Route::middleware('permission:certificate.view')->get('/sertifikat', [SertifikatController::class, 'index'])->name('sertifikat.daftar');
-        Route::middleware('permission:certificate.create')->post('/sertifikat', [SertifikatController::class, 'store'])->name('sertifikat.simpan');
-        Route::middleware('permission:certificate.delete')->delete('/sertifikat/{sertifikat}', [SertifikatController::class, 'destroy'])->name('sertifikat.hapus');
+        Route::middleware('route.permission')->get('/sertifikat', [SertifikatController::class, 'index'])->name('sertifikat.daftar');
+        Route::middleware('route.permission')->post('/sertifikat', [SertifikatController::class, 'store'])->name('sertifikat.simpan');
+        Route::middleware('route.permission')->delete('/sertifikat/{sertifikat}', [SertifikatController::class, 'destroy'])->name('sertifikat.hapus');
 
-        Route::middleware('permission:audit_log.view')->get('/catatan-aktivitas', [CatatanAktivitasController::class, 'index'])->name('catatan-aktivitas.daftar');
+        Route::middleware('route.permission')->get('/catatan-aktivitas', [CatatanAktivitasController::class, 'index'])->name('catatan-aktivitas.daftar');
 
-        Route::middleware('permission:settings.manage')->group(function () {
+        Route::middleware('route.permission')->group(function () {
             Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan.daftar');
             Route::patch('/pengaturan', [PengaturanController::class, 'update'])->name('pengaturan.perbarui');
         });
 
-        Route::middleware('permission:analytics.view')->get('/analitik', [AnalitikController::class, 'index'])->name('analitik.daftar');
-        Route::middleware('permission:components.view')->get('/komponen', [PratinjauKomponenController::class, 'index'])->name('komponen.daftar');
+        Route::middleware('route.permission')->get('/analitik', [AnalitikController::class, 'index'])->name('analitik.daftar');
+        Route::middleware('route.permission')->get('/komponen', [PratinjauKomponenController::class, 'index'])->name('komponen.daftar');
     });
 
     Route::get('/profil', [ProfilController::class, 'edit'])->name('profile.edit');

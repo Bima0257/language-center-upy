@@ -101,7 +101,7 @@ function tabClasses(item) {
                     </div>
                 </div>
                 <div
-                    v-if="index < items.length - 1"
+                    v-if="index < items.length - 1 && !isActiveTab(item) && !isActiveTab(items[index + 1])"
                     role="presentation"
                     aria-hidden="true"
                     class="flex h-11 w-2 shrink-0 items-center justify-center"

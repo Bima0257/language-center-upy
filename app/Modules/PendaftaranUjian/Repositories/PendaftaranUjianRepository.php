@@ -50,9 +50,9 @@ class PendaftaranUjianRepository implements PendaftaranUjianRepositoryInterface
     public function paginate(array $filters, int $perPage = 15): LengthAwarePaginator
     {
         return $this->queryDenganRelasi()
-            ->when($filters['jenis_tes_id'] ?? null, fn ($query, $jenisTesId) => $query->whereHas(
+            ->when($filters['program_tes_id'] ?? null, fn ($query, $programTesId) => $query->whereHas(
                 'slotUjian.periodeUjian.ujian',
-                fn ($ujianQuery) => $ujianQuery->where('jenis_tes_id', $jenisTesId),
+                fn ($ujianQuery) => $ujianQuery->where('program_tes_id', $programTesId),
             ))
             ->when($filters['ujian_id'] ?? null, fn ($query, $ujianId) => $query->whereHas(
                 'slotUjian.periodeUjian',
@@ -161,7 +161,7 @@ class PendaftaranUjianRepository implements PendaftaranUjianRepositoryInterface
         return [
             'pengguna.profilMahasiswa.fakultas',
             'pengguna.profilMahasiswa.programStudi',
-            'slotUjian.periodeUjian.ujian.jenisTes',
+            'slotUjian.periodeUjian.ujian.programTes',
             'diprosesOleh',
         ];
     }

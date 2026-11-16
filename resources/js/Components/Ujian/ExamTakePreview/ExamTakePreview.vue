@@ -4,13 +4,15 @@ import TataLetakUjian from "@/Layouts/TataLetakUjian.vue";
 import TimerDisplay from "@/Layouts/Ujian/Components/TimerDisplay.vue";
 import GridSoalModal from "@/Components/Ujian/GridSoalModal.vue";
 import ExamIntroState from "@/Components/Ujian/ExamTakePreview/ExamIntroState.vue";
-import SkillIntroState from "@/Components/Ujian/ExamTakePreview/SkillIntroState.vue";
+import SectionIntroState from "@/Components/Ujian/ExamTakePreview/SectionIntroState.vue";
 import QuestionPartIntroState from "@/Components/Ujian/ExamTakePreview/QuestionPartIntroState.vue";
 import ReadingQuestionPane from "@/Components/Ujian/ExamTakePreview/ReadingQuestionPane.vue";
 import ListeningQuestionPane from "@/Components/Ujian/ExamTakePreview/ListeningQuestionPane.vue";
 import QuestionPreviewPane from "@/Components/Ujian/ExamTakePreview/QuestionPreviewPane.vue";
 import QuestionNavigation from "@/Components/Ujian/ExamTakePreview/QuestionNavigation.vue";
+import DemoSummaryState from "@/Components/Ujian/ExamTakePreview/DemoSummaryState.vue";
 import { onMounted, onUnmounted, ref, computed, watch } from "vue";
+import axios from "axios";
 import {
     IconArrowLeft,
     IconMoon,
@@ -24,23 +26,45 @@ const props = defineProps({
     backUrl: { type: String, default: null },
     manageUrl: { type: String, default: null },
     initialSoalId: { type: String, default: null },
+    demo: { type: Boolean, default: false },
+    skorUrl: { type: String, default: null },
 });
 
 // ============================================================
 // FLOW ENGINE
-// steps: [{kind:'intro'}, {kind:'keterampilan', block}, {kind:'bagianSoal', block}, {kind:'soal', block}, ...]
+// steps: [{kind:'intro'}, {kind:'section', block}, {kind:'partSoal', block}, {kind:'soal', block}, ...]
 // ============================================================
+
+function partKey(block) {
+    const kodeSection = block?.section?.kode ?? "";
+    const kunciPart = String(
+        block?.partSoal?.id
+            ?? block?.partSoal?.nama
+            ?? block?.nomorMulai
+            ?? "none",
+    );
+
+    return `${kodeSection}:${kunciPart}`;
+}
 
 const steps = computed(() => {
     const list = [{ kind: "intro" }];
-    let lastSkillCode = null;
+    let lastSectionCode = null;
+    let lastPartKey = null;
 
     for (const block of props.blocks) {
-        if (block.keterampilan.kode !== lastSkillCode) {
-            lastSkillCode = block.keterampilan.kode;
-            list.push({ kind: "keterampilan", block });
+        if (block.section.kode !== lastSectionCode) {
+            lastSectionCode = block.section.kode;
+            list.push({ kind: "section", block });
         }
-        list.push({ kind: "bagianSoal", block });
+
+        const currentPartKey = partKey(block);
+
+        if (currentPartKey !== lastPartKey) {
+            lastPartKey = currentPartKey;
+            list.push({ kind: "partSoal", block });
+        }
+
         list.push({ kind: "soal", block });
     }
 
@@ -95,47 +119,64 @@ const currentStep = computed(
 const phase = computed(() => currentStep.value.kind);
 
 const currentBlock = computed(() =>
-    ["keterampilan", "bagianSoal", "soal"].includes(phase.value)
+    ["section", "partSoal", "soal"].includes(phase.value)
         ? currentStep.value.block
         : null,
 );
 
-const activeSkillCode = computed(
+const activeSectionCode = computed(
     () =>
-        currentBlock.value?.keterampilan?.kode ||
-        props.blocks[0]?.keterampilan?.kode ||
+        currentBlock.value?.section?.kode ||
+        props.blocks[0]?.section?.kode ||
         "",
 );
 
-const skillTabs = computed(() => {
+const sectionTabs = computed(() => {
     const seen = new Set();
 
     return props.blocks
         .filter((block) => {
-            const code = block.keterampilan?.kode;
+            const code = block.section?.kode;
             if (!code || seen.has(code)) return false;
 
             seen.add(code);
             return true;
         })
         .map((block) => ({
-            value: block.keterampilan.kode,
-            label: block.keterampilan.nama,
+            value: block.section.kode,
+            label: block.section.nama,
         }));
 });
 
-const partTabs = computed(() =>
-    props.blocks
-        .filter((block) => block.keterampilan?.kode === activeSkillCode.value)
+const partTabs = computed(() => {
+    const seen = new Set();
+
+    return props.blocks
+        .filter((block) => block.section?.kode === activeSectionCode.value)
+        .filter((block) => {
+            const key = partKey(block);
+            if (seen.has(key)) return false;
+
+            seen.add(key);
+            return true;
+        })
         .map((block) => ({
-            value: String(block.nomorMulai),
-            label: block.bagianSoal?.nama || "Bagian Soal",
-        })),
-);
+            value: partKey(block),
+            label: block.partSoal?.nama || "Part Soal",
+        }));
+});
 
 const activePartValue = computed(() =>
-    currentBlock.value ? String(currentBlock.value.nomorMulai) : "",
+    currentBlock.value ? partKey(currentBlock.value) : "",
 );
+
+const currentPartBlocks = computed(() => {
+    if (!currentBlock.value) return [];
+
+    const key = partKey(currentBlock.value);
+
+    return props.blocks.filter((block) => partKey(block) === key);
+});
 
 const isQuestions = computed(() => phase.value === "soal");
 
@@ -182,7 +223,49 @@ const progressPercent = computed(() =>
 );
 
 // ============================================================
-// FOOTER NUMBER STRIP (per bagianSoal) — sliding window maks 5 nomor
+// DEMO STATE
+// ============================================================
+
+const demoSelesai = ref(false);
+const demoMulaiPada = ref(Date.now());
+const demoSelesaiPada = ref(null);
+const hasilPenilaian = ref(null);
+const sedangMenilai = ref(false);
+const errorPenilaian = ref(null);
+
+const durasiDemoMenit = computed(() => {
+    const selesai = demoSelesaiPada.value ?? Date.now();
+
+    return Math.max(1, Math.ceil((selesai - demoMulaiPada.value) / 60000));
+});
+
+const ringkasanSection = computed(() => {
+    const ringkasan = new Map();
+
+    for (const block of props.blocks) {
+        const kode = block.section?.kode || "lainnya";
+        const nama = block.section?.nama || "Section";
+
+        if (!ringkasan.has(kode)) {
+            ringkasan.set(kode, { kode, nama, total: 0, terjawab: 0 });
+        }
+
+        const item = ringkasan.get(kode);
+
+        for (const soal of block.soal || []) {
+            item.total += 1;
+
+            if (answers.value[soal.id] !== undefined) {
+                item.terjawab += 1;
+            }
+        }
+    }
+
+    return [...ringkasan.values()];
+});
+
+// ============================================================
+// FOOTER NUMBER STRIP (per partSoal) — sliding window maks 5 nomor
 // ============================================================
 
 const WINDOW_SIZE = 5;
@@ -214,18 +297,39 @@ watch(globalNumber, (value) => {
     stripAnim.value = value > prev ? "strip-next" : "strip-prev";
 });
 
-const mapGroups = computed(() =>
-    props.blocks.map((block) => ({
-        keterampilan: { nama: block.keterampilan.nama, kode: block.keterampilan.kode },
-        bagianSoal: { nama: block.bagianSoal.nama },
-        nomorMulai: block.nomorMulai,
-        jumlahSoal: block.jumlahSoal,
-        soal: block.soal.map((q, i) => ({
-            id: q.id,
-            nomor_global: q.nomor_global ?? block.nomorMulai + i,
-        })),
-    })),
-);
+const mapGroups = computed(() => {
+    const groups = new Map();
+
+    for (const block of props.blocks) {
+        const key = partKey(block);
+
+        if (!groups.has(key)) {
+            groups.set(key, {
+                section: {
+                    nama: block.section.nama,
+                    kode: block.section.kode,
+                },
+                partSoal: { nama: block.partSoal.nama },
+                nomorMulai: block.nomorMulai,
+                jumlahSoal: 0,
+                soal: [],
+            });
+        }
+
+        const group = groups.get(key);
+
+        for (const [index, soal] of block.soal.entries()) {
+            group.soal.push({
+                id: soal.id,
+                nomor_global: soal.nomor_global ?? block.nomorMulai + index,
+            });
+        }
+
+        group.jumlahSoal = group.soal.length;
+    }
+
+    return [...groups.values()];
+});
 
 // ============================================================
 // NAVIGATION
@@ -236,13 +340,66 @@ function goToNext() {
         subIndex.value++;
         return;
     }
+    if (props.demo && isLastStep()) {
+        selesaikanDemo();
+        return;
+    }
     if (stepIndex.value < steps.value.length - 1) {
         stepIndex.value++;
         subIndex.value = 0;
     }
 }
 
-function navigateToBlock(block, kind = "bagianSoal") {
+function selesaikanDemo() {
+    demoSelesaiPada.value = Date.now();
+    demoSelesai.value = true;
+    hitungSkorDemo();
+}
+
+async function hitungSkorDemo() {
+    if (!props.skorUrl) {
+        errorPenilaian.value = "Endpoint penilaian demo tidak tersedia.";
+        return;
+    }
+
+    sedangMenilai.value = true;
+    errorPenilaian.value = null;
+
+    try {
+        const jawaban = Object.entries(answers.value).map(([soal_id, teks]) => ({
+            soal_id,
+            jawaban: teks,
+        }));
+
+        const { data } = await axios.post(
+            props.skorUrl,
+            { jawaban },
+            { headers: { Accept: "application/json" } },
+        );
+
+        hasilPenilaian.value = data;
+    } catch (error) {
+        errorPenilaian.value =
+            error.response?.data?.message ||
+            "Gagal menghitung skor demo. Silakan coba lagi.";
+    } finally {
+        sedangMenilai.value = false;
+    }
+}
+
+function ulangiDemo() {
+    answers.value = {};
+    stepIndex.value = 0;
+    subIndex.value = 0;
+    demoMulaiPada.value = Date.now();
+    demoSelesaiPada.value = null;
+    demoSelesai.value = false;
+    hasilPenilaian.value = null;
+    sedangMenilai.value = false;
+    errorPenilaian.value = null;
+}
+
+function navigateToBlock(block, kind = "partSoal") {
     if (!block) return;
 
     const targetIndex = steps.value.findIndex(
@@ -255,22 +412,22 @@ function navigateToBlock(block, kind = "bagianSoal") {
     subIndex.value = 0;
 }
 
-function selectSkill(value) {
-    const skillCode = String(value);
-    const skillStep = steps.value.find(
+function selectSection(value) {
+    const sectionCode = String(value);
+    const sectionStep = steps.value.find(
         (step) =>
-            step.kind === "keterampilan" &&
-            step.block?.keterampilan?.kode === skillCode,
+            step.kind === "section" &&
+            step.block?.section?.kode === sectionCode,
     );
 
-    if (skillStep) {
-        navigateToBlock(skillStep.block, "keterampilan");
+    if (sectionStep) {
+        navigateToBlock(sectionStep.block, "section");
         return;
     }
 
     navigateToBlock(
         props.blocks.find(
-            (block) => block.keterampilan?.kode === skillCode,
+            (block) => block.section?.kode === sectionCode,
         ),
     );
 }
@@ -278,8 +435,8 @@ function selectSkill(value) {
 function selectPart(value) {
     const block = props.blocks.find(
         (candidate) =>
-            candidate.keterampilan?.kode === activeSkillCode.value &&
-            String(candidate.nomorMulai) === String(value),
+            candidate.section?.kode === activeSectionCode.value &&
+            partKey(candidate) === String(value),
     );
 
     navigateToBlock(block);
@@ -429,16 +586,24 @@ const seconds = ref(37);
                         aria-hidden="true"
                     ></span>
                     <div class="min-w-0">
-                        <p
-                            class="truncate text-base font-bold tracking-[-0.02em] sm:text-lg"
-                            :class="
-                                previewTheme === 'dark'
-                                    ? 'text-text-heading'
-                                    : 'text-text-heading'
-                            "
-                        >
-                            {{ examTitle }}
-                        </p>
+                        <div class="flex min-w-0 items-center gap-2">
+                            <p
+                                class="truncate text-base font-bold tracking-[-0.02em] sm:text-lg"
+                                :class="
+                                    previewTheme === 'dark'
+                                        ? 'text-text-heading'
+                                        : 'text-text-heading'
+                                "
+                            >
+                                {{ examTitle }}
+                            </p>
+                            <span
+                                v-if="demo"
+                                class="shrink-0 rounded-full bg-pastel-peach px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-text-pastel"
+                            >
+                                Mode Demo
+                            </span>
+                        </div>
                     </div>
                     <Link
                         v-if="manageUrl"
@@ -459,7 +624,7 @@ const seconds = ref(37);
 
                 <div class="flex shrink-0 items-center gap-2 sm:gap-3">
                     <div
-                        v-if="isQuestions"
+                        v-if="isQuestions && !demoSelesai"
                         class="exam-header-timer flex items-center rounded-xl border px-3 py-1"
                         :class="
                             previewTheme === 'dark'
@@ -528,31 +693,31 @@ const seconds = ref(37);
             </div>
         </template>
 
-        <div class="flex h-full min-h-0 flex-col bg-canvas">
+        <div v-if="!demoSelesai" class="flex h-full min-h-0 flex-col bg-canvas">
             <nav
                 v-if="blocks.length"
                 class="exam-section-nav flex min-h-[44px] shrink-0 items-center px-2 py-1 sm:px-3 lg:h-12 lg:py-1"
-                aria-label="Navigasi bagian ujian"
+                aria-label="Navigasi part ujian"
             >
                 <div
                     class="relative mx-auto grid w-full min-w-0 grid-cols-1 items-center gap-2 lg:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)]"
                 >
-                    <div class="exam-skill-tabs min-w-0 justify-self-center lg:col-start-1 lg:justify-self-end">
+                    <div class="exam-section-tabs min-w-0 justify-self-center lg:col-start-1 lg:justify-self-end">
                         <div class="exam-tabs-scroll flex max-w-full items-center overflow-x-auto rounded-full border p-0.5">
                             <button
-                                v-for="skill in skillTabs"
-                                :key="skill.value"
+                                v-for="section in sectionTabs"
+                                :key="section.value"
                                 type="button"
                                 class="exam-tab flex min-h-8 shrink-0 items-center justify-center rounded-full px-2.5 text-xs font-semibold transition-colors sm:min-w-[112px] sm:px-3 sm:text-sm"
                                 :class="
-                                    String(activeSkillCode) === String(skill.value)
+                                    String(activeSectionCode) === String(section.value)
                                         ? 'exam-tab-active'
                                         : 'exam-tab-inactive'
                                 "
-                                :aria-selected="String(activeSkillCode) === String(skill.value)"
-                                @click="selectSkill(skill.value)"
+                                :aria-selected="String(activeSectionCode) === String(section.value)"
+                                @click="selectSection(section.value)"
                             >
-                                {{ skill.label }}
+                                {{ section.label }}
                             </button>
                         </div>
                     </div>
@@ -606,7 +771,7 @@ const seconds = ref(37);
 
             <div
                 v-if="!isQuestions"
-                class="min-h-0 flex-1 overflow-y-auto scroll-hide bg-canvas p-3 sm:p-4"
+                class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain scroll-hide bg-canvas p-3 sm:p-4"
             >
                 <div class="flex min-h-full items-center justify-center">
                     <ExamIntroState
@@ -615,8 +780,8 @@ const seconds = ref(37);
                         :participant-name="sesiUjian.pengguna?.name || 'Peserta'"
                         @next="goToNext"
                     />
-                    <SkillIntroState
-                        v-else-if="phase === 'keterampilan'"
+                    <SectionIntroState
+                        v-else-if="phase === 'section'"
                         :current-block="currentBlock"
                         :blocks="blocks"
                         :can-go-prev="canGoPrev()"
@@ -624,8 +789,9 @@ const seconds = ref(37);
                         @next="goToNext"
                     />
                     <QuestionPartIntroState
-                        v-else-if="phase === 'bagianSoal'"
+                        v-else-if="phase === 'partSoal'"
                         :current-block="currentBlock"
+                        :part-blocks="currentPartBlocks"
                         :can-go-prev="canGoPrev()"
                         @previous="goToPrev"
                         @next="goToNext"
@@ -648,13 +814,13 @@ const seconds = ref(37);
                     <ReadingQuestionPane
                         v-if="materiSoal && !isMaterialAudio"
                         :materi-soal="materiSoal"
-                        :bagian-soal-label="currentBlock?.bagianSoal?.nama || currentBlock?.keterampilan?.nama || ''"
+                        :part-soal-label="currentBlock?.partSoal?.nama || currentBlock?.section?.nama || ''"
                         :image-src="imageSrc"
                     />
                     <ListeningQuestionPane
                         v-else-if="materiSoal && isMaterialAudio"
                         :materi-soal="materiSoal"
-                        :bagian-soal-label="currentBlock?.bagianSoal?.nama || currentBlock?.keterampilan?.nama || ''"
+                        :part-soal-label="currentBlock?.partSoal?.nama || currentBlock?.section?.nama || ''"
                         :image-src="imageSrc"
                         :audio-src="audioSrc"
                     />
@@ -681,9 +847,28 @@ const seconds = ref(37);
             </div>
         </div>
 
+        <div
+            v-else
+            class="flex h-full min-h-0 items-center justify-center overflow-y-auto overscroll-y-contain bg-canvas p-3 sm:p-4"
+        >
+            <DemoSummaryState
+                :overview="overview"
+                :answered-count="answeredCount"
+                :total-all-questions="totalAllQuestions"
+                :durasi-menit="durasiDemoMenit"
+                :ringkasan-section="ringkasanSection"
+                :hasil-penilaian="hasilPenilaian"
+                :sedang-menilai="sedangMenilai"
+                :error-penilaian="errorPenilaian"
+                :back-url="backUrl"
+                @restart="ulangiDemo"
+                @retry-score="hitungSkorDemo"
+            />
+        </div>
+
         <template #footer>
             <QuestionNavigation
-                v-if="isQuestions"
+                v-if="isQuestions && !demoSelesai"
                 :current-index="subIndex"
                 :questions="currentBlockQuestions"
                 :answers="answers"

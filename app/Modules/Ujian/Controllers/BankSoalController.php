@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Ujian\PerbaruiBankSoalRequest;
 use App\Http\Requests\Ujian\SimpanBankSoalRequest;
 use App\Models\BankSoal;
-use App\Models\JenisTes;
+use App\Models\ProgramTes;
 use App\Modules\Ujian\Services\LayananBankSoal;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -23,10 +23,10 @@ class BankSoalController extends Controller
         return Inertia::render('BankSoal/KelolaBankSoal/index', $this->layananBank->dataDaftar());
     }
 
-    public function daftarKategori(JenisTes $jenisTes): Response
+    public function daftarProgramTes(ProgramTes $programTes): Response
     {
-        return Inertia::render('BankSoal/KelolaBankSoal/index', $this->layananBank->dataDaftar($jenisTes->id) + [
-            'kategori' => $jenisTes,
+        return Inertia::render('BankSoal/KelolaBankSoal/index', $this->layananBank->dataDaftar($programTes->id) + [
+            'programTesTerpilih' => $programTes,
         ]);
     }
 

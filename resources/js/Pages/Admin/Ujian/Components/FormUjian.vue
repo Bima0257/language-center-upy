@@ -4,7 +4,7 @@ import DropDown from '@/Components/Shared/DropDown.vue';
 const props = defineProps({
     creating: { type: Boolean, default: false },
     form: { type: Object, required: true },
-    jenisTes: { type: Array, default: () => [] },
+    programTes: { type: Array, default: () => [] },
     bankSoalTersaring: { type: Array, default: () => [] },
     formId: { type: String, default: 'form-ujian' },
     showActions: { type: Boolean, default: true },
@@ -21,19 +21,19 @@ const modeOptions = [
 <template>
     <form :id="props.formId" @submit.prevent="emit('submit')" class="space-y-6">
         <BaseFormGrid>
-            <div :class="{ 'sm:col-span-2': !props.creating || !props.form.jenis_tes_id }">
+            <div :class="{ 'sm:col-span-2': !props.creating || !props.form.program_tes_id }">
                 <DropDown
-                    v-model="props.form.jenis_tes_id"
-                    :options="props.jenisTes"
-                    label="Jenis Tes"
-                    placeholder="Pilih jenis tes"
+                    v-model="props.form.program_tes_id"
+                    :options="props.programTes"
+                    label="Program Tes"
+                    placeholder="Pilih program tes"
                     option-label="nama"
                     option-value="id"
                 />
-                <p v-if="props.form.errors.jenis_tes_id" class="text-error-red text-xs mt-1">{{ props.form.errors.jenis_tes_id }}</p>
+                <p v-if="props.form.errors.program_tes_id" class="text-error-red text-xs mt-1">{{ props.form.errors.program_tes_id }}</p>
             </div>
 
-            <div v-if="props.creating && props.form.jenis_tes_id">
+            <div v-if="props.creating && props.form.program_tes_id">
                 <DropDown
                     v-model="props.form.bank_soal_id"
                     :options="props.bankSoalTersaring"
@@ -41,7 +41,7 @@ const modeOptions = [
                     placeholder="Pilih bank soal"
                     option-label="nama"
                     option-value="id"
-                    empty-message="Belum ada bank soal aktif untuk jenis tes ini."
+                    empty-message="Belum ada bank soal aktif untuk program tes ini."
                 />
                 <p v-if="props.form.errors.bank_soal_id" class="text-error-red text-xs mt-1">{{ props.form.errors.bank_soal_id }}</p>
             </div>

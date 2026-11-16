@@ -90,7 +90,7 @@ const showAudioUpload = computed(() => props.policy?.aturan_media?.audio !== 'fo
                                 v-else
                                 class="rounded-xl border border-warning/30 bg-warning-container/30 px-4 py-3 text-label-md text-on-warning-container"
                             >
-                                Audio tersimpan tidak sesuai dengan aturan keterampilan ini. Hapus audio sebelum menyimpan perubahan.
+                                Audio tersimpan tidak sesuai dengan aturan section ini. Hapus audio sebelum menyimpan perubahan.
                             </p>
                             <button
                                 v-if="materiSoal.url_audio"
@@ -107,9 +107,10 @@ const showAudioUpload = computed(() => props.policy?.aturan_media?.audio !== 'fo
                             <FileUpload
                                 v-model="form.berkas_gambar"
                                 label="Ganti File Gambar"
-                                hint="JPG, PNG, atau WebP • Maks. 20MB"
+                                hint="JPG, PNG, atau WebP • Maks. 2MB"
                                 accept=".jpg,.jpeg,.png,.webp"
                                 media-type="image"
+                                :max-size-mb="2"
                                 :preview-url="materiSoal.url_gambar ? '/media/' + materiSoal.url_gambar : null"
                                 :error="form.errors.berkas_gambar"
                             />

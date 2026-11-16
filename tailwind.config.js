@@ -1,78 +1,12 @@
 import defaultTheme from 'tailwindcss/defaultTheme';
-import forms from '@tailwindcss/forms';
-import typography from '@tailwindcss/typography';
 
 /** @type {import('tailwindcss').Config} */
 export default {
-    darkMode: 'class',
-
-    content: [
-        './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
-        './storage/framework/views/*.php',
-        './resources/views/**/*.blade.php',
-        './resources/js/**/*.vue',
-    ],
-
     theme: {
         extend: {
             fontFamily: {
                 sans: ['Plus Jakarta Sans', ...defaultTheme.fontFamily.sans],
                 serif: ['Lora', ...defaultTheme.fontFamily.serif],
-            },
-            colors: {
-                'brand-blue': 'var(--color-brand-blue)',
-                sidebar: 'var(--color-sidebar)',
-                'sidebar-text': 'var(--color-sidebar-text)',
-                'sidebar-text-muted': 'var(--color-sidebar-text-muted)',
-                'sidebar-text-hover': 'var(--color-sidebar-text-hover)',
-                primary: 'var(--color-primary)',
-                'primary-container': 'var(--color-primary-container)',
-                secondary: 'var(--color-secondary)',
-                'secondary-container': 'var(--color-secondary-container)',
-                'deep-space': 'var(--color-deep-space)',
-                'pastel-blue': 'var(--color-pastel-blue)',
-                'pastel-purple': 'var(--color-pastel-purple)',
-                'pastel-peach': 'var(--color-pastel-peach)',
-                'text-heading': 'var(--color-text-heading)',
-                'text-body': 'var(--color-text-body)',
-                'text-muted': 'var(--color-text-muted)',
-                surface: 'var(--color-surface)',
-                'surface-white': 'var(--color-surface-white)',
-                'surface-container': 'var(--color-surface-container)',
-                'surface-container-low': 'var(--color-surface-container-low)',
-                'surface-container-high': 'var(--color-surface-container-high)',
-                'surface-container-highest': 'var(--color-surface-container-highest)',
-                'surface-container-lowest': 'var(--color-surface-container-lowest)',
-                'surface-bright': 'var(--color-surface-bright)',
-                'outline-variant': 'var(--color-outline-variant)',
-                'on-primary': 'var(--color-on-primary)',
-                'on-primary-container': 'var(--color-on-primary-container)',
-                'on-secondary': 'var(--color-on-secondary)',
-                'on-secondary-container': 'var(--color-on-secondary-container)',
-                background: 'var(--color-background)',
-                canvas: 'var(--color-canvas)',
-                'track-neutral': 'var(--color-track-neutral)',
-                'error-red': 'var(--color-error-red)',
-                'error-container': 'var(--color-error-container)',
-                'on-error': 'var(--color-on-error)',
-                'on-error-container': 'var(--color-on-error-container)',
-                success: 'var(--color-success)',
-                'on-success': 'var(--color-on-success)',
-                'success-container': 'var(--color-success-container)',
-                'on-success-container': 'var(--color-on-success-container)',
-                warning: 'var(--color-warning)',
-                'on-warning': 'var(--color-on-warning)',
-                'warning-container': 'var(--color-warning-container)',
-                'on-warning-container': 'var(--color-on-warning-container)',
-                info: 'var(--color-info)',
-                'on-info': 'var(--color-on-info)',
-                'info-container': 'var(--color-info-container)',
-                'on-info-container': 'var(--color-on-info-container)',
-                'neutral-container': 'var(--color-neutral-container)',
-                'on-neutral-container': 'var(--color-on-neutral-container)',
-                scrim: 'var(--color-scrim)',
-                'text-pastel': 'var(--color-text-pastel)',
-                'icon-pastel': 'var(--color-icon-pastel)',
             },
             borderRadius: {
                 '2xl': '12px',
@@ -104,6 +38,4 @@ export default {
             },
         },
     },
-
-    plugins: [forms, typography],
 };

@@ -36,7 +36,7 @@ class PustakaSoalController extends Controller
     public function daftar(Request $request): Response
     {
         return Inertia::render('BankSoal/PustakaSoal/index', $this->layananSoal->dataDaftar(
-            $request->only(['jenis_tes_id', 'keterampilan', 'bank_soal_id', 'materi_soal_id', 'bagian_soal_id'])
+            $request->only(['program_tes_id', 'section', 'bank_soal_id', 'materi_soal_id', 'part_soal_id'])
         ));
     }
 
@@ -54,7 +54,7 @@ class PustakaSoalController extends Controller
 
         return to_route('pustaka-soal.daftar', [
             'bank_soal_id' => $soal->bank_soal_id,
-            'keterampilan' => $soal->keterampilan_id,
+            'section' => $soal->section_id,
         ])->with('success', 'Soal berhasil diperbarui.');
     }
 
@@ -72,7 +72,7 @@ class PustakaSoalController extends Controller
     private function filterKembali(Request $request): array
     {
         return array_filter(
-            $request->only(['bank_soal_id', 'keterampilan', 'bagian_soal_id']),
+            $request->only(['bank_soal_id', 'section', 'part_soal_id']),
             fn ($value) => $value !== null && $value !== ''
         );
     }
@@ -81,8 +81,8 @@ class PustakaSoalController extends Controller
     {
         return array_filter([
             'bank_soal_id' => $request->input('bank_soal_id'),
-            'keterampilan' => $request->input('_kembali_keterampilan') ?: $request->input('soal.0.keterampilan_id'),
-            'bagian_soal_id' => $request->input('_kembali_bagian_soal_id'),
+            'section' => $request->input('_kembali_section') ?: $request->input('soal.0.section_id'),
+            'part_soal_id' => $request->input('_kembali_part_soal_id'),
         ], fn ($value) => ! empty($value));
     }
 }

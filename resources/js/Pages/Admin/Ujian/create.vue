@@ -5,12 +5,12 @@ import FormUjian from '@/Pages/Admin/Ujian/Components/FormUjian.vue';
 import { computed, watch } from 'vue';
 
 const props = defineProps({
-    jenisTes: { type: Array, default: () => [] },
+    programTes: { type: Array, default: () => [] },
     bankSoal: { type: Array, default: () => [] },
 });
 
 const form = useForm({
-    jenis_tes_id: '',
+    program_tes_id: '',
     bank_soal_id: '',
     judul: '',
     deskripsi: '',
@@ -19,13 +19,13 @@ const form = useForm({
 });
 
 const bankSoalTersaring = computed(() => {
-    if (!form.jenis_tes_id) return [];
+    if (!form.program_tes_id) return [];
     return props.bankSoal.filter(
-        (b) => String(b.jenis_tes_id) === String(form.jenis_tes_id) && b.aktif,
+        (b) => String(b.program_tes_id) === String(form.program_tes_id) && b.aktif,
     );
 });
 
-watch(() => form.jenis_tes_id, () => {
+watch(() => form.program_tes_id, () => {
         form.bank_soal_id = '';
 });
 
@@ -41,7 +41,7 @@ function submit() {
             <BaseCard padding="p-8">
                 <FormUjian
                     :form="form"
-                    :jenis-tes="jenisTes"
+                    :program-tes="programTes"
                     :bank-soal-tersaring="bankSoalTersaring"
                     creating
                     @submit="submit"

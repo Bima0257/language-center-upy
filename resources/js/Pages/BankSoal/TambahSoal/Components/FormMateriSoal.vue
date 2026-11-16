@@ -36,7 +36,7 @@ const modeOptions = computed(() => {
             value: 'new',
             title: 'Buat Materi Soal Baru',
             description: props.hasListeningQuestion
-                ? 'Gunakan audio pendamping sesuai policy keterampilan ini.'
+                ? 'Gunakan audio pendamping sesuai policy section ini.'
                 : 'Buat materi yang dapat digunakan bersama soal dalam batch ini.',
             icon: props.hasListeningQuestion ? IconHeadphones : IconBook2,
         });
@@ -51,7 +51,7 @@ const modeOptions = computed(() => {
         <div>
             <BaseFieldLabel>Pilih sumber materi</BaseFieldLabel>
             <p class="text-body-md text-text-muted -mt-0.5">
-                Tentukan sumber materi sesuai policy keterampilan pada jenis tes ini.
+                Tentukan sumber materi sesuai policy section pada program tes ini.
             </p>
         </div>
 
@@ -59,7 +59,7 @@ const modeOptions = computed(() => {
             v-if="!policy"
             class="rounded-2xl border border-warning/30 bg-warning-container/30 px-4 py-3 text-label-md leading-relaxed text-on-warning-container"
         >
-            Keterampilan ini belum memiliki konfigurasi aturan materi soal. Atur policy terlebih dahulu di Data Induk Keterampilan.
+            Section ini belum memiliki konfigurasi aturan materi soal. Atur policy terlebih dahulu di Data Induk Section.
         </div>
 
         <div

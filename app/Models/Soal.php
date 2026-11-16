@@ -16,8 +16,8 @@ use Illuminate\Support\Carbon;
  * @property string $id
  * @property string $bank_soal_id
  * @property string|null $materi_soal_id
- * @property string $keterampilan_id
- * @property string|null $bagian_soal_id
+ * @property string $section_id
+ * @property string|null $part_soal_id
  * @property string $teks_soal
  * @property string $pilihan_a
  * @property string $pilihan_b
@@ -28,19 +28,19 @@ use Illuminate\Support\Carbon;
  * @property string|null $pembuat_id
  * @property string|null $pengubah_id
  * @property string|null $materi
- * @property-read int $bagian_ujian_count
+ * @property-read int $part_ujian_count
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read BankSoal $bankSoal
  * @property-read MateriSoal|null $materiSoal
- * @property-read Keterampilan $keterampilan
- * @property-read BagianSoal|null $bagianSoal
+ * @property-read Section $section
+ * @property-read PartSoal|null $partSoal
  * @property-read Pengguna|null $pembuat
  * @property-read Pengguna|null $pengubah
- * @property-read Collection<int, BagianUjian> $bagianUjian
+ * @property-read Collection<int, PartUjian> $partUjian
  */
 #[Fillable([
-    'bank_soal_id', 'materi_soal_id', 'keterampilan_id', 'bagian_soal_id',
+    'bank_soal_id', 'materi_soal_id', 'section_id', 'part_soal_id',
     'teks_soal', 'pilihan_a', 'pilihan_b', 'pilihan_c', 'pilihan_d',
     'kunci_jawaban', 'urutan',
     'pembuat_id', 'pengubah_id',
@@ -68,14 +68,14 @@ class Soal extends Model
         return $this->belongsTo(MateriSoal::class, 'materi_soal_id', 'id');
     }
 
-    public function keterampilan(): BelongsTo
+    public function section(): BelongsTo
     {
-        return $this->belongsTo(Keterampilan::class, 'keterampilan_id', 'id');
+        return $this->belongsTo(Section::class, 'section_id', 'id');
     }
 
-    public function bagianSoal(): BelongsTo
+    public function partSoal(): BelongsTo
     {
-        return $this->belongsTo(BagianSoal::class, 'bagian_soal_id', 'id');
+        return $this->belongsTo(PartSoal::class, 'part_soal_id', 'id');
     }
 
     public function pembuat(): BelongsTo
@@ -88,13 +88,13 @@ class Soal extends Model
         return $this->belongsTo(Pengguna::class, 'pengubah_id', 'id');
     }
 
-    public function bagianUjian(): BelongsToMany
+    public function partUjian(): BelongsToMany
     {
         return $this->belongsToMany(
-            BagianUjian::class,
-            'soal_bagian_ujian',
+            PartUjian::class,
+            'soal_part_ujian',
             'soal_id',
-            'bagian_ujian_id',
+            'part_ujian_id',
             'id',
             'id',
         );

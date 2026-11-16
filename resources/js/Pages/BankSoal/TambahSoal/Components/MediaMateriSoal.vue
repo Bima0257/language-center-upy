@@ -60,12 +60,14 @@ const visibleMediaCount = computed(() => [showText.value, showAudio.value, showI
             <FileUpload
                 v-model="form.materi_baru_berkas_gambar"
                 :label="`Gambar Pendukung${imageRequired ? ' — Wajib' : ' — Opsional'}`"
-                hint="JPG, PNG, atau WebP • Maks. 20MB"
+                hint="JPG, PNG, atau WebP • Maks. 2MB"
                 placeholder="Pilih gambar pendukung"
                 accept=".jpg,.jpeg,.png,.webp"
                 media-type="image"
                 variant="dropzone"
                 preview-in-dropzone
+                preview-height-class="max-h-[420px]"
+                :max-size-mb="2"
                 :required="imageRequired"
                 :error="form.errors.materi_baru_berkas_gambar"
             />

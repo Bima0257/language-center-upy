@@ -40,7 +40,7 @@ defineEmits([
                         v-if="group.soal.length"
                         :href="route('preview.exam-take', {
                             bank_soal_id: group.soal[0].bank_soal_id,
-                            jenis_tes_id: group.soal[0].bank_soal?.jenis_tes_id,
+                            program_tes_id: group.soal[0].bank_soal?.program_tes_id,
                             soal_id: group.soal[0].id,
                         })"
                         class="p-1.5 text-text-muted transition-colors hover:text-secondary"
@@ -60,16 +60,21 @@ defineEmits([
                     </button>
                     <button
                         type="button"
-                        class="p-1.5 text-text-muted transition-colors hover:text-secondary"
-                        title="Ubah materi soal"
+                        :disabled="bankLocked"
+                        :title="bankLocked ? 'Tidak bisa diubah karena bank soal sudah digunakan di ujian.' : 'Ubah materi soal'"
+                        class="p-1.5 text-text-muted transition-colors hover:text-secondary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-text-muted"
                         @click="$emit('start-edit', group.materiSoal)"
                     >
                         <IconEdit :size="16" />
                     </button>
                     <button
                         type="button"
-                        :disabled="group.soal.length > 0"
-                        :title="group.soal.length > 0 ? `Tidak bisa dihapus — materi soal dipakai ${group.soal.length} soal` : 'Hapus materi soal'"
+                        :disabled="bankLocked || group.soal.length > 0"
+                        :title="bankLocked
+                            ? 'Tidak bisa dihapus karena bank soal sudah digunakan di ujian.'
+                            : group.soal.length > 0
+                                ? `Tidak bisa dihapus — materi soal dipakai ${group.soal.length} soal`
+                                : 'Hapus materi soal'"
                         class="p-1.5 text-text-muted transition-colors hover:text-error-red disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-text-muted"
                         @click="$emit('delete-materi-soal', group.materiSoal)"
                     >

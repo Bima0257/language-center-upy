@@ -3,22 +3,26 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\DataInduk\PerbaruiBagianSoalRequest;
+use App\Http\Requests\DataInduk\HapusPartSoalRequest;
+use App\Http\Requests\DataInduk\HapusSectionRequest;
 use App\Http\Requests\DataInduk\PerbaruiFakultasRequest;
-use App\Http\Requests\DataInduk\PerbaruiJenisTesRequest;
-use App\Http\Requests\DataInduk\PerbaruiKeterampilanRequest;
+use App\Http\Requests\DataInduk\PerbaruiPartSoalRequest;
 use App\Http\Requests\DataInduk\PerbaruiProgramStudiRequest;
-use App\Http\Requests\DataInduk\SimpanBagianSoalRequest;
+use App\Http\Requests\DataInduk\PerbaruiProgramTesRequest;
+use App\Http\Requests\DataInduk\PerbaruiSectionRequest;
 use App\Http\Requests\DataInduk\SimpanFakultasRequest;
-use App\Http\Requests\DataInduk\SimpanJenisTesRequest;
-use App\Http\Requests\DataInduk\SimpanKeterampilanRequest;
+use App\Http\Requests\DataInduk\SimpanPartSoalRequest;
 use App\Http\Requests\DataInduk\SimpanProgramStudiMassalRequest;
 use App\Http\Requests\DataInduk\SimpanProgramStudiRequest;
-use App\Models\BagianSoal;
+use App\Http\Requests\DataInduk\SimpanProgramTesRequest;
+use App\Http\Requests\DataInduk\SimpanSectionRequest;
+use App\Http\Requests\DataInduk\SusunUlangPartSoalRequest;
+use App\Http\Requests\DataInduk\SusunUlangSectionRequest;
 use App\Models\Fakultas;
-use App\Models\JenisTes;
-use App\Models\Keterampilan;
+use App\Models\PartSoal;
 use App\Models\ProgramStudi;
+use App\Models\ProgramTes;
+use App\Models\Section;
 use App\Modules\DataInduk\Services\LayananDataInduk;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,126 +35,127 @@ class DataIndukController extends Controller
         private LayananDataInduk $layananDataInduk,
     ) {}
 
-    public function daftarKeterampilan(): Response
+    public function daftarSection(): Response
     {
-        return Inertia::render('Admin/DataInduk/Keterampilan/index', $this->layananDataInduk->dataDaftarKeterampilan());
+        return Inertia::render('Admin/DataInduk/Section/index', $this->layananDataInduk->dataDaftarSection());
     }
 
-    public function daftarKeterampilanPerJenisTes(JenisTes $jenisTes): Response
+    public function daftarSectionPerProgramTes(ProgramTes $programTes): Response
     {
         return Inertia::render(
-            'Admin/DataInduk/Keterampilan/JenisTes/index',
-            $this->layananDataInduk->dataDaftarKeterampilanPerJenisTes($jenisTes),
+            'Admin/DataInduk/Section/ProgramTes/index',
+            $this->layananDataInduk->dataDaftarSectionPerProgramTes($programTes),
         );
     }
 
-    public function simpanKeterampilan(SimpanKeterampilanRequest $request): RedirectResponse
+    public function simpanSection(SimpanSectionRequest $request): RedirectResponse
     {
-        $this->layananDataInduk->buatKeterampilan($request->validated());
+        $this->layananDataInduk->buatSection($request->validated());
 
-        return back()->with('success', 'Keterampilan berhasil ditambahkan.');
+        return back()->with('success', 'Section berhasil ditambahkan.');
     }
 
-    public function perbaruiKeterampilan(PerbaruiKeterampilanRequest $request, Keterampilan $keterampilan): RedirectResponse
+    public function perbaruiSection(PerbaruiSectionRequest $request, Section $section): RedirectResponse
     {
-        $this->layananDataInduk->perbaruiKeterampilan($keterampilan, $request->validated());
+        $this->layananDataInduk->perbaruiSection($section, $request->validated());
 
-        return back()->with('success', 'Keterampilan berhasil diperbarui.');
+        return back()->with('success', 'Section berhasil diperbarui.');
     }
 
-    public function hapusKeterampilan(Keterampilan $keterampilan): RedirectResponse
+    public function hapusSection(HapusSectionRequest $request, Section $section): RedirectResponse
     {
         try {
-            $this->layananDataInduk->hapusKeterampilan($keterampilan);
+            $this->layananDataInduk->hapusSection(
+                $section,
+                $request->validated()['bank_soal_konteks_id'] ?? null,
+            );
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         }
 
-        return back()->with('success', 'Keterampilan berhasil dihapus.');
+        return back()->with('success', 'Section berhasil dihapus.');
     }
 
-    public function susunUlangKeterampilan(Request $request): RedirectResponse
+    public function susunUlangSection(SusunUlangSectionRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'keterampilan' => ['required', 'array', 'min:1'],
-            'keterampilan.*' => ['required', 'uuid', 'distinct'],
-            'jenis_tes_id' => ['required', 'uuid', 'exists:jenis_tes,id'],
-        ]);
+        $validated = $request->validated();
 
-        $this->layananDataInduk->susunUlangKeterampilan($validated['keterampilan'], $validated['jenis_tes_id']);
+        $this->layananDataInduk->susunUlangSection($validated['section'], $validated['program_tes_id']);
 
-        return back()->with('success', 'Urutan keterampilan disimpan.');
+        return back()->with('success', 'Urutan section disimpan.');
     }
 
-    public function daftarJenisTes(): Response
+    public function daftarProgramTes(): Response
     {
-        return Inertia::render('Admin/DataInduk/JenisTes/index', $this->layananDataInduk->dataDaftarJenisTes());
+        return Inertia::render('Admin/DataInduk/ProgramTes/index', $this->layananDataInduk->dataDaftarProgramTes());
     }
 
-    public function simpanJenisTes(SimpanJenisTesRequest $request): RedirectResponse
+    public function simpanProgramTes(SimpanProgramTesRequest $request): RedirectResponse
     {
-        $this->layananDataInduk->buatJenisTes($request->validated());
+        $this->layananDataInduk->buatProgramTes($request->validated());
 
-        return back()->with('success', 'Jenis tes berhasil ditambahkan.');
+        return back()->with('success', 'Program tes berhasil ditambahkan.');
     }
 
-    public function perbaruiJenisTes(PerbaruiJenisTesRequest $request, JenisTes $jenisTes): RedirectResponse
+    public function perbaruiProgramTes(PerbaruiProgramTesRequest $request, ProgramTes $programTes): RedirectResponse
     {
-        $this->layananDataInduk->perbaruiJenisTes($jenisTes, $request->validated());
+        $this->layananDataInduk->perbaruiProgramTes($programTes, $request->validated());
 
-        return back()->with('success', 'Jenis tes berhasil diperbarui.');
+        return back()->with('success', 'Program tes berhasil diperbarui.');
     }
 
-    public function hapusJenisTes(JenisTes $jenisTes): RedirectResponse
+    public function hapusProgramTes(ProgramTes $programTes): RedirectResponse
     {
         try {
-            $this->layananDataInduk->hapusJenisTes($jenisTes);
+            $this->layananDataInduk->hapusProgramTes($programTes);
         } catch (\RuntimeException) {
-            return back()->with('error', 'Jenis tes tidak bisa dihapus karena masih digunakan atau terjadi konflik data.');
+            return back()->with('error', 'Program tes tidak bisa dihapus karena masih digunakan atau terjadi konflik data.');
         }
 
-        return back()->with('success', 'Jenis tes berhasil dihapus.');
+        return back()->with('success', 'Program tes berhasil dihapus.');
     }
 
-    public function daftarBagianSoal(Request $request): Response
+    public function daftarPartSoal(Request $request): Response
     {
         $bankId = $request->query('bank_id');
-        $jenisTesId = $request->query('jenis_tes_id');
+        $programTesId = $request->query('program_tes_id');
 
-        return Inertia::render('Admin/DataInduk/BagianSoal/index', $this->layananDataInduk->dataDaftarBagianSoal($bankId, $jenisTesId));
+        return Inertia::render('Admin/DataInduk/PartSoal/index', $this->layananDataInduk->dataDaftarPartSoal($bankId, $programTesId));
     }
 
-    public function simpanBagianSoal(SimpanBagianSoalRequest $request): RedirectResponse
+    public function simpanPartSoal(SimpanPartSoalRequest $request): RedirectResponse
     {
-        $this->layananDataInduk->buatBagianSoal($request->validated());
+        $this->layananDataInduk->buatPartSoal($request->validated());
 
-        return back()->with('success', 'Bagian soal berhasil ditambahkan.');
+        return back()->with('success', 'Part soal berhasil ditambahkan.');
     }
 
-    public function perbaruiBagianSoal(PerbaruiBagianSoalRequest $request, BagianSoal $bagianSoal): RedirectResponse
+    public function perbaruiPartSoal(PerbaruiPartSoalRequest $request, PartSoal $partSoal): RedirectResponse
     {
-        $this->layananDataInduk->perbaruiBagianSoal($bagianSoal, $request->validated());
+        $this->layananDataInduk->perbaruiPartSoal($partSoal, $request->validated());
 
-        return back()->with('success', 'Bagian soal berhasil diperbarui.');
+        return back()->with('success', 'Part soal berhasil diperbarui.');
     }
 
-    public function susunUlangBagianSoal(Request $request): RedirectResponse
+    public function susunUlangPartSoal(SusunUlangPartSoalRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'bagian_soal' => ['required', 'array', 'min:1'],
-            'bagian_soal.*' => ['required', 'uuid', 'distinct'],
-        ]);
+        $this->layananDataInduk->susunUlangPartSoal($request->validated()['part_soal']);
 
-        $this->layananDataInduk->susunUlangBagianSoal($validated['bagian_soal']);
-
-        return back()->with('success', 'Urutan bagian soal disimpan.');
+        return back()->with('success', 'Urutan part soal disimpan.');
     }
 
-    public function hapusBagianSoal(BagianSoal $bagianSoal): RedirectResponse
+    public function hapusPartSoal(HapusPartSoalRequest $request, PartSoal $partSoal): RedirectResponse
     {
-        $this->layananDataInduk->hapusBagianSoal($bagianSoal);
+        try {
+            $this->layananDataInduk->hapusPartSoal(
+                $partSoal,
+                $request->validated()['bank_soal_konteks_id'] ?? null,
+            );
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
-        return back()->with('success', 'Bagian soal berhasil dihapus.');
+        return back()->with('success', 'Part soal berhasil dihapus.');
     }
 
     public function daftarFakultas(): Response

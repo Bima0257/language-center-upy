@@ -1,24 +1,27 @@
 <script setup>
-import DataTable from '@/Components/Shared/DataTable.vue';
+import { h } from 'vue';
 import { IconEdit, IconTrash } from '@tabler/icons-vue';
+import BaseBadge from '@/Components/Base/BaseBadge.vue';
+import BaseButton from '@/Components/Base/BaseButton.vue';
+import BaseTambahData from '@/Components/Base/BaseTambahData.vue';
+import AppDataTable from '@/Components/Ui/AppDataTable.vue';
+import { formatProgramTes } from '@/constants/programTes';
 
 const props = defineProps({
     interpretasiSkor: { type: Array, default: () => [] },
-    jenisTes: { type: Array, default: () => [] },
+    programTes: { type: Array, default: () => [] },
+    tableKey: { type: String, default: 'interpretasi-skor-table' },
+    readOnly: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
 
 function examTypeName(id) {
-    return props.jenisTes.find((type) => type.id === id)?.nama || '-';
+    return formatProgramTes(props.programTes.find((type) => type.id === id));
 }
 
-function scoreRange(_value, row) {
+function scoreRange(row) {
     return `${row.skor_minimum} - ${row.skor_maksimum}`;
-}
-
-function labelSearchValue(value, row) {
-    return [value, row.deskripsi].filter(Boolean).join(' ');
 }
 
 function statusLabel(value) {
@@ -26,61 +29,80 @@ function statusLabel(value) {
 }
 
 const columns = [
-    { key: 'skor_minimum', label: 'Rentang Skor', sortable: true, searchable: true, className: 'font-medium text-text-heading', render: scoreRange, slot: 'score-range' },
-    { key: 'tingkat_cefr', label: 'CEFR', sortable: true },
-    { key: 'label_tingkat', label: 'Label', sortable: true, searchable: true, render: labelSearchValue, slot: 'label' },
-    { key: 'lulus', label: 'Kelulusan', sortable: true, searchable: true, render: statusLabel, slot: 'pass-status' },
-    { key: 'id', label: 'Aksi', slot: 'actions' },
+    {
+        accessorKey: 'skor_minimum',
+        header: 'Rentang Skor',
+        meta: { cellClass: 'font-medium text-text-heading' },
+        cell: info => h('div', [
+            h('p', { class: 'font-medium text-text-heading' }, scoreRange(info.row.original)),
+            h('p', { class: 'text-text-muted text-label-md' }, examTypeName(info.row.original.program_tes_id)),
+        ]),
+    },
+    { accessorKey: 'tingkat_cefr', header: 'CEFR' },
+    {
+        accessorKey: 'label_tingkat',
+        header: 'Label',
+        cell: info => h('div', [
+            h('p', { class: 'text-body-md text-text-body' }, info.getValue()),
+            info.row.original.deskripsi
+                ? h('p', { class: 'text-text-muted text-label-md' }, info.row.original.deskripsi)
+                : null,
+        ]),
+    },
+    {
+        accessorKey: 'lulus',
+        header: 'Kelulusan',
+        cell: info => h(
+            BaseBadge,
+            { variant: info.getValue() ? 'success' : 'danger' },
+            () => statusLabel(info.getValue()),
+        ),
+    },
+    {
+        id: 'actions',
+        header: 'Aksi',
+        meta: { align: 'center' },
+        cell: info => (props.readOnly
+            ? '-'
+            : h('div', { class: 'flex items-center justify-center gap-1' }, [
+                h(
+                    BaseButton,
+                    {
+                        variant: 'secondary',
+                        iconOnly: true,
+                        title: 'Ubah',
+                        'aria-label': 'Ubah',
+                        onClick: () => emit('edit', info.row.original),
+                    },
+                    () => h(IconEdit, { size: 16 }),
+                ),
+                h(
+                    BaseButton,
+                    {
+                        variant: 'danger',
+                        iconOnly: true,
+                        title: 'Hapus',
+                        'aria-label': 'Hapus',
+                        onClick: () => emit('delete', info.row.original),
+                    },
+                    () => h(IconTrash, { size: 16 }),
+                ),
+            ])),
+    },
 ];
 </script>
 
 <template>
-    <DataTable
+    <AppDataTable
+        :table-key="props.tableKey"
         :data="props.interpretasiSkor"
         :columns="columns"
-        header-title="Daftar Interpretasi Skor"
+        title="Daftar Interpretasi Skor"
         class="lg:col-span-2"
         searchable
     >
-        <template #toolbar>
+        <template v-if="!props.readOnly" #actions>
             <BaseTambahData @click="emit('create')" />
         </template>
-
-        <template #score-range="{ row }">
-            <p class="font-medium text-text-heading">{{ scoreRange(null, row) }}</p>
-            <p class="text-text-muted text-label-md">{{ examTypeName(row.jenis_tes_id) }}</p>
-        </template>
-
-        <template #label="{ row }">
-            <p class="text-body-md text-text-body">{{ row.label_tingkat }}</p>
-            <p v-if="row.deskripsi" class="text-text-muted text-label-md">{{ row.deskripsi }}</p>
-        </template>
-
-        <template #pass-status="{ row }">
-            <BaseBadge :variant="row.lulus ? 'success' : 'danger'">
-                {{ statusLabel(row.lulus) }}
-            </BaseBadge>
-        </template>
-
-        <template #actions="{ row }">
-            <BaseButton
-                variant="secondary"
-                icon-only
-                title="Ubah"
-                aria-label="Ubah"
-                @click="emit('edit', row)"
-            >
-                <IconEdit :size="16" />
-            </BaseButton>
-            <BaseButton
-                variant="danger"
-                icon-only
-                title="Hapus"
-                aria-label="Hapus"
-                @click="emit('delete', row)"
-            >
-                <IconTrash :size="16" />
-            </BaseButton>
-        </template>
-    </DataTable>
+    </AppDataTable>
 </template>

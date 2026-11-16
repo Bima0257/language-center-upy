@@ -8,50 +8,50 @@ use Illuminate\Database\Eloquent\Collection;
 
 class BankSoalRepository implements BankSoalRepositoryInterface
 {
-    public function semuaDenganJenisTesDanJumlah(?string $jenisTesId = null): Collection
+    public function semuaDenganProgramTesDanJumlah(?string $programTesId = null): Collection
     {
-        return BankSoal::with('jenisTes')
-            ->withCount(['soal', 'bagianUjian'])
-            ->when($jenisTesId !== null, fn ($query) => $query->where('jenis_tes_id', $jenisTesId))
+        return BankSoal::with('programTes')
+            ->withCount(['soal', 'partUjian'])
+            ->when($programTesId !== null, fn ($query) => $query->where('program_tes_id', $programTesId))
             ->orderBy('nama')
             ->get();
     }
 
     public function semuaAktifBerurutan(): Collection
     {
-        return BankSoal::withCount('bagianUjian')
+        return BankSoal::withCount('partUjian')
             ->where('aktif', true)
             ->orderBy('nama')
             ->get();
     }
 
-    public function semuaAktifDenganJenisTesDanJumlah(?string $jenisTesId = null): Collection
+    public function semuaAktifDenganProgramTesDanJumlah(?string $programTesId = null): Collection
     {
-        return BankSoal::with('jenisTes')
-            ->withCount(['soal', 'bagianUjian'])
+        return BankSoal::with('programTes')
+            ->withCount(['soal', 'partUjian'])
             ->where('aktif', true)
-            ->when($jenisTesId !== null, fn ($query) => $query->where('jenis_tes_id', $jenisTesId))
+            ->when($programTesId !== null, fn ($query) => $query->where('program_tes_id', $programTesId))
             ->orderBy('nama')
             ->get();
     }
 
-    public function semuaAktifDenganJenisTesBerurutan(?string $jenisTesId = null): Collection
+    public function semuaAktifDenganProgramTesBerurutan(?string $programTesId = null): Collection
     {
-        return BankSoal::with('jenisTes')
+        return BankSoal::with('programTes')
             ->where('aktif', true)
-            ->when($jenisTesId !== null, fn ($query) => $query->where('jenis_tes_id', $jenisTesId))
+            ->when($programTesId !== null, fn ($query) => $query->where('program_tes_id', $programTesId))
             ->orderBy('nama')
             ->get();
     }
 
     public function find(string $id): ?BankSoal
     {
-        return BankSoal::withCount('bagianUjian')->find($id);
+        return BankSoal::withCount('partUjian')->find($id);
     }
 
     public function digunakanDalamUjian(string $id): bool
     {
-        return BankSoal::whereKey($id)->whereHas('bagianUjian')->exists();
+        return BankSoal::whereKey($id)->whereHas('partUjian')->exists();
     }
 
     public function adaAktif(string $id): bool

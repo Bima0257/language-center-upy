@@ -4,7 +4,7 @@ import { useMediaLoad } from "@/Composables/useMediaLoad";
 
 const props = defineProps({
     materiSoal: { type: Object, default: null },
-    bagianSoalLabel: { type: String, default: "" },
+    partSoalLabel: { type: String, default: "" },
     imageSrc: { type: String, default: null },
 });
 
@@ -15,12 +15,12 @@ const imageLoading = useMediaLoad(() => props.imageSrc);
     <section
         class="preview-material-panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border bg-surface-container-low"
     >
-        <div class="min-h-0 flex-1 overflow-y-auto scroll-hide p-3 sm:p-4 lg:p-4">
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain scroll-hide p-3 sm:p-4 lg:p-4">
             <div class="mx-auto w-full max-w-3xl">
                 <div class="mb-3">
                     <span
                         class="mb-1.5 inline-flex rounded-md bg-pastel-blue px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-info"
-                    >{{ bagianSoalLabel || "Materi" }}</span
+                    >{{ partSoalLabel || "Materi" }}</span
                     >
                     <h1
                         class="text-lg font-bold leading-[1.2] tracking-[-0.025em] text-text-heading sm:text-xl"

@@ -3,7 +3,7 @@
 use App\Modules\Pengawasan\Controllers\PengawasanController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'permission:exam_session.monitor'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('pengawas')
     ->name('pengawas.')
     ->group(function () {
@@ -13,14 +13,14 @@ Route::middleware(['auth', 'permission:exam_session.monitor'])
         Route::get('/ditandai', [PengawasanController::class, 'sesiDitandai'])->name('ditandai');
     });
 
-Route::middleware(['auth', 'permission:exam_session.terminate'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('pengawas')
     ->name('pengawas.')
     ->group(function () {
         Route::post('/sesi/{sesiUjian}/hentikan', [PengawasanController::class, 'hentikan'])->name('sesi.hentikan');
     });
 
-Route::middleware(['auth', 'permission:review.decide'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('pengawas')
     ->name('pengawas.')
     ->group(function () {

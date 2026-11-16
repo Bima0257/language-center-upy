@@ -7,7 +7,20 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface InterpretasiSkorRepositoryInterface
 {
-    public function semuaDenganJenisTes(?string $jenisTesId = null): Collection;
+    public function semuaDenganProgramTes(?string $programTesId = null): Collection;
+
+    /**
+     * @return Collection<int, InterpretasiSkor>
+     */
+    public function semuaUntukSkema(string $skemaPenilaianId): Collection;
+
+    public function updateOrCreate(
+        string $skemaPenilaianId,
+        int $skorMinimum,
+        array $data,
+    ): InterpretasiSkor;
+
+    public function salinKeSkema(string $skemaAsalId, string $skemaTujuanId): void;
 
     public function create(array $data): InterpretasiSkor;
 

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Permission;
 use App\Models\Role;
+use App\Modules\Identity\Contracts\IdentityContract;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -13,129 +14,39 @@ class RoleSeeder extends Seeder
     {
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $permissionNames = [
-            'user.view',
-            'user.create',
-            'user.edit',
-            'user.delete',
-
-            'exam.create',
-            'exam.edit',
-            'exam.delete',
-            'exam.view',
-            'exam.manage',
-
-            'exam_session.view',
-            'exam_session.take',
-            'exam_session.monitor',
-            'exam_session.terminate',
-
-            'exam_registration.view',
-            'exam_registration.apply',
-            'exam_registration.manage',
-
-            'registration_period.view',
-            'registration_period.create',
-            'registration_period.edit',
-            'registration_period.delete',
-
-            'schedule.create',
-            'schedule.edit',
-            'schedule.delete',
-            'schedule.view',
-
-            'question.create',
-            'question.edit',
-            'question.delete',
-            'question.view',
-
-            'review.violations',
-            'review.decide',
-
-            'report.view',
-            'report.export',
-
-            'speaking_score.create',
-            'writing_score.create',
-
-            'appeal.create',
-            'appeal.review',
-            'appeal.view',
-
-            'settings.manage',
-
-            'master_data.view',
-            'master_data.manage',
-            'certificate.view',
-            'certificate.create',
-            'certificate.delete',
-            'audit_log.view',
-            'analytics.view',
-            'components.view',
-        ];
-
-        foreach ($permissionNames as $permissionName) {
-            Permission::firstOrCreate(['name' => $permissionName, 'guard_name' => 'web']);
-        }
-
-        $permissions = Permission::query()
-            ->where('guard_name', 'web')
-            ->whereIn('name', $permissionNames)
-            ->get();
+        app(IdentityContract::class)->scanPermissions();
 
         $superadmin = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
-        $superadmin->syncPermissions($permissions);
+        $superadmin->update(['is_system' => true, 'is_default' => false]);
 
         $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        $admin->syncPermissions([
-            'user.view', 'user.create', 'user.edit',
-            'exam.view', 'exam.manage', 'exam.create', 'exam.edit', 'exam.delete',
-            'exam_session.view',
-            'exam_session.monitor',
-            'exam_session.terminate',
-            'exam_registration.view',
-            'exam_registration.manage',
-            'registration_period.view', 'registration_period.create',
-            'registration_period.edit', 'registration_period.delete',
-            'schedule.view', 'schedule.create', 'schedule.edit', 'schedule.delete',
-            'question.view', 'question.create', 'question.edit', 'question.delete',
-            'review.violations',
-            'review.decide',
-            'report.view', 'report.export',
-            'speaking_score.create',
-            'writing_score.create',
-            'settings.manage',
-            'master_data.view', 'master_data.manage',
-            'certificate.view', 'certificate.create', 'certificate.delete',
-            'audit_log.view',
-            'analytics.view',
-            'components.view',
-        ]);
+        $admin->update(['is_system' => true, 'is_default' => true]);
 
-        $proctor = Role::firstOrCreate(['name' => 'proctor', 'guard_name' => 'web']);
-        $proctor->syncPermissions([
-            'exam_session.view',
-            'exam_session.monitor',
-            'exam_session.terminate',
-            'review.violations',
-            'user.view',
-        ]);
+        $peserta = Role::firstOrCreate(['name' => 'peserta', 'guard_name' => 'web']);
+        $peserta->update(['is_system' => true, 'is_default' => true]);
 
-        $instructor = Role::firstOrCreate(['name' => 'instructor', 'guard_name' => 'web']);
-        $instructor->syncPermissions([
-            'question.create', 'question.edit', 'question.delete', 'question.view',
-            'exam.view',
-            'user.view',
-            'speaking_score.create',
-            'writing_score.create',
-        ]);
+        $adminPermissions = Permission::query()
+            ->whereNotNull('route_name')
+            ->where(function ($query): void {
+                $query->where(function ($query): void {
+                    $query->where('route_name', 'like', 'admin.%')
+                        ->where('route_name', 'not like', 'admin.identity.%');
+                })->orWhere('route_name', 'like', 'pengawas.%')
+                    ->orWhere('route_name', 'like', 'pustaka-soal.%');
+            })
+            ->pluck('name')
+            ->all();
 
-        $student = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
-        $student->syncPermissions([
-            'exam.view',
-            'exam_session.view',
-            'exam_session.take',
-            'exam_registration.apply',
-        ]);
+        $pesertaPermissions = Permission::query()
+            ->where('route_name', 'like', 'ujian.%')
+            ->pluck('name')
+            ->all();
+
+        $admin->syncPermissions($adminPermissions);
+        $peserta->syncPermissions($pesertaPermissions);
+
+        Permission::query()->whereNull('route_name')->delete();
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
 }

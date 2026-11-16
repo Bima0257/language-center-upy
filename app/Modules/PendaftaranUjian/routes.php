@@ -3,7 +3,7 @@
 use App\Modules\PendaftaranUjian\Controllers\PendaftaranUjianController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'permission:exam_registration.apply'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('ujian')
     ->name('ujian.')
     ->group(function () {
@@ -15,7 +15,7 @@ Route::middleware(['auth', 'permission:exam_registration.apply'])
             ->name('pendaftaran.batalkan');
     });
 
-Route::middleware(['auth', 'permission:registration_period.view'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/pendaftaran-ujian')
     ->name('admin.pendaftaran-ujian.')
     ->group(function () {
@@ -28,7 +28,7 @@ Route::middleware(['auth', 'permission:registration_period.view'])
             ->name('detail');
     });
 
-Route::middleware(['auth', 'permission:registration_period.create'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/pendaftaran-ujian')
     ->name('admin.pendaftaran-ujian.')
     ->group(function () {
@@ -36,7 +36,7 @@ Route::middleware(['auth', 'permission:registration_period.create'])
         Route::post('/', [PendaftaranUjianController::class, 'simpan'])->name('simpan');
     });
 
-Route::middleware(['auth', 'permission:registration_period.edit'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/pendaftaran-ujian')
     ->name('admin.pendaftaran-ujian.')
     ->group(function () {
@@ -48,7 +48,7 @@ Route::middleware(['auth', 'permission:registration_period.edit'])
             ->name('perbarui');
     });
 
-Route::middleware(['auth', 'permission:registration_period.delete'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/pendaftaran-ujian')
     ->name('admin.pendaftaran-ujian.')
     ->group(function () {
@@ -57,7 +57,7 @@ Route::middleware(['auth', 'permission:registration_period.delete'])
             ->name('hapus');
     });
 
-Route::middleware(['auth', 'permission:exam_registration.manage'])
+Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/pendaftaran-ujian')
     ->name('admin.pendaftaran-ujian.')
     ->group(function () {

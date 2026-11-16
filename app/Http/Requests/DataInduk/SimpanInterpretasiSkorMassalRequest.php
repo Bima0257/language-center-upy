@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\DataInduk;
 
-use App\Models\JenisTes;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -19,10 +18,10 @@ class SimpanInterpretasiSkorMassalRequest extends FormRequest
      */
     public function rules(): array
     {
-        $jenisTes = $this->route('jenisTes');
-        $jenisTesId = $jenisTes instanceof JenisTes ? $jenisTes->id : (string) $jenisTes;
+        $skemaPenilaianId = (string) $this->input('skema_penilaian_id', '');
 
         return [
+            'skema_penilaian_id' => ['required', 'uuid', 'exists:skema_penilaian,id'],
             'interpretasi_skor' => ['required', 'array', 'min:1', 'max:10'],
             'interpretasi_skor.*.skor_minimum' => [
                 'required',
@@ -30,7 +29,7 @@ class SimpanInterpretasiSkorMassalRequest extends FormRequest
                 'min:0',
                 'distinct',
                 Rule::unique('interpretasi_skor', 'skor_minimum')
-                    ->where(fn ($query) => $query->where('jenis_tes_id', $jenisTesId)),
+                    ->where(fn ($query) => $query->where('skema_penilaian_id', $skemaPenilaianId)),
             ],
             'interpretasi_skor.*.skor_maksimum' => ['required', 'integer', 'min:0'],
             'interpretasi_skor.*.tingkat_cefr' => ['required', 'string', 'max:10'],

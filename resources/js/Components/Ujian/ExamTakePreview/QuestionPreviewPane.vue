@@ -30,7 +30,7 @@ const optionKeys = computed(() =>
 </script>
 
 <template>
-    <div class="min-h-0 flex-1 overflow-y-auto scroll-hide p-2.5 sm:p-3 lg:p-4">
+    <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain scroll-hide p-2.5 sm:p-3 lg:p-4">
         <div class="mx-auto w-full max-w-3xl">
             <div class="mb-2 flex items-center gap-1.5">
                 <div

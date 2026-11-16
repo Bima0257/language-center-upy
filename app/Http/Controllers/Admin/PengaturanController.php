@@ -20,9 +20,6 @@ class PengaturanController extends Controller
             'default_max_strikes' => '3',
             'default_duration_minutes' => '160',
         ],
-        'scoring' => [
-            'passing_score' => '300',
-        ],
         'certificate' => [
             'certificate_validity_days' => '365',
         ],

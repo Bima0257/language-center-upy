@@ -5,7 +5,7 @@ const props = defineProps({
     show: { type: Boolean, default: false },
     editing: { type: Boolean, default: false },
     form: { type: Object, required: true },
-    jenisTes: { type: Object, required: true },
+    programTes: { type: Object, required: true },
 });
 
 const emit = defineEmits(['close', 'submit']);
@@ -34,8 +34,8 @@ const emit = defineEmits(['close', 'submit']);
         <template #default>
             <form id="form-interpretasi-skor" @submit.prevent="emit('submit')" class="space-y-5 px-8 pb-8 pt-6">
                 <div class="rounded-2xl bg-surface-container-low px-4 py-3">
-                    <p class="text-label-md text-text-muted">Jenis Tes</p>
-                    <p class="text-body-md font-semibold text-text-heading mt-1">{{ props.jenisTes.kode }} - {{ props.jenisTes.nama }}</p>
+                    <p class="text-label-md text-text-muted">Program Tes</p>
+                    <p class="text-body-md font-semibold text-text-heading mt-1">{{ props.programTes.kode }} - {{ props.programTes.nama }}</p>
                 </div>
 
                 <BaseFormGrid>

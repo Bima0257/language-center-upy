@@ -37,7 +37,7 @@ class FakultasTest extends TestCase
 
     public function test_peran_tanpa_izin_ditolak(): void
     {
-        $this->masukSebagai('student');
+        $this->masukSebagai('peserta');
 
         $this->get('/admin/data-induk/fakultas')->assertForbidden();
     }

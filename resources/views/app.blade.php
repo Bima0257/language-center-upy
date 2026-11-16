@@ -9,6 +9,7 @@
             $authComponents = ['Auth/Login/index', 'Auth/Register/index', 'Auth/ConfirmPassword/index', 'Auth/ForgotPassword/index', 'Auth/ResetPassword/index', 'Auth/VerifyEmail/index'];
             $isLanding = in_array($page['component'], $landingComponents);
             $isAuth = in_array($page['component'], $authComponents);
+            $usesTurnstile = in_array($page['component'], ['Auth/Login/index', 'Auth/Register/index']);
         @endphp
         @if($isLanding && !$isAuth)
         <script>
@@ -39,10 +40,17 @@
         <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
         <link href="https://fonts.bunny.net/css?family=lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
 
+        @if($usesTurnstile)
+        <link rel="preconnect" href="https://challenges.cloudflare.com">
+        <link rel="dns-prefetch" href="https://challenges.cloudflare.com">
+        @endif
+
         <!-- Scripts -->
         @routes
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
+        @if($usesTurnstile)
+        <script id="cf-turnstile-script" src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+        @endif
         @inertiaHead
     </head>
     <body class="font-sans antialiased">

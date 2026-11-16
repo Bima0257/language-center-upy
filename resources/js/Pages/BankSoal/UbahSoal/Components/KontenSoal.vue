@@ -17,7 +17,7 @@ defineProps({
         <div class="bg-pastel-purple/10 border border-pastel-purple/40 rounded-2xl p-5 space-y-4">
             <p class="flex items-center gap-1.5 text-label-md text-text-muted">
                 <IconInfoCircle :size="16" class="text-secondary shrink-0" />
-                Soal menggunakan audio materi soal sesuai policy keterampilan. Peserta hanya memilih A/B/C/D.
+                Soal menggunakan audio materi soal sesuai policy section. Peserta hanya memilih A/B/C/D.
             </p>
             <p v-if="!selectedPassage?.url_audio" class="text-label-md text-error-red">
                 Soal audio wajib memakai materi soal yang memiliki audio.

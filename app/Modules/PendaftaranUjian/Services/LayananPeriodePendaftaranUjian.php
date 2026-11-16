@@ -2,9 +2,9 @@
 
 namespace App\Modules\PendaftaranUjian\Services;
 
-use App\Models\JenisTes;
 use App\Models\PeriodePendaftaranUjian;
-use App\Modules\DataInduk\Repositories\Contracts\JenisTesRepositoryInterface;
+use App\Models\ProgramTes;
+use App\Modules\DataInduk\Repositories\Contracts\ProgramTesRepositoryInterface;
 use App\Modules\PendaftaranUjian\Repositories\Contracts\PendaftaranUjianRepositoryInterface;
 use App\Modules\PendaftaranUjian\Repositories\Contracts\PeriodePendaftaranUjianRepositoryInterface;
 use App\Modules\Penjadwalan\Repositories\Contracts\PenjadwalanRepositoryInterface;
@@ -18,7 +18,7 @@ class LayananPeriodePendaftaranUjian
         private PeriodePendaftaranUjianRepositoryInterface $periodePendaftaranRepo,
         private PendaftaranUjianRepositoryInterface $pendaftaranRepo,
         private PenjadwalanRepositoryInterface $penjadwalanRepo,
-        private JenisTesRepositoryInterface $jenisTesRepo,
+        private ProgramTesRepositoryInterface $programTesRepo,
         private UjianRepositoryInterface $ujianRepo,
     ) {}
 
@@ -28,52 +28,57 @@ class LayananPeriodePendaftaranUjian
      */
     public function dataDaftar(array $filters): array
     {
-        $jenisTes = $this->jenisTesRepo->semuaAktifBerurutan();
-        $ujianAktif = $this->ujianRepo->semuaAktifDenganJenisTes();
-        $jumlahUjianPerJenisTes = $ujianAktif->groupBy('jenis_tes_id')->map->count();
-        $jumlahPeriodePerJenisTes = $this->periodePendaftaranRepo->jumlahPeriodePerJenisTes();
-        $ringkasanJenisTes = $jenisTes
-            ->filter(fn (JenisTes $jenis): bool => $jumlahUjianPerJenisTes->has($jenis->id))
-            ->map(fn (JenisTes $jenis): array => [
+        $filters['search'] = $filters['q'] ?? $filters['search'] ?? null;
+        $filters['status'] = $filters['f_status'] ?? $filters['status'] ?? null;
+        $filters['program_tes_id'] = $filters['f_program_tes_id'] ?? $filters['program_tes_id'] ?? null;
+        $perPage = (int) ($filters['per_page'] ?? 15);
+
+        $programTes = $this->programTesRepo->semuaAktifBerurutan();
+        $ujianAktif = $this->ujianRepo->semuaAktifDenganProgramTes();
+        $jumlahUjianPerProgramTes = $ujianAktif->groupBy('program_tes_id')->map->count();
+        $jumlahPeriodePerProgramTes = $this->periodePendaftaranRepo->jumlahPeriodePerProgramTes();
+        $ringkasanProgramTes = $programTes
+            ->filter(fn (ProgramTes $jenis): bool => $jumlahUjianPerProgramTes->has($jenis->id))
+            ->map(fn (ProgramTes $jenis): array => [
                 'id' => $jenis->id,
                 'kode' => $jenis->kode,
                 'nama' => $jenis->nama,
-                'jumlahUjian' => (int) $jumlahUjianPerJenisTes->get($jenis->id, 0),
-                'jumlahPeriodePendaftaran' => (int) $jumlahPeriodePerJenisTes->get($jenis->id, 0),
+                'jumlahUjian' => (int) $jumlahUjianPerProgramTes->get($jenis->id, 0),
+                'jumlahPeriodePendaftaran' => (int) $jumlahPeriodePerProgramTes->get($jenis->id, 0),
             ])
             ->values()
             ->all();
 
-        $jenisTesTerpilih = $jenisTes->first(
-            fn (JenisTes $jenis): bool => $jenis->id === ($filters['jenis_tes_id'] ?? null)
-                && $jumlahUjianPerJenisTes->has($jenis->id),
+        $programTesTerpilih = $programTes->first(
+            fn (ProgramTes $jenis): bool => $jenis->id === ($filters['program_tes_id'] ?? null)
+                && $jumlahUjianPerProgramTes->has($jenis->id),
         );
-        $filters['jenis_tes_id'] = $jenisTesTerpilih?->id;
+        $filters['program_tes_id'] = $programTesTerpilih?->id;
 
-        $periodePendaftaran = $jenisTesTerpilih !== null
-            ? $this->periodePendaftaranRepo->paginate($filters)
-            : $this->periodePendaftaranRepo->paginatorKosong();
+        $periodePendaftaran = $programTesTerpilih !== null
+            ? $this->periodePendaftaranRepo->paginate($filters, $perPage)
+            : $this->periodePendaftaranRepo->paginatorKosong($perPage);
         $this->tambahkanStatus($periodePendaftaran);
 
         return [
             'periodePendaftaranUjian' => $periodePendaftaran,
-            'periodeUjian' => $jenisTesTerpilih !== null
-                ? $this->dataForm(null, $jenisTesTerpilih->id)['periodeUjian']
+            'periodeUjian' => $programTesTerpilih !== null
+                ? $this->dataForm(null, $programTesTerpilih->id)['periodeUjian']
                 : new Collection,
             'filters' => $filters,
-            'ringkasanJenisTes' => $ringkasanJenisTes,
-            'jenisTesTerpilih' => $jenisTesTerpilih,
-            'jenisTesTerpilihId' => $jenisTesTerpilih?->id,
+            'ringkasanProgramTes' => $ringkasanProgramTes,
+            'programTesTerpilih' => $programTesTerpilih,
+            'programTesTerpilihId' => $programTesTerpilih?->id,
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    public function dataForm(?string $kecualiId = null, ?string $jenisTesId = null): array
+    public function dataForm(?string $kecualiId = null, ?string $programTesId = null): array
     {
         return [
-            'periodeUjian' => $this->penjadwalanRepo->semuaAktifUntukPendaftaran($kecualiId, $jenisTesId),
+            'periodeUjian' => $this->penjadwalanRepo->semuaAktifUntukPendaftaran($kecualiId, $programTesId),
         ];
     }
 

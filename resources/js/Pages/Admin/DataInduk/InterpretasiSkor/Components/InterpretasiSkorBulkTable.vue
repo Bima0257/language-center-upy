@@ -1,86 +1,109 @@
 <script setup>
-import DataTable from '@/Components/Shared/DataTable.vue';
+import { h } from 'vue';
 import { IconEdit, IconTrash } from '@tabler/icons-vue';
+import BaseBadge from '@/Components/Base/BaseBadge.vue';
+import BaseButton from '@/Components/Base/BaseButton.vue';
+import BaseTambahData from '@/Components/Base/BaseTambahData.vue';
+import AppDataTable from '@/Components/Ui/AppDataTable.vue';
 
 const props = defineProps({
     interpretasiSkor: { type: Array, default: () => [] },
     maxRows: { type: Number, default: 10 },
+    tableKey: { type: String, default: 'interpretasi-skor-bulk' },
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
 
-function scoreRange(_value, row) {
+function scoreRange(row) {
     return `${row.skor_minimum} - ${row.skor_maksimum}`;
-}
-
-function labelSearchValue(value, row) {
-    return [value, row.deskripsi].filter(Boolean).join(' ');
 }
 
 function statusLabel(value) {
     return value ? 'LULUS' : 'TIDAK LULUS';
 }
 
-const columns = [
-    { key: '_index', label: 'No.', render: (_value, row) => props.interpretasiSkor.indexOf(row) + 1 },
-    { key: 'skor_minimum', label: 'Rentang Skor', sortable: true, render: scoreRange, className: 'font-medium text-text-heading' },
-    { key: 'tingkat_cefr', label: 'CEFR', sortable: true },
-    { key: 'label_tingkat', label: 'Label', sortable: true, searchable: true, render: labelSearchValue, slot: 'label' },
-    { key: 'lulus', label: 'Kelulusan', sortable: true, searchable: true, render: statusLabel, slot: 'pass-status' },
-    { key: 'id', label: 'Aksi', slot: 'actions' },
-];
-
 function rowIndex(interpretasi) {
     return props.interpretasiSkor.indexOf(interpretasi);
 }
+
+const columns = [
+    {
+        accessorKey: 'skor_minimum',
+        header: 'Rentang Skor',
+        meta: { cellClass: 'font-medium text-text-heading' },
+        cell: info => scoreRange(info.row.original),
+    },
+    { accessorKey: 'tingkat_cefr', header: 'CEFR' },
+    {
+        accessorKey: 'label_tingkat',
+        header: 'Label',
+        cell: info => h('div', [
+            h('p', { class: 'text-body-md text-text-body' }, info.getValue()),
+            info.row.original.deskripsi
+                ? h('p', { class: 'text-text-muted text-label-md' }, info.row.original.deskripsi)
+                : null,
+        ]),
+    },
+    {
+        accessorKey: 'lulus',
+        header: 'Kelulusan',
+        cell: info => h(
+            BaseBadge,
+            { variant: info.getValue() ? 'success' : 'danger' },
+            () => statusLabel(info.getValue()),
+        ),
+    },
+    {
+        id: 'actions',
+        header: 'Aksi',
+        meta: { align: 'center' },
+        cell: info => {
+            const index = rowIndex(info.row.original);
+
+            return h('div', { class: 'flex items-center justify-center gap-1' }, [
+                h(
+                    BaseButton,
+                    {
+                        variant: 'secondary',
+                        iconOnly: true,
+                        title: 'Ubah',
+                        'aria-label': 'Ubah',
+                        onClick: () => emit('edit', index),
+                    },
+                    () => h(IconEdit, { size: 16 }),
+                ),
+                h(
+                    BaseButton,
+                    {
+                        variant: 'danger',
+                        iconOnly: true,
+                        title: 'Hapus',
+                        'aria-label': 'Hapus',
+                        onClick: () => emit('delete', index),
+                    },
+                    () => h(IconTrash, { size: 16 }),
+                ),
+            ]);
+        },
+    },
+];
 </script>
 
 <template>
-    <DataTable
+    <AppDataTable
+        :table-key="props.tableKey"
         :data="props.interpretasiSkor"
         :columns="columns"
-        header-title="Daftar Interpretasi Skor Baru"
-        :show-page-size="false"
+        title="Daftar Interpretasi Skor Baru"
         searchable
+        :show-page-size="false"
     >
-        <template #toolbar>
+        <template #actions>
             <span class="text-label-md text-text-muted">{{ props.interpretasiSkor.length }}/{{ props.maxRows }} data</span>
             <BaseTambahData
                 :disabled="props.interpretasiSkor.length >= props.maxRows"
                 @click="emit('create')"
             />
         </template>
-
-        <template #label="{ row }">
-            <p class="text-body-md text-text-body">{{ row.label_tingkat }}</p>
-            <p v-if="row.deskripsi" class="text-text-muted text-label-md">{{ row.deskripsi }}</p>
-        </template>
-
-        <template #pass-status="{ row }">
-            <BaseBadge :variant="row.lulus ? 'success' : 'danger'">
-                {{ statusLabel(row.lulus) }}
-            </BaseBadge>
-        </template>
-
-        <template #actions="{ row }">
-            <BaseButton
-                variant="secondary"
-                icon-only
-                title="Ubah"
-                aria-label="Ubah"
-                @click="emit('edit', rowIndex(row))"
-            >
-                <IconEdit :size="16" />
-            </BaseButton>
-            <BaseButton
-                variant="danger"
-                icon-only
-                title="Hapus"
-                aria-label="Hapus"
-                @click="emit('delete', rowIndex(row))"
-            >
-                <IconTrash :size="16" />
-            </BaseButton>
-        </template>
-    </DataTable>
+    </AppDataTable>
 </template>

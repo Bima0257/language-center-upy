@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Penjadwalan;
 
-use App\Models\JenisTes;
 use App\Models\Pengguna;
 use App\Models\PeriodeUjian;
+use App\Models\ProgramTes;
 use App\Models\SesiUjian;
 use App\Models\SlotUjian;
 use App\Models\Ujian;
@@ -55,7 +55,7 @@ class PeriodeUjianTest extends TestCase
 
     public function test_peran_tanpa_izin_ditolak(): void
     {
-        $this->masukSebagai('student');
+        $this->masukSebagai('peserta');
 
         $this->get('/admin/periode-ujian')->assertForbidden();
     }
@@ -67,7 +67,7 @@ class PeriodeUjianTest extends TestCase
         $this->get('/admin/periode-ujian')->assertOk();
     }
 
-    public function test_admin_melihat_ringkasan_periode_per_jenis_tes(): void
+    public function test_admin_melihat_ringkasan_periode_per_program_tes(): void
     {
         $this->masukSebagai('admin');
 
@@ -75,27 +75,27 @@ class PeriodeUjianTest extends TestCase
             ->assertOk()
             ->inertiaPage();
 
-        $ringkasan = collect($page['props']['ringkasanJenisTes'])
-            ->firstWhere('id', $this->ujian()->jenis_tes_id);
+        $ringkasan = collect($page['props']['ringkasanProgramTes'])
+            ->firstWhere('id', $this->ujian()->program_tes_id);
 
-        $this->assertNull($page['props']['jenisTesTerpilihId']);
+        $this->assertNull($page['props']['programTesTerpilihId']);
         $this->assertNotNull($ringkasan);
         $this->assertGreaterThanOrEqual(1, $ringkasan['jumlahUjian']);
         $this->assertGreaterThanOrEqual(1, $ringkasan['jumlahPeriode']);
     }
 
-    public function test_admin_melihat_ringkasan_ujian_per_jenis_tes(): void
+    public function test_admin_melihat_ringkasan_ujian_per_program_tes(): void
     {
         $this->masukSebagai('admin');
 
         $ujian = $this->ujian();
-        $jenisTes = $ujian->jenisTes;
-        $page = $this->get('/admin/periode-ujian?jenis_tes_id='.$jenisTes->id)
+        $programTes = $ujian->programTes;
+        $page = $this->get('/admin/periode-ujian?program_tes_id='.$programTes->id)
             ->assertOk()
             ->inertiaPage();
 
-        $this->assertSame($jenisTes->id, $page['props']['jenisTesTerpilihId']);
-        $this->assertSame($jenisTes->id, $page['props']['jenisTesTerpilih']['id']);
+        $this->assertSame($programTes->id, $page['props']['programTesTerpilihId']);
+        $this->assertSame($programTes->id, $page['props']['programTesTerpilih']['id']);
         $this->assertNull($page['props']['ujianTerpilihId']);
         $this->assertEmpty($page['props']['periodeUjian']['data']);
         $ringkasanUjian = collect($page['props']['ringkasanUjian'])
@@ -112,8 +112,8 @@ class PeriodeUjianTest extends TestCase
 
         $ujian = $this->ujian();
         $ujianLain = Ujian::create([
-            'jenis_tes_id' => $ujian->jenis_tes_id,
-            'judul' => 'Ujian Lain Dalam Jenis Tes Sama',
+            'program_tes_id' => $ujian->program_tes_id,
+            'judul' => 'Ujian Lain Dalam Program Tes Sama',
             'mode' => 'tryout',
             'durasi_menit' => 60,
             'aktif' => true,
@@ -126,7 +126,7 @@ class PeriodeUjianTest extends TestCase
             'aktif' => true,
         ]);
 
-        $page = $this->get('/admin/periode-ujian?jenis_tes_id='.$ujian->jenis_tes_id.'&ujian_id='.$ujian->id)
+        $page = $this->get('/admin/periode-ujian?program_tes_id='.$ujian->program_tes_id.'&ujian_id='.$ujian->id)
             ->assertOk()
             ->inertiaPage();
 
@@ -141,18 +141,18 @@ class PeriodeUjianTest extends TestCase
         );
     }
 
-    public function test_jenis_tes_dengan_ujian_aktif_tanpa_periode_tetap_muncul(): void
+    public function test_program_tes_dengan_ujian_aktif_tanpa_periode_tetap_muncul(): void
     {
         $this->masukSebagai('admin');
 
-        $jenisTes = JenisTes::create([
+        $programTes = ProgramTes::create([
             'kode' => '010',
-            'nama' => 'Jenis Tes Tanpa Periode',
+            'nama' => 'Program Tes Tanpa Periode',
             'batas_pelanggaran' => 3,
             'aktif' => true,
         ]);
         $ujian = Ujian::create([
-            'jenis_tes_id' => $jenisTes->id,
+            'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Aktif Tanpa Periode',
             'mode' => 'tryout',
             'durasi_menit' => 60,
@@ -162,29 +162,52 @@ class PeriodeUjianTest extends TestCase
         $page = $this->get('/admin/periode-ujian')
             ->assertOk()
             ->inertiaPage();
-        $ringkasan = collect($page['props']['ringkasanJenisTes'])
-            ->firstWhere('id', $jenisTes->id);
+        $ringkasan = collect($page['props']['ringkasanProgramTes'])
+            ->firstWhere('id', $programTes->id);
 
         $this->assertNotNull($ringkasan);
         $this->assertSame(1, (int) $ringkasan['jumlahUjian']);
         $this->assertSame(0, (int) $ringkasan['jumlahPeriode']);
 
-        $detail = $this->get('/admin/periode-ujian?jenis_tes_id='.$jenisTes->id)
+        $detail = $this->get('/admin/periode-ujian?program_tes_id='.$programTes->id)
             ->assertOk()
             ->inertiaPage();
 
-        $this->assertSame($jenisTes->id, $detail['props']['jenisTesTerpilihId']);
+        $this->assertSame($programTes->id, $detail['props']['programTesTerpilihId']);
         $this->assertEmpty($detail['props']['periodeUjian']['data']);
         $this->assertCount(1, $detail['props']['ringkasanUjian']);
         $this->assertSame($ujian->id, $detail['props']['ringkasanUjian'][0]['id']);
         $this->assertSame(0, $detail['props']['ringkasanUjian'][0]['jumlahPeriode']);
 
-        $periodeList = $this->get('/admin/periode-ujian?jenis_tes_id='.$jenisTes->id.'&ujian_id='.$ujian->id)
+        $periodeList = $this->get('/admin/periode-ujian?program_tes_id='.$programTes->id.'&ujian_id='.$ujian->id)
             ->assertOk()
             ->inertiaPage();
 
         $this->assertSame($ujian->id, $periodeList['props']['ujianTerpilihId']);
         $this->assertEmpty($periodeList['props']['periodeUjian']['data']);
+    }
+
+    public function test_daftar_periode_ujian_mendukung_q_per_page_sort_dan_filter_aktif(): void
+    {
+        $this->masukSebagai('admin');
+
+        $periode = PeriodeUjian::firstOrFail();
+        $ujian = $periode->ujian;
+
+        $page = $this->get('/admin/periode-ujian?program_tes_id='.$ujian->program_tes_id
+            .'&ujian_id='.$ujian->id
+            .'&q='.urlencode($periode->judul)
+            .'&f_aktif=1&per_page=25&sort=judul&dir=asc')
+            ->assertOk()
+            ->inertiaPage();
+
+        $this->assertSame(25, $page['props']['periodeUjian']['per_page']);
+        $this->assertTrue(collect($page['props']['periodeUjian']['data'])->contains(
+            fn (array $item): bool => $item['id'] === $periode->id,
+        ));
+        $this->assertTrue(collect($page['props']['periodeUjian']['data'])->every(
+            fn (array $item): bool => (bool) $item['aktif'] === true,
+        ));
     }
 
     public function test_admin_dapat_mengakses_halaman_tambah(): void
@@ -366,9 +389,9 @@ class PeriodeUjianTest extends TestCase
 
     public function test_mahasiswa_tidak_dapat_mengikuti_periode_sama_dua_kali(): void
     {
-        $mahasiswa = $this->masukSebagai('student');
+        $mahasiswa = $this->masukSebagai('peserta');
 
-        $jenisTes = JenisTes::where('nama', 'TOEFL iBT')->first();
+        $programTes = ProgramTes::where('nama', 'EPT')->first();
         $ujian = $this->ujian();
 
         $periodeUjian = PeriodeUjian::create([

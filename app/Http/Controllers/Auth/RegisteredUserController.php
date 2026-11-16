@@ -28,7 +28,7 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.Pengguna::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'cf-turnstile-response' => [app()->environment('local', 'testing') ? 'sometimes' : 'required', new Turnstile],
+            'cf-turnstile-response' => [config('services.turnstile.verify') ? 'required' : 'sometimes', new Turnstile('register')],
         ]);
 
         $pengguna = DB::transaction(function () use ($request) {
@@ -38,7 +38,7 @@ class RegisteredUserController extends Controller
                 'password' => Hash::make($request->password),
             ]);
 
-            $pengguna->assignRole('student');
+            $pengguna->assignRole('peserta');
 
             return $pengguna;
         });

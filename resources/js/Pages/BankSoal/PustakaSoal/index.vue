@@ -5,12 +5,12 @@ import UploadProgressBar from "@/Components/Shared/UploadProgressBar.vue";
 import EmptyState from "@/Components/Shared/EmptyState.vue";
 import Pagination from "@/Components/Shared/Pagination.vue";
 import UserGuide from "@/Components/Shared/UserGuide.vue";
-import KeterampilanFormModal from "@/Components/Ujian/KeterampilanFormModal.vue";
-import BagianSoalFormModal from "@/Pages/Admin/DataInduk/BagianSoal/Components/BagianSoalFormModal.vue";
+import SectionFormModal from "@/Components/Ujian/SectionFormModal.vue";
+import PartSoalFormModal from "@/Pages/Admin/DataInduk/PartSoal/Components/PartSoalFormModal.vue";
 import KelompokSoalPustaka from "@/Pages/BankSoal/PustakaSoal/Components/KelompokSoalPustaka.vue";
 import EditMateriSoalModal from "@/Pages/BankSoal/PustakaSoal/Components/EditMateriSoalModal.vue";
 import TambahSoalMateriModal from "@/Pages/BankSoal/PustakaSoal/Components/TambahSoalMateriModal.vue";
-import RingkasanJenisTesPustaka from "@/Pages/BankSoal/PustakaSoal/Components/RingkasanJenisTesPustaka.vue";
+import RingkasanProgramTesPustaka from "@/Pages/BankSoal/PustakaSoal/Components/RingkasanProgramTesPustaka.vue";
 import RingkasanBankSoalPustaka from "@/Pages/BankSoal/PustakaSoal/Components/RingkasanBankSoalPustaka.vue";
 import { IconBook, IconEdit, IconPlus, IconTrash } from "@tabler/icons-vue";
 import { ref, computed } from "vue";
@@ -22,50 +22,52 @@ const page = usePage();
 
 const props = defineProps({
     soal: { type: Object, default: () => ({ data: [] }) },
-    jenisTes: { type: Array, default: () => [] },
+    programTes: { type: Array, default: () => [] },
     bankSoal: { type: Array, default: () => [] },
     bankSoalTerpilih: { type: Object, default: null },
-    opsiKeterampilan: { type: Array, default: () => [] },
-    bagianSoal: { type: Array, default: () => [] },
+    bankTerkunci: { type: Boolean, default: false },
+    opsiSection: { type: Array, default: () => [] },
+    partSoal: { type: Array, default: () => [] },
     kebijakanMateriSoal: { type: Array, default: () => [] },
     filter: { type: Object, default: () => ({}) },
     bankSoalTerpilihId: { type: [String, null], default: null },
-    jenisTesTerpilihId: { type: [String, null], default: null },
+    programTesTerpilihId: { type: [String, null], default: null },
 });
 
 const bankSoalTerpilihId = ref(props.bankSoalTerpilihId || props.filter.bank_soal_id || "");
-const jenisTesTerpilihId = ref(props.jenisTesTerpilihId || props.filter.jenis_tes_id || "");
-const bagianSoalDariFilter = props.bagianSoal.find(
-    (part) => String(part.id) === String(props.filter.bagian_soal_id) &&
+const programTesTerpilihId = ref(props.programTesTerpilihId || props.filter.program_tes_id || "");
+const partSoalDariFilter = props.partSoal.find(
+    (part) => String(part.id) === String(props.filter.part_soal_id) &&
         String(part.bank_soal_id) === String(bankSoalTerpilihId.value),
 );
-const keterampilanTerpilih = ref(
-    props.filter.keterampilan || bagianSoalDariFilter?.keterampilan_id || props.opsiKeterampilan[0]?.value || "",
+const sectionTerpilih = ref(
+    props.filter.section || partSoalDariFilter?.section_id || props.opsiSection[0]?.value || "",
 );
-const bagianSoalPertama = props.bagianSoal.find(
+const partSoalPertama = props.partSoal.find(
     (part) => String(part.bank_soal_id) === String(bankSoalTerpilihId.value) &&
-        String(part.keterampilan_id) === String(keterampilanTerpilih.value),
+        String(part.section_id) === String(sectionTerpilih.value),
 );
-const bagianSoalTerpilihId = ref(props.filter.bagian_soal_id || bagianSoalPertama?.id || "");
+const partSoalTerpilihId = ref(props.filter.part_soal_id || partSoalPertama?.id || "");
 
 const createParams = computed(() => {
     const p = {};
     if (bankSoalTerpilihId.value) p.bank_soal_id = bankSoalTerpilihId.value;
-    if (keterampilanTerpilih.value) p.keterampilan = keterampilanTerpilih.value;
-    if (bagianSoalTerpilihId.value) p.bagian_soal_id = bagianSoalTerpilihId.value;
+    if (sectionTerpilih.value) p.section = sectionTerpilih.value;
+    if (partSoalTerpilihId.value) p.part_soal_id = partSoalTerpilihId.value;
     return p;
 });
 
-const ringkasanJenisTes = computed(() => {
-    const groups = new Map(props.jenisTes.map((jenisTes) => [String(jenisTes.id), {
-        id: jenisTes.id,
-        nama: jenisTes.nama,
+const ringkasanProgramTes = computed(() => {
+    const groups = new Map(props.programTes.map((programTes) => [String(programTes.id), {
+        id: programTes.id,
+        kode: programTes.kode,
+        nama: programTes.nama,
         jumlahBankSoal: 0,
         jumlahSoal: 0,
     }]));
 
     props.bankSoal.forEach((bank) => {
-        const group = groups.get(String(bank.jenis_tes_id));
+        const group = groups.get(String(bank.program_tes_id));
         if (!group) return;
 
         group.jumlahBankSoal += 1;
@@ -85,294 +87,324 @@ const bankSoalTerpilih = computed(() => props.bankSoalTerpilih || props.bankSoal
     (bank) => String(bank.id) === String(bankSoalTerpilihId.value),
 ) || null);
 
-const bankIsLocked = computed(() => Number(bankSoalTerpilih.value?.bagian_ujian_count || 0) > 0);
+const bankIsLocked = computed(() =>
+    props.bankTerkunci || Number(bankSoalTerpilih.value?.part_ujian_count || 0) > 0,
+);
 
-function jenisTesUrl(jenisTesId) {
-    return `${route('pustaka-soal.daftar')}?jenis_tes_id=${encodeURIComponent(jenisTesId)}`;
+function programTesUrl(programTesId) {
+    return `${route('pustaka-soal.daftar')}?program_tes_id=${encodeURIComponent(programTesId)}`;
 }
 
 function bankSoalUrl(bankSoalId) {
     const params = new URLSearchParams({ bank_soal_id: String(bankSoalId) });
 
-    if (jenisTesTerpilihId.value) {
-        params.set('jenis_tes_id', String(jenisTesTerpilihId.value));
+    if (programTesTerpilihId.value) {
+        params.set('program_tes_id', String(programTesTerpilihId.value));
     }
 
     return `${route('pustaka-soal.daftar')}?${params.toString()}`;
 }
 
-const backToBankSoalUrl = computed(() => jenisTesTerpilihId.value
-    ? jenisTesUrl(jenisTesTerpilihId.value)
+const backToBankSoalUrl = computed(() => programTesTerpilihId.value
+    ? programTesUrl(programTesTerpilihId.value)
     : route('pustaka-soal.daftar'));
 
 const pageBackUrl = computed(() => {
     if (bankSoalTerpilihId.value) return backToBankSoalUrl.value;
-    if (jenisTesTerpilihId.value) return route('pustaka-soal.daftar');
+    if (programTesTerpilihId.value) return route('pustaka-soal.daftar');
     return null;
 });
 
-const tabsKeterampilan = computed(() => props.opsiKeterampilan.map((skill) => ({
-    value: String(skill.value),
-    label: skill.label,
+const tabsSection = computed(() => props.opsiSection.map((section) => ({
+    value: String(section.value),
+    label: section.label,
 })));
 
-const bagianSoalUntukKeterampilan = computed(() => props.bagianSoal
+const partSoalUntukSection = computed(() => props.partSoal
     .filter((part) =>
         String(part.bank_soal_id) === String(bankSoalTerpilihId.value) &&
-        String(part.keterampilan_id) === String(keterampilanTerpilih.value),
+        String(part.section_id) === String(sectionTerpilih.value),
     )
     .sort((left, right) => (left.urutan ?? 0) - (right.urutan ?? 0)));
 
-const tabsBagianSoal = computed(() => bagianSoalUntukKeterampilan.value.map((part) => ({
+const tabsPartSoal = computed(() => partSoalUntukSection.value.map((part) => ({
     value: String(part.id),
     label: part.nama,
 })));
 
-const canManageKeterampilan = computed(() =>
-    (page.props.auth?.permissions || []).includes("master_data.manage"),
+const canManageSection = computed(() =>
+    [
+        'admin.data-induk.section.simpan',
+        'admin.data-induk.section.perbarui',
+        'admin.data-induk.part-soal.simpan',
+        'admin.data-induk.part-soal.perbarui',
+    ].some(permission => (page.props.auth?.permissions || []).includes(permission))
+    && !bankIsLocked.value,
 );
-const canManageBagianSoal = canManageKeterampilan;
+const canManagePartSoal = canManageSection;
 
-const keterampilanTerpilihData = computed(() => props.opsiKeterampilan.find(
-    (skill) => String(skill.value) === String(keterampilanTerpilih.value),
+const sectionTerpilihData = computed(() => props.opsiSection.find(
+    (section) => String(section.value) === String(sectionTerpilih.value),
 ) || null);
 
-const keterampilanActions = computed(() => [
-    { value: "edit", label: "Ubah keterampilan", icon: IconEdit },
-    { value: "delete", label: "Hapus keterampilan", icon: IconTrash, variant: "danger" },
+const sectionActions = computed(() => [
+    { value: "edit", label: "Ubah section", icon: IconEdit },
+    { value: "delete", label: "Hapus section", icon: IconTrash, variant: "danger" },
 ]);
 
-const bagianSoalTerpilihData = computed(() => bagianSoalUntukKeterampilan.value.find(
-    (part) => String(part.id) === String(bagianSoalTerpilihId.value),
+const partSoalTerpilihData = computed(() => partSoalUntukSection.value.find(
+    (part) => String(part.id) === String(partSoalTerpilihId.value),
 ) || null);
 
-const bagianSoalActions = computed(() => [
-    { value: "edit", label: "Ubah bagian soal", icon: IconEdit },
-    { value: "delete", label: "Hapus bagian soal", icon: IconTrash, variant: "danger" },
+const partSoalActions = computed(() => [
+    { value: "edit", label: "Ubah part soal", icon: IconEdit },
+    { value: "delete", label: "Hapus part soal", icon: IconTrash, variant: "danger" },
 ]);
 
-const jenisTesKeterampilan = computed(() => {
-    const jenisTesId = bankSoalTerpilih.value?.jenis_tes_id || jenisTesTerpilihId.value;
+const programTesSection = computed(() => {
+    const programTesId = bankSoalTerpilih.value?.program_tes_id || programTesTerpilihId.value;
 
-    return props.jenisTes.filter((jenisTes) => String(jenisTes.id) === String(jenisTesId));
+    return props.programTes.filter((programTes) => String(programTes.id) === String(programTesId));
 });
 
 const canCreateSoal = computed(() => Boolean(
     !bankIsLocked.value &&
-    tabsKeterampilan.value.length &&
-    tabsBagianSoal.value.length &&
-    keterampilanTerpilih.value &&
-    bagianSoalTerpilihId.value,
+    tabsSection.value.length &&
+    tabsPartSoal.value.length &&
+    sectionTerpilih.value &&
+    partSoalTerpilihId.value,
 ));
 
-function onKeterampilanChange(value) {
-    keterampilanTerpilih.value = String(value);
-    bagianSoalTerpilihId.value = String(bagianSoalUntukKeterampilan.value[0]?.id || '');
+function onSectionChange(value) {
+    sectionTerpilih.value = String(value);
+    partSoalTerpilihId.value = String(partSoalUntukSection.value[0]?.id || '');
     applyFilters();
 }
 
-function onBagianSoalChange(value) {
-    bagianSoalTerpilihId.value = String(value);
+function onPartSoalChange(value) {
+    partSoalTerpilihId.value = String(value);
     applyFilters();
 }
 
-function policyForKeterampilan(keterampilanId) {
+function policyForSection(sectionId) {
     return props.kebijakanMateriSoal.find((policy) =>
-        String(policy.keterampilan_id) === String(keterampilanId),
+        String(policy.section_id) === String(sectionId),
     ) || null;
 }
 
-function openCreateKeterampilan() {
-    creatingKeterampilan.value = true;
-    keterampilanYangDiedit.value = null;
-    keterampilanForm.clearErrors();
-    keterampilanForm.reset();
-    keterampilanForm.jenis_tes_id = bankSoalTerpilih.value?.jenis_tes_id || jenisTesTerpilihId.value;
-    showKeterampilanModal.value = true;
+function openCreateSection() {
+    if (bankIsLocked.value) return;
+
+    creatingSection.value = true;
+    sectionYangDiedit.value = null;
+    sectionForm.clearErrors();
+    sectionForm.reset();
+    sectionForm.bank_soal_konteks_id = bankSoalTerpilihId.value;
+    sectionForm.program_tes_id = bankSoalTerpilih.value?.program_tes_id || programTesTerpilihId.value;
+    showSectionModal.value = true;
 }
 
-function openEditKeterampilan() {
-    const keterampilan = keterampilanTerpilihData.value;
-    if (!keterampilan) return;
+function openEditSection() {
+    if (bankIsLocked.value) return;
 
-    creatingKeterampilan.value = false;
-    keterampilanYangDiedit.value = keterampilan;
-    editKeterampilanForm.clearErrors();
-    editKeterampilanForm.reset();
-    editKeterampilanForm.jenis_tes_id = bankSoalTerpilih.value?.jenis_tes_id || jenisTesTerpilihId.value;
-    editKeterampilanForm.kode = keterampilan.kode || "";
-    editKeterampilanForm.nama = keterampilan.label || "";
-    editKeterampilanForm.deskripsi = keterampilan.deskripsi || "";
-    editKeterampilanForm.aktif = keterampilan.aktif !== false;
+    const section = sectionTerpilihData.value;
+    if (!section) return;
 
-    const policy = policyForKeterampilan(keterampilan.value);
-    editKeterampilanForm.ketentuan_materi = policy?.ketentuan_materi || "";
-    editKeterampilanForm.aturan_media = {
+    creatingSection.value = false;
+    sectionYangDiedit.value = section;
+    editSectionForm.clearErrors();
+    editSectionForm.reset();
+    editSectionForm.bank_soal_konteks_id = bankSoalTerpilihId.value;
+    editSectionForm.program_tes_id = bankSoalTerpilih.value?.program_tes_id || programTesTerpilihId.value;
+    editSectionForm.kode = section.kode || "";
+    editSectionForm.nama = section.label || "";
+    editSectionForm.deskripsi = section.deskripsi || "";
+    editSectionForm.aktif = section.aktif !== false;
+
+    const policy = policyForSection(section.value);
+    editSectionForm.ketentuan_materi = policy?.ketentuan_materi || "";
+    editSectionForm.aturan_media = {
         text: policy?.aturan_media?.text || "",
         audio: policy?.aturan_media?.audio || "",
         image: policy?.aturan_media?.image || "",
     };
-    showKeterampilanModal.value = true;
+    showSectionModal.value = true;
 }
 
-function closeKeterampilanModal() {
-    showKeterampilanModal.value = false;
-    keterampilanYangDiedit.value = null;
-    creatingKeterampilan.value = false;
-    keterampilanForm.reset();
-    editKeterampilanForm.reset();
+function closeSectionModal() {
+    showSectionModal.value = false;
+    sectionYangDiedit.value = null;
+    creatingSection.value = false;
+    sectionForm.reset();
+    editSectionForm.reset();
 }
 
-function syncKeterampilanSelection(pageResponse) {
-    const nextSkillId = pageResponse.props.filter?.keterampilan
-        || pageResponse.props.opsiKeterampilan?.[0]?.value
+function syncSectionSelection(pageResponse) {
+    const nextSectionId = pageResponse.props.filter?.section
+        || pageResponse.props.opsiSection?.[0]?.value
         || "";
 
-    keterampilanTerpilih.value = String(nextSkillId);
-    bagianSoalTerpilihId.value = String(pageResponse.props.bagianSoal?.find((part) =>
+    sectionTerpilih.value = String(nextSectionId);
+    partSoalTerpilihId.value = String(pageResponse.props.partSoal?.find((part) =>
         String(part.bank_soal_id) === String(bankSoalTerpilihId.value) &&
-        String(part.keterampilan_id) === String(nextSkillId),
+        String(part.section_id) === String(nextSectionId),
     )?.id || "");
 }
 
-function saveKeterampilan() {
-    keterampilanForm.post(route("admin.data-induk.keterampilan.simpan"), {
+function saveSection() {
+    if (bankIsLocked.value) return;
+
+    sectionForm.post(route("admin.data-induk.section.simpan"), {
         preserveScroll: true,
         onSuccess: (pageResponse) => {
-            closeKeterampilanModal();
-            syncKeterampilanSelection(pageResponse);
+            closeSectionModal();
+            syncSectionSelection(pageResponse);
         },
     });
 }
 
-function updateKeterampilan() {
-    if (!keterampilanYangDiedit.value) return;
+function updateSection() {
+    if (!sectionYangDiedit.value || bankIsLocked.value) return;
 
-    editKeterampilanForm.put(route(
-        "admin.data-induk.keterampilan.perbarui",
-        keterampilanYangDiedit.value.value,
+    editSectionForm.put(route(
+        "admin.data-induk.section.perbarui",
+        sectionYangDiedit.value.value,
     ), {
         preserveScroll: true,
         onSuccess: (pageResponse) => {
-            closeKeterampilanModal();
-            syncKeterampilanSelection(pageResponse);
+            closeSectionModal();
+            syncSectionSelection(pageResponse);
         },
     });
 }
 
-async function deleteKeterampilan() {
-    const keterampilan = keterampilanTerpilihData.value;
-    if (!keterampilan) return;
+async function deleteSection() {
+    if (bankIsLocked.value) return;
 
-    if (!(await confirm.confirm(`Hapus keterampilan "${keterampilan.label}"?`))) return;
+    const section = sectionTerpilihData.value;
+    if (!section) return;
 
-    router.delete(route("admin.data-induk.keterampilan.hapus", keterampilan.value), {
+    if (!(await confirm.confirm(`Hapus section "${section.label}"?`))) return;
+
+    router.delete(route("admin.data-induk.section.hapus", section.value), {
+        data: { bank_soal_konteks_id: bankSoalTerpilihId.value },
         preserveScroll: true,
-        onSuccess: syncKeterampilanSelection,
+        onSuccess: syncSectionSelection,
     });
 }
 
-function handleKeterampilanAction(action) {
+function handleSectionAction(action) {
     if (action === "edit") {
-        openEditKeterampilan();
+        openEditSection();
         return;
     }
 
     if (action === "delete") {
-        deleteKeterampilan();
+        deleteSection();
     }
 }
 
-function openCreateBagianSoal() {
-    creatingBagianSoal.value = true;
-    bagianSoalYangDiedit.value = null;
-    bagianSoalForm.clearErrors();
-    bagianSoalForm.reset();
-    bagianSoalForm.bank_soal_id = bankSoalTerpilihId.value;
-    bagianSoalForm.keterampilan_id = keterampilanTerpilih.value;
-    showBagianSoalModal.value = true;
+function openCreatePartSoal() {
+    if (bankIsLocked.value) return;
+
+    creatingPartSoal.value = true;
+    partSoalYangDiedit.value = null;
+    partSoalForm.clearErrors();
+    partSoalForm.reset();
+    partSoalForm.bank_soal_konteks_id = bankSoalTerpilihId.value;
+    partSoalForm.bank_soal_id = bankSoalTerpilihId.value;
+    partSoalForm.section_id = sectionTerpilih.value;
+    showPartSoalModal.value = true;
 }
 
-function openEditBagianSoal() {
-    const bagianSoal = bagianSoalTerpilihData.value;
-    if (!bagianSoal) return;
+function openEditPartSoal() {
+    if (bankIsLocked.value) return;
 
-    creatingBagianSoal.value = false;
-    bagianSoalYangDiedit.value = bagianSoal;
-    editBagianSoalForm.clearErrors();
-    editBagianSoalForm.reset();
-    editBagianSoalForm.bank_soal_id = String(bagianSoal.bank_soal_id);
-    editBagianSoalForm.keterampilan_id = String(bagianSoal.keterampilan_id);
-    editBagianSoalForm.nama = bagianSoal.nama;
-    editBagianSoalForm.petunjuk = bagianSoal.petunjuk || "";
-    editBagianSoalForm.aktif = bagianSoal.aktif !== false;
-    showBagianSoalModal.value = true;
+    const partSoal = partSoalTerpilihData.value;
+    if (!partSoal) return;
+
+    creatingPartSoal.value = false;
+    partSoalYangDiedit.value = partSoal;
+    editPartSoalForm.clearErrors();
+    editPartSoalForm.reset();
+    editPartSoalForm.bank_soal_konteks_id = bankSoalTerpilihId.value;
+    editPartSoalForm.bank_soal_id = String(partSoal.bank_soal_id);
+    editPartSoalForm.section_id = String(partSoal.section_id);
+    editPartSoalForm.nama = partSoal.nama;
+    editPartSoalForm.petunjuk = partSoal.petunjuk || "";
+    editPartSoalForm.aktif = partSoal.aktif !== false;
+    showPartSoalModal.value = true;
 }
 
-function closeBagianSoalModal() {
-    showBagianSoalModal.value = false;
-    bagianSoalYangDiedit.value = null;
-    creatingBagianSoal.value = false;
-    bagianSoalForm.reset();
-    editBagianSoalForm.reset();
+function closePartSoalModal() {
+    showPartSoalModal.value = false;
+    partSoalYangDiedit.value = null;
+    creatingPartSoal.value = false;
+    partSoalForm.reset();
+    editPartSoalForm.reset();
 }
 
-function syncBagianSoalSelection(pageResponse) {
-    const nextPartId = pageResponse.props.filter?.bagian_soal_id
-        || pageResponse.props.bagianSoal?.find((part) =>
+function syncPartSoalSelection(pageResponse) {
+    const nextPartId = pageResponse.props.filter?.part_soal_id
+        || pageResponse.props.partSoal?.find((part) =>
             String(part.bank_soal_id) === String(bankSoalTerpilihId.value) &&
-            String(part.keterampilan_id) === String(keterampilanTerpilih.value),
+            String(part.section_id) === String(sectionTerpilih.value),
         )?.id
         || "";
 
-    bagianSoalTerpilihId.value = String(nextPartId);
+    partSoalTerpilihId.value = String(nextPartId);
 }
 
-function saveBagianSoal() {
-    bagianSoalForm.post(route("admin.data-induk.bagian-soal.simpan"), {
+function savePartSoal() {
+    if (bankIsLocked.value) return;
+
+    partSoalForm.post(route("admin.data-induk.part-soal.simpan"), {
         preserveScroll: true,
         onSuccess: (pageResponse) => {
-            closeBagianSoalModal();
-            syncBagianSoalSelection(pageResponse);
+            closePartSoalModal();
+            syncPartSoalSelection(pageResponse);
         },
     });
 }
 
-function updateBagianSoal() {
-    if (!bagianSoalYangDiedit.value) return;
+function updatePartSoal() {
+    if (!partSoalYangDiedit.value || bankIsLocked.value) return;
 
-    editBagianSoalForm.put(route(
-        "admin.data-induk.bagian-soal.perbarui",
-        bagianSoalYangDiedit.value.id,
+    editPartSoalForm.put(route(
+        "admin.data-induk.part-soal.perbarui",
+        partSoalYangDiedit.value.id,
     ), {
         preserveScroll: true,
         onSuccess: (pageResponse) => {
-            closeBagianSoalModal();
-            syncBagianSoalSelection(pageResponse);
+            closePartSoalModal();
+            syncPartSoalSelection(pageResponse);
         },
     });
 }
 
-async function deleteBagianSoal() {
-    const bagianSoal = bagianSoalTerpilihData.value;
-    if (!bagianSoal) return;
+async function deletePartSoal() {
+    if (bankIsLocked.value) return;
 
-    if (!(await confirm.confirm(`Hapus bagian soal "${bagianSoal.nama}"?`))) return;
+    const partSoal = partSoalTerpilihData.value;
+    if (!partSoal) return;
 
-    router.delete(route("admin.data-induk.bagian-soal.hapus", bagianSoal.id), {
+    if (!(await confirm.confirm(`Hapus part soal "${partSoal.nama}"?`))) return;
+
+    router.delete(route("admin.data-induk.part-soal.hapus", partSoal.id), {
+        data: { bank_soal_konteks_id: bankSoalTerpilihId.value },
         preserveScroll: true,
-        onSuccess: syncBagianSoalSelection,
+        onSuccess: syncPartSoalSelection,
     });
 }
 
-function handleBagianSoalAction(action) {
+function handlePartSoalAction(action) {
     if (action === "edit") {
-        openEditBagianSoal();
+        openEditPartSoal();
         return;
     }
 
     if (action === "delete") {
-        deleteBagianSoal();
+        deletePartSoal();
     }
 }
 
@@ -398,8 +430,8 @@ const materiSoalForm = useForm({
 const quickQuestionForm = useForm({
     materi_soal_id: null,
     bank_soal_id: "",
-    keterampilan_id: "",
-    bagian_soal_id: "",
+    section_id: "",
+    part_soal_id: "",
     teks_soal: "",
     pilihan_a: "",
     pilihan_b: "",
@@ -408,8 +440,9 @@ const quickQuestionForm = useForm({
     kunci_jawaban: "",
 });
 
-const keterampilanForm = useForm({
-    jenis_tes_id: "",
+const sectionForm = useForm({
+    bank_soal_konteks_id: "",
+    program_tes_id: "",
     kode: "",
     nama: "",
     deskripsi: "",
@@ -418,8 +451,9 @@ const keterampilanForm = useForm({
     aturan_media: { text: "", audio: "", image: "" },
 });
 
-const editKeterampilanForm = useForm({
-    jenis_tes_id: "",
+const editSectionForm = useForm({
+    bank_soal_konteks_id: "",
+    program_tes_id: "",
     kode: "",
     nama: "",
     deskripsi: "",
@@ -428,61 +462,63 @@ const editKeterampilanForm = useForm({
     aturan_media: { text: "", audio: "", image: "" },
 });
 
-const bagianSoalForm = useForm({
+const partSoalForm = useForm({
+    bank_soal_konteks_id: "",
     bank_soal_id: "",
-    keterampilan_id: "",
+    section_id: "",
     nama: "",
     petunjuk: "",
     aktif: true,
 });
 
-const editBagianSoalForm = useForm({
+const editPartSoalForm = useForm({
+    bank_soal_konteks_id: "",
     bank_soal_id: "",
-    keterampilan_id: "",
+    section_id: "",
     nama: "",
     petunjuk: "",
     aktif: true,
 });
 
-const showKeterampilanModal = ref(false);
-const creatingKeterampilan = ref(false);
-const keterampilanYangDiedit = ref(null);
-const modalKeterampilanForm = computed(() => creatingKeterampilan.value
-    ? keterampilanForm
-    : editKeterampilanForm);
-const showBagianSoalModal = ref(false);
-const creatingBagianSoal = ref(false);
-const bagianSoalYangDiedit = ref(null);
-const modalBagianSoalForm = computed(() => creatingBagianSoal.value
-    ? bagianSoalForm
-    : editBagianSoalForm);
+const showSectionModal = ref(false);
+const creatingSection = ref(false);
+const sectionYangDiedit = ref(null);
+const modalSectionForm = computed(() => creatingSection.value
+    ? sectionForm
+    : editSectionForm);
+const showPartSoalModal = ref(false);
+const creatingPartSoal = ref(false);
+const partSoalYangDiedit = ref(null);
+const modalPartSoalForm = computed(() => creatingPartSoal.value
+    ? partSoalForm
+    : editPartSoalForm);
 
 const optionKeys = ["A", "B", "C", "D"];
 
-function materialForSkill(bankId, keterampilanId) {
-    return policyForBankAndSkill(bankId, keterampilanId)?.materi || null;
+function materialForSection(bankId, sectionId) {
+    return policyForBankAndSection(bankId, sectionId)?.materi || null;
 }
 
-function policyForBankAndSkill(bankId, keterampilanId) {
+function policyForBankAndSection(bankId, sectionId) {
     const bank = props.bankSoal.find((item) => String(item.id) === String(bankId));
 
     return props.kebijakanMateriSoal.find(p =>
-        String(p.jenis_tes_id) === String(bank?.jenis_tes_id) &&
-        String(p.keterampilan_id) === String(keterampilanId),
+        String(p.program_tes_id) === String(bank?.program_tes_id) &&
+        String(p.section_id) === String(sectionId),
     ) || null;
 }
 
-const editingMateriPolicy = computed(() => policyForBankAndSkill(
+const editingMateriPolicy = computed(() => policyForBankAndSection(
     bankSoalTerpilihId.value,
-    keterampilanTerpilih.value,
+    sectionTerpilih.value,
 ));
 
-function namaKeterampilanDariId(keterampilanId) {
-    return props.opsiKeterampilan.find(s => String(s.value) === String(keterampilanId))?.label || '';
+function namaSectionDariId(sectionId) {
+    return props.opsiSection.find(s => String(s.value) === String(sectionId))?.label || '';
 }
 
 const quickIsAudio = computed(
-    () => materialForSkill(quickQuestionForm.bank_soal_id, quickQuestionForm.keterampilan_id) === "audio",
+    () => materialForSection(quickQuestionForm.bank_soal_id, quickQuestionForm.section_id) === "audio",
 );
 
 function materiSoalTypeLabel(materiSoal) {
@@ -501,6 +537,8 @@ function togglePassage(id) {
 }
 
 function startEditPassage(materiSoal) {
+    if (bankIsLocked.value) return;
+
     editingPassageId.value = materiSoal.id;
     materiSoalForm.clearErrors();
     materiSoalForm.reset();
@@ -514,7 +552,7 @@ function cancelEditPassage() {
 }
 
 function savePassage() {
-    if (!editingMateriSoal.value) return;
+    if (!editingMateriSoal.value || bankIsLocked.value) return;
 
     materiSoalForm.put(route("pustaka-soal.materi-soal.perbarui", editingMateriSoal.value.id), {
         preserveScroll: true,
@@ -531,6 +569,8 @@ function savePassage() {
 }
 
 async function removePassageMedia(materiSoal, jenisMedia) {
+    if (bankIsLocked.value) return;
+
     const label = jenisMedia === 'audio' ? 'audio' : 'gambar';
     if (!(await confirm.confirm(`Hapus ${label} dari materi soal "${materiSoal.judul}"?`))) return;
 
@@ -551,8 +591,8 @@ function openQuickAdd(materiSoal) {
     quickQuestionForm.reset();
     quickQuestionForm.materi_soal_id = materiSoal.id;
     quickQuestionForm.bank_soal_id = bankSoalTerpilihId.value;
-    quickQuestionForm.keterampilan_id = keterampilanTerpilih.value;
-    quickQuestionForm.bagian_soal_id = bagianSoalTerpilihId.value;
+    quickQuestionForm.section_id = sectionTerpilih.value;
+    quickQuestionForm.part_soal_id = partSoalTerpilihId.value;
 }
 
 function closeQuickAdd() {
@@ -561,14 +601,16 @@ function closeQuickAdd() {
 }
 
 function saveQuickQuestion() {
+    if (bankIsLocked.value) return;
+
     quickQuestionForm
         .transform((data) => ({
             materi_soal_id: data.materi_soal_id,
             bank_soal_id: data.bank_soal_id,
             soal: [
                 {
-                    keterampilan_id: data.keterampilan_id,
-                    bagian_soal_id: data.bagian_soal_id,
+                    section_id: data.section_id,
+                    part_soal_id: data.part_soal_id,
                     teks_soal: data.teks_soal,
                     pilihan_a: data.pilihan_a,
                     pilihan_b: data.pilihan_b,
@@ -593,6 +635,8 @@ function saveQuickQuestion() {
 }
 
 async function deletePassage(materiSoal) {
+    if (bankIsLocked.value) return;
+
     if (
         !(await confirm.confirm(
             `Hapus materi soal "${materiSoal.judul}"?`,
@@ -605,46 +649,46 @@ async function deletePassage(materiSoal) {
     });
 }
 
-const kelompokSoalPerKeterampilan = computed(() => {
-    const keterampilanMap = new Map();
+const kelompokSoalPerSection = computed(() => {
+    const sectionMap = new Map();
 
     for (const q of props.soal.data) {
-        const sid = q.keterampilan_id || "none";
-        if (!keterampilanMap.has(sid)) {
-            keterampilanMap.set(sid, { keterampilan_id: sid, bagianSoal: new Map() });
+        const sid = q.section_id || "none";
+        if (!sectionMap.has(sid)) {
+            sectionMap.set(sid, { section_id: sid, partSoal: new Map() });
         }
-        const bucket = keterampilanMap.get(sid);
+        const bucket = sectionMap.get(sid);
 
-        const pid = q.bagian_soal_id || "none";
-        if (!bucket.bagianSoal.has(pid)) {
-            bucket.bagianSoal.set(pid, {
-                bagianSoal: q.bagian_soal || null,
+        const pid = q.part_soal_id || "none";
+        if (!bucket.partSoal.has(pid)) {
+            bucket.partSoal.set(pid, {
+                partSoal: q.part_soal || null,
                 materiSoalGroups: new Map(),
                 standalone: [],
             });
         }
-        const bagianSoalBucket = bucket.bagianSoal.get(pid);
+        const partSoalBucket = bucket.partSoal.get(pid);
 
         if (q.materi_soal) {
-            if (!bagianSoalBucket.materiSoalGroups.has(q.materi_soal_id)) {
-                bagianSoalBucket.materiSoalGroups.set(q.materi_soal_id, {
+            if (!partSoalBucket.materiSoalGroups.has(q.materi_soal_id)) {
+                partSoalBucket.materiSoalGroups.set(q.materi_soal_id, {
                     materiSoal: q.materi_soal,
                     soal: [],
                 });
             }
-            bagianSoalBucket.materiSoalGroups.get(q.materi_soal_id).soal.push(q);
+            partSoalBucket.materiSoalGroups.get(q.materi_soal_id).soal.push(q);
         } else {
-            bagianSoalBucket.standalone.push(q);
+            partSoalBucket.standalone.push(q);
         }
     }
 
-    return Array.from(keterampilanMap.values())
+    return Array.from(sectionMap.values())
         .map((s) => ({
-            keterampilan_id: s.keterampilan_id,
-            label: namaKeterampilanDariId(s.keterampilan_id),
-            bagianSoal: Array.from(s.bagianSoal.values())
+            section_id: s.section_id,
+            label: namaSectionDariId(s.section_id),
+            partSoal: Array.from(s.partSoal.values())
                 .map((p) => ({
-                    bagianSoal: p.bagianSoal,
+                    partSoal: p.partSoal,
                     groups: Array.from(p.materiSoalGroups.values()).map((group) => ({
                         ...group,
                         soal: [...group.soal].sort(
@@ -653,21 +697,23 @@ const kelompokSoalPerKeterampilan = computed(() => {
                     })),
                     standalone: p.standalone,
                 }))
-                .sort((a, b) => (a.bagianSoal?.urutan ?? 99) - (b.bagianSoal?.urutan ?? 99)),
+                .sort((a, b) => (a.partSoal?.urutan ?? 99) - (b.partSoal?.urutan ?? 99)),
         }))
         .sort((a, b) => a.label.localeCompare(b.label));
 });
 
 function applyFilters() {
     const p = {};
-    if (jenisTesTerpilihId.value) p.jenis_tes_id = jenisTesTerpilihId.value;
-    if (keterampilanTerpilih.value) p.keterampilan = keterampilanTerpilih.value;
+    if (programTesTerpilihId.value) p.program_tes_id = programTesTerpilihId.value;
+    if (sectionTerpilih.value) p.section = sectionTerpilih.value;
     if (bankSoalTerpilihId.value) p.bank_soal_id = bankSoalTerpilihId.value;
-    if (bagianSoalTerpilihId.value) p.bagian_soal_id = bagianSoalTerpilihId.value;
+    if (partSoalTerpilihId.value) p.part_soal_id = partSoalTerpilihId.value;
     router.get(route("pustaka-soal.daftar"), p, { preserveState: true });
 }
 
 async function deleteQuestion(id, text) {
+    if (bankIsLocked.value) return;
+
     if (!(await confirm.confirm(`Hapus soal: "${text.substring(0, 50)}..."?`)))
         return;
     router.delete(route("pustaka-soal.hapus", id), {
@@ -688,21 +734,21 @@ async function deleteQuestion(id, text) {
             <UserGuide
                 title="Panduan Bank Soal"
                 :steps="[
-                    { judul: 'Pilih Jenis Tes', desc: 'Buka jenis tes untuk melihat bank soal yang tersedia.' },
+                    { judul: 'Pilih Program Tes', desc: 'Buka program tes untuk melihat bank soal yang tersedia.' },
                     { judul: 'Pilih Bank Soal', desc: 'Buka bank soal untuk menampilkan daftar soal.' },
-                    { judul: 'Kelola & Filter Soal', desc: 'Gunakan filter Keterampilan dan Bagian Soal untuk menemukan soal.' },
+                    { judul: 'Kelola & Filter Soal', desc: 'Gunakan filter Section dan Part Soal untuk menemukan soal.' },
                 ]"
                 :rules="[
-                    'Soal dikelompokkan per keterampilan → bagian soal → materi soal.',
+                    'Soal dikelompokkan per section → part soal → materi soal.',
                 ]"
             />
         </template>
 
         <template v-if="!bankSoalTerpilihId">
-            <RingkasanJenisTesPustaka
-                v-if="!jenisTesTerpilihId"
-                :ringkasan-jenis-tes="ringkasanJenisTes"
-                :detail-url="jenisTesUrl"
+            <RingkasanProgramTesPustaka
+                v-if="!programTesTerpilihId"
+                :ringkasan-program-tes="ringkasanProgramTes"
+                :detail-url="programTesUrl"
             />
             <RingkasanBankSoalPustaka
                 v-else
@@ -714,37 +760,37 @@ async function deleteQuestion(id, text) {
         <template v-else>
             <div class="relative mb-6">
                 <div
-                    v-if="tabsKeterampilan.length || canManageKeterampilan"
+                    v-if="tabsSection.length || canManageSection"
                     class="flex min-w-0 items-end gap-1"
                 >
-                    <div v-if="tabsKeterampilan.length" class="min-w-0 flex-1">
+                    <div v-if="tabsSection.length" class="min-w-0 flex-1">
                         <BaseTabsChrome
-                            :model-value="keterampilanTerpilih"
-                            :items="tabsKeterampilan"
-                            :active-action="canManageKeterampilan && keterampilanTerpilihData !== null"
-                            aria-label="Filter keterampilan soal"
+                            :model-value="sectionTerpilih"
+                            :items="tabsSection"
+                            :active-action="canManageSection && sectionTerpilihData !== null"
+                            aria-label="Filter section soal"
                             class="relative z-10 -mb-px px-5"
-                            @update:model-value="onKeterampilanChange"
+                            @update:model-value="onSectionChange"
                         >
                             <template #active-action>
                                 <BaseActionMenu
-                                    :items="keterampilanActions"
+                                    :items="sectionActions"
                                     icon-only
                                     teleport-menu
                                     compact
                                     class="-ml-1"
-                                    aria-label="Aksi keterampilan aktif"
-                                    @select="handleKeterampilanAction"
+                                    aria-label="Aksi section aktif"
+                                    @select="handleSectionAction"
                                 />
                             </template>
                             <template #after>
                                 <button
-                                    v-if="canManageKeterampilan"
+                                    v-if="canManageSection"
                                     type="button"
                                     class="mb-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
-                                    aria-label="Tambah keterampilan"
-                                    title="Tambah keterampilan"
-                                    @click="openCreateKeterampilan"
+                                    aria-label="Tambah section"
+                                    title="Tambah section"
+                                    @click="openCreateSection"
                                 >
                                     <IconPlus :size="19" />
                                 </button>
@@ -753,12 +799,12 @@ async function deleteQuestion(id, text) {
                     </div>
 
                     <button
-                        v-else-if="canManageKeterampilan"
+                        v-else-if="canManageSection"
                         type="button"
                         class="mb-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
-                        aria-label="Tambah keterampilan"
-                        title="Tambah keterampilan"
-                        @click="openCreateKeterampilan"
+                        aria-label="Tambah section"
+                        title="Tambah section"
+                        @click="openCreateSection"
                     >
                         <IconPlus :size="19" />
                     </button>
@@ -767,45 +813,45 @@ async function deleteQuestion(id, text) {
 
                 <BaseCard :padding="false" class="!border-t-0 overflow-hidden">
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3">
-                        <div v-if="tabsBagianSoal.length" class="inline-flex min-w-0 max-w-full items-center gap-1">
+                        <div v-if="tabsPartSoal.length" class="inline-flex min-w-0 max-w-full items-center gap-1">
                             <BaseTabs
-                                :model-value="bagianSoalTerpilihId"
-                                :items="tabsBagianSoal"
-                                :active-action="canManageBagianSoal && bagianSoalTerpilihData !== null"
-                                aria-label="Filter bagian soal"
+                                :model-value="partSoalTerpilihId"
+                                :items="tabsPartSoal"
+                                :active-action="canManagePartSoal && partSoalTerpilihData !== null"
+                                aria-label="Filter part soal"
                                 class="min-w-0 max-w-full"
-                                @update:model-value="onBagianSoalChange"
+                                @update:model-value="onPartSoalChange"
                             >
                                 <template #active-action>
                                     <BaseActionMenu
-                                        :items="bagianSoalActions"
+                                        :items="partSoalActions"
                                         icon-only
                                         teleport-menu
                                         compact
                                         class="-ml-1 [&>button]:!text-on-primary"
-                                        aria-label="Aksi bagian soal aktif"
-                                        @select="handleBagianSoalAction"
+                                        aria-label="Aksi part soal aktif"
+                                        @select="handlePartSoalAction"
                                     />
                                 </template>
                             </BaseTabs>
                             <button
-                                v-if="canManageBagianSoal"
+                                v-if="canManagePartSoal"
                                 type="button"
                                 class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
-                                aria-label="Tambah bagian soal"
-                                title="Tambah bagian soal"
-                                @click="openCreateBagianSoal"
+                                aria-label="Tambah part soal"
+                                title="Tambah part soal"
+                                @click="openCreatePartSoal"
                             >
                                 <IconPlus :size="19" />
                             </button>
                         </div>
                         <button
-                            v-else-if="canManageBagianSoal"
+                            v-else-if="canManagePartSoal"
                             type="button"
                             class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
-                            aria-label="Tambah bagian soal"
-                            title="Tambah bagian soal"
-                            @click="openCreateBagianSoal"
+                            aria-label="Tambah part soal"
+                            title="Tambah part soal"
+                            @click="openCreatePartSoal"
                         >
                             <IconPlus :size="19" />
                         </button>
@@ -828,7 +874,7 @@ async function deleteQuestion(id, text) {
 
                     <KelompokSoalPustaka
                         v-else
-                        :kelompok-soal="kelompokSoalPerKeterampilan"
+                        :kelompok-soal="kelompokSoalPerSection"
                         :toggle-materi-soal-fn="togglePassage"
                         :materi-soal-type-label-fn="materiSoalTypeLabel"
                         :is-materi-soal-expanded-fn="isPassageExpanded"
@@ -843,8 +889,8 @@ async function deleteQuestion(id, text) {
             </div>
 
             <TambahSoalMateriModal
-                v-if="addingPassageId"
-                :show="Boolean(addingPassageId)"
+                v-if="addingPassageId && !bankIsLocked"
+                :show="Boolean(addingPassageId) && !bankIsLocked"
                 :form="quickQuestionForm"
                 :quick-is-audio="quickIsAudio"
                 :option-keys="optionKeys"
@@ -853,8 +899,8 @@ async function deleteQuestion(id, text) {
             />
 
             <EditMateriSoalModal
-                v-if="editingMateriSoal"
-                :show="Boolean(editingMateriSoal)"
+                v-if="editingMateriSoal && !bankIsLocked"
+                :show="Boolean(editingMateriSoal) && !bankIsLocked"
                 :materi-soal="editingMateriSoal"
                 :form="materiSoalForm"
                 :policy="editingMateriPolicy"
@@ -863,27 +909,27 @@ async function deleteQuestion(id, text) {
                 @remove-media="(jenisMedia) => removePassageMedia(editingMateriSoal, jenisMedia)"
             />
 
-            <KeterampilanFormModal
-                :show="showKeterampilanModal"
-                :creating="creatingKeterampilan"
-                :form="modalKeterampilanForm"
-                :jenis-tes="jenisTesKeterampilan"
-                lock-jenis-tes
-                @close="closeKeterampilanModal"
-                @submit="creatingKeterampilan ? saveKeterampilan() : updateKeterampilan()"
+            <SectionFormModal
+                :show="showSectionModal && !bankIsLocked"
+                :creating="creatingSection"
+                :form="modalSectionForm"
+                :program-tes="programTesSection"
+                lock-program-tes
+                @close="closeSectionModal"
+                @submit="creatingSection ? saveSection() : updateSection()"
             />
 
-            <BagianSoalFormModal
-                :show="showBagianSoalModal"
-                :creating="creatingBagianSoal"
-                :form="modalBagianSoalForm"
+            <PartSoalFormModal
+                :show="showPartSoalModal && !bankIsLocked"
+                :creating="creatingPartSoal"
+                :form="modalPartSoalForm"
                 :bank-soal="bankSoal"
-                :opsi-keterampilan="opsiKeterampilan"
+                :opsi-section="opsiSection"
                 :bank-filter="bankSoalTerpilihId"
                 lock-bank-soal
-                lock-keterampilan
-                @close="closeBagianSoalModal"
-                @submit="creatingBagianSoal ? saveBagianSoal() : updateBagianSoal()"
+                lock-section
+                @close="closePartSoalModal"
+                @submit="creatingPartSoal ? savePartSoal() : updatePartSoal()"
             />
 
             <Pagination

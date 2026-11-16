@@ -6,7 +6,7 @@ defineProps({
     show: { type: Boolean, default: false },
     creating: { type: Boolean, default: true },
     form: { type: Object, required: true },
-    jenisTes: { type: Array, default: () => [] },
+    programTes: { type: Array, default: () => [] },
     bankSoalTersaring: { type: Array, default: () => [] },
 });
 
@@ -45,7 +45,7 @@ const emit = defineEmits(['close', 'submit']);
                 <FormUjian
                     form-id="form-ujian-modal"
                     :form="form"
-                    :jenis-tes="jenisTes"
+                    :program-tes="programTes"
                     :bank-soal-tersaring="bankSoalTersaring"
                     :creating="creating"
                     :show-actions="false"

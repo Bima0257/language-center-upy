@@ -3,13 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\AturanPenilaian;
-use App\Models\BagianSoal;
 use App\Models\BankSoal;
 use App\Models\Fakultas;
 use App\Models\InterpretasiSkor;
-use App\Models\JenisTes;
-use App\Models\Keterampilan;
+use App\Models\PartSoal;
 use App\Models\ProgramStudi;
+use App\Models\ProgramTes;
+use App\Models\Section;
+use App\Models\SkemaPenilaian;
 use App\Modules\DataInduk\Services\LayananDataInduk;
 use Illuminate\Database\Seeder;
 
@@ -18,52 +19,92 @@ class DataIndukSeeder extends Seeder
     public function run(): void
     {
         $layananDataInduk = app(LayananDataInduk::class);
-        $toefl = JenisTes::where('nama', 'TOEFL iBT')->first();
+        $ept = ProgramTes::where('nama', 'EPT')->first();
 
-        if ($toefl === null) {
-            $toefl = $layananDataInduk->buatJenisTes([
-                'nama' => 'TOEFL iBT',
+        if ($ept === null) {
+            $ept = $layananDataInduk->buatProgramTes([
+                'nama' => 'EPT',
                 'batas_pelanggaran' => 3,
-                'deskripsi' => 'Test of English as a Foreign Language',
+                'deskripsi' => 'English Proficiency Test',
                 'aktif' => true,
             ]);
         }
 
-        $bank2022 = BankSoal::firstOrCreate(['nama' => 'Bank Soal 2022'], ['jenis_tes_id' => $toefl->id, 'deskripsi' => 'Kumpulan soal tryout tahun 2022', 'aktif' => true]);
-        $bank2023 = BankSoal::firstOrCreate(['nama' => 'Bank Soal 2023'], ['jenis_tes_id' => $toefl->id, 'deskripsi' => 'Kumpulan soal tryout tahun 2023', 'aktif' => true]);
+        $bankEpt = BankSoal::firstOrCreate(
+            ['nama' => 'Bank Soal EPT'],
+            [
+                'program_tes_id' => $ept->id,
+                'deskripsi' => 'Kumpulan soal EPT untuk pelaksanaan ujian',
+                'aktif' => true,
+            ],
+        );
 
-        $keterampilanMembaca = Keterampilan::where('jenis_tes_id', $toefl->id)->where('nama', 'Reading')->first();
-        if ($keterampilanMembaca === null) {
-            $keterampilanMembaca = $layananDataInduk->buatKeterampilan([
-                'jenis_tes_id' => $toefl->id,
-                'nama' => 'Reading',
+        $bankLatihan = BankSoal::firstOrCreate(
+            ['nama' => 'Bank Soal Latihan'],
+            [
+                'program_tes_id' => $ept->id,
+                'deskripsi' => 'Bank soal latihan untuk pengelolaan admin',
+                'aktif' => true,
+            ],
+        );
+
+        $sectionMenyimak = Section::where('program_tes_id', $ept->id)->where('nama', 'Listening')->first();
+        if ($sectionMenyimak === null) {
+            $sectionMenyimak = $layananDataInduk->buatSection([
+                'program_tes_id' => $ept->id,
+                'nama' => 'Listening',
                 'urutan' => 1,
                 'aktif' => true,
             ]);
         }
 
-        $keterampilanMenyimak = Keterampilan::where('jenis_tes_id', $toefl->id)->where('nama', 'Listening')->first();
-        if ($keterampilanMenyimak === null) {
-            $keterampilanMenyimak = $layananDataInduk->buatKeterampilan([
-                'jenis_tes_id' => $toefl->id,
-                'nama' => 'Listening',
+        $sectionMembaca = Section::where('program_tes_id', $ept->id)->where('nama', 'Reading')->first();
+        if ($sectionMembaca === null) {
+            $sectionMembaca = $layananDataInduk->buatSection([
+                'program_tes_id' => $ept->id,
+                'nama' => 'Reading',
                 'urutan' => 2,
                 'aktif' => true,
             ]);
         }
 
-        $definisiBagian = [
-            [$keterampilanMembaca->id, 'Part 1', 1, 'Read each passage carefully. Answer questions based on the information given in the passage.'],
-            [$keterampilanMembaca->id, 'Part 2', 2, 'A word or phrase is missing in each of the sentences below. Select the best answer to complete the sentence.'],
-            [$keterampilanMenyimak->id, 'Part 1', 1, 'Listen to each short conversation and question. Select the best answer to each question based on what is stated or implied by the speakers.'],
-            [$keterampilanMenyimak->id, 'Part 2', 2, 'Listen to each longer conversation or talk. Answer the questions based on the information you hear.'],
-            [$keterampilanMenyimak->id, 'Part 3', 3, 'Listen to each lecture. Answer the questions based on the information presented in the lecture.'],
+        $definisiPart = [
+            [
+                $sectionMenyimak->id,
+                'Listening Part 1',
+                1,
+                'Listen to each short conversation and choose the best answer.',
+            ],
+            [
+                $sectionMenyimak->id,
+                'Listening Part 2',
+                2,
+                'Listen to each longer conversation and answer the questions.',
+            ],
+            [
+                $sectionMenyimak->id,
+                'Listening Part 3',
+                3,
+                'Listen to each talk and answer the questions.',
+            ],
+            [
+                $sectionMembaca->id,
+                'Reading Part 1',
+                1,
+                'Read each passage carefully and answer the questions.',
+            ],
+            [
+                $sectionMembaca->id,
+                'Reading Part 2',
+                2,
+                'Choose the best answer to complete each sentence.',
+            ],
         ];
 
-        foreach ([$bank2022, $bank2023] as $bankSoal) {
-            foreach ($definisiBagian as [$keterampilanId, $nama, $urutan, $petunjuk]) {
-                BagianSoal::firstOrCreate(
-                    ['bank_soal_id' => $bankSoal->id, 'keterampilan_id' => $keterampilanId, 'nama' => $nama],
+        foreach ([$bankEpt, $bankLatihan] as $bankSoal) {
+            foreach ($definisiPart as [$sectionId, $nama, $urutan, $petunjuk]) {
+                PartSoal::firstOrCreate(
+                    ['bank_soal_id' => $bankSoal->id, 'section_id' => $sectionId, 'nama' => $nama],
                     ['urutan' => $urutan, 'petunjuk' => $petunjuk, 'aktif' => true],
                 );
             }
@@ -76,18 +117,33 @@ class DataIndukSeeder extends Seeder
         ProgramStudi::firstOrCreate(['fakultas_id' => $fkip->id, 'kode' => 'PMAT'], ['nama' => 'Pendidikan Matematika', 'aktif' => true]);
         ProgramStudi::firstOrCreate(['fakultas_id' => $ft->id, 'kode' => 'TI'], ['nama' => 'Teknik Informatika', 'aktif' => true]);
 
-        // Conversion table: raw 0-50 -> scaled 100-200 (2x + 100)
+        $skemaPenilaian = SkemaPenilaian::firstOrCreate(
+            ['program_tes_id' => $ept->id, 'versi' => 1],
+            [
+                'nama' => 'Skema '.$ept->nama.' v1',
+                'status' => 'aktif',
+                'metode_total' => 'jumlah',
+                'diaktifkan_pada' => now(),
+            ],
+        );
+
         $tabelKonversi = [];
         for ($skorMentah = 0; $skorMentah <= 50; $skorMentah++) {
             $tabelKonversi[(string) $skorMentah] = 100 + ($skorMentah * 2);
         }
 
-        foreach ([$keterampilanMembaca, $keterampilanMenyimak] as $keterampilan) {
-            AturanPenilaian::firstOrCreate(
-                ['jenis_tes_id' => $toefl->id, 'kode_keterampilan' => $keterampilan->kode],
+        foreach ([$sectionMembaca, $sectionMenyimak] as $section) {
+            AturanPenilaian::updateOrCreate(
                 [
+                    'skema_penilaian_id' => $skemaPenilaian->id,
+                    'section_id' => $section->id,
+                ],
+                [
+                    'program_tes_id' => $ept->id,
+                    'kode_section' => $section->kode,
                     'tabel_konversi' => $tabelKonversi,
                     'skor_mentah_maksimum' => 50,
+                    'skor_skala_minimum' => 100,
                     'skor_skala_maksimum' => 200,
                 ],
             );
@@ -106,9 +162,13 @@ class DataIndukSeeder extends Seeder
         ];
 
         foreach ($interpretasiSkor as $interpretasi) {
-            InterpretasiSkor::firstOrCreate(
-                ['jenis_tes_id' => $toefl->id, 'skor_minimum' => $interpretasi['min']],
+            InterpretasiSkor::updateOrCreate(
                 [
+                    'skema_penilaian_id' => $skemaPenilaian->id,
+                    'skor_minimum' => $interpretasi['min'],
+                ],
+                [
+                    'program_tes_id' => $ept->id,
                     'skor_maksimum' => $interpretasi['max'],
                     'tingkat_cefr' => $interpretasi['cefr'],
                     'label_tingkat' => $interpretasi['label'],
@@ -117,5 +177,12 @@ class DataIndukSeeder extends Seeder
                 ],
             );
         }
+
+        $aturanTersimpan = AturanPenilaian::where('skema_penilaian_id', $skemaPenilaian->id)->get();
+
+        $skemaPenilaian->update([
+            'skala_total_minimum' => $aturanTersimpan->sum('skor_skala_minimum'),
+            'skala_total_maksimum' => $aturanTersimpan->sum('skor_skala_maksimum'),
+        ]);
     }
 }

@@ -21,7 +21,7 @@ class LayananDasbor
     {
         $data = [];
 
-        if ($pengguna->hasRole('student')) {
+        if ($pengguna->hasRole('peserta')) {
             $data['sesiTerbaru'] = $this->sesiRepo->terbaruUntukPengguna($pengguna->id);
             $data['jumlahUjianTersedia'] = $this->slotRepo->slotTersedia()->count();
         }

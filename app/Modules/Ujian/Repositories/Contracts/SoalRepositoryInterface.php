@@ -32,9 +32,9 @@ interface SoalRepositoryInterface
     /**
      * @return Collection<int, Soal>
      */
-    public function soalUntukKeterampilan(string $keterampilanId): Collection;
+    public function soalUntukSection(string $sectionId): Collection;
 
-    public function memilikiSoalDenganKeterampilan(string $keterampilanId): bool;
+    public function memilikiSoalDenganSection(string $sectionId): bool;
 
     public function update(Soal $soal, array $data): Soal;
 
@@ -50,7 +50,7 @@ interface SoalRepositoryInterface
     /**
      * @return Collection<int, Soal>
      */
-    public function soalDenganKeterampilanUntukJenisTes(string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): Collection;
+    public function soalDenganSectionUntukProgramTes(string $sectionId, ?string $programTesId, ?string $bankId = null): Collection;
 
     /**
      * @return Collection<int, Soal>
@@ -58,27 +58,27 @@ interface SoalRepositoryInterface
     public function temukanDenganIdDenganMateriSoal(array $ids): Collection;
 
     /**
-     * Soal milik bank dan keterampilan tertentu yang belum terpasang di section.
+     * Soal milik bank dan section tertentu yang belum terpasang di section.
      *
      * @param  array<string>  $kecualiIds
      * @return Collection<int, Soal>
      */
-    public function soalDenganBankDanKeterampilanTanpa(string $bankId, string $keterampilanId, array $kecualiIds): Collection;
+    public function soalDenganBankDanSectionTanpa(string $bankId, string $sectionId, array $kecualiIds): Collection;
 
     /**
-     * @param  array<string>  $keterampilanIds
+     * @param  array<string>  $sectionIds
      * @return Collection<int, Soal>
      */
-    public function cadanganDenganKeterampilan(array $keterampilanIds, ?string $jenisTesId, ?string $bankId, array $kecualiIds): Collection;
+    public function cadanganDenganSection(array $sectionIds, ?string $programTesId, ?string $bankId, array $kecualiIds): Collection;
 
     /**
      * @return Collection<int, BankSoal>
      */
-    public function bankDenganKeterampilanDanJenisTes(string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): Collection;
+    public function bankDenganSectionDanProgramTes(string $sectionId, ?string $programTesId, ?string $bankId = null): Collection;
 
     public function count(): int;
 
-    public function hitungDenganKeterampilan(): \Illuminate\Support\Collection;
+    public function hitungDenganSection(): \Illuminate\Support\Collection;
 
     public function hitungDenganBank(): Collection;
 }

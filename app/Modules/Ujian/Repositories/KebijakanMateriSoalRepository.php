@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Collection;
 
 class KebijakanMateriSoalRepository implements KebijakanMateriSoalRepositoryInterface
 {
-    public function temukanDenganKeterampilan(string $keterampilanId): ?KebijakanMateriSoal
+    public function temukanDenganSection(string $sectionId): ?KebijakanMateriSoal
     {
         return KebijakanMateriSoal::with('aturanMedia')
-            ->where('keterampilan_id', $keterampilanId)
+            ->where('section_id', $sectionId)
             ->first();
     }
 
@@ -46,8 +46,8 @@ class KebijakanMateriSoalRepository implements KebijakanMateriSoalRepositoryInte
 
     public function all(): Collection
     {
-        return KebijakanMateriSoal::with(['aturanMedia', 'keterampilan'])
-            ->orderBy('keterampilan_id')
+        return KebijakanMateriSoal::with(['aturanMedia', 'section'])
+            ->orderBy('section_id')
             ->get();
     }
 }

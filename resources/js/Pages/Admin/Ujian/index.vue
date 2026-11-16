@@ -1,28 +1,31 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3'
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue'
-import DataTable from '@/Components/Shared/DataTable.vue'
+import BaseBadge from '@/Components/Base/BaseBadge.vue'
+import BaseButton from '@/Components/Base/BaseButton.vue'
+import BaseTambahData from '@/Components/Base/BaseTambahData.vue'
+import AppDataTable from '@/Components/Ui/AppDataTable.vue'
 import TambahUjianModal from './Components/TambahUjianModal.vue'
-import JenisTesSummaryTable from './Components/JenisTesSummaryTable.vue'
+import ProgramTesSummaryTable from './Components/ProgramTesSummaryTable.vue'
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-vue'
 import { useConfirm } from '@/Composables/useConfirm'
-import { computed, ref, watch } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 
 const props = defineProps({
     ujian: { type: Array, default: () => [] },
-    jenisTes: { type: Array, default: () => [] },
+    programTes: { type: Array, default: () => [] },
     bankSoal: { type: Array, default: () => [] },
-    ringkasanJenisTes: { type: Array, default: () => [] },
-    jenisTesTerpilih: { type: Object, default: null },
-    jenisTesTerpilihId: { type: [String, null], default: null },
+    ringkasanProgramTes: { type: Array, default: () => [] },
+    programTesTerpilih: { type: Object, default: null },
+    programTesTerpilihId: { type: [String, null], default: null },
 })
 
 const confirm = useConfirm()
-const jenisTesFilter = computed(() => props.jenisTesTerpilihId || '')
+const programTesFilter = computed(() => props.programTesTerpilihId || '')
 const showUjianModal = ref(false)
 const editingUjian = ref(null)
 const tambahForm = useForm({
-    jenis_tes_id: '',
+    program_tes_id: '',
     bank_soal_id: '',
     judul: '',
     deskripsi: '',
@@ -30,7 +33,7 @@ const tambahForm = useForm({
     durasi_menit: 160,
 })
 const editForm = useForm({
-    jenis_tes_id: '',
+    program_tes_id: '',
     judul: '',
     deskripsi: '',
     mode: 'tryout',
@@ -42,14 +45,14 @@ const isCreating = computed(() => editingUjian.value === null)
 const modalForm = computed(() => isCreating.value ? tambahForm : editForm)
 
 const bankSoalTersaring = computed(() => {
-    if (!tambahForm.jenis_tes_id) return []
+    if (!tambahForm.program_tes_id) return []
 
     return props.bankSoal.filter((bank) =>
-        String(bank.jenis_tes_id) === String(tambahForm.jenis_tes_id) && bank.aktif,
+        String(bank.program_tes_id) === String(tambahForm.program_tes_id) && bank.aktif,
     )
 })
 
-watch(() => tambahForm.jenis_tes_id, () => {
+watch(() => tambahForm.program_tes_id, () => {
     tambahForm.bank_soal_id = ''
 })
 
@@ -57,7 +60,7 @@ function openTambahModal() {
     editingUjian.value = null
     tambahForm.reset()
     tambahForm.clearErrors()
-    tambahForm.jenis_tes_id = jenisTesFilter.value
+    tambahForm.program_tes_id = programTesFilter.value
     showUjianModal.value = true
 }
 
@@ -65,7 +68,7 @@ function openEditModal(ujian) {
     editingUjian.value = ujian
     editForm.reset()
     editForm.clearErrors()
-    editForm.jenis_tes_id = ujian.jenis_tes_id || ''
+    editForm.program_tes_id = ujian.program_tes_id || ''
     editForm.judul = ujian.judul || ''
     editForm.deskripsi = ujian.deskripsi || ''
     editForm.mode = ujian.mode || 'tryout'
@@ -83,8 +86,8 @@ function closeUjianModal() {
     editForm.clearErrors()
 }
 
-function jenisTesUrl(jenisTesId) {
-    return `${route('admin.ujian.daftar')}?jenis_tes_id=${encodeURIComponent(jenisTesId)}`
+function programTesUrl(programTesId) {
+    return `${route('admin.ujian.daftar')}?program_tes_id=${encodeURIComponent(programTesId)}`
 }
 
 function submitTambahUjian() {
@@ -114,81 +117,108 @@ async function destroy(ujian) {
 }
 
 const columns = [
-    { key: 'judul', label: 'Judul Ujian', sortable: true, className: 'font-medium text-text-heading' },
-    { key: 'mode', label: 'Mode', sortable: true, badge: true,
-      render: (val) => val === 'tryout' ? 'Try Out' : 'Ujian Resmi' },
-    { key: 'durasi_menit', label: 'Durasi',
-      render: (val) => `${val} menit` },
-    { key: 'bagian_ujian_count', label: 'Bagian Ujian',
-      render: (val) => val ?? 0 },
-    { key: 'aktif', label: 'Status', sortable: true, badge: true,
-      render: (val) => val ? 'Aktif' : 'Nonaktif' },
-    { key: 'id', label: 'Aksi', slot: 'actions' },
+    { accessorKey: 'judul', header: 'Judul Ujian', meta: { cellClass: 'font-medium text-text-heading' } },
+    {
+        accessorKey: 'mode',
+        header: 'Mode',
+        cell: info => h(
+            BaseBadge,
+            { variant: info.getValue() === 'tryout' ? 'pastel-blue' : 'pastel' },
+            () => (info.getValue() === 'tryout' ? 'Try Out' : 'Ujian Resmi'),
+        ),
+    },
+    { accessorKey: 'durasi_menit', header: 'Durasi', cell: info => `${info.getValue()} menit` },
+    { accessorKey: 'part_ujian_count', header: 'Part Ujian', cell: info => info.getValue() ?? 0 },
+    {
+        accessorKey: 'aktif',
+        header: 'Status',
+        cell: info => h(
+            BaseBadge,
+            { variant: info.getValue() ? 'success' : 'neutral' },
+            () => (info.getValue() ? 'Aktif' : 'Nonaktif'),
+        ),
+    },
+    {
+        id: 'actions',
+        header: 'Aksi',
+        meta: { align: 'center' },
+        cell: info => {
+            const row = info.row.original
+
+            return h('div', { class: 'flex items-center justify-center gap-1' }, [
+                h(
+                    BaseButton,
+                    {
+                        variant: 'secondary',
+                        iconOnly: true,
+                        title: 'Ubah',
+                        'aria-label': 'Ubah',
+                        onClick: () => openEditModal(row),
+                    },
+                    () => h(IconEdit, { size: 16 }),
+                ),
+                h(
+                    BaseButton,
+                    {
+                        href: route('admin.ujian.detail', row.id),
+                        variant: 'secondary',
+                        iconOnly: true,
+                        title: 'Detail',
+                        'aria-label': 'Detail',
+                    },
+                    () => h(IconEye, { size: 16 }),
+                ),
+                h(
+                    BaseButton,
+                    {
+                        variant: 'danger',
+                        iconOnly: true,
+                        disabled: row.periode_ujian_exists,
+                        title: row.periode_ujian_exists ? 'Tidak bisa dihapus - sudah terjadwal' : 'Hapus ujian',
+                        'aria-label': row.periode_ujian_exists ? 'Tidak bisa dihapus - sudah terjadwal' : 'Hapus ujian',
+                        onClick: () => destroy(row),
+                    },
+                    () => h(IconTrash, { size: 16 }),
+                ),
+            ])
+        },
+    },
 ]
 </script>
 
 <template>
-    <Head :title="jenisTesTerpilih ? `Manajemen Ujian - ${jenisTesTerpilih.nama}` : 'Manajemen Ujian'" />
+    <Head :title="programTesTerpilih ? `Manajemen Ujian - ${programTesTerpilih.nama}` : 'Manajemen Ujian'" />
     <TataLetakDasbor
-        :title="jenisTesTerpilih ? `Manajemen Ujian - ${jenisTesTerpilih.nama}` : 'Manajemen Ujian'"
-        :subtitle="jenisTesTerpilih ? 'Atur daftar ujian, bagian ujian, dan komposisi soal' : 'Pilih jenis tes untuk melihat daftar ujian'"
-        :back-href="jenisTesFilter ? route('admin.ujian.daftar') : null"
+        :title="programTesTerpilih ? `Manajemen Ujian - ${programTesTerpilih.nama}` : 'Manajemen Ujian'"
+        :subtitle="programTesTerpilih ? 'Atur daftar ujian, part ujian, dan komposisi soal' : 'Pilih program tes untuk melihat daftar ujian'"
+        :back-href="programTesFilter ? route('admin.ujian.daftar') : null"
     >
-        <template v-if="!jenisTesFilter">
-            <JenisTesSummaryTable
-                :ringkasan-jenis-tes="ringkasanJenisTes"
-                :detail-url="jenisTesUrl"
+        <template v-if="!programTesFilter">
+            <ProgramTesSummaryTable
+                table-key="admin-ujian-program-tes"
+                :ringkasan-program-tes="ringkasanProgramTes"
+                :detail-url="programTesUrl"
             />
         </template>
 
         <template v-else>
-            <DataTable
+            <AppDataTable
+                table-key="admin-ujian"
                 :data="ujian"
                 :columns="columns"
                 searchable
-                header-title="Daftar Ujian"
+                title="Daftar Ujian"
             >
-                <template #toolbar>
+                <template #actions>
                     <BaseTambahData @click="openTambahModal" />
                 </template>
-
-                <template #actions="{ row }">
-                    <BaseButton
-                        variant="secondary"
-                        icon-only
-                        title="Ubah"
-                        aria-label="Ubah"
-                        @click="openEditModal(row)"
-                    >
-                        <IconEdit :size="16" />
-                    </BaseButton>
-                    <BaseButton
-                        :href="route('admin.ujian.detail', row.id)"
-                        variant="secondary"
-                        icon-only
-                        title="Detail"
-                        aria-label="Detail"
-                    >
-                        <IconEye :size="16" />
-                    </BaseButton>
-                    <BaseButton
-                        variant="danger"
-                        icon-only
-                        :disabled="row.periode_ujian_exists"
-                        :title="row.periode_ujian_exists ? 'Tidak bisa dihapus — sudah terjadwal' : 'Hapus ujian'"
-                        :aria-label="row.periode_ujian_exists ? 'Tidak bisa dihapus — sudah terjadwal' : 'Hapus ujian'"
-                        @click="destroy(row)"
-                    >
-                        <IconTrash :size="16" />
-                    </BaseButton>
-                </template>
-            </DataTable>
+            </AppDataTable>
 
             <TambahUjianModal
                 :show="showUjianModal"
                 :creating="isCreating"
                 :form="modalForm"
-                :jenis-tes="jenisTes"
+                :program-tes="programTes"
                 :bank-soal-tersaring="bankSoalTersaring"
                 @close="closeUjianModal"
                 @submit="isCreating ? submitTambahUjian() : submitEditUjian()"

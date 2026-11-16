@@ -18,10 +18,10 @@ class FilterUjianRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jenis_tes_id' => [
+            'program_tes_id' => [
                 'nullable',
                 'uuid',
-                Rule::exists('jenis_tes', 'id')->where(fn ($query) => $query->where('aktif', true)),
+                Rule::exists('program_tes', 'id')->where(fn ($query) => $query->where('aktif', true)),
             ],
         ];
     }

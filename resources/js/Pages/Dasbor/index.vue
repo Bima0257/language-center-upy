@@ -20,7 +20,7 @@ defineProps({
 });
 
 const roles = usePage().props.auth?.roles || [];
-const isMahasiswa = roles.includes("student");
+const isMahasiswa = roles.includes("peserta");
 const isAdmin = roles.includes("admin") || roles.includes("superadmin");
 
 </script>

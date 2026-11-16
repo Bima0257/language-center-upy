@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Head } from "@inertiajs/vue3";
 import TataLetakUjian from "@/Layouts/TataLetakUjian.vue";
 import GridSoalModal from "@/Components/Ujian/GridSoalModal.vue";
@@ -20,13 +20,13 @@ const props = defineProps({
     soalBank: { type: Array, default: () => [] },
 });
 
-const bagianAktif = computed(() => props.sesiUjian.bagian_aktif);
+const partUjianAktif = computed(() => props.sesiUjian.part_ujian_aktif);
 
 const currentQuestions = computed(() => {
-    const keterampilanId = bagianAktif.value?.keterampilan_id;
-    if (!keterampilanId) return props.soalBank;
+    const sectionId = partUjianAktif.value?.section_id;
+    if (!sectionId) return props.soalBank;
     return props.soalBank
-        .filter((q) => q.keterampilan_id === keterampilanId)
+        .filter((q) => q.section_id === sectionId)
         .sort((a, b) => (a.urutan || 0) - (b.urutan || 0));
 });
 
@@ -43,7 +43,7 @@ for (const a of sessionAnswers) {
 const answeredCount = computed(() => Object.keys(answers.value).length);
 
 // ============================================================
-// FOOTER NUMBER STRIP (per bagianUjian) — sliding window maks 5 nomor
+// FOOTER NUMBER STRIP (per partUjian) — sliding window maks 5 nomor
 // ============================================================
 
 const WINDOW_SIZE = 5;
@@ -77,14 +77,14 @@ watch(currentQuestionIndex, (value) => {
 
 const mapGroups = computed(() => {
     if (!currentQuestions.value.length) return [];
-    const keterampilanName =
-        currentQuestions.value[0]?.keterampilan?.nama ||
-        bagianSoalLabel.value ||
-        "Bagian Ujian";
+    const sectionName =
+        currentQuestions.value[0]?.section?.nama ||
+        partSoalLabel.value ||
+        "Part Ujian";
     return [
         {
-            keterampilan: { nama: keterampilanName },
-            bagianSoal: { nama: bagianSoalLabel.value || "Soal" },
+            section: { nama: sectionName },
+            partSoal: { nama: partSoalLabel.value || "Soal" },
             nomorMulai: 1,
             jumlahSoal: currentQuestions.value.length,
             soal: currentQuestions.value.map((q, i) => ({
@@ -146,17 +146,17 @@ const isMaterialAudio = computed(
     () => currentQuestion.value?.materi === "audio",
 );
 const materiSoal = computed(() => currentQuestion.value?.materi_soal || null);
-const bagianSoalLabel = computed(
+const partSoalLabel = computed(
     () =>
-        currentQuestion.value?.bagian_soal?.nama ||
-        currentQuestion.value?.keterampilan?.nama ||
+        currentQuestion.value?.part_soal?.nama ||
+        currentQuestion.value?.section?.nama ||
         "",
 );
 
 const headerTitle = computed(() => {
     const prefix = [
-        currentQuestion.value?.keterampilan?.nama,
-        currentQuestion.value?.bagian_soal?.nama,
+        currentQuestion.value?.section?.nama,
+        currentQuestion.value?.part_soal?.nama,
     ]
         .filter(Boolean)
         .join(' ');
@@ -196,7 +196,7 @@ function selectAnswer(key) {
 
 function handleTimeUp() {
     axios
-        .post(`/ujian/sesi/${props.sesiUjian.id}/selesaikan-bagian`)
+        .post(`/ujian/sesi/${props.sesiUjian.id}/selesaikan-part`)
         .catch(() => {});
 }
 
@@ -254,13 +254,13 @@ onUnmounted(() => {
             <ReadingMaterialPanel
                 v-if="!isMaterialAudio"
                 :materi-soal="materiSoal"
-                :bagian-soal-label="bagianSoalLabel"
+                :part-soal-label="partSoalLabel"
                 :image-loading="imageLoading"
             />
             <AudioMaterialPanel
                 v-else
                 :materi-soal="materiSoal"
-                :bagian-soal-label="bagianSoalLabel"
+                :part-soal-label="partSoalLabel"
                 :image-src="imageSrc"
                 :audio-src="audioSrc"
                 :image-loading="imageLoading"

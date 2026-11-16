@@ -9,6 +9,8 @@ defineProps({
     backUrl: { type: String, default: null },
     manageUrl: { type: String, default: null },
     initialSoalId: { type: String, default: null },
+    demo: { type: Boolean, default: false },
+    skorUrl: { type: String, default: null },
 });
 </script>
 
@@ -21,5 +23,7 @@ defineProps({
         :back-url="backUrl"
         :manage-url="manageUrl"
         :initial-soal-id="initialSoalId"
+        :demo="demo"
+        :skor-url="skorUrl"
     />
 </template>

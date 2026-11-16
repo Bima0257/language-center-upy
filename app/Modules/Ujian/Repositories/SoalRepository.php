@@ -3,7 +3,7 @@
 namespace App\Modules\Ujian\Repositories;
 
 use App\Models\BankSoal;
-use App\Models\Keterampilan;
+use App\Models\Section;
 use App\Models\Soal;
 use App\Modules\Ujian\Repositories\Contracts\SoalRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -14,17 +14,17 @@ class SoalRepository implements SoalRepositoryInterface
 {
     public function paginateDenganFilter(array $filter = [], int $perPage = 20): LengthAwarePaginator
     {
-        $keterampilanId = $filter['keterampilan_id'] ?? $filter['keterampilan'] ?? null;
+        $sectionId = $filter['section_id'] ?? $filter['section'] ?? null;
         $bankSoalId = $filter['bank_soal_id'] ?? null;
         $materiId = $filter['materi_soal_id'] ?? null;
-        $bagianSoalId = $filter['bagian_soal_id'] ?? null;
+        $partSoalId = $filter['part_soal_id'] ?? null;
 
-        return Soal::with(['materiSoal.mediaMateriSoal', 'bankSoal', 'keterampilan', 'bagianSoal', 'pembuat'])
-            ->withCount('bagianUjian')
-            ->when($keterampilanId, fn ($q) => $q->where('keterampilan_id', $keterampilanId))
+        return Soal::with(['materiSoal.mediaMateriSoal', 'bankSoal', 'section', 'partSoal', 'pembuat'])
+            ->withCount('partUjian')
+            ->when($sectionId, fn ($q) => $q->where('section_id', $sectionId))
             ->when($bankSoalId, fn ($q) => $q->where('bank_soal_id', $bankSoalId))
             ->when($materiId, fn ($q) => $q->where('materi_soal_id', $materiId))
-            ->when($bagianSoalId, fn ($q) => $q->where('bagian_soal_id', $bagianSoalId))
+            ->when($partSoalId, fn ($q) => $q->where('part_soal_id', $partSoalId))
             ->orderBy('created_at', 'desc')
             ->paginate($perPage)
             ->withQueryString();
@@ -42,12 +42,12 @@ class SoalRepository implements SoalRepositoryInterface
 
     public function digunakanDalamUjian(string $id): bool
     {
-        return Soal::whereKey($id)->whereHas('bagianUjian')->exists();
+        return Soal::whereKey($id)->whereHas('partUjian')->exists();
     }
 
     public function temukanDenganRelasi(string $id): ?Soal
     {
-        return Soal::with(['materiSoal.mediaMateriSoal', 'bankSoal', 'bagianSoal', 'pembuat', 'pengubah'])->find($id);
+        return Soal::with(['materiSoal.mediaMateriSoal', 'bankSoal', 'partSoal', 'pembuat', 'pengubah'])->find($id);
     }
 
     public function create(array $data): Soal
@@ -69,23 +69,23 @@ class SoalRepository implements SoalRepositoryInterface
         }
 
         return Soal::query()
-            ->select(['materi_soal_id', 'bank_soal_id', 'keterampilan_id', 'bagian_soal_id'])
+            ->select(['materi_soal_id', 'bank_soal_id', 'section_id', 'part_soal_id'])
             ->whereIn('materi_soal_id', $materiIds)
             ->when($kecualiSoalId, fn ($query) => $query->where('id', '!=', $kecualiSoalId))
             ->distinct()
             ->get();
     }
 
-    public function soalUntukKeterampilan(string $keterampilanId): Collection
+    public function soalUntukSection(string $sectionId): Collection
     {
         return Soal::with('materiSoal.mediaMateriSoal')
-            ->where('keterampilan_id', $keterampilanId)
+            ->where('section_id', $sectionId)
             ->get();
     }
 
-    public function memilikiSoalDenganKeterampilan(string $keterampilanId): bool
+    public function memilikiSoalDenganSection(string $sectionId): bool
     {
-        return Soal::where('keterampilan_id', $keterampilanId)->exists();
+        return Soal::where('section_id', $sectionId)->exists();
     }
 
     public function update(Soal $soal, array $data): Soal
@@ -107,53 +107,53 @@ class SoalRepository implements SoalRepositoryInterface
 
     public function semuaUntukPratinjauBank(string $bankId): Collection
     {
-        return Soal::with(['materiSoal.mediaMateriSoal', 'keterampilan', 'bagianSoal'])
+        return Soal::with(['materiSoal.mediaMateriSoal', 'section', 'partSoal'])
             ->where('bank_soal_id', $bankId)
             ->orderBy('urutan')
             ->orderBy('id')
             ->get();
     }
 
-    public function soalDenganKeterampilanUntukJenisTes(string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): Collection
+    public function soalDenganSectionUntukProgramTes(string $sectionId, ?string $programTesId, ?string $bankId = null): Collection
     {
-        return Soal::where('keterampilan_id', $keterampilanId)
+        return Soal::where('section_id', $sectionId)
             ->when($bankId, fn ($q) => $q->where('bank_soal_id', $bankId))
-            ->when($jenisTesId, fn ($q) => $q->whereHas('bankSoal', fn ($b) => $b->where('jenis_tes_id', $jenisTesId)))
+            ->when($programTesId, fn ($q) => $q->whereHas('bankSoal', fn ($b) => $b->where('program_tes_id', $programTesId)))
             ->orderBy('id')
             ->get();
     }
 
     public function temukanDenganIdDenganMateriSoal(array $ids): Collection
     {
-        return Soal::with(['materiSoal.mediaMateriSoal', 'keterampilan', 'bagianSoal'])
+        return Soal::with(['materiSoal.mediaMateriSoal', 'section', 'partSoal'])
             ->whereIn('id', $ids)
             ->get();
     }
 
-    public function soalDenganBankDanKeterampilanTanpa(string $bankId, string $keterampilanId, array $kecualiIds): Collection
+    public function soalDenganBankDanSectionTanpa(string $bankId, string $sectionId, array $kecualiIds): Collection
     {
         return Soal::with(['materiSoal.mediaMateriSoal', 'bankSoal'])
             ->where('bank_soal_id', $bankId)
-            ->where('keterampilan_id', $keterampilanId)
+            ->where('section_id', $sectionId)
             ->whereNotIn('id', $kecualiIds)
             ->orderBy('id')
             ->get();
     }
 
-    public function cadanganDenganKeterampilan(array $keterampilanIds, ?string $jenisTesId, ?string $bankId, array $kecualiIds): Collection
+    public function cadanganDenganSection(array $sectionIds, ?string $programTesId, ?string $bankId, array $kecualiIds): Collection
     {
-        return Soal::with(['materiSoal.mediaMateriSoal', 'keterampilan', 'bagianSoal'])
-            ->whereIn('keterampilan_id', $keterampilanIds)
+        return Soal::with(['materiSoal.mediaMateriSoal', 'section', 'partSoal'])
+            ->whereIn('section_id', $sectionIds)
             ->when($bankId, fn ($q) => $q->where('bank_soal_id', $bankId))
-            ->when($jenisTesId, fn ($q) => $q->whereHas('bankSoal', fn ($b) => $b->where('jenis_tes_id', $jenisTesId)))
+            ->when($programTesId, fn ($q) => $q->whereHas('bankSoal', fn ($b) => $b->where('program_tes_id', $programTesId)))
             ->whereNotIn('id', $kecualiIds)
             ->get();
     }
 
-    public function bankDenganKeterampilanDanJenisTes(string $keterampilanId, ?string $jenisTesId, ?string $bankId = null): Collection
+    public function bankDenganSectionDanProgramTes(string $sectionId, ?string $programTesId, ?string $bankId = null): Collection
     {
-        $bankIds = Soal::where('keterampilan_id', $keterampilanId)
-            ->when($jenisTesId, fn ($q) => $q->whereHas('bankSoal', fn ($b) => $b->where('jenis_tes_id', $jenisTesId)))
+        $bankIds = Soal::where('section_id', $sectionId)
+            ->when($programTesId, fn ($q) => $q->whereHas('bankSoal', fn ($b) => $b->where('program_tes_id', $programTesId)))
             ->when($bankId, fn ($q) => $q->where('bank_soal_id', $bankId))
             ->distinct()
             ->pluck('bank_soal_id')
@@ -167,25 +167,25 @@ class SoalRepository implements SoalRepositoryInterface
         return Soal::count();
     }
 
-    public function hitungDenganKeterampilan(): \Illuminate\Support\Collection
+    public function hitungDenganSection(): \Illuminate\Support\Collection
     {
         $rows = DB::select('
-            SELECT keterampilan_id, COUNT(*) as total
+            SELECT section_id, COUNT(*) as total
             FROM soal
-            WHERE keterampilan_id IS NOT NULL
-            GROUP BY keterampilan_id
+            WHERE section_id IS NOT NULL
+            GROUP BY section_id
             ORDER BY total DESC
         ');
 
-        $keterampilanIds = array_column($rows, 'keterampilan_id');
-        $keterampilanMap = Keterampilan::whereIn('id', $keterampilanIds)->get()->keyBy('id');
+        $sectionIds = array_column($rows, 'section_id');
+        $sectionMap = Section::whereIn('id', $sectionIds)->get()->keyBy('id');
 
         $result = new \Illuminate\Support\Collection;
         foreach ($rows as $row) {
-            $keterampilan = $keterampilanMap->get($row->keterampilan_id);
+            $section = $sectionMap->get($row->section_id);
 
             $result->push([
-                'label' => $keterampilan->nama ?? 'Unknown',
+                'label' => $section->nama ?? 'Unknown',
                 'count' => (int) $row->total,
             ]);
         }

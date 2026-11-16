@@ -15,10 +15,10 @@ const emit = defineEmits(['select']);
         <div class="border-2 border-dashed border-outline-variant rounded-2xl p-8 text-center relative hover:border-primary transition-colors cursor-pointer">
             <img v-if="preview" :src="preview" class="max-h-40 mx-auto rounded-lg mb-2 pointer-events-none" />
             <p v-else class="text-text-muted text-body-md">{{ placeholder }}</p>
-            <p class="text-text-muted text-label-md mt-1">Maks 5MB, format JPG/PNG</p>
+            <p class="text-text-muted text-label-md mt-1">Maks 2MB, format JPG/PNG/WebP</p>
             <input
                 type="file"
-                accept="image/*"
+                accept=".jpg,.jpeg,.png,.webp"
                 class="absolute inset-0 opacity-0 cursor-pointer"
                 @change="emit('select', $event)"
             />

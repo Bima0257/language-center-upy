@@ -24,17 +24,17 @@ defineEmits([
 <template>
     <div class="space-y-8">
         <template
-            v-for="kelompokKeterampilan in kelompokSoal"
-            :key="kelompokKeterampilan.keterampilan_id || 'no-keterampilan'"
+            v-for="kelompokSection in kelompokSoal"
+            :key="kelompokSection.section_id || 'no-section'"
         >
             <div class="space-y-6">
                 <template
-                    v-for="kelompokBagianSoal in kelompokKeterampilan.bagianSoal"
-                    :key="kelompokBagianSoal.bagianSoal?.id || 'no-bagianSoal'"
+                    v-for="kelompokPartSoal in kelompokSection.partSoal"
+                    :key="kelompokPartSoal.partSoal?.id || 'no-partSoal'"
                 >
                     <div class="space-y-4">
                         <KartuKelompokMateriSoal
-                            v-for="group in kelompokBagianSoal.groups"
+                            v-for="group in kelompokPartSoal.groups"
                             :key="group.materiSoal.id"
                             :group="group"
                             :toggle-materi-soal-fn="toggleMateriSoalFn"
@@ -48,7 +48,7 @@ defineEmits([
                             @delete-materi-soal="$emit('delete-materi-soal', $event)"
                         />
 
-                        <div v-if="kelompokBagianSoal.standalone.length">
+                        <div v-if="kelompokPartSoal.standalone.length">
                             <div class="flex items-center gap-2 px-1 mb-3">
                                 <IconBook :size="16" class="text-text-muted" />
                                 <p class="text-label-md font-semibold text-text-muted uppercase tracking-wider">
@@ -61,7 +61,7 @@ defineEmits([
                                 :class="attached ? 'rounded-none border-0 shadow-none' : ''"
                             >
                                 <TabelSoal
-                                    :soal="kelompokBagianSoal.standalone"
+                                    :soal="kelompokPartSoal.standalone"
                                     :bank-locked="bankLocked"
                                     @delete="(...args) => $emit('soal-delete', ...args)"
                                 />

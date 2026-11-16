@@ -2,19 +2,23 @@
 
 namespace App\Modules\Ujian\Services;
 
-use App\Models\BagianUjian;
 use App\Models\BankSoal;
-use App\Models\JenisTes;
-use App\Models\Keterampilan;
+use App\Models\PartSoal;
+use App\Models\PartUjian;
+use App\Models\ProgramTes;
+use App\Models\Section;
+use App\Models\Soal;
 use App\Models\Ujian;
-use App\Modules\DataInduk\Repositories\Contracts\BagianSoalRepositoryInterface;
-use App\Modules\DataInduk\Repositories\Contracts\JenisTesRepositoryInterface;
-use App\Modules\DataInduk\Repositories\Contracts\KeterampilanRepositoryInterface;
-use App\Modules\Ujian\Repositories\Contracts\BagianUjianRepositoryInterface;
+use App\Modules\DataInduk\Repositories\Contracts\PartSoalRepositoryInterface;
+use App\Modules\DataInduk\Repositories\Contracts\ProgramTesRepositoryInterface;
+use App\Modules\DataInduk\Repositories\Contracts\SectionRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\BankSoalRepositoryInterface;
+use App\Modules\Ujian\Repositories\Contracts\PartUjianRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\SoalRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\UjianRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -22,39 +26,54 @@ class LayananUjian
 {
     public function __construct(
         private UjianRepositoryInterface $ujianRepo,
-        private BagianUjianRepositoryInterface $bagianRepo,
+        private PartUjianRepositoryInterface $partRepo,
         private SoalRepositoryInterface $soalRepo,
         private BankSoalRepositoryInterface $bankSoalRepo,
-        private JenisTesRepositoryInterface $jenisTesRepo,
-        private KeterampilanRepositoryInterface $keterampilanRepo,
-        private BagianSoalRepositoryInterface $bagianSoalRepo,
+        private ProgramTesRepositoryInterface $programTesRepo,
+        private SectionRepositoryInterface $sectionRepo,
+        private PartSoalRepositoryInterface $partSoalRepo,
     ) {}
 
     /**
      * @return array<string, mixed>
      */
-    public function dataDaftar(?string $jenisTesId = null): array
+    public function dataDaftar(?string $programTesId = null): array
     {
-        $jenisTes = $this->jenisTesRepo->semuaAktifBerurutan();
-        $jumlahUjianPerJenisTes = $this->ujianRepo->jumlahPerJenisTes();
-        $jenisTesTerpilih = $jenisTes->first(
-            fn (JenisTes $jenis): bool => $jenis->id === $jenisTesId,
+        $programTes = $this->programTesRepo->semuaAktifBerurutan();
+        $jumlahUjianPerProgramTes = $this->ujianRepo->jumlahPerProgramTes();
+        $programTesTerpilih = $programTes->first(
+            fn (ProgramTes $jenis): bool => $jenis->id === $programTesId,
         );
 
         return [
-            'ujian' => $jenisTesTerpilih !== null
-                ? $this->ujianRepo->semuaUntukDaftar($jenisTesTerpilih->id)
+            'ujian' => $programTesTerpilih !== null
+                ? $this->ujianRepo->semuaUntukDaftar($programTesTerpilih->id)
                 : new Collection,
-            'jenisTes' => $jenisTes,
-            'ringkasanJenisTes' => $jenisTes->map(fn (JenisTes $jenis): array => [
+            'programTes' => $programTes,
+            'ringkasanProgramTes' => $programTes->map(fn (ProgramTes $jenis): array => [
                 'id' => $jenis->id,
                 'kode' => $jenis->kode,
                 'nama' => $jenis->nama,
-                'jumlahUjian' => (int) $jumlahUjianPerJenisTes->get($jenis->id, 0),
+                'jumlahUjian' => (int) $jumlahUjianPerProgramTes->get($jenis->id, 0),
             ])->values()->all(),
-            'jenisTesTerpilih' => $jenisTesTerpilih,
-            'jenisTesTerpilihId' => $jenisTesTerpilih?->id,
+            'programTesTerpilih' => $programTesTerpilih,
+            'programTesTerpilihId' => $programTesTerpilih?->id,
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function dataDemo(): array
+    {
+        return [
+            'ujian' => $this->ujianRepo->semuaUntukDemo(),
+        ];
+    }
+
+    public function memilikiSoal(Ujian $ujian): bool
+    {
+        return $this->ujianRepo->memilikiSoal($ujian);
     }
 
     public function temukanDenganRelasi(string $id): ?Ujian
@@ -62,7 +81,7 @@ class LayananUjian
         return $this->ujianRepo->temukanDenganRelasi($id);
     }
 
-    public function buatDenganBagian(array $data): Ujian
+    public function buatDenganPart(array $data): Ujian
     {
         $bank = $this->pastikanDataPembuatanUjian($data);
 
@@ -71,10 +90,10 @@ class LayananUjian
             $bankId = $data['bank_soal_id'];
 
             $urutan = 1;
-            foreach ($this->keterampilanRepo->semuaAktifBerurutan($ujian->jenis_tes_id) as $keterampilan) {
-                $hasSoal = $this->soalRepo->soalDenganKeterampilanUntukJenisTes(
-                    $keterampilan->id,
-                    $ujian->jenis_tes_id,
+            foreach ($this->sectionRepo->semuaAktifBerurutan($ujian->program_tes_id) as $section) {
+                $hasSoal = $this->soalRepo->soalDenganSectionUntukProgramTes(
+                    $section->id,
+                    $ujian->program_tes_id,
                     $bankId,
                 )->isNotEmpty();
 
@@ -82,33 +101,39 @@ class LayananUjian
                     continue;
                 }
 
-                $bagian = $this->bagianRepo->create([
+                $part = $this->partRepo->create([
                     'ujian_id' => $ujian->id,
                     'bank_soal_id' => $bankId,
-                    'keterampilan_id' => $keterampilan->id,
-                    'judul' => "{$keterampilan->nama} — {$bank->nama}",
+                    'section_id' => $section->id,
+                    'judul' => "{$section->nama} — {$bank->nama}",
                     'urutan' => $urutan++,
                 ]);
 
-                foreach ($this->bagianSoalRepo->semuaAktifDenganBank($bankId) as $bagianSoal) {
-                    if ($bagianSoal->keterampilan_id !== $keterampilan->id) {
+                foreach ($this->partSoalRepo->semuaAktifDenganBank($bankId) as $partSoal) {
+                    if ($partSoal->section_id !== $section->id) {
                         continue;
                     }
 
-                    $this->bagianRepo->perbaruiAtauBuatPivotBagianSoal($bagian->id, $bagianSoal->id, $bagianSoal->urutan);
+                    $this->partRepo->perbaruiAtauBuatPivotPartSoal($part->id, $partSoal->id, $partSoal->urutan);
                 }
 
-                $this->lampirkanSoal($ujian, $bagian, $keterampilan);
+                $this->lampirkanSoal($ujian, $part, $section);
             }
 
             return $ujian;
         });
     }
 
-    public function sinkronkanBagian(Ujian $ujian): int
+    public function sinkronkanPart(Ujian $ujian): int
     {
-        $bagianSaatIni = $this->bagianRepo->semuaUntukUjian($ujian);
-        $bankId = $bagianSaatIni->first()?->bank_soal_id;
+        if ($ujian->aktif) {
+            throw ValidationException::withMessages([
+                'ujian' => 'Ujian aktif tidak dapat disinkronkan ulang.',
+            ]);
+        }
+
+        $partSaatIni = $this->partRepo->semuaUntukUjian($ujian);
+        $bankId = $partSaatIni->first()?->bank_soal_id;
 
         if ($bankId === null) {
             return 0;
@@ -119,16 +144,16 @@ class LayananUjian
             return 0;
         }
 
-        return DB::transaction(function () use ($ujian, $bank, $bankId, $bagianSaatIni): int {
-            $urutan = $bagianSaatIni->max('urutan') ?? 0;
+        return DB::transaction(function () use ($ujian, $bank, $bankId, $partSaatIni): int {
+            $urutan = $partSaatIni->max('urutan') ?? 0;
             $dibuat = 0;
-            $bagianSoalAktif = $this->bagianSoalRepo->semuaAktifDenganBank($bankId);
+            $partSoalAktif = $this->partSoalRepo->semuaAktifDenganBank($bankId);
 
-            foreach ($this->keterampilanRepo->semuaAktifBerurutan($ujian->jenis_tes_id) as $keterampilan) {
-                $bagian = $bagianSaatIni->firstWhere('keterampilan_id', $keterampilan->id);
-                $soalTersedia = $this->soalRepo->soalDenganKeterampilanUntukJenisTes(
-                    $keterampilan->id,
-                    $ujian->jenis_tes_id,
+            foreach ($this->sectionRepo->semuaAktifBerurutan($ujian->program_tes_id) as $section) {
+                $part = $partSaatIni->firstWhere('section_id', $section->id);
+                $soalTersedia = $this->soalRepo->soalDenganSectionUntukProgramTes(
+                    $section->id,
+                    $ujian->program_tes_id,
                     $bankId,
                 );
 
@@ -136,53 +161,79 @@ class LayananUjian
                     continue;
                 }
 
-                if ($bagian === null) {
-                    $bagian = $this->bagianRepo->create([
+                if ($part === null) {
+                    $part = $this->partRepo->create([
                         'ujian_id' => $ujian->id,
                         'bank_soal_id' => $bankId,
-                        'keterampilan_id' => $keterampilan->id,
-                        'judul' => "{$keterampilan->nama} — {$bank->nama}",
+                        'section_id' => $section->id,
+                        'judul' => "{$section->nama} — {$bank->nama}",
                         'urutan' => ++$urutan,
                     ]);
 
-                    foreach ($bagianSoalAktif as $bagianSoal) {
-                        if ($bagianSoal->keterampilan_id === $keterampilan->id) {
-                            $this->bagianRepo->perbaruiAtauBuatPivotBagianSoal($bagian->id, $bagianSoal->id, $bagianSoal->urutan);
+                    foreach ($partSoalAktif as $partSoal) {
+                        if ($partSoal->section_id === $section->id) {
+                            $this->partRepo->perbaruiAtauBuatPivotPartSoal($part->id, $partSoal->id, $partSoal->urutan);
                         }
                     }
 
-                    $bagianSaatIni->push($bagian);
+                    $partSaatIni->push($part);
                     $dibuat++;
                 }
 
-                $this->lampirkanSoal($ujian, $bagian, $keterampilan);
+                $this->lampirkanSoal($ujian, $part, $section);
             }
 
             return $dibuat;
         });
     }
 
+    /**
+     * @param  array<string>  $partSoalIds
+     * @return array<string>
+     */
+    public function idPartSoalDalamUjianAktif(array $partSoalIds): array
+    {
+        return $this->partRepo->idPartSoalDalamUjianAktif($partSoalIds);
+    }
+
+    /**
+     * @param  Collection<int, PartSoal>  $partSoal
+     */
+    public function sinkronkanPartSoalGlobal(Collection $partSoal): void
+    {
+        $this->partRepo->hapusPartSoalDalamUjianNonaktif($partSoal->pluck('id')->all());
+        $this->partRepo->sinkronkanPartSoalDalamUjianNonaktif($partSoal);
+    }
+
+    /**
+     * @param  array<string>  $partSoalIds
+     */
+    public function hapusPartSoalDariUjianNonaktif(array $partSoalIds): void
+    {
+        $this->partRepo->hapusPartSoalDalamUjianNonaktif($partSoalIds);
+    }
+
     public function perbarui(Ujian $ujian, array $data): Ujian
     {
-        $targetJenisTesId = $data['jenis_tes_id'];
-        $jenisTes = $this->jenisTesRepo->find($targetJenisTesId);
+        $targetProgramTesId = $data['program_tes_id'];
+        $programTes = $this->programTesRepo->find($targetProgramTesId);
 
-        if ($jenisTes === null) {
+        if ($programTes === null) {
             throw ValidationException::withMessages([
-                'jenis_tes_id' => 'Jenis tes tidak ditemukan.',
+                'program_tes_id' => 'Program tes tidak ditemukan.',
             ]);
         }
 
-        if ($targetJenisTesId !== $ujian->jenis_tes_id) {
-            if (! $jenisTes->aktif) {
+        if ($targetProgramTesId !== $ujian->program_tes_id) {
+            if (! $programTes->aktif) {
                 throw ValidationException::withMessages([
-                    'jenis_tes_id' => 'Jenis tes tujuan harus aktif.',
+                    'program_tes_id' => 'Program tes tujuan harus aktif.',
                 ]);
             }
 
-            if ($ujian->bagianUjian()->exists() || $ujian->periodeUjian()->exists()) {
+            if ($ujian->partUjian()->exists() || $ujian->periodeUjian()->exists()) {
                 throw ValidationException::withMessages([
-                    'jenis_tes_id' => 'Jenis tes tidak dapat diubah setelah ujian memiliki bagian atau periode ujian.',
+                    'program_tes_id' => 'Program tes tidak dapat diubah setelah ujian memiliki part atau periode ujian.',
                 ]);
             }
         }
@@ -201,36 +252,187 @@ class LayananUjian
 
     public function dataDetail(Ujian $ujian): array
     {
-        $this->sinkronkanBagian($ujian);
+        if (! $ujian->aktif) {
+            $this->sinkronkanPart($ujian);
+        }
         $ujian = $this->ujianRepo->temukanDenganRelasi($ujian->id);
-        $bagianIds = $ujian->bagianUjian->pluck('id');
+        $partIds = $ujian->partUjian->pluck('id');
 
         return [
             'ujian' => $ujian,
-            'opsiKeterampilan' => $this->keterampilanRepo->semuaAktifBerurutan($ujian->jenis_tes_id)->map(fn (Keterampilan $keterampilan) => ['value' => $keterampilan->id, 'label' => $keterampilan->nama, 'kode' => $keterampilan->kode])->toArray(),
-            'bagianSoal' => $this->bagianSoalRepo->semuaAktifBerurutan(),
+            'opsiSection' => $this->sectionRepo->semuaAktifBerurutan($ujian->program_tes_id)->map(fn (Section $section) => ['value' => $section->id, 'label' => $section->nama, 'kode' => $section->kode])->toArray(),
+            'partSoal' => $this->partSoalRepo->semuaAktifBerurutan(),
             'bankSoal' => $this->bankSoalRepo->semuaAktifBerurutan(),
-            'soalPerBagian' => $this->bagianRepo->soalDikelompokkanDenganBagian($bagianIds),
-            'bagianSoalPerBagian' => $this->bagianRepo->bagianSoalDikelompokkanDenganBagian($bagianIds),
+            'soalPerPart' => $this->partRepo->soalDikelompokkanDenganPart($partIds),
+            'partSoalPerPart' => $this->partRepo->partSoalDikelompokkanDenganPart($partIds),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function dataPratinjau(Ujian $ujian): array
+    {
+        $ujianDenganRelasi = $this->ujianRepo->temukanDenganRelasi($ujian->id);
+
+        if ($ujianDenganRelasi === null) {
+            throw (new ModelNotFoundException)->setModel(Ujian::class, [$ujian->id]);
+        }
+
+        $partUjian = $ujianDenganRelasi->partUjian;
+        $soalPerPart = $this->partRepo->soalDikelompokkanDenganPart($partUjian->pluck('id'));
+        $blocks = [];
+        $nomorGlobal = 1;
+
+        foreach ($partUjian as $part) {
+            $kelompokSoal = [];
+            $kunciBlokAktif = null;
+
+            foreach ($soalPerPart->get($part->id, new Collection)->sortBy('urutan') as $barisSoal) {
+                $soal = $barisSoal->soal;
+                if ($soal === null) {
+                    continue;
+                }
+
+                $partSoalId = (string) ($soal->part_soal_id ?? 'none');
+                $kunciBlok = $partSoalId.'|'.($soal->materi_soal_id ?? 'none');
+
+                if ($kunciBlok !== $kunciBlokAktif) {
+                    $kunciBlokAktif = $kunciBlok;
+                    $kelompokSoal[] = [
+                        'partSoal' => $soal->partSoal,
+                        'soal' => [],
+                    ];
+                }
+
+                $kelompokSoal[array_key_last($kelompokSoal)]['soal'][] = $soal;
+            }
+
+            foreach ($kelompokSoal as $kelompok) {
+                $soal = $kelompok['soal'];
+                if ($soal === []) {
+                    continue;
+                }
+
+                $partSoal = $kelompok['partSoal'];
+                if ($partSoal === null) {
+                    $namaPartSoal = 'Soal Standalone';
+                    $petunjukPartSoal = null;
+                } else {
+                    $namaPartSoal = $partSoal->nama;
+                    $petunjukPartSoal = $partSoal->petunjuk;
+                }
+
+                $blocks[] = [
+                    'nomorMulai' => $nomorGlobal,
+                    'jumlahSoal' => count($soal),
+                    'materi' => $soal[0]->materiSoal?->url_audio !== null ? 'audio' : 'text',
+                    'section' => [
+                        'kode' => $part->section->kode,
+                        'nama' => $part->section->nama,
+                        'deskripsi' => $part->section->deskripsi,
+                    ],
+                    'partSoal' => [
+                        'id' => $partSoal?->id,
+                        'nama' => $namaPartSoal,
+                        'petunjuk' => $petunjukPartSoal,
+                    ],
+                    'soal' => collect($soal)
+                        ->values()
+                        ->map(fn ($dataSoal, int $indeks): array => $this->petakanSoalPratinjau(
+                            $dataSoal,
+                            $nomorGlobal + $indeks,
+                        ))
+                        ->all(),
+                ];
+
+                $nomorGlobal += count($soal);
+            }
+        }
+
+        $blocksCollection = collect($blocks);
+
+        return [
+            'sesiUjian' => [
+                'id' => 0,
+                'status' => 'preview',
+                'pengguna' => ['name' => 'Pratinjau'],
+            ],
+            'overview' => [
+                'judulUjian' => $ujianDenganRelasi->judul,
+                'durasiMenit' => $ujianDenganRelasi->durasi_menit,
+                'jumlahSoal' => $nomorGlobal - 1,
+                'section' => $blocksCollection
+                    ->groupBy('section.kode')
+                    ->map(fn (SupportCollection $items): array => [
+                        'kode' => $items->first()['section']['kode'],
+                        'nama' => $items->first()['section']['nama'],
+                        'materi' => $items->first()['materi'],
+                        'jumlahSoal' => $items->sum('jumlahSoal'),
+                        'partSoal' => $items
+                            ->groupBy(fn (array $block): string => (string) ($block['partSoal']['id'] ?? $block['partSoal']['nama']))
+                            ->map(fn (SupportCollection $part): array => [
+                                'id' => $part->first()['partSoal']['id'] ?? null,
+                                'nama' => $part->first()['partSoal']['nama'],
+                                'jumlahSoal' => $part->sum('jumlahSoal'),
+                            ])
+                            ->values()
+                            ->all(),
+                    ])
+                    ->values()
+                    ->all(),
+            ],
+            'blocks' => $blocks,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function petakanSoalPratinjau(Soal $soal, int $nomorGlobal): array
+    {
+        $materiSoal = $soal->materiSoal;
+        $urlAudio = $materiSoal?->url_audio;
+        $urlGambar = $materiSoal?->url_gambar;
+
+        return [
+            'id' => $soal->id,
+            'teks_soal' => $soal->teks_soal,
+            'pilihan_a' => $soal->pilihan_a,
+            'pilihan_b' => $soal->pilihan_b,
+            'pilihan_c' => $soal->pilihan_c,
+            'pilihan_d' => $soal->pilihan_d,
+            'urutan' => $soal->urutan,
+            'nomor_global' => $nomorGlobal,
+            'materiSoal' => $materiSoal === null ? null : [
+                'id' => $materiSoal->id,
+                'judul' => $materiSoal->judul,
+                'isi_teks' => $materiSoal->isi_teks,
+                'url_audio' => $urlAudio,
+                'url_gambar' => $urlGambar,
+                'memiliki_audio' => $urlAudio !== null,
+                'memiliki_gambar' => $urlGambar !== null,
+            ],
+            'materi' => $urlAudio !== null ? 'audio' : 'text',
         ];
     }
 
     public function dataTambah(): array
     {
-        $bankDenganKeterampilan = [];
+        $bankDenganSection = [];
 
-        foreach ($this->keterampilanRepo->semuaAktifBerurutan() as $keterampilan) {
-            $bankDenganKeterampilan[] = [
-                'keterampilan_id' => $keterampilan->id,
-                'label' => $keterampilan->nama,
-                'bankSoal' => $this->soalRepo->bankDenganKeterampilanDanJenisTes($keterampilan->id, null),
+        foreach ($this->sectionRepo->semuaAktifBerurutan() as $section) {
+            $bankDenganSection[] = [
+                'section_id' => $section->id,
+                'label' => $section->nama,
+                'bankSoal' => $this->soalRepo->bankDenganSectionDanProgramTes($section->id, null),
             ];
         }
 
         return [
-            'opsiKeterampilan' => $this->keterampilanRepo->semuaAktifBerurutan()->map(fn (Keterampilan $keterampilan) => ['value' => $keterampilan->id, 'label' => $keterampilan->nama, 'kode' => $keterampilan->kode])->toArray(),
-            'bagianSoal' => $this->bagianSoalRepo->semuaAktifBerurutan(),
-            'bankDenganKeterampilan' => $bankDenganKeterampilan,
+            'opsiSection' => $this->sectionRepo->semuaAktifBerurutan()->map(fn (Section $section) => ['value' => $section->id, 'label' => $section->nama, 'kode' => $section->kode])->toArray(),
+            'partSoal' => $this->partSoalRepo->semuaAktifBerurutan(),
+            'bankDenganSection' => $bankDenganSection,
         ];
     }
 
@@ -239,12 +441,12 @@ class LayananUjian
         return $this->bankSoalRepo->semuaAktifBerurutan();
     }
 
-    public function lampirkanSoal(Ujian $ujian, BagianUjian $bagian, Keterampilan $keterampilan): int
+    public function lampirkanSoal(Ujian $ujian, PartUjian $part, Section $section): int
     {
-        $soalTersedia = $this->soalRepo->soalDenganKeterampilanUntukJenisTes($keterampilan->id, $ujian->jenis_tes_id, $bagian->bank_soal_id);
+        $soalTersedia = $this->soalRepo->soalDenganSectionUntukProgramTes($section->id, $ujian->program_tes_id, $part->bank_soal_id);
 
-        $terpasang = array_fill_keys($this->bagianRepo->idSoalDalamBagian($bagian->id), true);
-        $nomor = $this->bagianRepo->urutanSoalBerikutnya($bagian->id);
+        $terpasang = array_fill_keys($this->partRepo->idSoalDalamPart($part->id), true);
+        $nomor = $this->partRepo->urutanSoalBerikutnya($part->id);
         $dilampirkan = 0;
 
         foreach ($soalTersedia as $soal) {
@@ -252,24 +454,24 @@ class LayananUjian
                 continue;
             }
 
-            $this->bagianRepo->buatPivotSoal($bagian->id, $soal->id, $nomor++);
+            $this->partRepo->buatPivotSoal($part->id, $soal->id, $nomor++);
             $terpasang[$soal->id] = true;
             $dilampirkan++;
         }
 
-        $this->bagianRepo->perbaruiJumlahSoal($bagian, $this->bagianRepo->jumlahSoalDalamBagian($bagian->id));
+        $this->partRepo->perbaruiJumlahSoal($part, $this->partRepo->jumlahSoalDalamPart($part->id));
 
         return $dilampirkan;
     }
 
     private function pastikanDataPembuatanUjian(array $data): BankSoal
     {
-        $jenisTes = $this->jenisTesRepo->find($data['jenis_tes_id']);
+        $programTes = $this->programTesRepo->find($data['program_tes_id']);
         $bank = $this->bankSoalRepo->find($data['bank_soal_id']);
 
-        if ($jenisTes === null || ! $jenisTes->aktif) {
+        if ($programTes === null || ! $programTes->aktif) {
             throw ValidationException::withMessages([
-                'jenis_tes_id' => 'Jenis tes tidak aktif atau tidak ditemukan.',
+                'program_tes_id' => 'Program tes tidak aktif atau tidak ditemukan.',
             ]);
         }
 
@@ -279,9 +481,9 @@ class LayananUjian
             ]);
         }
 
-        if ($bank->jenis_tes_id !== $jenisTes->id) {
+        if ($bank->program_tes_id !== $programTes->id) {
             throw ValidationException::withMessages([
-                'bank_soal_id' => 'Bank soal harus berasal dari jenis tes yang dipilih.',
+                'bank_soal_id' => 'Bank soal harus berasal dari program tes yang dipilih.',
             ]);
         }
 

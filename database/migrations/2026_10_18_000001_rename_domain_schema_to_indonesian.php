@@ -9,12 +9,12 @@ return new class extends Migration
      * @var array<string, string>
      */
     private array $tableRenames = [
-        'exam_types' => 'jenis_tes',
+        'exam_types' => 'program_tes',
         'faculties' => 'fakultas',
         'departments' => 'program_studi',
         'student_profiles' => 'profil_mahasiswa',
         'question_banks' => 'bank_soal',
-        'skills' => 'keterampilan',
+        'skills' => 'section',
         'skill_parts' => 'bagian_soal',
         'passages' => 'materi_soal',
         'questions' => 'soal',
@@ -40,7 +40,7 @@ return new class extends Migration
      * @var array<string, array<string, string>>
      */
     private array $columnRenames = [
-        'jenis_tes' => [
+        'program_tes' => [
             'name' => 'nama',
             'max_strikes' => 'batas_pelanggaran',
             'description' => 'deskripsi',
@@ -69,12 +69,12 @@ return new class extends Migration
             'verification_note' => 'catatan_verifikasi',
         ],
         'bank_soal' => [
-            'exam_type_id' => 'jenis_tes_id',
+            'exam_type_id' => 'program_tes_id',
             'name' => 'nama',
             'description' => 'deskripsi',
             'is_active' => 'aktif',
         ],
-        'keterampilan' => [
+        'section' => [
             'code' => 'kode',
             'name' => 'nama',
             'description' => 'deskripsi',
@@ -83,7 +83,7 @@ return new class extends Migration
         ],
         'bagian_soal' => [
             'question_bank_id' => 'bank_soal_id',
-            'skill_id' => 'keterampilan_id',
+            'skill_id' => 'section_id',
             'name' => 'nama',
             'order' => 'urutan',
             'directions' => 'petunjuk',
@@ -97,7 +97,7 @@ return new class extends Migration
         'soal' => [
             'question_bank_id' => 'bank_soal_id',
             'passage_id' => 'materi_soal_id',
-            'skill_id' => 'keterampilan_id',
+            'skill_id' => 'section_id',
             'skill_part_id' => 'bagian_soal_id',
             'question_text' => 'teks_soal',
             'option_a' => 'pilihan_a',
@@ -114,7 +114,7 @@ return new class extends Migration
         ],
         'kebijakan_materi_soal' => [
             'question_bank_id' => 'bank_soal_id',
-            'skill_id' => 'keterampilan_id',
+            'skill_id' => 'section_id',
             'passage_requirement' => 'ketentuan_materi',
         ],
         'aturan_media_materi_soal' => [
@@ -133,7 +133,7 @@ return new class extends Migration
             'sort_order' => 'urutan',
         ],
         'ujian' => [
-            'exam_type_id' => 'jenis_tes_id',
+            'exam_type_id' => 'program_tes_id',
             'title' => 'judul',
             'description' => 'deskripsi',
             'duration_minutes' => 'durasi_menit',
@@ -142,7 +142,7 @@ return new class extends Migration
         'bagian_ujian' => [
             'exam_id' => 'ujian_id',
             'question_bank_id' => 'bank_soal_id',
-            'skill_id' => 'keterampilan_id',
+            'skill_id' => 'section_id',
             'title' => 'judul',
             'order' => 'urutan',
             'total_questions' => 'jumlah_soal',
@@ -200,14 +200,14 @@ return new class extends Migration
             'selfie_taken_at' => 'swafoto_diambil_pada',
         ],
         'aturan_penilaian' => [
-            'exam_type_id' => 'jenis_tes_id',
-            'section_skill' => 'kode_keterampilan',
+            'exam_type_id' => 'program_tes_id',
+            'section_skill' => 'kode_section',
             'conversion_table' => 'tabel_konversi',
             'max_raw' => 'skor_mentah_maksimum',
             'max_scaled' => 'skor_skala_maksimum',
         ],
         'interpretasi_skor' => [
-            'exam_type_id' => 'jenis_tes_id',
+            'exam_type_id' => 'program_tes_id',
             'min_score' => 'skor_minimum',
             'max_score' => 'skor_maksimum',
             'cefr_level' => 'tingkat_cefr',

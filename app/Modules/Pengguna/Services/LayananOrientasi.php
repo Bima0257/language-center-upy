@@ -6,6 +6,7 @@ use App\Models\Pengguna;
 use App\Modules\DataInduk\Repositories\Contracts\FakultasRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\ProgramStudiRepositoryInterface;
 use App\Modules\Pengguna\Repositories\Contracts\PenggunaRepositoryInterface;
+use App\Services\ImageCompressionService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -15,6 +16,7 @@ class LayananOrientasi
         private PenggunaRepositoryInterface $penggunaRepo,
         private FakultasRepositoryInterface $fakultasRepo,
         private ProgramStudiRepositoryInterface $programStudiRepo,
+        private ImageCompressionService $imageCompression,
     ) {}
 
     public function dataVerifikasiIdentitas(Pengguna $pengguna): array
@@ -59,7 +61,7 @@ class LayananOrientasi
                 Storage::disk('public')->delete($profil->foto_identitas);
             }
 
-            $dataProfil['foto_identitas'] = $fotoIdentitas->store('identities', 'public');
+            $dataProfil['foto_identitas'] = $this->imageCompression->storeCompressed($fotoIdentitas, 'identities');
         }
 
         $this->penggunaRepo->perbaruiProfilMahasiswa($pengguna, $dataProfil);
@@ -69,7 +71,7 @@ class LayananOrientasi
                 Storage::disk('public')->delete($pengguna->foto);
             }
 
-            $this->penggunaRepo->update($pengguna, ['foto' => $foto->store('photos', 'public')]);
+            $this->penggunaRepo->update($pengguna, ['foto' => $this->imageCompression->storeCompressed($foto, 'photos')]);
         }
     }
 }

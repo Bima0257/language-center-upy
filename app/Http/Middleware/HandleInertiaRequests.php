@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Modules\Identity\Contracts\IdentityContract;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -40,7 +41,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
                 'roles' => $user ? $user->getRoleNames()->values()->all() : [],
-                'permissions' => $user ? $user->getAllPermissions()->pluck('name')->values()->all() : [],
+                'permissions' => $user
+                    ? app(IdentityContract::class)->effectivePermissionNames($user)
+                    : [],
             ],
             'flash' => [
                 'error' => session('error') ?: (function () use ($request) {

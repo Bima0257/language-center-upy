@@ -4,12 +4,16 @@ namespace App\Modules\PelaksanaanUjian\Actions;
 
 use App\Enums\ModeUjian;
 use App\Enums\StatusSesi;
+use App\Models\Ujian;
 use App\Modules\Keamanan\Services\LayananKeamanan;
 use App\Modules\PelaksanaanUjian\DTOs\HasilSesiDimulai;
 use App\Modules\PelaksanaanUjian\Repositories\Contracts\SesiUjianRepositoryInterface;
+use App\Modules\PelaksanaanUjian\Services\LayananPelaksanaanUjian;
 use App\Modules\PendaftaranUjian\Services\LayananPendaftaranUjian;
 use App\Modules\Pengguna\Repositories\Contracts\PenggunaRepositoryInterface;
+use App\Modules\Penilaian\Services\LayananAturanPenilaian;
 use App\Modules\Penjadwalan\Repositories\Contracts\SlotUjianRepositoryInterface;
+use App\Services\ImageCompressionService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +27,9 @@ class MulaiSesiUjian
         private LayananKeamanan $keamanan,
         private LayananPendaftaranUjian $layananPendaftaran,
         private PenggunaRepositoryInterface $penggunaRepo,
+        private ImageCompressionService $imageCompression,
+        private LayananAturanPenilaian $layananAturan,
+        private LayananPelaksanaanUjian $layananPelaksanaan,
     ) {}
 
     public function execute(
@@ -79,7 +86,7 @@ class MulaiSesiUjian
                 if ($activeSession !== null) {
                     return new HasilSesiDimulai(
                         sesiId: $activeSession->id,
-                        bagianPertamaId: $activeSession->bagian_aktif_id,
+                        partPertamaId: $activeSession->part_ujian_aktif_id,
                     );
                 }
 
@@ -96,10 +103,14 @@ class MulaiSesiUjian
                     );
                 }
 
-                $bagianPertama = $slot->periodeUjian->ujian->bagianUjian->first();
+                $ujian = $slot->periodeUjian->ujian;
+                $snapshotPenilaian = $this->layananAturan->snapshotAktif($ujian->program_tes_id);
+                $this->pastikanSoalSesuaiSkema($ujian, $snapshotPenilaian);
+
+                $partPertama = $ujian->partUjian->first();
 
                 if ($swafoto !== null) {
-                    $lokasiSwafoto = $swafoto->store('selfies', 'public');
+                    $lokasiSwafoto = $this->imageCompression->storeCompressed($swafoto, 'selfies');
                 }
 
                 $sesi = $this->sesiRepo->create([
@@ -107,7 +118,10 @@ class MulaiSesiUjian
                     'pengguna_id' => $penggunaId,
                     'status' => StatusSesi::IN_PROGRESS,
                     'dimulai_pada' => now(),
-                    'bagian_aktif_id' => $bagianPertama?->id,
+                    'part_ujian_aktif_id' => $partPertama?->id,
+                    'skema_penilaian_id' => $snapshotPenilaian['skema_penilaian_id'],
+                    'snapshot_penilaian' => $snapshotPenilaian,
+                    'skor_total_maksimum' => $snapshotPenilaian['skala_total_maksimum'],
                     'jenis_perangkat' => $jenisPerangkat,
                     'agen_pengguna_perangkat' => $agenPenggunaPerangkat,
                     'lokasi_swafoto' => $lokasiSwafoto,
@@ -118,7 +132,7 @@ class MulaiSesiUjian
 
                 return new HasilSesiDimulai(
                     sesiId: $sesi->id,
-                    bagianPertamaId: $bagianPertama?->id,
+                    partPertamaId: $partPertama?->id,
                 );
             });
         } catch (\Throwable $exception) {
@@ -127,6 +141,46 @@ class MulaiSesiUjian
             }
 
             throw $exception;
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $snapshotPenilaian
+     */
+    private function pastikanSoalSesuaiSkema(Ujian $ujian, array $snapshotPenilaian): void
+    {
+        $soal = $this->layananPelaksanaan->soalUntukUjian($ujian);
+        $soalPerSection = $soal->groupBy('section_id');
+        $aturan = collect($snapshotPenilaian['aturan'] ?? []);
+
+        $idSectionAturan = $aturan->pluck('section_id')->filter()->values();
+        $idSectionSoal = $soalPerSection->keys()->filter()->values();
+        $tanpaAturan = $idSectionSoal->diff($idSectionAturan);
+
+        if ($tanpaAturan->isNotEmpty()) {
+            throw new \RuntimeException(
+                'Terdapat section pada ujian yang belum memiliki aturan penilaian: '.
+                $tanpaAturan->implode(', ').'.',
+            );
+        }
+
+        foreach ($aturan as $rule) {
+            $sectionId = (string) ($rule['section_id'] ?? '');
+            $namaSection = (string) ($rule['nama_section'] ?? $sectionId);
+            $jumlahSoal = $soalPerSection->get($sectionId, collect())->count();
+            $skorMentahMaksimum = (int) ($rule['skor_mentah_maksimum'] ?? 0);
+
+            if ($jumlahSoal === 0) {
+                throw new \RuntimeException(
+                    "Ujian belum memiliki soal untuk section {$namaSection}.",
+                );
+            }
+
+            if ($jumlahSoal > $skorMentahMaksimum) {
+                throw new \RuntimeException(
+                    "Jumlah soal {$namaSection} ({$jumlahSoal}) melebihi skor mentah maksimum ({$skorMentahMaksimum}).",
+                );
+            }
         }
     }
 }

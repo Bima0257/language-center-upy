@@ -9,8 +9,8 @@ import RingkasanSoal from './Components/RingkasanSoal.vue';
 const props = defineProps({
     soal: { type: Object, required: true },
     bankSoal: { type: Array, default: () => [] },
-    opsiKeterampilan: { type: Array, default: () => [] },
-    bagianSoal: { type: Array, default: () => [] },
+    opsiSection: { type: Array, default: () => [] },
+    partSoal: { type: Array, default: () => [] },
     materiSoal: { type: Array, default: () => [] },
     kebijakanMateriSoal: { type: Array, default: () => [] },
 });
@@ -19,8 +19,8 @@ const optionKeys = ['A', 'B', 'C', 'D'];
 
 const form = useForm({
     bank_soal_id: props.soal.bank_soal_id || '',
-    keterampilan_id: props.soal.keterampilan_id || '',
-    bagian_soal_id: props.soal.bagian_soal_id || '',
+    section_id: props.soal.section_id || '',
+    part_soal_id: props.soal.part_soal_id || '',
     materi_soal_id: props.soal.materi_soal_id || null,
     teks_soal: props.soal.teks_soal || '',
     pilihan_a: props.soal.pilihan_a || '',
@@ -30,27 +30,27 @@ const form = useForm({
     kunci_jawaban: props.soal.kunci_jawaban || '',
 });
 
-function namaKeterampilanDariId(keterampilanId) {
-    return props.opsiKeterampilan.find(s => String(s.value) === String(keterampilanId))?.label || '';
+function namaSectionDariId(sectionId) {
+    return props.opsiSection.find(s => String(s.value) === String(sectionId))?.label || '';
 }
 
-function materialForSkill(bankId, keterampilanId) {
+function materialForSection(bankId, sectionId) {
     const bank = props.bankSoal.find((item) => String(item.id) === String(bankId));
 
     return props.kebijakanMateriSoal.find(p =>
-        String(p.jenis_tes_id) === String(bank?.jenis_tes_id) &&
-        String(p.keterampilan_id) === String(keterampilanId),
+        String(p.program_tes_id) === String(bank?.program_tes_id) &&
+        String(p.section_id) === String(sectionId),
     )?.materi || null;
 }
 
-const isMaterialAudio = computed(() => materialForSkill(form.bank_soal_id, form.keterampilan_id) === 'audio');
+const isMaterialAudio = computed(() => materialForSection(form.bank_soal_id, form.section_id) === 'audio');
 
 const selectedPolicy = computed(() => {
     const bank = props.bankSoal.find((item) => String(item.id) === String(form.bank_soal_id));
 
     return props.kebijakanMateriSoal.find((policy) =>
-        String(policy.jenis_tes_id) === String(bank?.jenis_tes_id) &&
-        String(policy.keterampilan_id) === String(form.keterampilan_id),
+        String(policy.program_tes_id) === String(bank?.program_tes_id) &&
+        String(policy.section_id) === String(form.section_id),
     ) || null;
 });
 
@@ -64,20 +64,20 @@ const canSubmit = computed(() => {
     return true;
 });
 
-const bagianSoalsForSelectedSkill = computed(() =>
-    props.bagianSoal.filter((p) =>
-        String(p.keterampilan_id) === String(form.keterampilan_id) &&
+const partSoalsForSelectedSection = computed(() =>
+    props.partSoal.filter((p) =>
+        String(p.section_id) === String(form.section_id) &&
         String(p.bank_soal_id) === String(form.bank_soal_id),
     ),
 );
 
-function onSkillChange() {
-    form.bagian_soal_id = '';
+function onSectionChange() {
+    form.part_soal_id = '';
 }
 
 const indexUrl = computed(() => route('pustaka-soal.daftar', {
     bank_soal_id: props.soal.bank_soal_id,
-    keterampilan: props.soal.keterampilan_id,
+    section: props.soal.section_id,
 }));
 
 function submit() {
@@ -95,15 +95,15 @@ function submit() {
     >
         <div class="max-w-5xl mx-auto">
             <div class="bg-surface-white rounded-2xl p-8 shadow-soft border border-outline-variant/30">
-                <RingkasanSoal :keterampilan-name="namaKeterampilanDariId(form.keterampilan_id)" />
+                <RingkasanSoal :section-name="namaSectionDariId(form.section_id)" />
                 <form @submit.prevent="submit" class="space-y-6">
                     <FormKonteksSoal
                         :form="form"
                         :bank-soal="bankSoal"
-                        :opsi-keterampilan="opsiKeterampilan"
-                        :bagian-soals="bagianSoalsForSelectedSkill"
+                        :opsi-section="opsiSection"
+                        :part-soals="partSoalsForSelectedSection"
                         :materi-soal="materiSoal"
-                        @skill-change="onSkillChange"
+                        @section-change="onSectionChange"
                     />
 
                     <hr class="border-outline-variant/50" />

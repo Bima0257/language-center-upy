@@ -30,7 +30,7 @@ class PendaftaranTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $this->assertTrue(Pengguna::where('email', 'test@example.com')->firstOrFail()->hasRole('student'));
+        $this->assertTrue(Pengguna::where('email', 'test@example.com')->firstOrFail()->hasRole('peserta'));
         $response->assertRedirect(route('verification.notice', absolute: false));
     }
 }

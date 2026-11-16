@@ -10,17 +10,17 @@ class SimpanUjianRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jenis_tes_id' => [
+            'program_tes_id' => [
                 'required',
                 'uuid',
-                Rule::exists('jenis_tes', 'id')->where(fn ($query) => $query->where('aktif', true)),
+                Rule::exists('program_tes', 'id')->where(fn ($query) => $query->where('aktif', true)),
             ],
             'bank_soal_id' => [
                 'required',
                 'uuid',
                 Rule::exists('bank_soal', 'id')->where(fn ($query) => $query
                     ->where('aktif', true)
-                    ->where('jenis_tes_id', $this->input('jenis_tes_id'))),
+                    ->where('program_tes_id', $this->input('program_tes_id'))),
             ],
             'judul' => ['required', 'string', 'max:255'],
             'deskripsi' => ['nullable', 'string'],

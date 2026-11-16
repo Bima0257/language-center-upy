@@ -18,10 +18,10 @@ class SimpanBankSoalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jenis_tes_id' => [
+            'program_tes_id' => [
                 'required',
                 'uuid',
-                Rule::exists('jenis_tes', 'id')->where(fn ($query) => $query->where('aktif', true)),
+                Rule::exists('program_tes', 'id')->where(fn ($query) => $query->where('aktif', true)),
             ],
             'nama' => ['required', 'string', 'max:255'],
             'deskripsi' => ['nullable', 'string'],

@@ -17,6 +17,38 @@ class AutentikasiTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_tamu_tetap_bisa_membuka_landing(): void
+    {
+        $this->get('/')->assertOk();
+    }
+
+    public function test_pengguna_terautentikasi_diarahkan_ke_dasbor_dari_landing(): void
+    {
+        $pengguna = Pengguna::factory()->create();
+
+        $this->actingAs($pengguna)
+            ->get('/')
+            ->assertRedirect(route('dasbor', absolute: false));
+    }
+
+    public function test_pengguna_terautentikasi_diarahkan_ke_dasbor_dari_halaman_login(): void
+    {
+        $pengguna = Pengguna::factory()->create();
+
+        $this->actingAs($pengguna)
+            ->get('/login')
+            ->assertRedirect(route('dasbor', absolute: false));
+    }
+
+    public function test_pengguna_terautentikasi_diarahkan_ke_dasbor_dari_halaman_register(): void
+    {
+        $pengguna = Pengguna::factory()->create();
+
+        $this->actingAs($pengguna)
+            ->get('/register')
+            ->assertRedirect(route('dasbor', absolute: false));
+    }
+
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
         $pengguna = Pengguna::factory()->create();

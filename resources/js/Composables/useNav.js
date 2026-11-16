@@ -16,10 +16,11 @@ import {
     IconBuilding,
     IconSchool,
     IconChartBar,
+    IconPlayerPlay,
 } from "@tabler/icons-vue";
 
 export function getNav(roles, permissions = []) {
-    const isMahasiswa = roles.includes("student");
+    const isMahasiswa = roles.includes("peserta");
     const isSuperadmin = roles.includes("superadmin");
     const isAdmin = roles.includes("admin") || roles.includes("superadmin");
     const can = (permission) =>
@@ -34,25 +35,25 @@ export function getNav(roles, permissions = []) {
                 label: "Tryout",
                 icon: IconClipboardCheck,
                 route: "ujian.tersedia",
-                permission: "exam_session.take",
+                permission: "ujian.tersedia",
             },
             {
                 label: "Ujian",
                 icon: IconCalendarEvent,
                 route: "ujian.jadwal",
-                permission: "exam_session.take",
+                permission: "ujian.jadwal",
             },
             {
                 label: "Riwayat Tryout",
                 icon: IconHistory,
                 route: "ujian.riwayat",
-                permission: "exam_session.take",
+                permission: "ujian.riwayat",
             },
             {
                 label: "Sertifikat",
                 icon: IconCertificate,
                 route: "ujian.sertifikat",
-                permission: "exam_session.take",
+                permission: "ujian.sertifikat",
             },
         );
     }
@@ -65,34 +66,40 @@ export function getNav(roles, permissions = []) {
                 icon: IconFolders,
                 children: [
                     {
-                        label: "Kategori Tes",
+                        label: "Program Tes",
                         icon: IconCategory,
-                        route: "admin.data-induk.jenis-tes.daftar",
-                        permission: "master_data.view",
+                        route: "admin.data-induk.program-tes.daftar",
+                        permission: "admin.data-induk.program-tes.daftar",
                     },
                     {
-                        label: "Keterampilan",
+                        label: "Section",
                         icon: IconListDetails,
-                        route: "admin.data-induk.keterampilan.daftar",
-                        permission: "master_data.view",
+                        route: "admin.data-induk.section.daftar",
+                        permission: "admin.data-induk.section.daftar",
                     },
                     {
                         label: "Fakultas",
                         icon: IconBuilding,
                         route: "admin.data-induk.fakultas.daftar",
-                        permission: "master_data.view",
+                        permission: "admin.data-induk.fakultas.daftar",
                     },
                     {
                         label: "Jurusan",
                         icon: IconSchool,
                         route: "admin.data-induk.program-studi.daftar",
-                        permission: "master_data.view",
+                        permission: "admin.data-induk.program-studi.daftar",
                     },
                     {
                         label: "Interpretasi Skor",
                         icon: IconListDetails,
                         route: "admin.data-induk.interpretasi-skor.daftar",
-                        permission: "master_data.view",
+                        permission: "admin.data-induk.interpretasi-skor.daftar",
+                    },
+                    {
+                        label: "Aturan Penilaian",
+                        icon: IconSettings,
+                        route: "admin.data-induk.aturan-penilaian.daftar",
+                        permission: "admin.data-induk.aturan-penilaian.daftar",
                     },
                 ],
             },
@@ -104,19 +111,19 @@ export function getNav(roles, permissions = []) {
                         label: "Bank Soal Manager",
                         icon: IconFolders,
                         route: "pustaka-soal.bank-soal.daftar",
-                        permission: "soal.view",
+                        permission: "pustaka-soal.bank-soal.daftar",
                     },
                     {
-                        label: "Bagian Soal",
+                        label: "Part Soal",
                         icon: IconListDetails,
-                        route: "admin.data-induk.bagian-soal.daftar",
-                        permission: "master_data.view",
+                        route: "admin.data-induk.part-soal.daftar",
+                        permission: "admin.data-induk.part-soal.daftar",
                     },
                     {
                         label: "Bank Soal",
                         icon: IconBooks,
                         route: "pustaka-soal.daftar",
-                        permission: "soal.view",
+                        permission: "pustaka-soal.daftar",
                     },
                 ],
             },
@@ -128,19 +135,25 @@ export function getNav(roles, permissions = []) {
                         label: "Daftar Ujian",
                         icon: IconClipboardCheck,
                         route: "admin.ujian.daftar",
-                        permission: "exam.manage",
+                        permission: "admin.ujian.daftar",
+                    },
+                    {
+                        label: "Demo Ujian",
+                        icon: IconPlayerPlay,
+                        route: "admin.demo-ujian.daftar",
+                        permission: "admin.demo-ujian.daftar",
                     },
                     {
                         label: "Penjadwalan",
                         icon: IconCalendarEvent,
                         route: "admin.periode-ujian.daftar",
-                        permission: "schedule.view",
+                        permission: "admin.periode-ujian.daftar",
                     },
                     {
                         label: "Pendaftaran Ujian",
                         icon: IconUsers,
                         route: "admin.pendaftaran-ujian.daftar",
-                        permission: "exam_registration.view",
+                        permission: "admin.pendaftaran-ujian.daftar",
                     },
                 ],
             },
@@ -148,49 +161,69 @@ export function getNav(roles, permissions = []) {
                 label: "Sertifikat",
                 icon: IconCertificate,
                 route: "admin.sertifikat.daftar",
-                permission: "certificate.view",
+                permission: "admin.sertifikat.daftar",
             },
             {
                 label: "Dasbor Pengawas",
                 icon: IconEyeCheck,
                 route: "pengawas.dasbor",
-                permission: "exam_session.monitor",
+                permission: "pengawas.dasbor",
+                matchPrefixes: ["pengawas.sesi"],
             },
             {
                 label: "Manajemen Pengguna",
                 icon: IconUsers,
-                route: "admin.pengguna.daftar",
-                permission: "pengguna.view",
+                children: [
+                    {
+                        label: "Pengguna",
+                        icon: IconUsers,
+                        route: "admin.identity.users.index",
+                        permission: "admin.identity.users.index",
+                    },
+                    {
+                        label: "Role",
+                        icon: IconSettings,
+                        route: "admin.identity.roles.index",
+                        permission: "admin.identity.roles.index",
+                    },
+                    {
+                        label: "Permission",
+                        icon: IconCategory,
+                        route: "admin.identity.permissions.index",
+                        permission: "admin.identity.permissions.index",
+                    },
+                ],
             },
             {
                 label: "Log Aktivitas",
                 icon: IconHistory,
                 route: "admin.catatan-aktivitas.daftar",
-                permission: "audit_log.view",
+                permission: "admin.catatan-aktivitas.daftar",
             },
             {
                 label: "Analitik",
                 icon: IconChartBar,
                 route: "admin.analitik.daftar",
-                permission: "analytics.view",
+                permission: "admin.analitik.daftar",
             },
             {
                 label: "Pengaturan",
                 icon: IconSettings,
                 route: "admin.pengaturan.daftar",
-                permission: "settings.manage",
+                permission: "admin.pengaturan.daftar",
             },
             {
                 label: "Pratinjau Komponen",
                 icon: IconCategory,
                 route: "admin.komponen.daftar",
-                permission: "components.view",
+                permission: "admin.komponen.daftar",
             },
             {
                 label: "Laporan",
                 icon: IconReport,
                 route: "admin.laporan.sesi",
-                permission: "report.view",
+                permission: "admin.laporan.sesi",
+                matchPrefixes: ["admin.laporan.sesi"],
             },
         );
     }
@@ -220,6 +253,56 @@ function baseOf(route) {
 
 function routeMatches(routeName, base) {
     return routeName === base || routeName.startsWith(base + ".");
+}
+
+export function findActiveNavItem(nav, currentRouteName) {
+    if (!currentRouteName) return null;
+
+    let best = null;
+    let bestScore = -1;
+
+    const consider = (item, parent = null) => {
+        if (!item?.route || item.route === "#") return;
+
+        let score = -1;
+
+        if (currentRouteName === item.route) {
+            score = 100000 + item.route.length;
+        } else {
+            const prefixes = [];
+
+            if (item.route.endsWith(".daftar") || item.route.endsWith(".index")) {
+                prefixes.push(baseOf(item.route));
+            }
+
+            if (Array.isArray(item.matchPrefixes)) {
+                prefixes.push(...item.matchPrefixes);
+            }
+
+            for (const prefix of prefixes) {
+                if (routeMatches(currentRouteName, prefix)) {
+                    score = Math.max(score, prefix.length);
+                }
+            }
+        }
+
+        if (score > bestScore) {
+            bestScore = score;
+            best = { item, parent, score };
+        }
+    };
+
+    for (const item of nav) {
+        if (item.children) {
+            for (const child of item.children) {
+                consider(child, item);
+            }
+        } else {
+            consider(item);
+        }
+    }
+
+    return best;
 }
 
 export function getBreadcrumbs(title) {

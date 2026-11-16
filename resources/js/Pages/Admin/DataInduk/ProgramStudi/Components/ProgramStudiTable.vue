@@ -1,47 +1,77 @@
 <script setup>
-import DataTable from '@/Components/Shared/DataTable.vue';
+import { h } from 'vue';
 import { IconEdit, IconTrash } from '@tabler/icons-vue';
+import BaseBadge from '@/Components/Base/BaseBadge.vue';
+import BaseButton from '@/Components/Base/BaseButton.vue';
+import BaseTambahData from '@/Components/Base/BaseTambahData.vue';
+import AppDataTable from '@/Components/Ui/AppDataTable.vue';
 
 const props = defineProps({
     programStudi: { type: Array, default: () => [] },
+    tableKey: { type: String, default: 'admin-program-studi' },
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
 
 const columns = [
-    { key: 'nama', label: 'Nama', sortable: true, className: 'font-medium text-text-heading' },
-    { key: 'kode', label: 'Kode', sortable: true },
-    { key: 'fakultas', label: 'Fakultas', sortable: true, render: (value) => value?.nama || '-' },
-    { key: 'aktif', label: 'Status', sortable: true, badge: true, render: (value) => value ? 'Aktif' : 'Nonaktif' },
-    { key: 'id', label: 'Aksi', slot: 'actions' },
+    { accessorKey: 'nama', header: 'Nama', meta: { cellClass: 'font-medium text-text-heading' } },
+    { accessorKey: 'kode', header: 'Kode' },
+    {
+        accessorKey: 'fakultas',
+        header: 'Fakultas',
+        cell: info => info.getValue()?.nama || '-',
+    },
+    {
+        accessorKey: 'aktif',
+        header: 'Status',
+        cell: info => h(
+            BaseBadge,
+            { variant: info.getValue() ? 'success' : 'neutral' },
+            () => (info.getValue() ? 'Aktif' : 'Nonaktif'),
+        ),
+    },
+    {
+        id: 'actions',
+        header: 'Aksi',
+        meta: { align: 'center' },
+        cell: info => h('div', { class: 'flex items-center justify-center gap-1' }, [
+            h(
+                BaseButton,
+                {
+                    variant: 'secondary',
+                    iconOnly: true,
+                    title: 'Ubah',
+                    'aria-label': 'Ubah',
+                    onClick: () => emit('edit', info.row.original),
+                },
+                () => h(IconEdit, { size: 16 }),
+            ),
+            h(
+                BaseButton,
+                {
+                    variant: 'danger',
+                    iconOnly: true,
+                    title: 'Hapus',
+                    'aria-label': 'Hapus',
+                    onClick: () => emit('delete', info.row.original),
+                },
+                () => h(IconTrash, { size: 16 }),
+            ),
+        ]),
+    },
 ];
 </script>
 
 <template>
-    <DataTable :data="props.programStudi" :columns="columns" header-title="Daftar Program Studi" searchable>
-        <template #toolbar>
+    <AppDataTable
+        :table-key="props.tableKey"
+        :data="props.programStudi"
+        :columns="columns"
+        title="Daftar Program Studi"
+        searchable
+    >
+        <template #actions>
             <BaseTambahData @click="emit('create')" />
         </template>
-
-        <template #actions="{ row }">
-            <BaseButton
-                variant="secondary"
-                icon-only
-                title="Ubah"
-                aria-label="Ubah"
-                @click="emit('edit', row)"
-            >
-                <IconEdit :size="16" />
-            </BaseButton>
-            <BaseButton
-                variant="danger"
-                icon-only
-                title="Hapus"
-                aria-label="Hapus"
-                @click="emit('delete', row)"
-            >
-                <IconTrash :size="16" />
-            </BaseButton>
-        </template>
-    </DataTable>
+    </AppDataTable>
 </template>

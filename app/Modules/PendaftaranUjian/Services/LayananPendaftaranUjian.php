@@ -16,6 +16,7 @@ use App\Modules\PendaftaranUjian\Repositories\Contracts\PeriodePendaftaranUjianR
 use App\Modules\Pengguna\Repositories\Contracts\PenggunaRepositoryInterface;
 use App\Modules\Penjadwalan\Repositories\Contracts\PenjadwalanRepositoryInterface;
 use App\Modules\Penjadwalan\Repositories\Contracts\SlotUjianRepositoryInterface;
+use App\Services\ImageCompressionService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -33,6 +34,7 @@ class LayananPendaftaranUjian
         private FakultasRepositoryInterface $fakultasRepo,
         private ProgramStudiRepositoryInterface $programStudiRepo,
         private PenjadwalanRepositoryInterface $penjadwalanRepo,
+        private ImageCompressionService $imageCompression,
     ) {}
 
     /**
@@ -44,10 +46,10 @@ class LayananPendaftaranUjian
         $periodeUjian = $this->penjadwalanRepo->semuaAktifDenganUjianDanSlot();
         $this->tambahkanRingkasanPendaftaran($periodeUjian);
 
-        $periodeUntukJenisTes = $this->filterPeriode($periodeUjian, [
-            'jenis_tes_id' => $filters['jenis_tes_id'] ?? null,
+        $periodeUntukProgramTes = $this->filterPeriode($periodeUjian, [
+            'program_tes_id' => $filters['program_tes_id'] ?? null,
         ]);
-        $periodeUntukUjian = $this->filterPeriode($periodeUntukJenisTes, [
+        $periodeUntukUjian = $this->filterPeriode($periodeUntukProgramTes, [
             'ujian_id' => $filters['ujian_id'] ?? null,
         ]);
         $periodeUntukPeriode = $this->filterPeriode($periodeUntukUjian, [
@@ -58,8 +60,8 @@ class LayananPendaftaranUjian
             'pendaftaranUjian' => ! empty($filters['slot_ujian_id'])
                 ? $this->pendaftaranRepo->paginate($filters)
                 : $this->paginatorKosong(),
-            'ringkasanJenisTes' => $this->buatRingkasanJenisTes($periodeUjian),
-            'ringkasanUjian' => $this->buatRingkasanUjian($periodeUntukJenisTes),
+            'ringkasanProgramTes' => $this->buatRingkasanProgramTes($periodeUjian),
+            'ringkasanUjian' => $this->buatRingkasanUjian($periodeUntukProgramTes),
             'ringkasanPeriode' => $this->buatRingkasanPeriode($periodeUntukUjian),
             'ringkasanSlot' => $this->buatRingkasanSlot($periodeUntukPeriode),
             'context' => $this->contextDariFilter($filters),
@@ -74,12 +76,16 @@ class LayananPendaftaranUjian
     public function dataPeserta(PeriodePendaftaranUjian $periodePendaftaran, array $filters): array
     {
         $periodePendaftaran = $this->periodePendaftaranRepo->temukan($periodePendaftaran->id);
+        $filters['search'] = $filters['q'] ?? $filters['search'] ?? null;
+        $filters['status'] = $filters['f_status'] ?? $filters['status'] ?? null;
+        $filters['slot_ujian_id'] = $filters['f_slot_ujian_id'] ?? $filters['slot_ujian_id'] ?? null;
         $filters['periode_ujian_id'] = $periodePendaftaran->periode_ujian_id;
+        $perPage = (int) ($filters['per_page'] ?? 15);
 
         return [
             'periodePendaftaranUjian' => $periodePendaftaran,
             'slotUjian' => $periodePendaftaran->slotUjian,
-            'pendaftaranUjian' => $this->pendaftaranRepo->paginate($filters),
+            'pendaftaranUjian' => $this->pendaftaranRepo->paginate($filters, $perPage),
             'filters' => $filters,
         ];
     }
@@ -99,10 +105,10 @@ class LayananPendaftaranUjian
         $this->tambahkanRingkasanPendaftaran($periodeUjian);
         $this->tambahkanStatusPeriodePendaftaran($periodeUjian);
 
-        $periodeUntukJenisTes = $this->filterPeriode($periodeUjian, [
-            'jenis_tes_id' => $filters['jenis_tes_id'] ?? null,
+        $periodeUntukProgramTes = $this->filterPeriode($periodeUjian, [
+            'program_tes_id' => $filters['program_tes_id'] ?? null,
         ]);
-        $periodeUntukUjian = $this->filterPeriode($periodeUntukJenisTes, [
+        $periodeUntukUjian = $this->filterPeriode($periodeUntukProgramTes, [
             'ujian_id' => $filters['ujian_id'] ?? null,
         ]);
         $periodeUntukPeriode = $this->filterPeriode($periodeUntukUjian, [
@@ -117,8 +123,8 @@ class LayananPendaftaranUjian
                 $periodeUntukJadwal,
                 $pengguna->id,
             )->values(),
-            'ringkasanJenisTes' => $this->buatRingkasanJenisTes($periodeUjian),
-            'ringkasanUjian' => $this->buatRingkasanUjian($periodeUntukJenisTes),
+            'ringkasanProgramTes' => $this->buatRingkasanProgramTes($periodeUjian),
+            'ringkasanUjian' => $this->buatRingkasanUjian($periodeUntukProgramTes),
             'ringkasanPeriode' => $this->buatRingkasanPeriode($periodeUntukUjian),
             'filters' => $this->contextDariFilter($filters),
             ...$this->dataFormMahasiswa($pengguna),
@@ -151,7 +157,7 @@ class LayananPendaftaranUjian
     private function contextDariFilter(array $filters): array
     {
         return [
-            'jenis_tes_id' => $filters['jenis_tes_id'] ?? null,
+            'program_tes_id' => $filters['program_tes_id'] ?? null,
             'ujian_id' => $filters['ujian_id'] ?? null,
             'periode_ujian_id' => $filters['periode_ujian_id'] ?? null,
             'slot_ujian_id' => $filters['slot_ujian_id'] ?? null,
@@ -168,7 +174,7 @@ class LayananPendaftaranUjian
         return $periodeUjian->filter(function (PeriodeUjian $periode) use ($filters): bool {
             $ujian = $periode->ujian;
 
-            return (empty($filters['jenis_tes_id']) || $ujian->jenis_tes_id === $filters['jenis_tes_id'])
+            return (empty($filters['program_tes_id']) || $ujian->program_tes_id === $filters['program_tes_id'])
                 && (empty($filters['ujian_id']) || $ujian->id === $filters['ujian_id'])
                 && (empty($filters['periode_ujian_id']) || $periode->id === $filters['periode_ujian_id']);
         })->values();
@@ -178,17 +184,17 @@ class LayananPendaftaranUjian
      * @param  Collection<int, PeriodeUjian>  $periodeUjian
      * @return array<int, array<string, mixed>>
      */
-    private function buatRingkasanJenisTes(Collection $periodeUjian): array
+    private function buatRingkasanProgramTes(Collection $periodeUjian): array
     {
         return $periodeUjian
-            ->groupBy(fn (PeriodeUjian $periode): string => $periode->ujian->jenis_tes_id)
-            ->map(function (Collection $periodeGroup, string $jenisTesId): array {
-                $jenisTes = $periodeGroup->first()->ujian->jenisTes;
+            ->groupBy(fn (PeriodeUjian $periode): string => $periode->ujian->program_tes_id)
+            ->map(function (Collection $periodeGroup, string $programTesId): array {
+                $programTes = $periodeGroup->first()->ujian->programTes;
                 $slotUjian = $this->slotDariPeriode($periodeGroup);
 
                 return [
-                    'id' => $jenisTesId,
-                    'nama' => $jenisTes->nama,
+                    'id' => $programTesId,
+                    'nama' => $programTes->nama,
                     'jumlahUjian' => $periodeGroup->pluck('ujian_id')->unique()->count(),
                     'jumlahPeriode' => $periodeGroup->count(),
                     'jumlahSlot' => $slotUjian->count(),
@@ -214,7 +220,7 @@ class LayananPendaftaranUjian
 
                 return [
                     'id' => $ujianId,
-                    'jenisTesId' => $ujian->jenis_tes_id,
+                    'programTesId' => $ujian->program_tes_id,
                     'judul' => $ujian->judul,
                     'mode' => $ujian->mode->value,
                     'jumlahPeriode' => $periodeGroup->count(),
@@ -393,7 +399,7 @@ class LayananPendaftaranUjian
 
         $pendaftaranLama = $this->pendaftaranRepo->temukanUntukSlotDanPengguna($slotUjian->id, $pengguna->id);
         $lokasiLama = $pendaftaranLama?->lokasi_bukti_pembayaran;
-        $lokasiBaru = $buktiPembayaran->store('payments', 'public');
+        $lokasiBaru = $this->imageCompression->storeCompressed($buktiPembayaran, 'payments');
 
         try {
             $pendaftaran = DB::transaction(function () use ($pengguna, $slotUjian, $data, $lokasiBaru): PendaftaranUjian {
@@ -625,7 +631,7 @@ class LayananPendaftaranUjian
             throw new \RuntimeException('Pendaftaran manual hanya tersedia untuk ujian resmi.');
         }
 
-        if (! $slotUjian->aktif || ! $periodeUjian->aktif || ! $ujian->aktif || ! $ujian->jenisTes->aktif) {
+        if (! $slotUjian->aktif || ! $periodeUjian->aktif || ! $ujian->aktif || ! $ujian->programTes->aktif) {
             throw new \RuntimeException('Ujian resmi ini sedang tidak aktif.');
         }
 

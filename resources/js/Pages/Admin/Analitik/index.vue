@@ -7,7 +7,7 @@ import DoughnutChart from '@/Components/Charts/DoughnutChart.vue';
 defineProps({
     penggunaDenganPeran: { type: Array, default: () => [] },
     sesiDenganBulan: { type: Array, default: () => [] },
-    skorDenganKeterampilan: { type: Array, default: () => [] },
+    skorDenganSection: { type: Array, default: () => [] },
     tingkatLulus: { type: Array, default: () => [] },
     mahasiswaTeratas: { type: Array, default: () => [] },
     partisipasiDenganFakultas: { type: Array, default: () => [] },
@@ -44,9 +44,9 @@ defineProps({
             </BaseCard>
             <BaseCard>
                 <BarChart
-                    :labels="skorDenganKeterampilan.map(i => i.label)"
-                    :data="skorDenganKeterampilan.map(i => i.count)"
-                    title="Rata-rata Skor per Keterampilan"
+                    :labels="skorDenganSection.map(i => i.label)"
+                    :data="skorDenganSection.map(i => i.count)"
+                    title="Rata-rata Skor per Section"
                 />
             </BaseCard>
         </div>

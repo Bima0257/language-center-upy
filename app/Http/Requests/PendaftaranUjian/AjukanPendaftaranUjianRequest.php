@@ -21,7 +21,13 @@ class AjukanPendaftaranUjianRequest extends FormRequest
             'fakultas_id' => ['required', 'uuid', 'exists:fakultas,id'],
             'program_studi_id' => ['required', 'uuid', 'exists:program_studi,id'],
             'tahun_angkatan' => ['required', 'integer', 'min:2000', 'max:'.(date('Y') + 1)],
-            'bukti_pembayaran' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+            'bukti_pembayaran' => [
+                'required',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:'.config('image.max_kb'),
+                'dimensions:max_width=12000,max_height=12000',
+            ],
         ];
     }
 }

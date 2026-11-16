@@ -32,8 +32,8 @@ function eventBadgeVariant(event) {
 
 function modelShortName(type) {
     if (!type) return '-';
-    const bagianSoal = type.split('\\');
-    return bagianSoal[bagianSoal.length - 1];
+    const partSoal = type.split('\\');
+    return partSoal[partSoal.length - 1];
 }
 
 function formatProperties(props) {

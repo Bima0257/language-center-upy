@@ -1,29 +1,31 @@
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import { computed, ref } from 'vue';
+import { computed, h, ref } from 'vue';
+import BaseBadge from '@/Components/Base/BaseBadge.vue';
 import { useConfirm } from '@/Composables/useConfirm';
+import { formatProgramTes } from '@/constants/programTes';
 import FormBankSoal from './Components/FormBankSoal.vue';
 import TabelBankSoal from './Components/TabelBankSoal.vue';
-import TabelKategoriBankSoal from './Components/TabelKategoriBankSoal.vue';
+import TabelProgramTesBankSoal from './Components/TabelProgramTesBankSoal.vue';
 
 const props = defineProps({
     bankSoal: { type: Array, default: () => [] },
-    jenisTes: { type: Array, default: () => [] },
-    kategori: { type: Object, default: null },
+    programTes: { type: Array, default: () => [] },
+    programTesTerpilih: { type: Object, default: null },
 });
 
 const confirm = useConfirm();
 
 const form = useForm({
-    jenis_tes_id: '',
+    program_tes_id: '',
     nama: '',
     deskripsi: '',
     aktif: true,
 });
 
 const editForm = useForm({
-    jenis_tes_id: '',
+    program_tes_id: '',
     nama: '',
     deskripsi: '',
     aktif: true,
@@ -42,47 +44,76 @@ function stripHtml(html) {
 }
 
 const semuaKolom = [
-    { key: 'nama', label: 'Nama', sortable: true, className: 'font-medium text-text-heading' },
-    { key: 'jenis_tes', label: 'Kategori', render: (val) => val?.nama || '-' },
-    { key: 'deskripsi', label: 'Deskripsi', render: (val) => { const text = stripHtml(val); return text ? (text.length > 60 ? text.substring(0, 60) + '…' : text) : '-'; } },
-    { key: 'soal_count', label: 'Soal', render: (val) => val ?? 0 },
-    { key: 'aktif', label: 'Status', badge: true, render: (val) => val ? 'Aktif' : 'Nonaktif' },
-    { key: 'id', label: 'Aksi', slot: 'actions' },
+    { accessorKey: 'nama', header: 'Nama', meta: { cellClass: 'font-medium text-text-heading' } },
+    {
+        id: 'program_tes',
+        header: 'Program Tes',
+        accessorFn: row => formatProgramTes(row.program_tes),
+    },
+    {
+        accessorKey: 'deskripsi',
+        header: 'Deskripsi',
+        cell: info => {
+            const text = stripHtml(info.getValue());
+
+            return text ? (text.length > 60 ? `${text.substring(0, 60)}…` : text) : '-';
+        },
+    },
+    { accessorKey: 'soal_count', header: 'Soal', cell: info => info.getValue() ?? 0 },
+    {
+        accessorKey: 'aktif',
+        header: 'Status',
+        cell: info => h(
+            BaseBadge,
+            { variant: info.getValue() ? 'success' : 'neutral' },
+            () => (info.getValue() ? 'Aktif' : 'Nonaktif'),
+        ),
+    },
 ];
 
-const kolom = computed(() => props.kategori
-    ? semuaKolom.filter((column) => column.key !== 'jenis_tes')
+const kolom = computed(() => props.programTesTerpilih
+    ? semuaKolom.filter((column) => column.id !== 'program_tes')
     : semuaKolom);
 
-const kategoriKolom = [
-    { key: 'nama', label: 'Kategori', sortable: true, className: 'font-medium text-text-heading' },
-    { key: 'deskripsi', label: 'Deskripsi', render: (val) => val ? (val.length > 80 ? `${val.substring(0, 80)}…` : val) : '-' },
-    { key: 'jumlahBankSoal', label: 'Bank Soal', sortable: true, render: (val) => val ?? 0 },
-    { key: 'id', label: 'Aksi', slot: 'actions' },
+const programTesKolom = [
+    {
+        id: 'program_tes',
+        header: 'Program Tes',
+        meta: { cellClass: 'font-medium text-text-heading' },
+        accessorFn: row => formatProgramTes(row),
+    },
+    {
+        accessorKey: 'deskripsi',
+        header: 'Deskripsi',
+        cell: info => (info.getValue() ? (info.getValue().length > 80 ? `${info.getValue().substring(0, 80)}…` : info.getValue()) : '-'),
+    },
+    { accessorKey: 'jumlahBankSoal', header: 'Bank Soal', cell: info => info.getValue() ?? 0 },
 ];
 
-const kategoriBankSoal = computed(() => {
+const ringkasanProgramTes = computed(() => {
     const groups = new Map();
 
-    props.jenisTes.forEach((jenisTes) => {
-        groups.set(jenisTes.id, {
-            id: jenisTes.id,
-            nama: jenisTes.nama,
-            deskripsi: stripHtml(jenisTes.deskripsi),
-            aktif: !!jenisTes.aktif,
+    props.programTes.forEach((programTes) => {
+        groups.set(programTes.id, {
+            id: programTes.id,
+            kode: programTes.kode,
+            nama: programTes.nama,
+            deskripsi: stripHtml(programTes.deskripsi),
+            aktif: !!programTes.aktif,
             jumlahBankSoal: 0,
             jumlahSoal: 0,
         });
     });
 
     props.bankSoal.forEach((bank) => {
-        const jenisTes = bank.jenis_tes || {
+        const programTes = bank.program_tes || {
             id: null,
-            nama: 'Tanpa Kategori',
+            kode: null,
+            nama: 'Tanpa Program Tes',
             deskripsi: '',
             aktif: false,
         };
-        const key = jenisTes.id ?? 'tanpa-kategori';
+        const key = programTes.id ?? 'tanpa-program-tes';
         const existing = groups.get(key);
 
         if (existing) {
@@ -92,10 +123,11 @@ const kategoriBankSoal = computed(() => {
         }
 
         groups.set(key, {
-            id: jenisTes.id,
-            nama: jenisTes.nama,
-            deskripsi: stripHtml(jenisTes.deskripsi),
-            aktif: !!jenisTes.aktif,
+            id: programTes.id,
+            kode: programTes.kode,
+            nama: programTes.nama,
+            deskripsi: stripHtml(programTes.deskripsi),
+            aktif: !!programTes.aktif,
             jumlahBankSoal: 1,
             jumlahSoal: Number(bank.soal_count ?? 0),
         });
@@ -109,10 +141,10 @@ function openCreate() {
     editingBank.value = null;
     form.clearErrors();
     form.reset();
-    if (props.kategori?.id) {
-        form.jenis_tes_id = String(props.kategori.id);
-    } else if (props.jenisTes.length === 1) {
-        form.jenis_tes_id = String(props.jenisTes[0].id);
+    if (props.programTesTerpilih?.id) {
+        form.program_tes_id = String(props.programTesTerpilih.id);
+    } else if (props.programTes.length === 1) {
+        form.program_tes_id = String(props.programTes[0].id);
     }
     showModal.value = true;
 }
@@ -132,7 +164,7 @@ function startEdit(bank) {
     editingBank.value = bank;
     editForm.clearErrors();
     editForm.reset();
-    editForm.jenis_tes_id = String(bank.jenis_tes_id);
+    editForm.program_tes_id = String(bank.program_tes_id);
     editForm.nama = bank.nama;
     editForm.deskripsi = bank.deskripsi || '';
     editForm.aktif = !!bank.aktif;
@@ -159,18 +191,24 @@ async function destroy(bank) {
 </script>
 
 <template>
-    <Head :title="kategori ? `Bank Soal - ${kategori.nama}` : 'Kategori Bank Soal'" />
+    <Head :title="programTesTerpilih ? `Bank Soal - ${programTesTerpilih.nama}` : 'Program Tes Bank Soal'" />
     <TataLetakDasbor
-        :title="kategori ? `Bank Soal - ${kategori.nama}` : 'Kategori Bank Soal'"
-        :subtitle="kategori ? 'Daftar bank soal dalam kategori ini' : 'Pilih kategori untuk melihat daftar bank soal'"
-        :back-href="kategori ? route('pustaka-soal.bank-soal.daftar') : null"
+        :title="programTesTerpilih ? `Bank Soal - ${programTesTerpilih.nama}` : 'Program Tes Bank Soal'"
+        :subtitle="programTesTerpilih ? 'Daftar bank soal dalam program tes ini' : 'Pilih program tes untuk melihat daftar bank soal'"
+        :back-href="programTesTerpilih ? route('pustaka-soal.bank-soal.daftar') : null"
     >
-        <template v-if="!kategori">
-            <TabelKategoriBankSoal :data="kategoriBankSoal" :columns="kategoriKolom" @create="openCreate" />
+        <template v-if="!programTesTerpilih">
+            <TabelProgramTesBankSoal
+                table-key="admin-program-tes-bank-soal"
+                :data="ringkasanProgramTes"
+                :columns="programTesKolom"
+                @create="openCreate"
+            />
         </template>
 
         <template v-else>
             <TabelBankSoal
+                table-key="admin-bank-soal"
                 :data="bankSoal"
                 :columns="kolom"
                 @create="openCreate"
@@ -183,7 +221,7 @@ async function destroy(bank) {
             :show="showModal"
             :creating="creating"
             :form="modalForm"
-            :jenis-tes="jenisTes"
+            :program-tes="programTes"
             @close="closeModal"
             @submit="creating ? submit() : saveEdit()"
         />

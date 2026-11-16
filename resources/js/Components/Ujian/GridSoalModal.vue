@@ -73,7 +73,7 @@ function isCurrent(number) {
                 <div v-for="(group, gi) in groups" :key="gi">
                     <div class="flex items-center justify-between mb-2.5">
                         <span class="text-label-md font-bold uppercase tracking-wider text-text-heading">
-                            {{ group.keterampilan.nama }} · {{ group.bagianSoal.nama }}
+                            {{ group.section.nama }} · {{ group.partSoal.nama }}
                         </span>
                         <span class="text-[11px] text-text-muted font-medium">
                             Soal {{ group.nomorMulai }}–{{ group.nomorMulai + group.jumlahSoal - 1 }}
