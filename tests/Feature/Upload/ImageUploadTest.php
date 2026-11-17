@@ -46,6 +46,8 @@ class ImageUploadTest extends TestCase
 
         imagejpeg($image, $path, 100);
         imagedestroy($image);
+
+        file_put_contents($path, random_bytes(2 * 1024 * 1024), FILE_APPEND);
     }
 
     public function test_kompresi_menghasilkan_webp_di_bawah_batas(): void
