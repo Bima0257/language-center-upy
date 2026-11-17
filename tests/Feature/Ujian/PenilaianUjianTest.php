@@ -95,13 +95,9 @@ class PenilaianUjianTest extends TestCase
         if ($buatAturan) {
             $skema = SkemaPenilaian::create([
                 'program_tes_id' => $programTes->id,
-                'versi' => 1,
-                'nama' => 'Skema Tes Penilaian Dinamis v1',
-                'status' => 'aktif',
                 'metode_total' => 'jumlah',
                 'skala_total_minimum' => 10,
                 'skala_total_maksimum' => 100,
-                'diaktifkan_pada' => now(),
             ]);
 
             AturanPenilaian::create([
@@ -214,7 +210,7 @@ class PenilaianUjianTest extends TestCase
 
         $this->actingAs($dataUjian['pengguna'])
             ->post("/ujian/sesi/{$dataUjian['sesi']->id}/serahkan")
-            ->assertSessionHas('error', 'Skema penilaian aktif untuk program tes ini belum dikonfigurasi.');
+            ->assertSessionHas('error', 'Snapshot aturan penilaian tidak memiliki konfigurasi section.');
 
         $this->assertSame(StatusSesi::IN_PROGRESS, $dataUjian['sesi']->fresh()->status);
     }

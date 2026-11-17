@@ -5,13 +5,13 @@ import BaseBadge from '@/Components/Base/BaseBadge.vue';
 import BaseButton from '@/Components/Base/BaseButton.vue';
 import BaseTambahData from '@/Components/Base/BaseTambahData.vue';
 import AppDataTable from '@/Components/Ui/AppDataTable.vue';
+import RichTextViewer from '@/Components/Shared/RichTextViewer.vue';
 import { formatProgramTes } from '@/constants/programTes';
 
 const props = defineProps({
     interpretasiSkor: { type: Array, default: () => [] },
     programTes: { type: Array, default: () => [] },
     tableKey: { type: String, default: 'interpretasi-skor-table' },
-    readOnly: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
@@ -45,7 +45,11 @@ const columns = [
         cell: info => h('div', [
             h('p', { class: 'text-body-md text-text-body' }, info.getValue()),
             info.row.original.deskripsi
-                ? h('p', { class: 'text-text-muted text-label-md' }, info.row.original.deskripsi)
+                ? h(RichTextViewer, {
+                    content: info.row.original.deskripsi,
+                    clamp: 2,
+                    class: 'text-text-muted text-label-md',
+                })
                 : null,
         ]),
     },
@@ -62,32 +66,30 @@ const columns = [
         id: 'actions',
         header: 'Aksi',
         meta: { align: 'center' },
-        cell: info => (props.readOnly
-            ? '-'
-            : h('div', { class: 'flex items-center justify-center gap-1' }, [
-                h(
-                    BaseButton,
-                    {
-                        variant: 'secondary',
-                        iconOnly: true,
-                        title: 'Ubah',
-                        'aria-label': 'Ubah',
-                        onClick: () => emit('edit', info.row.original),
-                    },
-                    () => h(IconEdit, { size: 16 }),
-                ),
-                h(
-                    BaseButton,
-                    {
-                        variant: 'danger',
-                        iconOnly: true,
-                        title: 'Hapus',
-                        'aria-label': 'Hapus',
-                        onClick: () => emit('delete', info.row.original),
-                    },
-                    () => h(IconTrash, { size: 16 }),
-                ),
-            ])),
+        cell: info => h('div', { class: 'flex items-center justify-center gap-1' }, [
+            h(
+                BaseButton,
+                {
+                    variant: 'secondary',
+                    iconOnly: true,
+                    title: 'Ubah',
+                    'aria-label': 'Ubah',
+                    onClick: () => emit('edit', info.row.original),
+                },
+                () => h(IconEdit, { size: 16 }),
+            ),
+            h(
+                BaseButton,
+                {
+                    variant: 'danger',
+                    iconOnly: true,
+                    title: 'Hapus',
+                    'aria-label': 'Hapus',
+                    onClick: () => emit('delete', info.row.original),
+                },
+                () => h(IconTrash, { size: 16 }),
+            ),
+        ]),
     },
 ];
 </script>
@@ -101,7 +103,7 @@ const columns = [
         class="lg:col-span-2"
         searchable
     >
-        <template v-if="!props.readOnly" #actions>
+        <template #actions>
             <BaseTambahData @click="emit('create')" />
         </template>
     </AppDataTable>

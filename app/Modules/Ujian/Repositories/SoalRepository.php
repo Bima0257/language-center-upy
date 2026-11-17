@@ -19,7 +19,7 @@ class SoalRepository implements SoalRepositoryInterface
         $materiId = $filter['materi_soal_id'] ?? null;
         $partSoalId = $filter['part_soal_id'] ?? null;
 
-        return Soal::with(['materiSoal.mediaMateriSoal', 'bankSoal', 'section', 'partSoal', 'pembuat'])
+        return Soal::with(['materiSoal.mediaMateriSoal', 'bankSoal', 'section', 'partSoal'])
             ->withCount('partUjian')
             ->when($sectionId, fn ($q) => $q->where('section_id', $sectionId))
             ->when($bankSoalId, fn ($q) => $q->where('bank_soal_id', $bankSoalId))

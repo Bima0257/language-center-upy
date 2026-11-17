@@ -19,6 +19,4 @@ interface AturanPenilaianRepositoryInterface
         string $sectionId,
         array $data,
     ): AturanPenilaian;
-
-    public function salinKeSkema(string $skemaAsalId, string $skemaTujuanId): void;
 }

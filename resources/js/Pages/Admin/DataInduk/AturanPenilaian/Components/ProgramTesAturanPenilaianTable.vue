@@ -23,11 +23,6 @@ const columns = [
         cell: info => info.getValue() ?? 0,
     },
     {
-        accessorKey: 'skema_penilaian_count',
-        header: 'Versi Skema',
-        cell: info => info.getValue() ?? 0,
-    },
-    {
         id: 'actions',
         header: 'Aksi',
         meta: { align: 'center' },

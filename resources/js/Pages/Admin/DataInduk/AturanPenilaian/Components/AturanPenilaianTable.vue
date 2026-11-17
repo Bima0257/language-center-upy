@@ -4,9 +4,8 @@ import { IconEdit } from '@tabler/icons-vue';
 import BaseButton from '@/Components/Base/BaseButton.vue';
 import AppDataTable from '@/Components/Ui/AppDataTable.vue';
 
-const props = defineProps({
+defineProps({
     aturanPenilaian: { type: Array, default: () => [] },
-    readOnly: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['edit']);
@@ -42,20 +41,18 @@ const columns = [
         id: 'actions',
         header: 'Aksi',
         meta: { align: 'center' },
-        cell: info => (props.readOnly
-            ? '-'
-            : h(
-                BaseButton,
-                {
-                    variant: 'secondary',
-                    size: 'sm',
-                    class: '!p-2',
-                    title: 'Ubah aturan penilaian',
-                    'aria-label': 'Ubah aturan penilaian',
-                    onClick: () => emit('edit', info.row.original),
-                },
-                () => h(IconEdit, { size: 18 }),
-            )),
+        cell: info => h(
+            BaseButton,
+            {
+                variant: 'secondary',
+                size: 'sm',
+                class: '!p-2',
+                title: 'Ubah aturan penilaian',
+                'aria-label': 'Ubah aturan penilaian',
+                onClick: () => emit('edit', info.row.original),
+            },
+            () => h(IconEdit, { size: 18 }),
+        ),
     },
 ];
 </script>

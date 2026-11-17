@@ -3,7 +3,7 @@
 namespace App\Modules\Pengguna\Repositories;
 
 use App\Models\Pengguna;
-use App\Models\ProfilMahasiswa;
+use App\Models\ProfilPeserta;
 use App\Models\Role;
 use App\Modules\Pengguna\Repositories\Contracts\PenggunaRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -38,7 +38,7 @@ class PenggunaRepository implements PenggunaRepositoryInterface
         }
 
         $query = Pengguna::query()
-            ->with(['roles', 'profilMahasiswa.fakultas', 'profilMahasiswa.programStudi'])
+            ->with(['roles', 'profilPeserta.fakultas', 'profilPeserta.programStudi'])
             ->withCount('sesiUjian')
             ->whereDoesntHave('roles', fn ($roleQuery) => $roleQuery->where('name', 'superadmin'));
 
@@ -87,14 +87,14 @@ class PenggunaRepository implements PenggunaRepositoryInterface
 
     public function findOrFail(string $id): Pengguna
     {
-        return Pengguna::with('profilMahasiswa')->findOrFail($id);
+        return Pengguna::with('profilPeserta')->findOrFail($id);
     }
 
     public function penggunaMenungguVerifikasi(): Collection
     {
         return Pengguna::role('peserta')
-            ->whereHas('profilMahasiswa', fn ($q) => $q->whereNotNull('foto_identitas'))
-            ->with(['profilMahasiswa.fakultas', 'profilMahasiswa.programStudi'])
+            ->whereHas('profilPeserta', fn ($q) => $q->whereNotNull('foto_identitas'))
+            ->with(['profilPeserta.fakultas', 'profilPeserta.programStudi'])
             ->select(['id', 'name', 'email', 'foto', 'created_at'])
             ->get();
     }
@@ -109,17 +109,17 @@ class PenggunaRepository implements PenggunaRepositoryInterface
         return Pengguna::create($data);
     }
 
-    public function buatProfilMahasiswa(Pengguna $pengguna, array $data): ProfilMahasiswa
+    public function buatProfilPeserta(Pengguna $pengguna, array $data): ProfilPeserta
     {
-        return ProfilMahasiswa::create([...$data, 'pengguna_id' => $pengguna->id]);
+        return ProfilPeserta::create([...$data, 'pengguna_id' => $pengguna->id]);
     }
 
-    public function perbaruiProfilMahasiswa(Pengguna $pengguna, array $data): ProfilMahasiswa
+    public function perbaruiProfilPeserta(Pengguna $pengguna, array $data): ProfilPeserta
     {
-        $profil = $pengguna->profilMahasiswa;
+        $profil = $pengguna->profilPeserta;
 
         if ($profil === null) {
-            return $this->buatProfilMahasiswa($pengguna, $data);
+            return $this->buatProfilPeserta($pengguna, $data);
         }
 
         $profil->update($data);

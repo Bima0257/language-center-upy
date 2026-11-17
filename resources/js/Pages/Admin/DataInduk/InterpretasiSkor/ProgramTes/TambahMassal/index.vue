@@ -10,7 +10,7 @@ const MAX_ROWS = 10;
 
 const props = defineProps({
     programTes: { type: Object, required: true },
-    skemaTerpilih: { type: Object, default: null },
+    skema: { type: Object, required: true },
 });
 
 const toast = useToast();
@@ -19,7 +19,7 @@ const showModal = ref(false);
 const editingIndex = ref(null);
 
 const form = useForm({
-    skema_penilaian_id: props.skemaTerpilih?.id ?? '',
+    skema_penilaian_id: props.skema.id,
     interpretasi_skor: [],
 });
 
@@ -148,7 +148,7 @@ function submit() {
     <TataLetakDasbor
         :title="'Tambah Massal Interpretasi Skor'"
         :subtitle="`Tambahkan interpretasi skor untuk ${props.programTes.nama}`"
-        :back-href="route('admin.data-induk.interpretasi-skor.program-tes.daftar', { programTes: props.programTes.id, skema: props.skemaTerpilih?.id })"
+        :back-href="route('admin.data-induk.interpretasi-skor.program-tes.daftar', { programTes: props.programTes.id })"
     >
         <InterpretasiSkorBulkTable
             :interpretasi-skor="interpretasiSkor"

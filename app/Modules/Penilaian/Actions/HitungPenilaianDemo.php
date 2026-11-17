@@ -22,7 +22,7 @@ class HitungPenilaianDemo
      */
     public function execute(Ujian $ujian, array $jawaban): HasilPenilaianSesi
     {
-        $snapshot = $this->layananAturan->snapshotAktif($ujian->program_tes_id);
+        $snapshot = $this->layananAturan->snapshotProgram($ujian->program_tes_id);
         $soalUjian = $this->layananPelaksanaan->soalUntukUjian($ujian);
 
         if ($soalUjian->isEmpty()) {

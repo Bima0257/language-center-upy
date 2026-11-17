@@ -118,13 +118,8 @@ class DataIndukSeeder extends Seeder
         ProgramStudi::firstOrCreate(['fakultas_id' => $ft->id, 'kode' => 'TI'], ['nama' => 'Teknik Informatika', 'aktif' => true]);
 
         $skemaPenilaian = SkemaPenilaian::firstOrCreate(
-            ['program_tes_id' => $ept->id, 'versi' => 1],
-            [
-                'nama' => 'Skema '.$ept->nama.' v1',
-                'status' => 'aktif',
-                'metode_total' => 'jumlah',
-                'diaktifkan_pada' => now(),
-            ],
+            ['program_tes_id' => $ept->id],
+            ['metode_total' => 'jumlah'],
         );
 
         $tabelKonversi = [];

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Pengguna\Services;
 
+use App\Enums\JenisPeserta;
 use App\Models\Pengguna;
 use App\Modules\DataInduk\Repositories\Contracts\FakultasRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\ProgramStudiRepositoryInterface;
@@ -21,22 +22,30 @@ class LayananOrientasi
 
     public function dataVerifikasiIdentitas(Pengguna $pengguna): array
     {
-        $profil = $pengguna->profilMahasiswa;
+        $profil = $pengguna->profilPeserta;
+        $jenisPeserta = $profil !== null ? $profil->jenis_peserta : JenisPeserta::MAHASISWA;
 
         return [
             'pengguna' => $pengguna,
             'fakultas' => $this->fakultasRepo->semuaAktifBerurutan(),
             'programStudi' => $this->programStudiRepo->semuaAktifBerurutan(),
-            'sudahUnggah' => $profil !== null
-                && filled($profil->nim)
-                && filled($profil->fakultas_id)
-                && filled($profil->program_studi_id)
-                && filled($profil->tahun_angkatan),
+            'jenisPeserta' => $jenisPeserta->value,
+            'opsiJenisPeserta' => collect(JenisPeserta::cases())
+                ->map(fn (JenisPeserta $jenis): array => [
+                    'value' => $jenis->value,
+                    'label' => $jenis->label(),
+                    'label_identitas' => $jenis->labelIdentitas(),
+                ])
+                ->all(),
+            'bisaPilihJenis' => $profil === null,
+            'sudahUnggah' => $pengguna->profilTerverifikasi(),
             'profil' => $profil ? [
-                'nim' => $profil->nim,
+                'jenis_peserta' => $profil->jenis_peserta->value,
+                'nomor_identitas' => $profil->nomor_identitas,
+                'institusi' => $profil->institusi,
                 'fakultas_id' => $profil->fakultas_id,
                 'program_studi_id' => $profil->program_studi_id,
-                'tahun_angkatan' => $profil->tahun_angkatan,
+                'tahun_mulai' => $profil->tahun_mulai,
             ] : null,
         ];
     }
@@ -47,14 +56,23 @@ class LayananOrientasi
         ?UploadedFile $fotoIdentitas,
         ?UploadedFile $foto,
     ): void {
-        $profil = $pengguna->profilMahasiswa;
+        $profil = $pengguna->profilPeserta;
+        $jenisPeserta = $profil !== null
+            ? $profil->jenis_peserta
+            : (JenisPeserta::tryFrom((string) ($data['jenis_peserta'] ?? '')) ?? JenisPeserta::MAHASISWA);
+        $memerlukanAkademik = in_array($jenisPeserta, [JenisPeserta::MAHASISWA, JenisPeserta::DOSEN], true);
 
         $dataProfil = [
-            'nim' => $data['nim'],
-            'fakultas_id' => $data['fakultas_id'],
-            'program_studi_id' => $data['program_studi_id'],
-            'tahun_angkatan' => $data['tahun_angkatan'],
+            'nomor_identitas' => $data['nomor_identitas'],
+            'institusi' => filled($data['institusi'] ?? null) ? $data['institusi'] : $profil?->institusi,
+            'fakultas_id' => $memerlukanAkademik ? ($data['fakultas_id'] ?? null) : null,
+            'program_studi_id' => $memerlukanAkademik ? ($data['program_studi_id'] ?? null) : null,
+            'tahun_mulai' => $data['tahun_mulai'] ?? $profil?->tahun_mulai,
         ];
+
+        if ($profil === null) {
+            $dataProfil['jenis_peserta'] = $jenisPeserta->value;
+        }
 
         if ($fotoIdentitas !== null) {
             if ($profil !== null && $profil->foto_identitas) {
@@ -64,7 +82,7 @@ class LayananOrientasi
             $dataProfil['foto_identitas'] = $this->imageCompression->storeCompressed($fotoIdentitas, 'identities');
         }
 
-        $this->penggunaRepo->perbaruiProfilMahasiswa($pengguna, $dataProfil);
+        $this->penggunaRepo->perbaruiProfilPeserta($pengguna, $dataProfil);
 
         if ($foto !== null) {
             if ($pengguna->foto) {

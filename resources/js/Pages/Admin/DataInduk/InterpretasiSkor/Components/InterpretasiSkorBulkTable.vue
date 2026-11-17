@@ -5,6 +5,7 @@ import BaseBadge from '@/Components/Base/BaseBadge.vue';
 import BaseButton from '@/Components/Base/BaseButton.vue';
 import BaseTambahData from '@/Components/Base/BaseTambahData.vue';
 import AppDataTable from '@/Components/Ui/AppDataTable.vue';
+import RichTextViewer from '@/Components/Shared/RichTextViewer.vue';
 
 const props = defineProps({
     interpretasiSkor: { type: Array, default: () => [] },
@@ -40,7 +41,11 @@ const columns = [
         cell: info => h('div', [
             h('p', { class: 'text-body-md text-text-body' }, info.getValue()),
             info.row.original.deskripsi
-                ? h('p', { class: 'text-text-muted text-label-md' }, info.row.original.deskripsi)
+                ? h(RichTextViewer, {
+                    content: info.row.original.deskripsi,
+                    clamp: 2,
+                    class: 'text-text-muted text-label-md',
+                })
                 : null,
         ]),
     },

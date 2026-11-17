@@ -44,24 +44,6 @@ class InterpretasiSkorRepository implements InterpretasiSkorRepositoryInterface
         );
     }
 
-    public function salinKeSkema(string $skemaAsalId, string $skemaTujuanId): void
-    {
-        $interpretasiAsal = InterpretasiSkor::where('skema_penilaian_id', $skemaAsalId)->get();
-
-        foreach ($interpretasiAsal as $interpretasi) {
-            InterpretasiSkor::create([
-                'skema_penilaian_id' => $skemaTujuanId,
-                'program_tes_id' => $interpretasi->program_tes_id,
-                'skor_minimum' => $interpretasi->skor_minimum,
-                'skor_maksimum' => $interpretasi->skor_maksimum,
-                'tingkat_cefr' => $interpretasi->tingkat_cefr,
-                'label_tingkat' => $interpretasi->label_tingkat,
-                'lulus' => $interpretasi->lulus,
-                'deskripsi' => $interpretasi->deskripsi,
-            ]);
-        }
-    }
-
     public function create(array $data): InterpretasiSkor
     {
         return InterpretasiSkor::create($data);

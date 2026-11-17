@@ -21,15 +21,24 @@ const emit = defineEmits(['submit']);
         <BaseFormGrid>
             <div>
                 <label class="text-label-md font-medium text-text-heading block mb-2">Tanggal Mulai</label>
-                <input type="date" v-model="props.form.tanggal_mulai" required
-                       class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
-                <p v-if="props.form.errors.tanggal_mulai" class="mt-1 text-xs text-error-red">{{ props.form.errors.tanggal_mulai }}</p>
+                <BaseDatePicker
+                    v-model="props.form.tanggal_mulai"
+                    mode="date"
+                    placeholder="Pilih tanggal mulai"
+                    required
+                    :error="props.form.errors.tanggal_mulai"
+                />
             </div>
             <div>
                 <label class="text-label-md font-medium text-text-heading block mb-2">Tanggal Selesai</label>
-                <input type="date" v-model="props.form.tanggal_selesai" required
-                       class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
-                <p v-if="props.form.errors.tanggal_selesai" class="mt-1 text-xs text-error-red">{{ props.form.errors.tanggal_selesai }}</p>
+                <BaseDatePicker
+                    v-model="props.form.tanggal_selesai"
+                    mode="date"
+                    placeholder="Pilih tanggal selesai"
+                    required
+                    :min="props.form.tanggal_mulai"
+                    :error="props.form.errors.tanggal_selesai"
+                />
             </div>
         </BaseFormGrid>
         <p v-if="props.creating" class="text-label-md text-text-muted">

@@ -1,5 +1,6 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
+import RichTextViewer from "@/Components/Shared/RichTextViewer.vue";
 import {
     IconArrowLeft,
     IconCircleCheck,
@@ -122,9 +123,11 @@ function formatSkor(value) {
                     <p v-if="hasilPenilaian.tingkat_cefr" class="mt-1 text-sm font-semibold text-text-heading">
                         {{ hasilPenilaian.tingkat_cefr }} — {{ hasilPenilaian.label_tingkat }}
                     </p>
-                    <p v-if="hasilPenilaian.deskripsi_tingkat" class="text-xs text-text-muted">
-                        {{ hasilPenilaian.deskripsi_tingkat }}
-                    </p>
+                    <RichTextViewer
+                        v-if="hasilPenilaian.deskripsi_tingkat"
+                        :content="hasilPenilaian.deskripsi_tingkat"
+                        class="mt-1 text-xs"
+                    />
                     <p
                         class="mt-1 text-sm font-bold"
                         :class="hasilPenilaian.lulus ? 'text-success' : 'text-error-red'"

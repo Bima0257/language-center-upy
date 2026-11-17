@@ -1,3 +1,4 @@
+import '@vuepic/vue-datepicker/dist/main.css';
 import '../css/app.css';
 import './bootstrap.js';
 import '@aejkatappaja/phantom-ui';

@@ -1,10 +1,18 @@
 <script setup>
+import { computed, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import TabelSoal from './TabelSoal.vue';
 import PenampilMediaMateriSoal from './PenampilMediaMateriSoal.vue';
-import { IconFileDescription, IconEye, IconEdit, IconPlus, IconTrash } from '@tabler/icons-vue';
+import {
+    IconChevronDown,
+    IconFileDescription,
+    IconEye,
+    IconEdit,
+    IconPlus,
+    IconTrash,
+} from '@tabler/icons-vue';
 
-defineProps({
+const props = defineProps({
     group: { type: Object, required: true },
     toggleMateriSoalFn: { type: Function, default: () => {} },
     materiSoalTypeLabelFn: { type: Function, default: () => 'Teks' },
@@ -19,6 +27,9 @@ defineEmits([
     'soal-delete',
     'delete-materi-soal',
 ]);
+
+const isOpen = ref(true);
+const panelId = computed(() => `materi-soal-panel-${props.group.materiSoal.id}`);
 </script>
 
 <template>
@@ -29,8 +40,24 @@ defineEmits([
     >
         <div class="border-b border-outline-variant/30 bg-surface-container-low/60 px-5 py-4">
             <div class="flex flex-wrap items-center gap-2">
-                <IconFileDescription :size="20" class="shrink-0 text-secondary" />
-                <h3 class="text-title-md font-semibold text-text-heading">{{ group.materiSoal.judul }}</h3>
+                <button
+                    type="button"
+                    class="flex min-w-0 items-center gap-2 rounded-xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
+                    :aria-expanded="isOpen"
+                    :aria-controls="panelId"
+                    :title="isOpen ? 'Sembunyikan soal materi' : 'Tampilkan soal materi'"
+                    @click="isOpen = !isOpen"
+                >
+                    <IconChevronDown
+                        :size="18"
+                        class="shrink-0 text-text-muted transition-transform"
+                        :class="!isOpen ? '-rotate-90' : ''"
+                    />
+                    <IconFileDescription :size="20" class="shrink-0 text-secondary" />
+                    <span role="heading" aria-level="3" class="truncate text-title-md font-semibold text-text-heading">
+                        {{ group.materiSoal.judul }}
+                    </span>
+                </button>
                 <span class="inline-block rounded-full bg-pastel-purple/50 px-2.5 py-0.5 text-label-md font-medium text-text-heading">
                     {{ materiSoalTypeLabelFn(group.materiSoal) }}
                 </span>
@@ -84,16 +111,19 @@ defineEmits([
             </div>
 
             <PenampilMediaMateriSoal
+                v-if="isOpen"
                 :materi-soal="group.materiSoal"
                 :expanded="isMateriSoalExpandedFn(group.materiSoal.id)"
                 @toggle-expand="toggleMateriSoalFn(group.materiSoal.id)"
             />
         </div>
 
+        <div v-if="isOpen" :id="panelId">
             <TabelSoal
                 :soal="group.soal"
                 :bank-locked="bankLocked"
                 @delete="(...args) => $emit('soal-delete', ...args)"
-        />
+            />
+        </div>
     </BaseCard>
 </template>

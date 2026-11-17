@@ -1,6 +1,6 @@
 <script setup>
 import { computed, h } from 'vue';
-import { IconEdit, IconTrash } from '@tabler/icons-vue';
+import { IconEdit, IconEye, IconTrash } from '@tabler/icons-vue';
 import BaseButton from '@/Components/Base/BaseButton.vue';
 import BaseTambahData from '@/Components/Base/BaseTambahData.vue';
 import AppDataTable from '@/Components/Ui/AppDataTable.vue';
@@ -11,7 +11,7 @@ const props = defineProps({
     tableKey: { type: String, default: 'admin-bank-soal' },
 });
 
-const emit = defineEmits(['create', 'edit', 'delete']);
+const emit = defineEmits(['create', 'detail', 'edit', 'delete']);
 
 const tableColumns = computed(() => [
     ...props.columns,
@@ -25,6 +25,17 @@ const tableColumns = computed(() => [
             const deleteDisabled = row.soal_count > 0 || row.part_ujian_count > 0;
 
             return h('div', { class: 'flex items-center justify-center gap-1' }, [
+                h(
+                    BaseButton,
+                    {
+                        variant: 'secondary',
+                        iconOnly: true,
+                        title: 'Lihat detail bank soal',
+                        'aria-label': 'Lihat detail bank soal',
+                        onClick: () => emit('detail', row),
+                    },
+                    () => h(IconEye, { size: 16 }),
+                ),
                 h(
                     BaseButton,
                     {

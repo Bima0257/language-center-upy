@@ -36,14 +36,14 @@ class PengawasanController extends Controller
         $sesi = $this->sesiRepo->temukanDenganJawaban($sesiUjian->id);
 
         return Inertia::render('Pengawas/TinjauanSesi/index', [
-            'sesiUjian' => $sesi->loadMissing(['pengguna', 'catatanPelanggaran', 'slotUjian.periodeUjian.ujian', 'jawaban.soal']),
+            'sesiUjian' => $sesi->loadMissing(['pengguna.profilPeserta', 'catatanPelanggaran', 'slotUjian.periodeUjian.ujian', 'jawaban.soal']),
         ]);
     }
 
     public function pelanggaran(SesiUjian $sesiUjian): Response
     {
         return Inertia::render('Pengawas/TinjauanSesi/index', [
-            'sesiUjian' => $sesiUjian->load(['pengguna', 'catatanPelanggaran']),
+            'sesiUjian' => $sesiUjian->load(['pengguna.profilPeserta', 'catatanPelanggaran']),
         ]);
     }
 

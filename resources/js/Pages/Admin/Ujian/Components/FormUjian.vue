@@ -1,5 +1,6 @@
 <script setup>
 import DropDown from '@/Components/Shared/DropDown.vue';
+import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 
 const props = defineProps({
     creating: { type: Boolean, default: false },
@@ -57,8 +58,12 @@ const modeOptions = [
 
         <div>
             <label class="text-label-md font-medium text-text-heading block mb-2">Deskripsi</label>
-            <BaseTextarea v-model="props.form.deskripsi" rows="3"
-                          :placeholder="props.creating ? 'Deskripsi ujian...' : null" />
+            <RichTextEditor
+                v-model="props.form.deskripsi"
+                placeholder="Deskripsi ujian..."
+                :min-height="'120px'"
+            />
+            <p v-if="props.form.errors.deskripsi" class="text-error-red text-xs mt-1">{{ props.form.errors.deskripsi }}</p>
         </div>
 
         <BaseFormGrid>

@@ -104,7 +104,7 @@ class MulaiSesiUjian
                 }
 
                 $ujian = $slot->periodeUjian->ujian;
-                $snapshotPenilaian = $this->layananAturan->snapshotAktif($ujian->program_tes_id);
+                $snapshotPenilaian = $this->layananAturan->snapshotProgram($ujian->program_tes_id);
                 $this->pastikanSoalSesuaiSkema($ujian, $snapshotPenilaian);
 
                 $partPertama = $ujian->partUjian->first();

@@ -11,7 +11,7 @@ class LaporanRepository implements LaporanRepositoryInterface
     public function semuaIntegritas(): Collection
     {
         return SesiUjian::with([
-            'pengguna',
+            'pengguna.profilPeserta',
             'slotUjian.periodeUjian.ujian',
         ])
             ->orderBy('created_at', 'desc')
@@ -21,7 +21,7 @@ class LaporanRepository implements LaporanRepositoryInterface
     public function temukanUntukEkspor(string $id): ?SesiUjian
     {
         return SesiUjian::with([
-            'pengguna', 'catatanPelanggaran', 'slotUjian.periodeUjian.ujian', 'slotUjian', 'jawaban.soal',
+            'pengguna.profilPeserta', 'catatanPelanggaran', 'slotUjian.periodeUjian.ujian', 'slotUjian', 'jawaban.soal',
         ])->find($id);
     }
 }

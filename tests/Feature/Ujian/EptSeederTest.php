@@ -77,7 +77,7 @@ class EptSeederTest extends TestCase
     {
         $ept = ProgramTes::where('nama', 'EPT')->firstOrFail();
         $reading = Section::where('program_tes_id', $ept->id)->where('nama', 'Reading')->firstOrFail();
-        $skema = SkemaPenilaian::where('program_tes_id', $ept->id)->where('status', 'aktif')->firstOrFail();
+        $skema = SkemaPenilaian::where('program_tes_id', $ept->id)->firstOrFail();
 
         $this->assertSame(50, $skema->aturanPenilaian()->where('section_id', $reading->id)->value('skor_mentah_maksimum'));
         $this->assertSame('400.0', $skema->skala_total_maksimum);

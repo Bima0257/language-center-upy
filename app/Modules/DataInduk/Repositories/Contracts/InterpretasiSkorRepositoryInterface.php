@@ -20,8 +20,6 @@ interface InterpretasiSkorRepositoryInterface
         array $data,
     ): InterpretasiSkor;
 
-    public function salinKeSkema(string $skemaAsalId, string $skemaTujuanId): void;
-
     public function create(array $data): InterpretasiSkor;
 
     public function createMany(array $data): void;

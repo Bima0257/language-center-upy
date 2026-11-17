@@ -16,6 +16,13 @@ import BaseModalHeader from '@/Components/Base/BaseModalHeader.vue';
 import BaseToggle from '@/Components/Base/BaseToggle.vue';
 import DropDown from '@/Components/Shared/DropDown.vue';
 import { useConfirm } from '@/Composables/useConfirm';
+import {
+    jenisPesertaIdentitasLabel,
+    jenisPesertaLabel,
+    jenisPesertaOptions,
+    jenisPesertaVariant,
+    labelIdentitasPeserta,
+} from '@/constants/jenisPeserta';
 import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-vue';
 
 const props = defineProps({
@@ -52,6 +59,12 @@ const tableFilters = computed(() => [
         ],
     },
     {
+        key: 'f_jenis_peserta',
+        label: 'Jenis Peserta',
+        allOption: true,
+        options: jenisPesertaOptions,
+    },
+    {
         key: 'f_program_studi_id',
         label: 'Program Studi',
         allOption: true,
@@ -72,10 +85,20 @@ const form = useForm({
     password_confirmation: '',
     status: true,
     role_ids: [],
+    jenis_peserta: 'mahasiswa',
+    nomor_identitas: '',
+    institusi: '',
     program_studi_id: null,
+    tahun_mulai: '',
 });
 
 const roleOptions = computed(() => props.roles.map(role => ({ value: role.id, label: role.name })));
+const roleNames = computed(() => Object.fromEntries(props.roles.map(role => [role.id, role.name])));
+const isPesertaRole = computed(() => form.role_ids.some(id => roleNames.value[id] === 'peserta'));
+const formJenisPeserta = computed(() => form.jenis_peserta || 'mahasiswa');
+const memerlukanAkademik = computed(() => isPesertaRole.value && ['mahasiswa', 'dosen'].includes(formJenisPeserta.value));
+const memerlukanInstitusi = computed(() => isPesertaRole.value && formJenisPeserta.value === 'umum');
+const labelIdentitas = computed(() => labelIdentitasPeserta(formJenisPeserta.value));
 
 function switchTab(tab) {
     router.get(route('admin.identity.users.index'), {
@@ -98,7 +121,11 @@ function openEdit(user) {
     form.password_confirmation = '';
     form.status = Boolean(user.status);
     form.role_ids = (user.roles || []).map(role => role.id);
+    form.jenis_peserta = user.jenis_peserta || 'mahasiswa';
+    form.nomor_identitas = user.nomor_identitas || '';
+    form.institusi = user.institusi || '';
     form.program_studi_id = user.program_studi_id || null;
+    form.tahun_mulai = user.tahun_mulai || '';
     showForm.value = true;
 }
 
@@ -139,6 +166,25 @@ const columns = [
         accessorKey: 'email',
         header: 'Email',
         cell: info => info.getValue() || '-',
+    },
+    {
+        id: 'identitas',
+        header: 'Identitas Peserta',
+        enableSorting: false,
+        cell: info => {
+            const user = info.row.original;
+            const jenis = user.jenis_peserta;
+            const isPeserta = (user.role_names || []).includes('peserta');
+
+            if (!isPeserta || !jenis) return '-';
+
+            const labelIdentitas = jenisPesertaIdentitasLabel[jenis] || 'Identitas';
+
+            return h('div', { class: 'flex flex-wrap items-center gap-1' }, [
+                h(BaseBadge, { variant: jenisPesertaVariant[jenis] || 'neutral' }, () => jenisPesertaLabel[jenis] || jenis),
+                h('span', { class: 'text-label-md text-text-muted' }, `${labelIdentitas}: ${user.nomor_identitas || '-'}`),
+            ]);
+        },
     },
     {
         accessorKey: 'roles',
@@ -283,18 +329,48 @@ const columns = [
                     <BaseCheckboxGroup v-model="form.role_ids" :options="roleOptions" inline />
                     <BaseInputError :message="form.errors.role_ids" />
                 </div>
-                <div>
-                    <BaseFieldLabel>Program Studi</BaseFieldLabel>
-                    <DropDown
-                        v-model="form.program_studi_id"
-                        :options="props.programStudis"
-                        option-label="label"
-                        option-value="value"
-                        placeholder="Pilih program studi"
-                        clearable
-                    />
-                    <BaseInputError :message="form.errors.program_studi_id" />
-                </div>
+                <template v-if="isPesertaRole">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <BaseFieldLabel required>Jenis Peserta</BaseFieldLabel>
+                            <DropDown
+                                v-model="form.jenis_peserta"
+                                :options="jenisPesertaOptions"
+                                option-label="label"
+                                option-value="value"
+                                placeholder="Pilih jenis peserta"
+                            />
+                            <BaseInputError :message="form.errors.jenis_peserta" />
+                        </div>
+                        <div>
+                            <BaseFieldLabel required>{{ labelIdentitas }}</BaseFieldLabel>
+                            <BaseInput v-model="form.nomor_identitas" />
+                            <BaseInputError :message="form.errors.nomor_identitas" />
+                        </div>
+                    </div>
+                    <div v-if="memerlukanInstitusi">
+                        <BaseFieldLabel required>Institusi</BaseFieldLabel>
+                        <BaseInput v-model="form.institusi" placeholder="Nama institusi/instansi" />
+                        <BaseInputError :message="form.errors.institusi" />
+                    </div>
+                    <div v-if="memerlukanAkademik">
+                        <BaseFieldLabel required>Program Studi</BaseFieldLabel>
+                        <DropDown
+                            v-model="form.program_studi_id"
+                            :options="props.programStudis"
+                            option-label="label"
+                            option-value="value"
+                            placeholder="Pilih program studi"
+                            clearable
+                        />
+                        <BaseInputError :message="form.errors.program_studi_id" />
+                    </div>
+                    <div>
+                        <BaseFieldLabel>Tahun Mulai</BaseFieldLabel>
+                        <BaseInput v-model="form.tahun_mulai" type="number" />
+                        <BaseInputError :message="form.errors.tahun_mulai" />
+                    </div>
+                </template>
                 <BaseToggle v-model="form.status" label="Status aktif" />
             </form>
 

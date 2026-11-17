@@ -27,22 +27,12 @@ class AturanPenilaianController extends Controller
         );
     }
 
-    public function detail(Request $request, ProgramTes $programTes): Response
+    public function detail(ProgramTes $programTes): Response
     {
         return Inertia::render(
             'Admin/DataInduk/AturanPenilaian/ProgramTes/index',
-            $this->layananAturan->dataDetail($programTes, $request->query('skema')),
+            $this->layananAturan->dataDetail($programTes),
         );
-    }
-
-    public function buatVersi(ProgramTes $programTes): RedirectResponse
-    {
-        $skema = $this->layananAturan->buatVersi($programTes);
-
-        return to_route('admin.data-induk.aturan-penilaian.program-tes.daftar', [
-            'programTes' => $programTes->id,
-            'skema' => $skema->id,
-        ])->with('success', 'Versi skema penilaian berhasil dibuat sebagai draft.');
     }
 
     public function perbarui(
@@ -57,28 +47,6 @@ class AturanPenilaianController extends Controller
         }
 
         return back()->with('success', 'Aturan penilaian berhasil disimpan.');
-    }
-
-    public function aktifkan(SkemaPenilaian $skema): RedirectResponse
-    {
-        try {
-            $this->layananAturan->aktifkan($skema);
-        } catch (\RuntimeException $exception) {
-            return back()->with('error', $exception->getMessage());
-        }
-
-        return back()->with('success', 'Skema penilaian berhasil diaktifkan.');
-    }
-
-    public function arsipkan(SkemaPenilaian $skema): RedirectResponse
-    {
-        try {
-            $this->layananAturan->arsipkan($skema);
-        } catch (\RuntimeException $exception) {
-            return back()->with('error', $exception->getMessage());
-        }
-
-        return back()->with('success', 'Skema penilaian berhasil diarsipkan.');
     }
 
     public function simulasi(Request $request, SkemaPenilaian $skema): RedirectResponse

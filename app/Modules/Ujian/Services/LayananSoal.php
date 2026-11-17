@@ -25,6 +25,8 @@ use Mews\Purifier\Facades\Purifier;
 
 class LayananSoal
 {
+    private const SOAL_PER_HALAMAN_PUSTAKA = 200;
+
     public function __construct(
         private SoalRepositoryInterface $soalRepo,
         private BankSoalRepositoryInterface $bankSoalRepo,
@@ -162,8 +164,8 @@ class LayananSoal
         }
 
         $soal = $bankSoalId
-            ? $this->soalRepo->paginateDenganFilter($normalizedFilter)
-            : $this->soalRepo->paginatorKosong();
+            ? $this->soalRepo->paginateDenganFilter($normalizedFilter, self::SOAL_PER_HALAMAN_PUSTAKA)
+            : $this->soalRepo->paginatorKosong(self::SOAL_PER_HALAMAN_PUSTAKA);
 
         return [
             'soal' => $soal,

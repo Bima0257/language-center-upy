@@ -8,14 +8,18 @@ use App\Models\PendaftaranUjian;
 use App\Models\Pengguna;
 use App\Models\PeriodePendaftaranUjian;
 use App\Models\PeriodeUjian;
+use App\Models\ProgramTes;
 use App\Models\SlotUjian;
+use App\Models\Ujian;
 use App\Modules\DataInduk\Repositories\Contracts\FakultasRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\ProgramStudiRepositoryInterface;
+use App\Modules\DataInduk\Repositories\Contracts\ProgramTesRepositoryInterface;
 use App\Modules\PendaftaranUjian\Repositories\Contracts\PendaftaranUjianRepositoryInterface;
 use App\Modules\PendaftaranUjian\Repositories\Contracts\PeriodePendaftaranUjianRepositoryInterface;
 use App\Modules\Pengguna\Repositories\Contracts\PenggunaRepositoryInterface;
 use App\Modules\Penjadwalan\Repositories\Contracts\PenjadwalanRepositoryInterface;
 use App\Modules\Penjadwalan\Repositories\Contracts\SlotUjianRepositoryInterface;
+use App\Modules\Ujian\Repositories\Contracts\UjianRepositoryInterface;
 use App\Services\ImageCompressionService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
@@ -33,6 +37,8 @@ class LayananPendaftaranUjian
         private PenggunaRepositoryInterface $penggunaRepo,
         private FakultasRepositoryInterface $fakultasRepo,
         private ProgramStudiRepositoryInterface $programStudiRepo,
+        private ProgramTesRepositoryInterface $programTesRepo,
+        private UjianRepositoryInterface $ujianRepo,
         private PenjadwalanRepositoryInterface $penjadwalanRepo,
         private ImageCompressionService $imageCompression,
     ) {}
@@ -94,6 +100,39 @@ class LayananPendaftaranUjian
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
+    public function dataPesertaSemua(array $filters): array
+    {
+        $filters['search'] = $filters['q'] ?? $filters['search'] ?? null;
+        $filters['status'] = $filters['f_status'] ?? $filters['status'] ?? null;
+        $filters['program_tes_id'] = $filters['f_program_tes_id'] ?? $filters['program_tes_id'] ?? null;
+        $filters['ujian_id'] = $filters['f_ujian_id'] ?? $filters['ujian_id'] ?? null;
+        $perPage = (int) ($filters['per_page'] ?? 15);
+
+        return [
+            'pendaftaranUjian' => $this->pendaftaranRepo->paginate($filters, $perPage),
+            'filters' => $filters,
+            'programTes' => $this->programTesRepo->semuaAktifBerurutan()
+                ->map(fn (ProgramTes $programTes): array => [
+                    'value' => $programTes->id,
+                    'label' => $programTes->nama,
+                ])
+                ->values()
+                ->all(),
+            'ujian' => $this->ujianRepo->semuaAktifDenganProgramTes()
+                ->map(fn (Ujian $ujian): array => [
+                    'value' => $ujian->id,
+                    'label' => $ujian->judul,
+                    'program_tes_id' => $ujian->program_tes_id,
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
     public function dataJadwal(Pengguna $pengguna, array $filters): array
     {
         $periodeUjian = $this->penjadwalanRepo->semuaAktifDenganUjianDanSlot()
@@ -127,23 +166,25 @@ class LayananPendaftaranUjian
             'ringkasanUjian' => $this->buatRingkasanUjian($periodeUntukProgramTes),
             'ringkasanPeriode' => $this->buatRingkasanPeriode($periodeUntukUjian),
             'filters' => $this->contextDariFilter($filters),
-            ...$this->dataFormMahasiswa($pengguna),
+            ...$this->dataFormPeserta($pengguna),
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    public function dataFormMahasiswa(Pengguna $pengguna): array
+    public function dataFormPeserta(Pengguna $pengguna): array
     {
-        $profil = $pengguna->loadMissing('profilMahasiswa')->profilMahasiswa;
+        $profil = $pengguna->loadMissing('profilPeserta')->profilPeserta;
 
         return [
             'profil' => $profil ? [
-                'nim' => $profil->nim,
+                'jenis_peserta' => $profil->jenis_peserta->value,
+                'nomor_identitas' => $profil->nomor_identitas,
+                'institusi' => $profil->institusi,
                 'fakultas_id' => $profil->fakultas_id,
                 'program_studi_id' => $profil->program_studi_id,
-                'tahun_angkatan' => $profil->tahun_angkatan,
+                'tahun_mulai' => $profil->tahun_mulai,
             ] : null,
             'fakultas' => $this->fakultasRepo->semuaAktifBerurutan(),
             'programStudi' => $this->programStudiRepo->semuaAktifBerurutan(),
@@ -395,7 +436,7 @@ class LayananPendaftaranUjian
         array $data,
         UploadedFile $buktiPembayaran,
     ): PendaftaranUjian {
-        $this->pastikanMahasiswa($pengguna);
+        $this->pastikanPesertaUjian($pengguna);
 
         $pendaftaranLama = $this->pendaftaranRepo->temukanUntukSlotDanPengguna($slotUjian->id, $pengguna->id);
         $lokasiLama = $pendaftaranLama?->lokasi_bukti_pembayaran;
@@ -427,11 +468,14 @@ class LayananPendaftaranUjian
                     throw new \RuntimeException('Anda sudah memiliki pendaftaran aktif pada periode ujian ini.');
                 }
 
-                $this->penggunaRepo->perbaruiProfilMahasiswa($pengguna, [
-                    'nim' => $data['nim'],
-                    'fakultas_id' => $data['fakultas_id'],
-                    'program_studi_id' => $data['program_studi_id'],
-                    'tahun_angkatan' => $data['tahun_angkatan'],
+                $profilSaatIni = $pengguna->loadMissing('profilPeserta')->profilPeserta;
+
+                $this->penggunaRepo->perbaruiProfilPeserta($pengguna, [
+                    'nomor_identitas' => $data['nomor_identitas'],
+                    'institusi' => filled($data['institusi'] ?? null) ? $data['institusi'] : $profilSaatIni?->institusi,
+                    'fakultas_id' => $data['fakultas_id'] ?? null,
+                    'program_studi_id' => $data['program_studi_id'] ?? null,
+                    'tahun_mulai' => $data['tahun_mulai'] ?? $profilSaatIni?->tahun_mulai,
                 ]);
 
                 $dataPendaftaran = [
@@ -570,7 +614,7 @@ class LayananPendaftaranUjian
 
     public function daftarkanTryout(Pengguna $pengguna, SlotUjian $slotUjian): PendaftaranUjian
     {
-        $this->pastikanMahasiswa($pengguna);
+        $this->pastikanPesertaUjian($pengguna);
         $this->pastikanProfilLengkap($pengguna);
 
         $pendaftaran = $this->pendaftaranRepo->temukanUntukSlotDanPengguna($slotUjian->id, $pengguna->id);
@@ -606,19 +650,17 @@ class LayananPendaftaranUjian
         return $this->pendaftaranRepo->buat($data);
     }
 
-    private function pastikanMahasiswa(Pengguna $pengguna): void
+    private function pastikanPesertaUjian(Pengguna $pengguna): void
     {
-        if (! $pengguna->adalahMahasiswa()) {
-            throw new \RuntimeException('Hanya mahasiswa yang dapat mendaftar ujian.');
+        if (! $pengguna->adalahPesertaUjian()) {
+            throw new \RuntimeException('Hanya peserta ujian yang dapat mendaftar ujian.');
         }
     }
 
     private function pastikanProfilLengkap(Pengguna $pengguna): void
     {
-        $profil = $pengguna->loadMissing('profilMahasiswa')->profilMahasiswa;
-
-        if ($profil === null || ! $profil->nim || ! $profil->fakultas_id || ! $profil->program_studi_id || ! $profil->tahun_angkatan) {
-            throw new \RuntimeException('Lengkapi identitas akademik sebelum mendaftar atau mengikuti ujian.');
+        if (! $pengguna->profilTerverifikasi()) {
+            throw new \RuntimeException('Lengkapi identitas peserta sebelum mendaftar atau mengikuti ujian.');
         }
     }
 

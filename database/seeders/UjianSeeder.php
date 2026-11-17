@@ -10,7 +10,7 @@ use App\Models\PartUjian;
 use App\Models\Pengguna;
 use App\Models\PeriodePendaftaranUjian;
 use App\Models\PeriodeUjian;
-use App\Models\ProfilMahasiswa;
+use App\Models\ProfilPeserta;
 use App\Models\ProgramStudi;
 use App\Models\ProgramTes;
 use App\Models\Section;
@@ -85,13 +85,14 @@ class UjianSeeder extends Seeder
         $admin = Pengguna::where('email', 'admin@toefl.test')->first();
 
         if ($fkip && $pbi && $admin) {
-            ProfilMahasiswa::firstOrCreate(
+            ProfilPeserta::firstOrCreate(
                 ['pengguna_id' => $mahasiswaDemo->id],
                 [
-                    'nim' => '2200010099',
+                    'jenis_peserta' => 'mahasiswa',
+                    'nomor_identitas' => '2200010099',
                     'fakultas_id' => $fkip->id,
                     'program_studi_id' => $pbi->id,
-                    'tahun_angkatan' => 2022,
+                    'tahun_mulai' => 2022,
                     'foto_identitas' => null,
                     'terverifikasi' => true,
                     'diverifikasi_pada' => now(),
@@ -100,9 +101,7 @@ class UjianSeeder extends Seeder
             );
         }
 
-        $skemaPenilaian = SkemaPenilaian::where('program_tes_id', $ept->id)
-            ->where('status', 'aktif')
-            ->first();
+        $skemaPenilaian = SkemaPenilaian::where('program_tes_id', $ept->id)->first();
 
         $snapshotPenilaian = $skemaPenilaian !== null
             ? app(LayananAturanPenilaian::class)->snapshot($skemaPenilaian)

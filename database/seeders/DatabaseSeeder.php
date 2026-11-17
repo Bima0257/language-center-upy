@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Fakultas;
 use App\Models\Pengguna;
-use App\Models\ProfilMahasiswa;
+use App\Models\ProfilPeserta;
 use App\Models\ProgramStudi;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -58,12 +58,13 @@ class DatabaseSeeder extends Seeder
         $pbi = ProgramStudi::where('kode', 'PBI')->first();
 
         if ($fkip && $pbi) {
-            ProfilMahasiswa::create([
+            ProfilPeserta::create([
                 'pengguna_id' => $mahasiswa->id,
-                'nim' => '2200010001',
+                'jenis_peserta' => 'mahasiswa',
+                'nomor_identitas' => '2200010001',
                 'fakultas_id' => $fkip->id,
                 'program_studi_id' => $pbi->id,
-                'tahun_angkatan' => 2022,
+                'tahun_mulai' => 2022,
                 'foto_identitas' => null,
                 'terverifikasi' => true,
                 'diverifikasi_pada' => now(),
@@ -71,6 +72,60 @@ class DatabaseSeeder extends Seeder
             ]);
 
             $mahasiswa->programStudis()->sync([$pbi->id]);
+
+            $dosen = Pengguna::firstOrCreate(
+                ['email' => 'dosen@toefl.test'],
+                [
+                    'name' => 'Dosen Demo',
+                    'password' => bcrypt('password'),
+                    'email_verified_at' => now(),
+                    'aktif' => true,
+                ],
+            );
+            $dosen->assignRole('peserta');
+
+            ProfilPeserta::firstOrCreate(
+                ['pengguna_id' => $dosen->id],
+                [
+                    'jenis_peserta' => 'dosen',
+                    'nomor_identitas' => 'NIDN-2200010002',
+                    'fakultas_id' => $fkip->id,
+                    'program_studi_id' => $pbi->id,
+                    'tahun_mulai' => 2015,
+                    'foto_identitas' => null,
+                    'terverifikasi' => true,
+                    'diverifikasi_pada' => now(),
+                    'verifikator_id' => $admin->id,
+                ],
+            );
+            $dosen->programStudis()->sync([$pbi->id]);
+
+            $umum = Pengguna::firstOrCreate(
+                ['email' => 'umum@toefl.test'],
+                [
+                    'name' => 'Peserta Umum Demo',
+                    'password' => bcrypt('password'),
+                    'email_verified_at' => now(),
+                    'aktif' => true,
+                ],
+            );
+            $umum->assignRole('peserta');
+
+            ProfilPeserta::firstOrCreate(
+                ['pengguna_id' => $umum->id],
+                [
+                    'jenis_peserta' => 'umum',
+                    'nomor_identitas' => 'NIK-3400000000000001',
+                    'institusi' => 'Masyarakat Umum',
+                    'fakultas_id' => null,
+                    'program_studi_id' => null,
+                    'tahun_mulai' => null,
+                    'foto_identitas' => null,
+                    'terverifikasi' => true,
+                    'diverifikasi_pada' => now(),
+                    'verifikator_id' => $admin->id,
+                ],
+            );
         }
     }
 }

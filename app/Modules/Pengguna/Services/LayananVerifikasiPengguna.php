@@ -24,7 +24,7 @@ class LayananVerifikasiPengguna
     {
         $this->pastikanProfil($pengguna);
 
-        $this->penggunaRepo->perbaruiProfilMahasiswa($pengguna, [
+        $this->penggunaRepo->perbaruiProfilPeserta($pengguna, [
             'terverifikasi' => true,
             'diverifikasi_pada' => now(),
             'verifikator_id' => auth()->id(),
@@ -35,7 +35,7 @@ class LayananVerifikasiPengguna
     {
         $this->pastikanProfil($pengguna);
 
-        $this->penggunaRepo->perbaruiProfilMahasiswa($pengguna, [
+        $this->penggunaRepo->perbaruiProfilPeserta($pengguna, [
             'terverifikasi' => false,
             'diverifikasi_pada' => null,
             'verifikator_id' => null,
@@ -44,14 +44,14 @@ class LayananVerifikasiPengguna
 
     public function tolak(Pengguna $pengguna, ?string $alasan): void
     {
-        $profil = $pengguna->profilMahasiswa;
+        $profil = $pengguna->profilPeserta;
 
         if ($profil !== null) {
             if ($profil->foto_identitas) {
                 Storage::disk('public')->delete($profil->foto_identitas);
             }
 
-            $this->penggunaRepo->perbaruiProfilMahasiswa($pengguna, [
+            $this->penggunaRepo->perbaruiProfilPeserta($pengguna, [
                 'foto_identitas' => null,
                 'catatan_verifikasi' => $alasan,
             ]);
@@ -66,8 +66,8 @@ class LayananVerifikasiPengguna
 
     private function pastikanProfil(Pengguna $pengguna): void
     {
-        if ($pengguna->profilMahasiswa === null) {
-            throw new RuntimeException('Profile mahasiswa tidak ditemukan.');
+        if ($pengguna->profilPeserta === null) {
+            throw new RuntimeException('Profil peserta tidak ditemukan.');
         }
     }
 }

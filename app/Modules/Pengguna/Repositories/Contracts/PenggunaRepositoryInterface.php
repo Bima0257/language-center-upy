@@ -3,7 +3,7 @@
 namespace App\Modules\Pengguna\Repositories\Contracts;
 
 use App\Models\Pengguna;
-use App\Models\ProfilMahasiswa;
+use App\Models\ProfilPeserta;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -29,9 +29,9 @@ interface PenggunaRepositoryInterface
 
     public function create(array $data): Pengguna;
 
-    public function buatProfilMahasiswa(Pengguna $pengguna, array $data): ProfilMahasiswa;
+    public function buatProfilPeserta(Pengguna $pengguna, array $data): ProfilPeserta;
 
-    public function perbaruiProfilMahasiswa(Pengguna $pengguna, array $data): ProfilMahasiswa;
+    public function perbaruiProfilPeserta(Pengguna $pengguna, array $data): ProfilPeserta;
 
     public function update(Pengguna $pengguna, array $data): Pengguna;
 }

@@ -37,10 +37,15 @@ const emit = defineEmits(['close', 'submit']);
             <form id="form-slot-ujian" @submit.prevent="emit('submit')" class="space-y-5 px-8 pb-8 pt-6">
                 <div>
                     <label class="text-label-md font-medium text-text-heading block mb-2">Tanggal Sesi</label>
-                    <input type="date" v-model="props.form.tanggal" required
-                           :min="props.slotDateMin" :max="props.slotDateMax"
-                           class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
-                    <p v-if="props.form.errors.tanggal" class="text-error-red text-xs mt-1">{{ props.form.errors.tanggal }}</p>
+                    <BaseDatePicker
+                        v-model="props.form.tanggal"
+                        mode="date"
+                        placeholder="Pilih tanggal sesi"
+                        required
+                        :min="props.slotDateMin"
+                        :max="props.slotDateMax"
+                        :error="props.form.errors.tanggal"
+                    />
                     <p class="text-label-md text-text-muted mt-1">
                         Hanya tanggal dalam periode {{ props.formatDate(props.periodeUjian.tanggal_mulai) }} s/d {{ props.formatDate(props.periodeUjian.tanggal_selesai) }} yang bisa dipilih.
                     </p>

@@ -1,6 +1,7 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
-import { IconHeadphones, IconEye, IconEdit, IconTrash } from '@tabler/icons-vue';
+import { IconEdit, IconEye, IconHeadphones, IconPhoto, IconTrash } from '@tabler/icons-vue';
+import BaseBadge from '@/Components/Base/BaseBadge.vue';
+import BaseButton from '@/Components/Base/BaseButton.vue';
 
 const props = defineProps({
     soal: { type: Array, default: () => [] },
@@ -20,6 +21,14 @@ function previewUrl(question) {
         soal_id: question.id,
     });
 }
+
+function teksSoal(question) {
+    if (question.teks_soal) return question.teks_soal;
+    if (question.materi_soal?.url_audio) return 'Soal audio';
+    if (question.materi_soal?.url_gambar) return 'Soal gambar';
+
+    return '—';
+}
 </script>
 
 <template>
@@ -27,50 +36,80 @@ function previewUrl(question) {
         <table class="w-full text-left">
             <thead>
                 <tr class="border-b border-outline-variant/30 bg-surface-container-low">
+                    <th class="w-12 px-5 py-4 text-center text-label-md font-semibold text-text-muted uppercase tracking-wider">No.</th>
                     <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Soal</th>
-                    <th class="text-label-md font-semibold text-text-muted uppercase tracking-wider px-5 py-4">Pembuat</th>
+                    <th class="w-px whitespace-nowrap px-5 py-4 text-center text-label-md font-semibold text-text-muted uppercase tracking-wider">Kunci</th>
                     <th class="w-px min-w-20 whitespace-nowrap px-5 py-4 text-center text-label-md font-semibold text-text-muted uppercase tracking-wider">Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="q in soal" :key="q.id"
+                <tr v-for="(question, indeks) in soal" :key="question.id"
                     class="border-b border-outline-variant/20 last:border-0 hover:bg-surface-container-low/50 transition-colors">
+                    <td class="px-5 py-4 text-center text-body-md text-text-muted">{{ indeks + 1 }}</td>
                     <td class="px-5 py-4 min-w-[260px] max-w-md">
-                        <span v-if="q.materi_soal?.url_audio"
-                              class="inline-flex items-center gap-1 bg-pastel-blue/50 text-info px-2 py-0.5 rounded-full text-label-md font-medium mb-1">
-                            <IconHeadphones :size="12" /> Audio
-                        </span>
-                        <p class="text-text-heading text-body-md font-medium line-clamp-2">{{ q.teks_soal }}</p>
+                        <div
+                            v-if="question.materi_soal?.url_audio || question.materi_soal?.url_gambar"
+                            class="mb-1 flex flex-wrap items-center gap-1"
+                        >
+                            <span
+                                v-if="question.materi_soal?.url_audio"
+                                class="inline-flex items-center gap-1 bg-pastel-blue/50 text-info px-2 py-0.5 rounded-full text-label-md font-medium"
+                            >
+                                <IconHeadphones :size="12" /> Audio
+                            </span>
+                            <span
+                                v-if="question.materi_soal?.url_gambar"
+                                class="inline-flex items-center gap-1 bg-pastel-purple/50 text-text-heading px-2 py-0.5 rounded-full text-label-md font-medium"
+                            >
+                                <IconPhoto :size="12" /> Gambar
+                            </span>
+                        </div>
+                        <p class="text-text-heading text-body-md font-medium line-clamp-2">{{ teksSoal(question) }}</p>
                     </td>
-                    <td class="px-5 py-4 text-body-md text-text-body whitespace-nowrap">{{ q.pembuat?.name || '-' }}</td>
+                    <td class="w-px whitespace-nowrap px-5 py-4 text-center">
+                        <BaseBadge variant="pastel-blue">{{ question.kunci_jawaban || '-' }}</BaseBadge>
+                    </td>
                     <td class="w-px min-w-20 whitespace-nowrap px-5 py-4 text-center">
                         <div class="flex min-w-20 items-center justify-center gap-1 whitespace-nowrap">
-                            <Link :href="previewUrl(q)" class="p-2 text-text-muted hover:text-secondary transition-colors" title="Pratinjau"><IconEye :size="18" /></Link>
-                            <Link
-                                v-if="!isLocked(q)"
-                                :href="route('pustaka-soal.ubah', q.id)"
-                                class="p-2 text-text-muted hover:text-secondary transition-colors"
+                            <BaseButton
+                                :href="previewUrl(question)"
+                                variant="secondary"
+                                icon-only
+                                title="Pratinjau"
+                                aria-label="Pratinjau soal"
+                            >
+                                <IconEye :size="16" />
+                            </BaseButton>
+                            <BaseButton
+                                v-if="!isLocked(question)"
+                                :href="route('pustaka-soal.ubah', question.id)"
+                                variant="secondary"
+                                icon-only
                                 title="Ubah"
+                                aria-label="Ubah soal"
                             >
-                                <IconEdit :size="18" />
-                            </Link>
-                            <button
+                                <IconEdit :size="16" />
+                            </BaseButton>
+                            <BaseButton
                                 v-else
-                                type="button"
+                                variant="secondary"
+                                icon-only
                                 disabled
-                                class="cursor-not-allowed p-2 text-text-muted opacity-30"
                                 title="Tidak bisa diubah karena bank soal sudah digunakan di ujian"
+                                aria-label="Tidak bisa diubah karena bank soal sudah digunakan di ujian"
                             >
-                                <IconEdit :size="18" />
-                            </button>
-                            <button
-                                :disabled="isLocked(q)"
-                                @click="emit('delete', q.id, q.teks_soal)"
-                                class="p-2 text-text-muted transition-colors hover:text-error-red disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-text-muted"
-                                :title="isLocked(q) ? 'Tidak bisa dihapus karena bank soal sudah digunakan di ujian' : 'Hapus'"
+                                <IconEdit :size="16" />
+                            </BaseButton>
+                            <BaseButton
+                                variant="danger"
+                                icon-only
+                                :disabled="isLocked(question)"
+                                :title="isLocked(question) ? 'Tidak bisa dihapus karena bank soal sudah digunakan di ujian' : 'Hapus'"
+                                :aria-label="isLocked(question) ? 'Tidak bisa dihapus karena bank soal sudah digunakan di ujian' : 'Hapus'"
+                                @click="emit('delete', question.id, teksSoal(question))"
                             >
-                                <IconTrash :size="18" />
-                            </button>
+                                <IconTrash :size="16" />
+                            </BaseButton>
                         </div>
                     </td>
                 </tr>

@@ -377,3 +377,77 @@
         animation: progress-indeterminate 1.2s ease-in-out infinite;
     }
 }
+
+
+.base-datepicker {
+    width: 100%;
+}
+
+    .base-datepicker .dp--input-wrap {
+        width: 100%;
+    }
+
+    .base-datepicker-input {
+        --dp-input-padding: 0.8125rem 2.75rem 0.8125rem 1rem;
+        --dp-input-not-clearable-padding: 1rem;
+        --dp-input-icon-padding: 2.75rem;
+        min-height: 3.25rem;
+        border-radius: 1rem !important;
+        border-color: var(--color-outline-variant) !important;
+        background-color: var(--color-surface-container-lowest) !important;
+        color: var(--color-text-body) !important;
+        font-size: 0.9375rem !important;
+        line-height: 1.5rem !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .base-datepicker-input:hover:not(.dp--disabled):not(.dp--input-focus) {
+        border-color: var(--color-secondary) !important;
+    }
+
+    .base-datepicker-input:focus,
+    .base-datepicker-input.dp--input-focus {
+        border-color: var(--color-secondary) !important;
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-secondary) 16%, transparent) !important;
+        outline: none;
+    }
+
+    .base-datepicker--error .base-datepicker-input {
+        border-color: var(--color-error-red) !important;
+    }
+
+    .base-datepicker-icon {
+        color: var(--color-text-muted);
+    }
+
+    .base-datepicker-menu {
+        --dp-background-color: var(--color-surface-white);
+        --dp-text-color: var(--color-text-body);
+        --dp-hover-color: var(--color-surface-container-low);
+        --dp-hover-text-color: var(--color-text-heading);
+        --dp-hover-icon-color: var(--color-secondary);
+        --dp-primary-color: var(--color-secondary);
+        --dp-primary-disabled-color: var(--color-text-muted);
+        --dp-primary-text-color: var(--color-on-secondary);
+        --dp-secondary-color: var(--color-text-muted);
+        --dp-border-color: var(--color-outline-variant);
+        --dp-menu-border-color: var(--color-outline-variant);
+        --dp-border-color-hover: var(--color-secondary);
+        --dp-border-color-focus: var(--color-secondary);
+        --dp-disabled-color: var(--color-surface-container);
+        --dp-disabled-color-text: var(--color-text-muted);
+        --dp-scroll-bar-background: var(--color-surface-container);
+        --dp-scroll-bar-color: var(--color-surface-container-high);
+        --dp-success-color: var(--color-success);
+        --dp-danger-color: var(--color-error-red);
+        --dp-marker-color: var(--color-error-red);
+        --dp-tooltip-color: var(--color-surface-white);
+        --dp-highlight-color: var(--color-pastel-purple);
+        --dp-border-radius: 1rem;
+        --dp-cell-border-radius: 0.5rem;
+        --dp-font-family: inherit;
+        --dp-font-size: 0.875rem;
+        --dp-menu-padding: 0.75rem;
+        border-radius: 1rem;
+        box-shadow: var(--shadow-standard);
+    }

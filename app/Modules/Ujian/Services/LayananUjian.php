@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Mews\Purifier\Facades\Purifier;
 
 class LayananUjian
 {
@@ -84,6 +85,7 @@ class LayananUjian
     public function buatDenganPart(array $data): Ujian
     {
         $bank = $this->pastikanDataPembuatanUjian($data);
+        $data = $this->bersihkanDeskripsi($data);
 
         return DB::transaction(function () use ($data, $bank) {
             $ujian = $this->ujianRepo->create($data);
@@ -215,6 +217,7 @@ class LayananUjian
 
     public function perbarui(Ujian $ujian, array $data): Ujian
     {
+        $data = $this->bersihkanDeskripsi($data);
         $targetProgramTesId = $data['program_tes_id'];
         $programTes = $this->programTesRepo->find($targetProgramTesId);
 
@@ -462,6 +465,31 @@ class LayananUjian
         $this->partRepo->perbaruiJumlahSoal($part, $this->partRepo->jumlahSoalDalamPart($part->id));
 
         return $dilampirkan;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function bersihkanDeskripsi(array $data): array
+    {
+        if (! array_key_exists('deskripsi', $data)) {
+            return $data;
+        }
+
+        $deskripsi = $data['deskripsi'];
+
+        if (! is_string($deskripsi)) {
+            $data['deskripsi'] = null;
+
+            return $data;
+        }
+
+        $bersih = Purifier::clean($deskripsi);
+        $teks = trim(html_entity_decode(strip_tags($bersih), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $data['deskripsi'] = $teks === '' ? null : $bersih;
+
+        return $data;
     }
 
     private function pastikanDataPembuatanUjian(array $data): BankSoal

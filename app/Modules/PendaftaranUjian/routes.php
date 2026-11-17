@@ -20,6 +20,7 @@ Route::middleware(['auth', 'route.permission'])
     ->name('admin.pendaftaran-ujian.')
     ->group(function () {
         Route::get('/', [PendaftaranUjianController::class, 'daftar'])->name('daftar');
+        Route::get('/peserta', [PendaftaranUjianController::class, 'pesertaSemua'])->name('peserta-semua');
         Route::get('/{periodePendaftaranUjian}/peserta', [PendaftaranUjianController::class, 'peserta'])
             ->whereUuid('periodePendaftaranUjian')
             ->name('peserta');

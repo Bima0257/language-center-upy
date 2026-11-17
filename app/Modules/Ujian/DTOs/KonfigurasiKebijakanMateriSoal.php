@@ -22,6 +22,11 @@ final class KonfigurasiKebijakanMateriSoal
 
     public function materi(): string
     {
-        return $this->ketentuanUntuk(JenisMedia::AUDIO) === KetentuanMedia::REQUIRED ? 'audio' : 'text';
+        $audio = $this->ketentuanUntuk(JenisMedia::AUDIO);
+        $berbasisAudio = $audio === KetentuanMedia::REQUIRED
+            || ($audio === KetentuanMedia::OPTIONAL
+                && $this->ketentuanUntuk(JenisMedia::TEXT) === KetentuanMedia::FORBIDDEN);
+
+        return $berbasisAudio ? 'audio' : 'text';
     }
 }

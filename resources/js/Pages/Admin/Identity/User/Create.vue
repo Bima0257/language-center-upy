@@ -13,6 +13,12 @@ import BaseModalFooter from '@/Components/Base/BaseModalFooter.vue';
 import BaseModalHeader from '@/Components/Base/BaseModalHeader.vue';
 import BaseToggle from '@/Components/Base/BaseToggle.vue';
 import DropDown from '@/Components/Shared/DropDown.vue';
+import {
+    jenisPesertaIdentitasLabel,
+    jenisPesertaLabel,
+    jenisPesertaOptions,
+    labelIdentitasPeserta,
+} from '@/constants/jenisPeserta';
 import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-vue';
 
 const props = defineProps({
@@ -28,6 +34,11 @@ const bulkForm = useForm({ users: [] });
 
 const roleOptions = computed(() => props.roles.map(role => ({ value: role.id, label: role.name })));
 const roleNames = computed(() => Object.fromEntries(props.roles.map(role => [role.id, role.name])));
+const isPesertaRow = computed(() => rowForm.value.role_ids.some(id => roleNames.value[id] === 'peserta'));
+const rowJenisPeserta = computed(() => rowForm.value.jenis_peserta || 'mahasiswa');
+const rowMemerlukanAkademik = computed(() => isPesertaRow.value && ['mahasiswa', 'dosen'].includes(rowJenisPeserta.value));
+const rowMemerlukanInstitusi = computed(() => isPesertaRow.value && rowJenisPeserta.value === 'umum');
+const rowLabelIdentitas = computed(() => labelIdentitasPeserta(rowJenisPeserta.value));
 
 const rowForm = ref(emptyRow());
 
@@ -39,7 +50,11 @@ function emptyRow() {
         password: '',
         status: true,
         role_ids: [],
+        jenis_peserta: 'mahasiswa',
+        nomor_identitas: '',
+        institusi: '',
         program_studi_id: null,
+        tahun_mulai: '',
     };
 }
 
@@ -90,8 +105,16 @@ function commitRow() {
         return;
     }
 
-    if (rowForm.value.role_ids.some(id => roleNames.value[id] === 'peserta') && !rowForm.value.program_studi_id) {
-        localError.value = 'Program studi wajib dipilih untuk peserta.';
+    const jenisPeserta = rowForm.value.jenis_peserta || 'mahasiswa';
+    const isPeserta = rowForm.value.role_ids.some(id => roleNames.value[id] === 'peserta');
+
+    if (isPeserta && ['mahasiswa', 'dosen'].includes(jenisPeserta) && !rowForm.value.program_studi_id) {
+        localError.value = 'Program studi wajib dipilih untuk peserta mahasiswa atau dosen.';
+        return;
+    }
+
+    if (isPeserta && jenisPeserta === 'umum' && !rowForm.value.institusi) {
+        localError.value = 'Institusi wajib diisi untuk peserta umum.';
         return;
     }
 
@@ -160,7 +183,13 @@ function submit() {
                     <tbody class="divide-y divide-outline-variant/30">
                         <tr v-for="(row, index) in rows" :key="`${row.username}-${index}`">
                             <td class="px-4 py-3 text-body-md text-text-body">{{ index + 1 }}</td>
-                            <td class="px-4 py-3 text-body-md font-medium text-text-heading">{{ row.name }}</td>
+                            <td class="px-4 py-3">
+                                <p class="text-body-md font-medium text-text-heading">{{ row.name }}</p>
+                                <p v-if="row.role_ids.some(id => roleNames[id] === 'peserta')" class="text-label-md text-text-muted">
+                                    {{ jenisPesertaLabel[row.jenis_peserta] }}
+                                    · {{ jenisPesertaIdentitasLabel[row.jenis_peserta] }}: {{ row.nomor_identitas || '-' }}
+                                </p>
+                            </td>
                             <td class="px-4 py-3 text-body-md text-text-body">{{ row.username }}</td>
                             <td class="px-4 py-3 text-body-md text-text-body">{{ row.email }}</td>
                             <td class="px-4 py-3">
@@ -239,17 +268,43 @@ function submit() {
                     <BaseFieldLabel required>Role</BaseFieldLabel>
                     <BaseCheckboxGroup v-model="rowForm.role_ids" :options="roleOptions" inline />
                 </div>
-                <div>
-                    <BaseFieldLabel>Program Studi</BaseFieldLabel>
-                    <DropDown
-                        v-model="rowForm.program_studi_id"
-                        :options="props.programStudis"
-                        option-label="label"
-                        option-value="value"
-                        placeholder="Pilih program studi"
-                        clearable
-                    />
-                </div>
+                <template v-if="isPesertaRow">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <BaseFieldLabel required>Jenis Peserta</BaseFieldLabel>
+                            <DropDown
+                                v-model="rowForm.jenis_peserta"
+                                :options="jenisPesertaOptions"
+                                option-label="label"
+                                option-value="value"
+                                placeholder="Pilih jenis peserta"
+                            />
+                        </div>
+                        <div>
+                            <BaseFieldLabel required>{{ rowLabelIdentitas }}</BaseFieldLabel>
+                            <BaseInput v-model="rowForm.nomor_identitas" />
+                        </div>
+                    </div>
+                    <div v-if="rowMemerlukanInstitusi">
+                        <BaseFieldLabel required>Institusi</BaseFieldLabel>
+                        <BaseInput v-model="rowForm.institusi" placeholder="Nama institusi/instansi" />
+                    </div>
+                    <div v-if="rowMemerlukanAkademik">
+                        <BaseFieldLabel required>Program Studi</BaseFieldLabel>
+                        <DropDown
+                            v-model="rowForm.program_studi_id"
+                            :options="props.programStudis"
+                            option-label="label"
+                            option-value="value"
+                            placeholder="Pilih program studi"
+                            clearable
+                        />
+                    </div>
+                    <div>
+                        <BaseFieldLabel>Tahun Mulai</BaseFieldLabel>
+                        <BaseInput v-model="rowForm.tahun_mulai" type="number" />
+                    </div>
+                </template>
                 <BaseToggle v-model="rowForm.status" label="Status aktif" />
             </div>
             <BaseModalFooter>

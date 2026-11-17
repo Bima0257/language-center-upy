@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Pengguna;
+use App\Models\ProgramStudi;
 use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -107,6 +108,59 @@ class KelolaPenggunaTest extends TestCase
         ])->assertRedirect();
 
         $this->assertTrue(Hash::check('Sandi-baru-123', $mahasiswa->fresh()->password));
+    }
+
+    public function test_superadmin_dapat_membuat_pengguna_dosen(): void
+    {
+        $this->masukSebagai('superadmin');
+
+        $rolePeserta = Role::findByName('peserta');
+        $programStudi = ProgramStudi::where('kode', 'PBI')->firstOrFail();
+
+        $this->post(route('admin.identity.users.store'), [
+            'name' => 'Dosen Baru',
+            'username' => 'dosen-baru',
+            'email' => 'dosen-baru@toefl.test',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'status' => true,
+            'role_ids' => [$rolePeserta->id],
+            'jenis_peserta' => 'dosen',
+            'nomor_identitas' => 'NIDN-999001',
+            'program_studi_id' => $programStudi->id,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('profil_peserta', [
+            'jenis_peserta' => 'dosen',
+            'nomor_identitas' => 'NIDN-999001',
+            'program_studi_id' => $programStudi->id,
+        ]);
+    }
+
+    public function test_superadmin_dapat_membuat_pengguna_umum_tanpa_program_studi(): void
+    {
+        $this->masukSebagai('superadmin');
+
+        $rolePeserta = Role::findByName('peserta');
+
+        $this->post(route('admin.identity.users.store'), [
+            'name' => 'Peserta Umum Baru',
+            'username' => 'umum-baru',
+            'email' => 'umum-baru@toefl.test',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'status' => true,
+            'role_ids' => [$rolePeserta->id],
+            'jenis_peserta' => 'umum',
+            'nomor_identitas' => 'NIK-999001',
+            'institusi' => 'Instansi Umum',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('profil_peserta', [
+            'jenis_peserta' => 'umum',
+            'nomor_identitas' => 'NIK-999001',
+            'institusi' => 'Instansi Umum',
+        ]);
     }
 
     public function test_konfirmasi_password_harus_cocok(): void

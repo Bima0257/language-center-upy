@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Identity;
 
+use App\Enums\JenisPeserta;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -23,6 +24,7 @@ class IndexUserRequest extends FormRequest
             'tab' => ['nullable', Rule::in(['admin', 'peserta', 'custom'])],
             'f_role_names' => ['nullable', 'string', 'max:100'],
             'f_status' => ['nullable', Rule::in(['true', 'false'])],
+            'f_jenis_peserta' => ['nullable', Rule::enum(JenisPeserta::class)],
             'f_program_studi_id' => ['nullable', 'uuid', 'exists:program_studi,id'],
         ];
     }

@@ -20,7 +20,7 @@ import {
 } from "@tabler/icons-vue";
 
 export function getNav(roles, permissions = []) {
-    const isMahasiswa = roles.includes("peserta");
+    const isPeserta = roles.includes("peserta");
     const isSuperadmin = roles.includes("superadmin");
     const isAdmin = roles.includes("admin") || roles.includes("superadmin");
     const can = (permission) =>
@@ -28,7 +28,7 @@ export function getNav(roles, permissions = []) {
 
     const nav = [];
 
-    if (isMahasiswa) {
+    if (isPeserta) {
         nav.push(
             { label: "Dasbor", icon: IconChartPie, route: "dasbor" },
             {
@@ -154,6 +154,12 @@ export function getNav(roles, permissions = []) {
                         icon: IconUsers,
                         route: "admin.pendaftaran-ujian.daftar",
                         permission: "admin.pendaftaran-ujian.daftar",
+                    },
+                    {
+                        label: "Peserta Ujian",
+                        icon: IconUsers,
+                        route: "admin.pendaftaran-ujian.peserta-semua",
+                        permission: "admin.pendaftaran-ujian.peserta-semua",
                     },
                 ],
             },

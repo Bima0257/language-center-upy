@@ -42,22 +42,4 @@ class AturanPenilaianRepository implements AturanPenilaianRepositoryInterface
             ],
         );
     }
-
-    public function salinKeSkema(string $skemaAsalId, string $skemaTujuanId): void
-    {
-        $aturanAsal = AturanPenilaian::where('skema_penilaian_id', $skemaAsalId)->get();
-
-        foreach ($aturanAsal as $aturan) {
-            AturanPenilaian::create([
-                'skema_penilaian_id' => $skemaTujuanId,
-                'program_tes_id' => $aturan->program_tes_id,
-                'section_id' => $aturan->section_id,
-                'kode_section' => $aturan->kode_section,
-                'tabel_konversi' => $aturan->tabel_konversi,
-                'skor_mentah_maksimum' => $aturan->skor_mentah_maksimum,
-                'skor_skala_minimum' => $aturan->skor_skala_minimum,
-                'skor_skala_maksimum' => $aturan->skor_skala_maksimum,
-            ]);
-        }
-    }
 }

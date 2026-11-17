@@ -63,7 +63,7 @@ class SesiUjianRepository implements SesiUjianRepositoryInterface
 
     public function ambilSesiAktifDenganPeriode(string $periodeUjianId): Collection
     {
-        return SesiUjian::with('pengguna')
+        return SesiUjian::with('pengguna.profilPeserta')
             ->whereHas('slotUjian', fn ($q) => $q->where('periode_ujian_id', $periodeUjianId))
             ->where('status', StatusSesi::IN_PROGRESS)
             ->get();
@@ -71,7 +71,7 @@ class SesiUjianRepository implements SesiUjianRepositoryInterface
 
     public function ambilSesiDitandai(bool $sertakanDitinjau = false): Collection
     {
-        $query = SesiUjian::with(['pengguna', 'catatanPelanggaran', 'slotUjian.periodeUjian.ujian', 'slotUjian'])
+        $query = SesiUjian::with(['pengguna.profilPeserta', 'catatanPelanggaran', 'slotUjian.periodeUjian.ujian', 'slotUjian'])
             ->where('ditandai', true);
 
         if (! $sertakanDitinjau) {
@@ -83,7 +83,7 @@ class SesiUjianRepository implements SesiUjianRepositoryInterface
 
     public function ambilSesiAktif(): Collection
     {
-        return SesiUjian::with(['pengguna', 'slotUjian.periodeUjian.ujian', 'slotUjian'])
+        return SesiUjian::with(['pengguna.profilPeserta', 'slotUjian.periodeUjian.ujian', 'slotUjian'])
             ->withCount('jawaban')
             ->where('status', StatusSesi::IN_PROGRESS)
             ->get();

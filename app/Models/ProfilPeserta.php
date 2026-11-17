@@ -2,20 +2,24 @@
 
 namespace App\Models;
 
+use App\Enums\JenisPeserta;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * Profil akademik dan verifikasi identitas mahasiswa.
+ * Profil identitas peserta ujian (mahasiswa, dosen, atau umum).
  *
  * @property string $id
  * @property string $pengguna_id
- * @property string|null $nim
- * @property string $fakultas_id
- * @property string $program_studi_id
- * @property int|null $tahun_angkatan
+ * @property JenisPeserta $jenis_peserta
+ * @property string|null $nomor_identitas
+ * @property string|null $institusi
+ * @property string|null $fakultas_id
+ * @property string|null $program_studi_id
+ * @property int|null $tahun_mulai
  * @property string|null $foto_identitas
  * @property bool $terverifikasi
  * @property Carbon|null $diverifikasi_pada
@@ -24,34 +28,36 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Pengguna $pengguna
- * @property-read Fakultas $fakultas
- * @property-read ProgramStudi $programStudi
+ * @property-read Fakultas|null $fakultas
+ * @property-read ProgramStudi|null $programStudi
  * @property-read Pengguna|null $verifikator
  */
-class ProfilMahasiswa extends Model
+#[Fillable([
+    'pengguna_id',
+    'jenis_peserta',
+    'nomor_identitas',
+    'institusi',
+    'fakultas_id',
+    'program_studi_id',
+    'tahun_mulai',
+    'foto_identitas',
+    'terverifikasi',
+    'diverifikasi_pada',
+    'verifikator_id',
+    'catatan_verifikasi',
+])]
+class ProfilPeserta extends Model
 {
     use HasUuids;
 
-    protected $table = 'profil_mahasiswa';
-
-    protected $fillable = [
-        'pengguna_id',
-        'nim',
-        'fakultas_id',
-        'program_studi_id',
-        'tahun_angkatan',
-        'foto_identitas',
-        'terverifikasi',
-        'diverifikasi_pada',
-        'verifikator_id',
-        'catatan_verifikasi',
-    ];
+    protected $table = 'profil_peserta';
 
     protected function casts(): array
     {
         return [
+            'jenis_peserta' => JenisPeserta::class,
+            'tahun_mulai' => 'integer',
             'terverifikasi' => 'boolean',
-            'tahun_angkatan' => 'integer',
             'diverifikasi_pada' => 'datetime',
         ];
     }

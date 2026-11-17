@@ -1,5 +1,6 @@
 <script setup>
 import DropDown from '@/Components/Shared/DropDown.vue';
+import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import { IconPlus } from '@tabler/icons-vue';
 
 const props = defineProps({
@@ -53,8 +54,12 @@ const emit = defineEmits(['submit']);
             </BaseFormGrid>
             <div>
                 <label class="text-label-md font-medium text-text-heading block mb-1">Deskripsi</label>
-                <input type="text" v-model="props.form.deskripsi" placeholder="Opsional"
-                       class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                <RichTextEditor
+                    v-model="props.form.deskripsi"
+                    placeholder="Deskripsi interpretasi skor..."
+                    :min-height="'100px'"
+                />
+                <p v-if="props.form.errors.deskripsi" class="text-error-red text-xs mt-1">{{ props.form.errors.deskripsi }}</p>
             </div>
             <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" v-model="props.form.lulus" class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />

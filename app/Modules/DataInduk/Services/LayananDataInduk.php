@@ -232,12 +232,14 @@ class LayananDataInduk
             || $programTes->section()->exists()
             || $programTes->ujian()->exists()
             || $programTes->aturanPenilaian()->exists()
-            || $programTes->interpretasiSkor()->exists()
-            || $programTes->skemaPenilaian()->exists()) {
+            || $programTes->interpretasiSkor()->exists()) {
             throw new \RuntimeException('Program tes tidak bisa dihapus karena masih digunakan konfigurasi ujian.');
         }
 
-        $this->programTesRepo->delete($programTes);
+        DB::transaction(function () use ($programTes): void {
+            $programTes->skemaPenilaian()->delete();
+            $this->programTesRepo->delete($programTes);
+        });
     }
 
     public function dataDaftarPartSoal(?string $bankSoalId = null, ?string $programTesId = null): array
@@ -508,7 +510,7 @@ class LayananDataInduk
 
     public function buatInterpretasiSkor(array $data): void
     {
-        $this->interpretasiSkorRepo->create($data);
+        $this->interpretasiSkorRepo->create($this->bersihkanTeksOpsional($data));
     }
 
     /**
@@ -517,10 +519,10 @@ class LayananDataInduk
     public function buatBanyakInterpretasiSkor(
         ProgramTes $programTes,
         array $data,
-        ?string $skemaPenilaianId = null,
+        string $skemaPenilaianId,
     ): void {
         $interpretasiSkor = array_map(
-            static fn (array $row): array => [
+            fn (array $row): array => $this->bersihkanTeksOpsional([
                 'skema_penilaian_id' => $skemaPenilaianId,
                 'program_tes_id' => $programTes->id,
                 'skor_minimum' => $row['skor_minimum'],
@@ -529,7 +531,7 @@ class LayananDataInduk
                 'label_tingkat' => $row['label_tingkat'],
                 'lulus' => $row['lulus'] ?? false,
                 'deskripsi' => $row['deskripsi'] ?? null,
-            ],
+            ]),
             $data,
         );
 
@@ -540,7 +542,7 @@ class LayananDataInduk
 
     public function perbaruiInterpretasiSkor(InterpretasiSkor $interpretasi, array $data): void
     {
-        $this->interpretasiSkorRepo->update($interpretasi, $data);
+        $this->interpretasiSkorRepo->update($interpretasi, $this->bersihkanTeksOpsional($data));
     }
 
     public function hapusInterpretasiSkor(InterpretasiSkor $interpretasi): void

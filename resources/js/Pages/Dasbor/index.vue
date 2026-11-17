@@ -20,7 +20,7 @@ defineProps({
 });
 
 const roles = usePage().props.auth?.roles || [];
-const isMahasiswa = roles.includes("peserta");
+const isPeserta = roles.includes("peserta");
 const isAdmin = roles.includes("admin") || roles.includes("superadmin");
 
 </script>
@@ -29,7 +29,7 @@ const isAdmin = roles.includes("admin") || roles.includes("superadmin");
     <Head title="Dasbor" />
     <TataLetakDasbor title="Dasbor" hide-header>
         <!-- === STUDENT DASHBOARD === -->
-        <template v-if="isMahasiswa">
+        <template v-if="isPeserta">
             <Link
                 :href="route('ujian.tersedia')"
                 class="mb-6 flex items-center justify-between bg-primary-container text-on-primary-container rounded-2xl p-6 hover:opacity-90 transition-all active:scale-[0.99]"

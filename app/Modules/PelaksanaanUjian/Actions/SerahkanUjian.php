@@ -114,7 +114,7 @@ class SerahkanUjian
             'program_tes_id' => $programTesId,
         ]);
 
-        return $this->layananAturan->snapshotAktif($programTesId);
+        return $this->layananAturan->snapshotProgram($programTesId);
     }
 
     /**

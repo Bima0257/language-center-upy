@@ -2,12 +2,14 @@
 
 namespace App\Modules\Identity\Services;
 
+use App\Enums\JenisPeserta;
 use App\Models\Pengguna;
 use App\Models\Permission;
 use App\Models\PermissionCategory;
 use App\Models\ProgramStudi;
 use App\Models\Role;
 use App\Modules\Identity\Contracts\IdentityContract;
+use App\Modules\Pengguna\Repositories\Contracts\PenggunaRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -32,6 +34,7 @@ class IdentityService implements IdentityContract
 
     public function __construct(
         private PermissionScanner $permissionScanner,
+        private PenggunaRepositoryInterface $penggunaRepo,
     ) {}
 
     public function listUsersPaginated(array $params): LengthAwarePaginator
@@ -108,13 +111,24 @@ class IdentityService implements IdentityContract
         $this->guardRoleSelection($roles);
 
         $status = (bool) ($data['status'] ?? true);
+        $jenisPeserta = JenisPeserta::tryFrom((string) ($data['jenis_peserta'] ?? '')) ?? JenisPeserta::MAHASISWA;
+        $memerlukanAkademik = in_array($jenisPeserta, [JenisPeserta::MAHASISWA, JenisPeserta::DOSEN], true);
         $programStudiId = $data['program_studi_id'] ?? null;
+        $memilikiRolePeserta = $roles->contains('name', 'peserta');
 
-        if ($roles->contains('name', 'peserta') && blank($programStudiId)) {
-            throw new \RuntimeException('Program studi wajib dipilih untuk pengguna peserta.');
+        if ($memilikiRolePeserta && $memerlukanAkademik && blank($programStudiId)) {
+            throw new \RuntimeException('Program studi wajib dipilih untuk peserta mahasiswa atau dosen.');
         }
 
-        return DB::transaction(function () use ($data, $roles, $status, $programStudiId): Pengguna {
+        if ($memilikiRolePeserta && $jenisPeserta === JenisPeserta::UMUM && blank($data['institusi'] ?? null)) {
+            throw new \RuntimeException('Institusi wajib diisi untuk peserta umum.');
+        }
+
+        $programStudi = $programStudiId !== null
+            ? ProgramStudi::query()->find($programStudiId)
+            : null;
+
+        return DB::transaction(function () use ($data, $roles, $status, $jenisPeserta, $programStudi, $memilikiRolePeserta): Pengguna {
             $pengguna = Pengguna::create([
                 'name' => $data['name'],
                 'username' => $data['username'],
@@ -126,9 +140,20 @@ class IdentityService implements IdentityContract
             ]);
 
             $pengguna->syncRoles($roles->pluck('name')->all());
-            $this->syncUserProgramStudi($pengguna, $programStudiId);
+            $this->syncUserProgramStudi($pengguna, $programStudi?->id);
 
-            return $pengguna->fresh(['roles', 'programStudis']);
+            if ($memilikiRolePeserta) {
+                $this->penggunaRepo->buatProfilPeserta($pengguna, [
+                    'jenis_peserta' => $jenisPeserta->value,
+                    'nomor_identitas' => $data['nomor_identitas'] ?? null,
+                    'institusi' => $data['institusi'] ?? null,
+                    'fakultas_id' => $programStudi?->fakultas_id,
+                    'program_studi_id' => $programStudi?->id,
+                    'tahun_mulai' => $data['tahun_mulai'] ?? null,
+                ]);
+            }
+
+            return $pengguna->fresh(['roles', 'programStudis', 'profilPeserta']);
         });
     }
 
@@ -182,15 +207,57 @@ class IdentityService implements IdentityContract
                 $pengguna->syncRoles($roles->pluck('name')->all());
             }
 
-            if (array_key_exists('program_studi_id', $data)) {
+            $memilikiRolePeserta = $roles?->contains('name', 'peserta') ?? $pengguna->hasRole('peserta');
+            $profil = $pengguna->loadMissing('profilPeserta')->profilPeserta;
+            $jenisDariRequest = JenisPeserta::tryFrom((string) ($data['jenis_peserta'] ?? ''));
+            $jenisPeserta = $jenisDariRequest
+                ?? ($profil !== null ? $profil->jenis_peserta : JenisPeserta::MAHASISWA);
+            $memerlukanAkademik = in_array($jenisPeserta, [JenisPeserta::MAHASISWA, JenisPeserta::DOSEN], true);
+            $programStudiId = array_key_exists('program_studi_id', $data)
+                ? $data['program_studi_id']
+                : $profil?->program_studi_id;
+            $programStudi = $programStudiId !== null
+                ? ProgramStudi::query()->find($programStudiId)
+                : null;
+
+            if ($memilikiRolePeserta) {
+                if ($memerlukanAkademik && blank($programStudiId)) {
+                    throw new \RuntimeException('Program studi wajib dipilih untuk peserta mahasiswa atau dosen.');
+                }
+
+                $institusi = array_key_exists('institusi', $data)
+                    ? $data['institusi']
+                    : $profil?->institusi;
+
+                if ($jenisPeserta === JenisPeserta::UMUM && blank($institusi)) {
+                    throw new \RuntimeException('Institusi wajib diisi untuk peserta umum.');
+                }
+
+                $dataProfil = [
+                    'jenis_peserta' => $jenisPeserta->value,
+                    'nomor_identitas' => array_key_exists('nomor_identitas', $data)
+                        ? $data['nomor_identitas']
+                        : $profil?->nomor_identitas,
+                    'institusi' => $institusi,
+                    'fakultas_id' => $memerlukanAkademik ? $programStudi?->fakultas_id : null,
+                    'program_studi_id' => $memerlukanAkademik ? $programStudi?->id : null,
+                    'tahun_mulai' => array_key_exists('tahun_mulai', $data)
+                        ? $data['tahun_mulai']
+                        : $profil?->tahun_mulai,
+                ];
+
+                if ($profil === null) {
+                    $this->penggunaRepo->buatProfilPeserta($pengguna, $dataProfil);
+                } else {
+                    $this->penggunaRepo->perbaruiProfilPeserta($pengguna, $dataProfil);
+                }
+
+                $this->syncUserProgramStudi($pengguna, $memerlukanAkademik ? $programStudi?->id : null);
+            } elseif (array_key_exists('program_studi_id', $data)) {
                 $this->syncUserProgramStudi($pengguna, $data['program_studi_id']);
             }
 
-            if ($pengguna->hasRole('peserta') && $pengguna->programStudis()->doesntExist()) {
-                throw new \RuntimeException('Program studi wajib dipilih untuk pengguna peserta.');
-            }
-
-            return $pengguna->fresh(['roles', 'programStudis']);
+            return $pengguna->fresh(['roles', 'programStudis', 'profilPeserta']);
         });
     }
 
@@ -654,9 +721,14 @@ class IdentityService implements IdentityContract
         $status = $params['f_status'] ?? null;
         $programStudiId = $params['f_program_studi_id'] ?? null;
         $roleName = $params['f_role_names'] ?? null;
+        $jenisPeserta = $params['f_jenis_peserta'] ?? null;
 
         $query = Pengguna::query()
-            ->with(['roles:id,name', 'programStudis:id,nama'])
+            ->with([
+                'roles:id,name',
+                'programStudis:id,nama',
+                'profilPeserta:id,pengguna_id,jenis_peserta,nomor_identitas,institusi,fakultas_id,program_studi_id,tahun_mulai,terverifikasi',
+            ])
             ->whereDoesntHave('roles', fn (Builder $roleQuery) => $roleQuery->where('name', 'superadmin'))
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $query->where(function (Builder $inner) use ($search): void {
@@ -676,6 +748,10 @@ class IdentityService implements IdentityContract
             ->when(filled($programStudiId), fn (Builder $query) => $query->whereHas(
                 'programStudis',
                 fn (Builder $programStudiQuery) => $programStudiQuery->where('program_studi_id', $programStudiId),
+            ))
+            ->when(filled($jenisPeserta), fn (Builder $query) => $query->whereHas(
+                'profilPeserta',
+                fn (Builder $profilQuery) => $profilQuery->where('jenis_peserta', $jenisPeserta),
             ));
 
         if ($tab === 'custom') {
@@ -801,7 +877,15 @@ class IdentityService implements IdentityContract
                 'name' => $role->name,
             ])->all(),
             'role_names' => $pengguna->roles->pluck('name')->all(),
-            'program_studi_id' => $pengguna->programStudis->first()?->id,
+            'jenis_peserta' => $pengguna->profilPeserta?->jenis_peserta?->value,
+            'jenis_peserta_label' => $pengguna->profilPeserta?->jenis_peserta?->label(),
+            'nomor_identitas' => $pengguna->profilPeserta?->nomor_identitas,
+            'institusi' => $pengguna->profilPeserta?->institusi,
+            'fakultas_id' => $pengguna->profilPeserta?->fakultas_id,
+            'tahun_mulai' => $pengguna->profilPeserta?->tahun_mulai,
+            'program_studi_id' => $pengguna->profilPeserta !== null
+                ? $pengguna->profilPeserta->program_studi_id
+                : $pengguna->programStudis->first()?->id,
             'program_studi_nama' => $pengguna->programStudis->first()?->nama,
         ];
     }

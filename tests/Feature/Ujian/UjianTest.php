@@ -122,6 +122,27 @@ class UjianTest extends TestCase
         ]);
     }
 
+    public function test_deskripsi_ujian_diperbarui_sebagai_html_tersanitasi(): void
+    {
+        $this->masukSebagai('admin');
+
+        $ujian = Ujian::whereHas('partUjian')->firstOrFail();
+
+        $this->put(route('admin.ujian.perbarui', $ujian), [
+            'program_tes_id' => $ujian->program_tes_id,
+            'judul' => $ujian->judul,
+            'deskripsi' => '<p><em>Deskripsi baru</em></p><script>alert(1)</script>',
+            'mode' => $ujian->mode->value,
+            'durasi_menit' => $ujian->durasi_menit,
+            'aktif' => true,
+        ])->assertRedirect();
+
+        $ujian->refresh();
+
+        $this->assertStringContainsString('<em>Deskripsi baru</em>', (string) $ujian->deskripsi);
+        $this->assertStringNotContainsString('<script', (string) $ujian->deskripsi);
+    }
+
     public function test_pembuatan_ujian_membentuk_part_per_section_dan_bank(): void
     {
         $this->masukSebagai('admin');
@@ -164,6 +185,29 @@ class UjianTest extends TestCase
 
             $this->assertSame($soalBank, $soalUjian);
         }
+    }
+
+    public function test_deskripsi_ujian_disimpan_sebagai_html_tersanitasi(): void
+    {
+        $this->masukSebagai('admin');
+
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
+
+        $this->post('/admin/ujian', [
+            'program_tes_id' => $programTes->id,
+            'bank_soal_id' => $bankSoal->id,
+            'judul' => 'Ujian Deskripsi HTML',
+            'deskripsi' => '<p>Deskripsi <strong>ujian</strong></p><script>alert(1)</script>',
+            'mode' => 'tryout',
+            'durasi_menit' => 120,
+        ])->assertRedirect();
+
+        $deskripsi = Ujian::where('judul', 'Ujian Deskripsi HTML')->value('deskripsi');
+
+        $this->assertIsString($deskripsi);
+        $this->assertStringContainsString('<strong>ujian</strong>', $deskripsi);
+        $this->assertStringNotContainsString('<script', $deskripsi);
     }
 
     public function test_bank_soal_yang_dipakai_ujian_tidak_dapat_diubah(): void

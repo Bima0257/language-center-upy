@@ -9,7 +9,7 @@ defineProps({
     sesiDenganBulan: { type: Array, default: () => [] },
     skorDenganSection: { type: Array, default: () => [] },
     tingkatLulus: { type: Array, default: () => [] },
-    mahasiswaTeratas: { type: Array, default: () => [] },
+    pesertaTeratas: { type: Array, default: () => [] },
     partisipasiDenganFakultas: { type: Array, default: () => [] },
 });
 </script>
@@ -60,21 +60,21 @@ defineProps({
                 />
             </BaseCard>
 
-             <BaseCard v-if="mahasiswaTeratas.length">
+             <BaseCard v-if="pesertaTeratas.length">
                 <h2 class="text-title-lg font-semibold text-text-heading mb-4">Top 10 Skor Tertinggi</h2>
                 <div class="space-y-2">
-                     <div v-for="(student, i) in mahasiswaTeratas" :key="i"
+                     <div v-for="(peserta, i) in pesertaTeratas" :key="i"
                         class="flex items-center justify-between py-2 border-b border-outline-variant/20 last:border-0">
                         <div class="flex items-center gap-3">
                             <span class="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center text-label-md font-bold text-text-muted">
                                 {{ i + 1 }}
                             </span>
                             <div>
-                                <p class="text-body-md text-text-heading font-medium">{{ student.name }}</p>
-                                <p class="text-label-md text-text-muted">{{ student.date }}</p>
+                                <p class="text-body-md text-text-heading font-medium">{{ peserta.name }}</p>
+                                <p class="text-label-md text-text-muted">{{ peserta.date }}</p>
                             </div>
                         </div>
-                        <span class="text-title-lg font-bold text-secondary">{{ student.score }}</span>
+                        <span class="text-title-lg font-bold text-secondary">{{ peserta.score }}</span>
                     </div>
                 </div>
             </BaseCard>

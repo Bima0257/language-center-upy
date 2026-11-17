@@ -4,7 +4,7 @@ namespace Tests\Feature\Pengguna;
 
 use App\Models\Fakultas;
 use App\Models\Pengguna;
-use App\Models\ProfilMahasiswa;
+use App\Models\ProfilPeserta;
 use App\Models\ProgramStudi;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -44,10 +44,11 @@ class UnggahIdentitasTest extends TestCase
     private function dataIdentitas(): array
     {
         return [
-            'nim' => '2200010001',
+            'jenis_peserta' => 'mahasiswa',
+            'nomor_identitas' => '2200010001',
             'fakultas_id' => $this->fakultas->id,
             'program_studi_id' => $this->programStudi->id,
-            'tahun_angkatan' => 2022,
+            'tahun_mulai' => 2022,
         ];
     }
 
@@ -67,7 +68,7 @@ class UnggahIdentitasTest extends TestCase
             'foto' => UploadedFile::fake()->image('profil.jpg', 800, 800),
         ])->assertRedirect(route('onboarding.verify-identity'));
 
-        $profil = ProfilMahasiswa::where('pengguna_id', $this->pengguna->id)->firstOrFail();
+        $profil = ProfilPeserta::where('pengguna_id', $this->pengguna->id)->firstOrFail();
 
         $this->assertNotNull($profil->foto_identitas);
         $this->assertStringEndsWith('.webp', $profil->foto_identitas);
@@ -86,5 +87,73 @@ class UnggahIdentitasTest extends TestCase
             2 * 1024 * 1024,
             Storage::disk('public')->size($this->pengguna->foto),
         );
+    }
+
+    public function test_dosen_wajib_mengisi_fakultas_dan_prodi(): void
+    {
+        $this->post('/logout');
+        $this->post('/login', [
+            'email' => 'dosen@toefl.test',
+            'password' => 'password',
+        ]);
+
+        $this->post('/onboarding/upload-identity', [
+            'nomor_identitas' => 'NIDN-2200010002',
+        ])->assertSessionHasErrors(['fakultas_id', 'program_studi_id']);
+    }
+
+    public function test_dosen_dapat_melengkapi_identitas_dengan_fakultas_dan_prodi(): void
+    {
+        $this->post('/logout');
+        $this->post('/login', [
+            'email' => 'dosen@toefl.test',
+            'password' => 'password',
+        ]);
+
+        $this->post('/onboarding/upload-identity', [
+            'nomor_identitas' => 'NIDN-2200010002',
+            'fakultas_id' => $this->fakultas->id,
+            'program_studi_id' => $this->programStudi->id,
+        ])->assertRedirect(route('onboarding.verify-identity'));
+
+        $this->assertDatabaseHas('profil_peserta', [
+            'jenis_peserta' => 'dosen',
+            'nomor_identitas' => 'NIDN-2200010002',
+            'fakultas_id' => $this->fakultas->id,
+            'program_studi_id' => $this->programStudi->id,
+        ]);
+    }
+
+    public function test_umum_wajib_mengisi_institusi(): void
+    {
+        $this->post('/logout');
+        $this->post('/login', [
+            'email' => 'umum@toefl.test',
+            'password' => 'password',
+        ]);
+
+        $this->post('/onboarding/upload-identity', [
+            'nomor_identitas' => 'NIK-3400000000000001',
+        ])->assertSessionHasErrors('institusi');
+    }
+
+    public function test_umum_dapat_melengkapi_identitas_dengan_institusi(): void
+    {
+        $this->post('/logout');
+        $this->post('/login', [
+            'email' => 'umum@toefl.test',
+            'password' => 'password',
+        ]);
+
+        $this->post('/onboarding/upload-identity', [
+            'nomor_identitas' => 'NIK-3400000000000001',
+            'institusi' => 'Masyarakat Umum',
+        ])->assertRedirect(route('onboarding.verify-identity'));
+
+        $this->assertDatabaseHas('profil_peserta', [
+            'jenis_peserta' => 'umum',
+            'nomor_identitas' => 'NIK-3400000000000001',
+            'institusi' => 'Masyarakat Umum',
+        ]);
     }
 }

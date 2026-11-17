@@ -26,7 +26,6 @@ function canDelete(row) {
         || row.ujian_count > 0
         || row.aturan_penilaian_count > 0
         || row.interpretasi_skor_count > 0
-        || row.skema_penilaian_count > 0
     );
 }
 

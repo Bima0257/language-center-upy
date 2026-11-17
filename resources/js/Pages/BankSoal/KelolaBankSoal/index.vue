@@ -5,6 +5,7 @@ import { computed, h, ref } from 'vue';
 import BaseBadge from '@/Components/Base/BaseBadge.vue';
 import { useConfirm } from '@/Composables/useConfirm';
 import { formatProgramTes } from '@/constants/programTes';
+import DetailBankSoalModal from './Components/DetailBankSoalModal.vue';
 import FormBankSoal from './Components/FormBankSoal.vue';
 import TabelBankSoal from './Components/TabelBankSoal.vue';
 import TabelProgramTesBankSoal from './Components/TabelProgramTesBankSoal.vue';
@@ -32,8 +33,10 @@ const editForm = useForm({
 });
 
 const showModal = ref(false);
+const showDetailModal = ref(false);
 const creating = ref(false);
 const editingBank = ref(null);
+const detailBank = ref(null);
 
 const modalForm = computed(() => creating.value ? form : editForm);
 
@@ -49,15 +52,6 @@ const semuaKolom = [
         id: 'program_tes',
         header: 'Program Tes',
         accessorFn: row => formatProgramTes(row.program_tes),
-    },
-    {
-        accessorKey: 'deskripsi',
-        header: 'Deskripsi',
-        cell: info => {
-            const text = stripHtml(info.getValue());
-
-            return text ? (text.length > 60 ? `${text.substring(0, 60)}…` : text) : '-';
-        },
     },
     { accessorKey: 'soal_count', header: 'Soal', cell: info => info.getValue() ?? 0 },
     {
@@ -81,11 +75,6 @@ const programTesKolom = [
         header: 'Program Tes',
         meta: { cellClass: 'font-medium text-text-heading' },
         accessorFn: row => formatProgramTes(row),
-    },
-    {
-        accessorKey: 'deskripsi',
-        header: 'Deskripsi',
-        cell: info => (info.getValue() ? (info.getValue().length > 80 ? `${info.getValue().substring(0, 80)}…` : info.getValue()) : '-'),
     },
     { accessorKey: 'jumlahBankSoal', header: 'Bank Soal', cell: info => info.getValue() ?? 0 },
 ];
@@ -135,6 +124,16 @@ const ringkasanProgramTes = computed(() => {
 
     return Array.from(groups.values()).sort((left, right) => left.nama.localeCompare(right.nama, 'id'));
 });
+
+function openDetail(bank) {
+    detailBank.value = bank;
+    showDetailModal.value = true;
+}
+
+function closeDetail() {
+    showDetailModal.value = false;
+    detailBank.value = null;
+}
 
 function openCreate() {
     creating.value = true;
@@ -212,10 +211,17 @@ async function destroy(bank) {
                 :data="bankSoal"
                 :columns="kolom"
                 @create="openCreate"
+                @detail="openDetail"
                 @edit="startEdit"
                 @delete="destroy"
             />
         </template>
+
+        <DetailBankSoalModal
+            :show="showDetailModal"
+            :bank-soal="detailBank"
+            @close="closeDetail"
+        />
 
         <FormBankSoal
             :show="showModal"

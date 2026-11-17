@@ -12,7 +12,7 @@ import EditMateriSoalModal from "@/Pages/BankSoal/PustakaSoal/Components/EditMat
 import TambahSoalMateriModal from "@/Pages/BankSoal/PustakaSoal/Components/TambahSoalMateriModal.vue";
 import RingkasanProgramTesPustaka from "@/Pages/BankSoal/PustakaSoal/Components/RingkasanProgramTesPustaka.vue";
 import RingkasanBankSoalPustaka from "@/Pages/BankSoal/PustakaSoal/Components/RingkasanBankSoalPustaka.vue";
-import { IconBook, IconEdit, IconPlus, IconTrash } from "@tabler/icons-vue";
+import { IconBook, IconEdit, IconPlus, IconSearch, IconTrash, IconX } from "@tabler/icons-vue";
 import { ref, computed } from "vue";
 import { useConfirm } from "@/Composables/useConfirm";
 import { useUploadProgress } from "@/Composables/useUploadProgress";
@@ -48,6 +48,7 @@ const partSoalPertama = props.partSoal.find(
         String(part.section_id) === String(sectionTerpilih.value),
 );
 const partSoalTerpilihId = ref(props.filter.part_soal_id || partSoalPertama?.id || "");
+const search = ref("");
 
 const createParams = computed(() => {
     const p = {};
@@ -127,9 +128,23 @@ const partSoalUntukSection = computed(() => props.partSoal
     )
     .sort((left, right) => (left.urutan ?? 0) - (right.urutan ?? 0)));
 
+function partTabLabel(part) {
+    const sectionName = props.opsiSection.find(
+        (section) => String(section.value) === String(part.section_id),
+    )?.label?.trim();
+
+    if (!sectionName || !part.nama.toLowerCase().startsWith(sectionName.toLowerCase())) {
+        return part.nama;
+    }
+
+    const tanpaSection = part.nama.slice(sectionName.length).trim();
+
+    return /^part\b/i.test(tanpaSection) ? tanpaSection : part.nama;
+}
+
 const tabsPartSoal = computed(() => partSoalUntukSection.value.map((part) => ({
     value: String(part.id),
-    label: part.nama,
+    label: partTabLabel(part),
 })));
 
 const canManageSection = computed(() =>
@@ -649,10 +664,26 @@ async function deletePassage(materiSoal) {
     });
 }
 
+const kataKunciPencarian = computed(() => search.value.trim().toLowerCase());
+
+const soalTampil = computed(() => {
+    const daftarSoal = props.soal.data ?? [];
+
+    if (!kataKunciPencarian.value) return daftarSoal;
+
+    return daftarSoal.filter((question) =>
+        [question.teks_soal, question.materi_soal?.judul]
+            .filter(Boolean)
+            .some((teks) => String(teks).toLowerCase().includes(kataKunciPencarian.value)),
+    );
+});
+
+const sedangMencari = computed(() => kataKunciPencarian.value !== "");
+
 const kelompokSoalPerSection = computed(() => {
     const sectionMap = new Map();
 
-    for (const q of props.soal.data) {
+    for (const q of soalTampil.value) {
         const sid = q.section_id || "none";
         if (!sectionMap.has(sid)) {
             sectionMap.set(sid, { section_id: sid, partSoal: new Map() });
@@ -856,7 +887,29 @@ async function deleteQuestion(id, text) {
                             <IconPlus :size="19" />
                         </button>
 
-                        <div class="ml-auto flex shrink-0 items-center gap-2">
+                        <div class="ml-auto flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+                            <div class="relative w-full sm:w-64">
+                                <IconSearch
+                                    :size="16"
+                                    class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+                                />
+                                <input
+                                    v-model="search"
+                                    type="text"
+                                    class="h-9 w-full rounded-full border border-surface-container-high bg-surface-container-lowest pl-9 pr-9 text-body-md text-text-body placeholder:text-text-muted focus:border-secondary focus:outline-none"
+                                    placeholder="Cari soal atau materi..."
+                                    aria-label="Cari soal pada part aktif"
+                                />
+                                <button
+                                    v-if="search"
+                                    type="button"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-text-muted transition-colors hover:text-text-heading"
+                                    aria-label="Hapus pencarian"
+                                    @click="search = ''"
+                                >
+                                    <IconX :size="14" />
+                                </button>
+                            </div>
                             <BaseTambahData
                                 :href="canCreateSoal ? route('pustaka-soal.tambah', createParams) : null"
                                 :disabled="!canCreateSoal"
@@ -869,6 +922,14 @@ async function deleteQuestion(id, text) {
                         v-if="soal.data?.length === 0"
                         :icon="IconBook"
                         title="Tidak ada soal ditemukan."
+                        class="!rounded-none !border-0 !shadow-none"
+                    />
+
+                    <EmptyState
+                        v-else-if="sedangMencari && soalTampil.length === 0"
+                        :icon="IconSearch"
+                        title="Tidak ada soal yang cocok dengan pencarian."
+                        description="Coba kata kunci lain atau hapus pencarian."
                         class="!rounded-none !border-0 !shadow-none"
                     />
 

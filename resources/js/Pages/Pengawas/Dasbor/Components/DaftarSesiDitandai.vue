@@ -1,10 +1,21 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
 import { IconAlertTriangle } from '@tabler/icons-vue';
+import { jenisPesertaIdentitasLabel } from '@/constants/jenisPeserta';
 
 const props = defineProps({
     sesiDitandai: { type: Array, default: () => [] },
 });
+
+function identitasPeserta(pengguna) {
+    const profil = pengguna?.profil_peserta;
+
+    if (!profil) return 'Identitas: -';
+
+    const label = jenisPesertaIdentitasLabel[profil.jenis_peserta] || 'Identitas';
+
+    return `${label}: ${profil.nomor_identitas || '-'}`;
+}
 </script>
 
 <template>
@@ -22,7 +33,7 @@ const props = defineProps({
                 <div class="flex justify-between items-center">
                     <div>
                         <p class="font-semibold text-text-heading">{{ sesiUjian.pengguna?.name }}</p>
-                        <p class="text-text-muted text-label-md">{{ sesiUjian.pengguna?.nim || 'NIM: -' }}</p>
+                        <p class="text-text-muted text-label-md">{{ identitasPeserta(sesiUjian.pengguna) }}</p>
                         <p class="text-text-muted text-label-md">{{ sesiUjian.alasan_penandaan }}</p>
                     </div>
                     <div class="text-right">

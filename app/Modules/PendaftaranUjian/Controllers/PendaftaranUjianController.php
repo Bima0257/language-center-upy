@@ -103,6 +103,13 @@ class PendaftaranUjianController extends Controller
         ));
     }
 
+    public function pesertaSemua(FilterPendaftaranUjianRequest $request): Response
+    {
+        return Inertia::render('Admin/PendaftaranUjian/peserta-semua', $this->layananPendaftaran->dataPesertaSemua(
+            $request->validated(),
+        ));
+    }
+
     public function ajukan(AjukanPendaftaranUjianRequest $request, SlotUjian $slotUjian): RedirectResponse
     {
         $buktiPembayaran = $request->file('bukti_pembayaran');

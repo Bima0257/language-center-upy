@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\DataInduk;
 
-use App\Enums\StatusSkemaPenilaian;
 use App\Models\AturanPenilaian;
 use App\Models\Pengguna;
 use App\Models\ProgramTes;
@@ -35,6 +34,11 @@ class AturanPenilaianTest extends TestCase
         return $pengguna;
     }
 
+    private function skema(ProgramTes $programTes): SkemaPenilaian
+    {
+        return SkemaPenilaian::where('program_tes_id', $programTes->id)->firstOrFail();
+    }
+
     public function test_tamu_diarahkan_ke_login(): void
     {
         $this->get('/admin/data-induk/aturan-penilaian')->assertRedirect('/login');
@@ -54,7 +58,7 @@ class AturanPenilaianTest extends TestCase
         $section = Section::where('program_tes_id', $programTes->id)
             ->where('nama', 'Reading')
             ->firstOrFail();
-        $skema = app(LayananAturanPenilaian::class)->buatVersi($programTes);
+        $skema = $this->skema($programTes);
 
         $this->get('/admin/data-induk/aturan-penilaian')->assertOk();
         $this->get("/admin/data-induk/aturan-penilaian/program-tes/{$programTes->id}")->assertOk();
@@ -86,7 +90,7 @@ class AturanPenilaianTest extends TestCase
         $section = Section::where('program_tes_id', $programTes->id)
             ->where('nama', 'Reading')
             ->firstOrFail();
-        $skema = app(LayananAturanPenilaian::class)->buatVersi($programTes);
+        $skema = $this->skema($programTes);
 
         $this->put(
             "/admin/data-induk/aturan-penilaian/skema/{$skema->id}/section/{$section->id}",
@@ -99,49 +103,20 @@ class AturanPenilaianTest extends TestCase
         )->assertSessionHasErrors('tabel_konversi');
     }
 
-    public function test_admin_dapat_membuat_dan_mengaktifkan_versi_baru(): void
+    public function test_setiap_program_tes_hanya_memiliki_satu_skema(): void
     {
-        $this->masukSebagai('admin');
-        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
-        $skemaAktif = SkemaPenilaian::where('program_tes_id', $programTes->id)
-            ->where('status', StatusSkemaPenilaian::AKTIF)
-            ->firstOrFail();
+        $programTes = ProgramTes::create([
+            'kode' => '010',
+            'nama' => 'Program Tes Skema Tunggal',
+            'batas_pelanggaran' => 3,
+            'aktif' => true,
+        ]);
 
-        $this->post("/admin/data-induk/aturan-penilaian/program-tes/{$programTes->id}/versi")
-            ->assertRedirect();
+        $layanan = app(LayananAturanPenilaian::class);
+        $dataPertama = $layanan->dataDetail($programTes);
+        $dataKedua = $layanan->dataDetail($programTes);
 
-        $skemaDraft = SkemaPenilaian::where('program_tes_id', $programTes->id)
-            ->where('status', StatusSkemaPenilaian::DRAFT)
-            ->firstOrFail();
-
-        $this->assertSame($skemaAktif->versi + 1, $skemaDraft->versi);
-
-        $this->post("/admin/data-induk/aturan-penilaian/skema/{$skemaDraft->id}/aktifkan")
-            ->assertRedirect();
-
-        $this->assertSame(StatusSkemaPenilaian::AKTIF, $skemaDraft->fresh()->status);
-        $this->assertSame(StatusSkemaPenilaian::ARSIP, $skemaAktif->fresh()->status);
-    }
-
-    public function test_versi_aktif_tidak_dapat_diubah(): void
-    {
-        $this->masukSebagai('admin');
-        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
-        $section = Section::where('program_tes_id', $programTes->id)
-            ->where('nama', 'Reading')
-            ->firstOrFail();
-        $skema = SkemaPenilaian::where('program_tes_id', $programTes->id)
-            ->where('status', StatusSkemaPenilaian::AKTIF)
-            ->firstOrFail();
-
-        $this->put(
-            "/admin/data-induk/aturan-penilaian/skema/{$skema->id}/section/{$section->id}",
-            [
-                'tabel_konversi' => [0 => 100, 1 => 150, 2 => 200],
-                'skor_mentah_maksimum' => 2,
-                'skor_skala_minimum' => 100,
-                'skor_skala_maksimum' => 200,
-            ],
-        )->assertSessionHas('error');
+        $this->assertSame($dataPertama['skema']->id, $dataKedua['skema']->id);
+        $this->assertSame(1, SkemaPenilaian::where('program_tes_id', $programTes->id)->count());
     }
 }

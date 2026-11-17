@@ -36,7 +36,7 @@ const editForm = useForm({
 
 const modalForm = computed(() => (creating.value ? form : editForm));
 
-// Native input[type=date] butuh format yyyy-mm-dd — Inertia men-serialize Carbon sebagai ISO datetime penuh
+// BaseDatePicker butuh format yyyy-mm-dd — Inertia men-serialize Carbon sebagai ISO datetime penuh
 const slotDateMin = computed(() => props.periodeUjian.tanggal_mulai?.substring(0, 10) || '');
 const slotDateMax = computed(() => props.periodeUjian.tanggal_selesai?.substring(0, 10) || '');
 

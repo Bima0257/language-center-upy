@@ -7,6 +7,7 @@ import BaseModal from '@/Components/Base/BaseModal.vue';
 import ContextSummaryTable from '@/Components/Ujian/ContextSummaryTable.vue';
 import { useConfirm } from '@/Composables/useConfirm';
 import { formatProgramTes } from '@/constants/programTes';
+import { labelIdentitasPeserta } from '@/constants/jenisPeserta';
 import { IconCalendarEvent, IconClipboardCheck, IconClock, IconUpload, IconUsers } from '@tabler/icons-vue';
 
 const props = defineProps({
@@ -25,12 +26,20 @@ const showRegistrationModal = ref(false);
 const selectedSlot = ref(null);
 
 const registrationForm = useForm({
-    nim: '',
+    jenis_peserta: '',
+    nomor_identitas: '',
+    institusi: '',
     fakultas_id: '',
     program_studi_id: '',
-    tahun_angkatan: '',
+    tahun_mulai: '',
     bukti_pembayaran: null,
 });
+
+const jenisPeserta = computed(() => registrationForm.jenis_peserta || 'mahasiswa');
+const memerlukanAkademik = computed(() => ['mahasiswa', 'dosen'].includes(jenisPeserta.value));
+const memerlukanInstitusi = computed(() => jenisPeserta.value === 'umum');
+const memerlukanTahun = computed(() => jenisPeserta.value === 'mahasiswa');
+const labelIdentitas = computed(() => labelIdentitasPeserta(jenisPeserta.value));
 
 const context = computed(() => props.filters || {});
 
@@ -195,10 +204,12 @@ function openRegistration(slotUjian) {
     selectedSlot.value = slotUjian;
     registrationForm.clearErrors();
     registrationForm.reset();
-    registrationForm.nim = props.profil?.nim || '';
+    registrationForm.jenis_peserta = props.profil?.jenis_peserta || 'mahasiswa';
+    registrationForm.nomor_identitas = props.profil?.nomor_identitas || '';
+    registrationForm.institusi = props.profil?.institusi || '';
     registrationForm.fakultas_id = props.profil?.fakultas_id || '';
     registrationForm.program_studi_id = props.profil?.program_studi_id || '';
-    registrationForm.tahun_angkatan = props.profil?.tahun_angkatan || '';
+    registrationForm.tahun_mulai = props.profil?.tahun_mulai || '';
     showRegistrationModal.value = true;
 }
 
@@ -407,17 +418,24 @@ async function cancelRegistration(slotUjian) {
                 <form id="registration-form" class="space-y-5 px-6 pb-6 pt-6 sm:px-8 sm:pb-8 sm:pt-8" @submit.prevent="submitRegistration">
                     <BaseFormGrid>
                         <div>
-                            <label class="mb-1.5 block text-label-md font-medium text-text-heading">NIM</label>
-                            <input v-model="registrationForm.nim" type="text" class="w-full rounded-xl border border-outline-variant px-4 py-3 text-body-md text-text-heading" />
-                            <p v-if="registrationForm.errors.nim" class="mt-1 text-xs text-error-red">{{ registrationForm.errors.nim }}</p>
+                            <label class="mb-1.5 block text-label-md font-medium text-text-heading">{{ labelIdentitas }}</label>
+                            <input v-model="registrationForm.nomor_identitas" type="text" class="w-full rounded-xl border border-outline-variant px-4 py-3 text-body-md text-text-heading" />
+                            <p v-if="registrationForm.errors.nomor_identitas" class="mt-1 text-xs text-error-red">{{ registrationForm.errors.nomor_identitas }}</p>
                         </div>
-                        <div>
-                            <label class="mb-1.5 block text-label-md font-medium text-text-heading">Tahun Angkatan</label>
-                            <input v-model="registrationForm.tahun_angkatan" type="number" min="2000" max="2100" class="w-full rounded-xl border border-outline-variant px-4 py-3 text-body-md text-text-heading" />
-                            <p v-if="registrationForm.errors.tahun_angkatan" class="mt-1 text-xs text-error-red">{{ registrationForm.errors.tahun_angkatan }}</p>
+                        <div v-if="memerlukanInstitusi">
+                            <label class="mb-1.5 block text-label-md font-medium text-text-heading">Institusi</label>
+                            <input v-model="registrationForm.institusi" type="text" placeholder="Nama institusi/instansi" class="w-full rounded-xl border border-outline-variant px-4 py-3 text-body-md text-text-heading" />
+                            <p v-if="registrationForm.errors.institusi" class="mt-1 text-xs text-error-red">{{ registrationForm.errors.institusi }}</p>
                         </div>
-                        <DropDown v-model="registrationForm.fakultas_id" :options="fakultas" label="Fakultas" option-label="nama" option-value="id" placeholder="Pilih fakultas" />
-                        <DropDown v-model="registrationForm.program_studi_id" :options="programStudi" label="Program Studi" option-label="nama" option-value="id" placeholder="Pilih program studi" />
+                        <template v-if="memerlukanAkademik">
+                            <DropDown v-model="registrationForm.fakultas_id" :options="fakultas" label="Fakultas" option-label="nama" option-value="id" placeholder="Pilih fakultas" />
+                            <DropDown v-model="registrationForm.program_studi_id" :options="programStudi" label="Program Studi" option-label="nama" option-value="id" placeholder="Pilih program studi" />
+                            <div v-if="memerlukanTahun">
+                                <label class="mb-1.5 block text-label-md font-medium text-text-heading">Tahun Angkatan</label>
+                                <input v-model="registrationForm.tahun_mulai" type="number" min="2000" max="2100" class="w-full rounded-xl border border-outline-variant px-4 py-3 text-body-md text-text-heading" />
+                                <p v-if="registrationForm.errors.tahun_mulai" class="mt-1 text-xs text-error-red">{{ registrationForm.errors.tahun_mulai }}</p>
+                            </div>
+                        </template>
                     </BaseFormGrid>
                     <p v-if="registrationForm.errors.fakultas_id" class="text-xs text-error-red">{{ registrationForm.errors.fakultas_id }}</p>
                     <p v-if="registrationForm.errors.program_studi_id" class="text-xs text-error-red">{{ registrationForm.errors.program_studi_id }}</p>

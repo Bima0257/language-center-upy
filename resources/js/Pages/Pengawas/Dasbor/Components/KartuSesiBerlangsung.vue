@@ -1,5 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import { jenisPesertaIdentitasLabel } from '@/constants/jenisPeserta';
 
 defineProps({
     sesiUjian: { type: Object, required: true },
@@ -10,6 +11,16 @@ function formatDuration(startedAt) {
     const minutes = Math.floor((Date.now() - new Date(startedAt).getTime()) / 60000);
     return `${minutes}m`;
 }
+
+function identitasPeserta(pengguna) {
+    const profil = pengguna?.profil_peserta;
+
+    if (!profil) return 'Identitas: -';
+
+    const label = jenisPesertaIdentitasLabel[profil.jenis_peserta] || 'Identitas';
+
+    return `${label}: ${profil.nomor_identitas || '-'}`;
+}
 </script>
 
 <template>
@@ -18,7 +29,7 @@ function formatDuration(startedAt) {
         <div class="flex items-start justify-between mb-3">
             <div class="min-w-0 flex-1">
                 <p class="text-title-lg font-semibold text-text-heading truncate">{{ sesiUjian.pengguna?.name }}</p>
-                <p class="text-label-md text-text-muted truncate">{{ sesiUjian.pengguna?.nim || 'NIM: -' }}</p>
+                <p class="text-label-md text-text-muted truncate">{{ identitasPeserta(sesiUjian.pengguna) }}</p>
             </div>
             <span class="flex items-center gap-1.5 text-label-md font-medium text-success shrink-0">
                 LIVE → <span class="w-2 h-2 rounded-full bg-success inline-block animate-pulse"></span>

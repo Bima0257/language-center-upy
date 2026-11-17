@@ -39,21 +39,24 @@ const emit = defineEmits(['submit']);
         <BaseFormGrid>
             <div>
                 <label class="mb-2 block text-label-md font-medium text-text-heading">Dibuka Pada</label>
-                <input
+                <BaseDatePicker
                     v-model="props.form.dibuka_pada"
-                    type="datetime-local"
-                    class="w-full rounded-2xl border border-outline-variant bg-surface-container-lowest px-4 py-3.5 text-body-md text-text-body focus:border-secondary focus:outline-none"
+                    mode="datetime"
+                    placeholder="Pilih tanggal & jam dibuka"
+                    required
+                    :error="props.form.errors.dibuka_pada"
                 />
-                <p v-if="props.form.errors.dibuka_pada" class="mt-1 text-xs text-error-red">{{ props.form.errors.dibuka_pada }}</p>
             </div>
             <div>
                 <label class="mb-2 block text-label-md font-medium text-text-heading">Ditutup Pada</label>
-                <input
+                <BaseDatePicker
                     v-model="props.form.ditutup_pada"
-                    type="datetime-local"
-                    class="w-full rounded-2xl border border-outline-variant bg-surface-container-lowest px-4 py-3.5 text-body-md text-text-body focus:border-secondary focus:outline-none"
+                    mode="datetime"
+                    placeholder="Pilih tanggal & jam ditutup"
+                    required
+                    :min="props.form.dibuka_pada"
+                    :error="props.form.errors.ditutup_pada"
                 />
-                <p v-if="props.form.errors.ditutup_pada" class="mt-1 text-xs text-error-red">{{ props.form.errors.ditutup_pada }}</p>
             </div>
         </BaseFormGrid>
 

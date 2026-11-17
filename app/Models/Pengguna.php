@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\JenisPeserta;
 use Database\Factories\PenggunaFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -39,7 +40,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property bool $terverifikasi
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read ProfilMahasiswa|null $profilMahasiswa
+ * @property-read ProfilPeserta|null $profilPeserta
  * @property-read Collection<int, ProgramStudi> $programStudis
  * @property-read Collection<int, SesiUjian> $sesiUjian
  * @property-read Collection<int, PendaftaranUjian> $pendaftaranUjian
@@ -98,9 +99,9 @@ class Pengguna extends Authenticatable implements MustVerifyEmail
         });
     }
 
-    public function profilMahasiswa(): HasOne
+    public function profilPeserta(): HasOne
     {
-        return $this->hasOne(ProfilMahasiswa::class, 'pengguna_id', 'id');
+        return $this->hasOne(ProfilPeserta::class, 'pengguna_id', 'id');
     }
 
     public function programStudis(): BelongsToMany
@@ -125,17 +126,27 @@ class Pengguna extends Authenticatable implements MustVerifyEmail
 
     public function profilTerverifikasi(): bool
     {
-        if (! $this->adalahMahasiswa()) {
+        if (! $this->adalahPesertaUjian()) {
             return true;
         }
 
-        $profil = $this->profilMahasiswa;
+        $profil = $this->profilPeserta;
 
-        return $profil !== null
-            && filled($profil->nim)
-            && filled($profil->fakultas_id)
-            && filled($profil->program_studi_id)
-            && filled($profil->tahun_angkatan);
+        if ($profil === null) {
+            return false;
+        }
+
+        return match ($profil->jenis_peserta) {
+            JenisPeserta::MAHASISWA => filled($profil->nomor_identitas)
+                && filled($profil->fakultas_id)
+                && filled($profil->program_studi_id)
+                && filled($profil->tahun_mulai),
+            JenisPeserta::DOSEN => filled($profil->nomor_identitas)
+                && filled($profil->fakultas_id)
+                && filled($profil->program_studi_id),
+            JenisPeserta::UMUM => filled($profil->nomor_identitas)
+                && filled($profil->institusi),
+        };
     }
 
     public function getTerverifikasiAttribute(): bool
@@ -143,7 +154,7 @@ class Pengguna extends Authenticatable implements MustVerifyEmail
         return $this->profilTerverifikasi();
     }
 
-    public function adalahMahasiswa(): bool
+    public function adalahPesertaUjian(): bool
     {
         return $this->hasRole('peserta');
     }

@@ -69,7 +69,9 @@ class PendaftaranUjianRepository implements PendaftaranUjianRepositoryInterface
                     $penggunaQuery->where(function ($query) use ($search): void {
                         $query->where('name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%")
-                            ->orWhereHas('profilMahasiswa', fn ($profileQuery) => $profileQuery->where('nim', 'like', "%{$search}%"));
+                            ->orWhereHas('profilPeserta', fn ($profileQuery) => $profileQuery
+                                ->where('nomor_identitas', 'like', "%{$search}%")
+                                ->orWhere('institusi', 'like', "%{$search}%"));
                     });
                 });
             })
@@ -159,8 +161,8 @@ class PendaftaranUjianRepository implements PendaftaranUjianRepositoryInterface
     private function relasi(): array
     {
         return [
-            'pengguna.profilMahasiswa.fakultas',
-            'pengguna.profilMahasiswa.programStudi',
+            'pengguna.profilPeserta.fakultas',
+            'pengguna.profilPeserta.programStudi',
             'slotUjian.periodeUjian.ujian.programTes',
             'diprosesOleh',
         ];

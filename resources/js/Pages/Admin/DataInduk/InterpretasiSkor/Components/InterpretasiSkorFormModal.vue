@@ -1,4 +1,5 @@
 <script setup>
+import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import { IconX } from '@tabler/icons-vue';
 
 const props = defineProps({
@@ -22,7 +23,7 @@ const emit = defineEmits(['close', 'submit']);
             <BaseModalHeader>
                 <div class="px-8 py-4">
                     <div class="flex items-center justify-between">
-                         <h2 id="interpretasi-skor-modal-title" class="text-headline-md font-bold text-text-heading">{{ props.editing ? 'Ubah Interpretasi Skor' : 'Tambah Draft Interpretasi' }}</h2>
+                         <h2 id="interpretasi-skor-modal-title" class="text-headline-md font-bold text-text-heading">{{ props.editing ? 'Ubah Interpretasi Skor' : 'Tambah Interpretasi' }}</h2>
                          <button type="button" aria-label="Tutup form interpretasi skor" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
                             <IconX :size="20" />
                         </button>
@@ -70,8 +71,11 @@ const emit = defineEmits(['close', 'submit']);
 
                 <div>
                     <label class="text-label-md font-medium text-text-heading block mb-1.5">Deskripsi</label>
-                    <input type="text" v-model="props.form.deskripsi" placeholder="Opsional"
-                           class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                    <RichTextEditor
+                        v-model="props.form.deskripsi"
+                        placeholder="Deskripsi interpretasi skor..."
+                        :min-height="'100px'"
+                    />
                     <p v-if="props.form.errors.deskripsi" class="text-error-red text-xs mt-1">{{ props.form.errors.deskripsi }}</p>
                 </div>
 

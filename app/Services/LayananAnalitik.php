@@ -15,7 +15,7 @@ class LayananAnalitik
             'sesiDenganBulan' => $this->sesiDenganBulan(),
             'skorDenganSection' => $this->skorDenganSection(),
             'tingkatLulus' => $this->tingkatLulus(),
-            'mahasiswaTeratas' => $this->mahasiswaTeratas(),
+            'pesertaTeratas' => $this->pesertaTeratas(),
             'partisipasiDenganFakultas' => $this->partisipasiDenganFakultas(),
         ];
     }
@@ -72,7 +72,7 @@ class LayananAnalitik
         return $data;
     }
 
-    private function mahasiswaTeratas(): array
+    private function pesertaTeratas(): array
     {
         return SesiUjian::where('status', 'submitted')
             ->whereNotNull('skor_total')
@@ -90,9 +90,9 @@ class LayananAnalitik
 
     private function partisipasiDenganFakultas(): array
     {
-        return Pengguna::whereHas('profilMahasiswa')
-            ->join('profil_mahasiswa', 'users.id', '=', 'profil_mahasiswa.pengguna_id')
-            ->join('fakultas', 'profil_mahasiswa.fakultas_id', '=', 'fakultas.id')
+        return Pengguna::whereHas('profilPeserta')
+            ->join('profil_peserta', 'users.id', '=', 'profil_peserta.pengguna_id')
+            ->join('fakultas', 'profil_peserta.fakultas_id', '=', 'fakultas.id')
             ->join('sesi_ujian', 'users.id', '=', 'sesi_ujian.pengguna_id')
             ->select('fakultas.nama as label', DB::raw('count(distinct users.id) as count'))
             ->groupBy('fakultas.nama')

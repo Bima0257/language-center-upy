@@ -319,6 +319,50 @@ class PustakaSoalTest extends TestCase
         $this->assertSame($partSoal->id, $page['props']['filter']['part_soal_id']);
     }
 
+    public function test_pustaka_soal_menampilkan_seluruh_soal_satu_part_tanpa_terpotong_pagination(): void
+    {
+        $this->masukSebagai('admin');
+
+        $bankSoal = $this->bankSoal();
+        $section = Section::where('nama', 'Reading')->first();
+        $partSoal = $this->partMembaca();
+        $materiSoal = $this->buatMateriTeks($bankSoal);
+
+        $idSoalDibuat = [];
+
+        for ($urutan = 1; $urutan <= 25; $urutan++) {
+            $soal = Soal::create([
+                'bank_soal_id' => $bankSoal->id,
+                'materi_soal_id' => $materiSoal->id,
+                'section_id' => $section->id,
+                'part_soal_id' => $partSoal->id,
+                'teks_soal' => "Soal regresi pagination {$urutan}",
+                'pilihan_a' => 'A',
+                'pilihan_b' => 'B',
+                'pilihan_c' => 'C',
+                'pilihan_d' => 'D',
+                'kunci_jawaban' => 'A',
+                'urutan' => $urutan,
+            ]);
+
+            $idSoalDibuat[] = $soal->id;
+        }
+
+        $page = $this->get(
+            '/pustaka-soal?bank_soal_id='.$bankSoal->id
+                .'&program_tes_id='.$bankSoal->program_tes_id
+                .'&section='.$section->id
+                .'&part_soal_id='.$partSoal->id,
+        )->assertOk()->inertiaPage();
+
+        $idSoalTampil = collect($page['props']['soal']['data'])->pluck('id');
+
+        $this->assertCount(25, $idSoalTampil);
+        $this->assertTrue($idSoalTampil->every(
+            fn (string $id): bool => in_array($id, $idSoalDibuat, true),
+        ));
+    }
+
     public function test_pustaka_soal_fallback_ke_section_aktif_jika_filter_tidak_valid(): void
     {
         $this->masukSebagai('admin');
@@ -443,17 +487,34 @@ class PustakaSoalTest extends TestCase
             'nama' => 'Bank Soal Di Luar Program Tes',
             'aktif' => true,
         ]);
+        Section::create([
+            'program_tes_id' => $programTes->id,
+            'kode' => '010001',
+            'nama' => 'Section Aktif Bank Soal',
+            'urutan' => 1,
+            'aktif' => true,
+        ]);
+        Section::create([
+            'program_tes_id' => $programTes->id,
+            'kode' => '010002',
+            'nama' => 'Section Nonaktif Bank Soal',
+            'urutan' => 2,
+            'aktif' => false,
+        ]);
 
         $page = $this->get("/pustaka-soal/bank-soal/program-tes/{$programTes->id}")
             ->assertOk()
             ->inertiaPage();
 
         $bankSoalIds = collect($page['props']['bankSoal'])->pluck('id');
+        $bankSoalPayload = collect($page['props']['bankSoal'])->firstWhere('id', $bankSoalTerpilih->id);
 
         $this->assertSame('BankSoal/KelolaBankSoal/index', $page['component']);
         $this->assertSame($programTes->id, $page['props']['programTesTerpilih']['id']);
         $this->assertTrue($bankSoalIds->contains($bankSoalTerpilih->id));
         $this->assertFalse($bankSoalIds->contains($bankSoalLain->id));
+        $this->assertNotNull($bankSoalPayload);
+        $this->assertSame(1, (int) $bankSoalPayload['program_tes']['section_aktif_count']);
     }
 
     public function test_bank_soal_tidak_dapat_dipindah_ke_program_tes_nonaktif(): void
@@ -908,6 +969,41 @@ class PustakaSoalTest extends TestCase
         $this->assertDatabaseHas('materi_soal', [
             'id' => $materiSoal->id,
             'isi_teks' => '<p>Isi passage teks.</p>',
+        ]);
+    }
+
+    public function test_update_materi_audio_menolak_teks_pada_section_teks_terlarang(): void
+    {
+        $this->masukSebagai('admin');
+
+        $materiSoal = $this->buatMateriAudio();
+        $section = Section::where('nama', 'Listening')->firstOrFail();
+
+        $this->post('/pustaka-soal', [
+            'bank_soal_id' => $this->bankSoal()->id,
+            'materi_soal_id' => $materiSoal->id,
+            'soal' => [
+                [
+                    'section_id' => $section->id,
+                    'part_soal_id' => $this->partMenyimak()->id,
+                    'teks_soal' => null,
+                    'pilihan_a' => null,
+                    'pilihan_b' => null,
+                    'pilihan_c' => null,
+                    'pilihan_d' => null,
+                    'kunci_jawaban' => 'A',
+                ],
+            ],
+        ])->assertRedirect();
+
+        $this->put("/pustaka-soal/materi-soal/{$materiSoal->id}", [
+            'judul' => $materiSoal->judul,
+            'isi_teks' => '<p>Materi audio tidak boleh berisi teks.</p>',
+        ])->assertRedirect()->assertSessionHas('error');
+
+        $this->assertDatabaseHas('materi_soal', [
+            'id' => $materiSoal->id,
+            'isi_teks' => null,
         ]);
     }
 

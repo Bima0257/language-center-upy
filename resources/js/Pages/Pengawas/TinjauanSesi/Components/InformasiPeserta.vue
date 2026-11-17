@@ -1,7 +1,13 @@
 <script setup>
+import { computed } from 'vue';
+import { jenisPesertaIdentitasLabel, jenisPesertaLabel } from '@/constants/jenisPeserta';
+
 const props = defineProps({
     sesiUjian: { type: Object, required: true },
 });
+
+const profil = computed(() => props.sesiUjian.pengguna?.profil_peserta);
+const labelIdentitas = computed(() => jenisPesertaIdentitasLabel[profil.value?.jenis_peserta] || 'Identitas');
 
 const statusColors = {
     pending: 'bg-warning-container text-on-warning-container',
@@ -24,8 +30,12 @@ function formatDateTime(value) {
                 <p class="text-text-heading font-medium">{{ props.sesiUjian.pengguna?.name }}</p>
             </div>
             <div>
-                <p class="text-text-muted text-label-md">NIM</p>
-                <p class="text-text-heading">{{ props.sesiUjian.pengguna?.nim || '-' }}</p>
+                <p class="text-text-muted text-label-md">{{ labelIdentitas }}</p>
+                <p class="text-text-heading">{{ profil?.nomor_identitas || '-' }}</p>
+            </div>
+            <div v-if="profil?.jenis_peserta">
+                <p class="text-text-muted text-label-md">Jenis Peserta</p>
+                <p class="text-text-heading">{{ jenisPesertaLabel[profil.jenis_peserta] }}</p>
             </div>
             <div>
                 <p class="text-text-muted text-label-md">Email</p>

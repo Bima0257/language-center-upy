@@ -6,7 +6,6 @@ use App\Models\InterpretasiSkor;
 use App\Models\Pengguna;
 use App\Models\ProgramTes;
 use App\Models\SkemaPenilaian;
-use App\Modules\Penilaian\Services\LayananAturanPenilaian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -33,9 +32,9 @@ class InterpretasiSkorTest extends TestCase
         return $pengguna;
     }
 
-    private function skemaDraft(ProgramTes $programTes): SkemaPenilaian
+    private function skema(ProgramTes $programTes): SkemaPenilaian
     {
-        return app(LayananAturanPenilaian::class)->buatVersi($programTes);
+        return SkemaPenilaian::where('program_tes_id', $programTes->id)->firstOrFail();
     }
 
     public function test_tamu_diarahkan_ke_login(): void
@@ -63,9 +62,8 @@ class InterpretasiSkorTest extends TestCase
     {
         $this->masukSebagai('admin');
         $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
-        $skema = $this->skemaDraft($programTes);
 
-        $this->get("/admin/data-induk/interpretasi-skor/program-tes/{$programTes->id}/tambah-massal?skema={$skema->id}")
+        $this->get("/admin/data-induk/interpretasi-skor/program-tes/{$programTes->id}/tambah-massal")
             ->assertOk();
     }
 
@@ -73,7 +71,7 @@ class InterpretasiSkorTest extends TestCase
     {
         $this->masukSebagai('admin');
         $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
-        $skema = $this->skemaDraft($programTes);
+        $skema = $this->skema($programTes);
         $interpretasiSkor = InterpretasiSkor::where('skema_penilaian_id', $skema->id)
             ->where('skor_minimum', 380)
             ->firstOrFail();
@@ -93,15 +91,69 @@ class InterpretasiSkorTest extends TestCase
             'id' => $interpretasiSkor->id,
             'skor_minimum' => 381,
             'label_tingkat' => 'Excellent Updated',
-            'deskripsi' => 'Updated description',
+            'deskripsi' => '<p>Updated description</p>',
         ]);
+    }
+
+    public function test_deskripsi_interpretasi_skor_disimpan_sebagai_html_tersanitasi(): void
+    {
+        $this->masukSebagai('admin');
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $skema = $this->skema($programTes);
+        $interpretasiSkor = InterpretasiSkor::where('skema_penilaian_id', $skema->id)
+            ->where('skor_minimum', 380)
+            ->firstOrFail();
+
+        $this->put("/admin/data-induk/interpretasi-skor/{$interpretasiSkor->id}", [
+            'skema_penilaian_id' => $skema->id,
+            'program_tes_id' => $programTes->id,
+            'skor_minimum' => 381,
+            'skor_maksimum' => 400,
+            'tingkat_cefr' => 'B2',
+            'label_tingkat' => 'Excellent Updated',
+            'lulus' => true,
+            'deskripsi' => '<p><strong>Deskripsi</strong> baru</p><script>alert(1)</script>',
+        ])->assertRedirect();
+
+        $interpretasiSkor->refresh();
+
+        $this->assertStringContainsString('<strong>Deskripsi</strong>', (string) $interpretasiSkor->deskripsi);
+        $this->assertStringNotContainsString('<script', (string) $interpretasiSkor->deskripsi);
+    }
+
+    public function test_deskripsi_interpretasi_skor_massal_disimpan_sebagai_html_tersanitasi(): void
+    {
+        $this->masukSebagai('admin');
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $skema = $this->skema($programTes);
+
+        $this->post("/admin/data-induk/interpretasi-skor/program-tes/{$programTes->id}/tambah-massal", [
+            'skema_penilaian_id' => $skema->id,
+            'interpretasi_skor' => [
+                [
+                    'skor_minimum' => 550,
+                    'skor_maksimum' => 599,
+                    'tingkat_cefr' => 'C1',
+                    'label_tingkat' => 'Advanced HTML',
+                    'lulus' => true,
+                    'deskripsi' => '<p><em>Advanced</em> level</p><script>alert(1)</script>',
+                ],
+            ],
+        ])->assertRedirect();
+
+        $interpretasiSkor = InterpretasiSkor::where('skema_penilaian_id', $skema->id)
+            ->where('skor_minimum', 550)
+            ->firstOrFail();
+
+        $this->assertStringContainsString('<em>Advanced</em>', (string) $interpretasiSkor->deskripsi);
+        $this->assertStringNotContainsString('<script', (string) $interpretasiSkor->deskripsi);
     }
 
     public function test_rentang_skor_tidak_valid_ditolak_saat_memperbarui(): void
     {
         $this->masukSebagai('admin');
         $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
-        $skema = $this->skemaDraft($programTes);
+        $skema = $this->skema($programTes);
         $interpretasiSkor = InterpretasiSkor::where('skema_penilaian_id', $skema->id)
             ->where('skor_minimum', 380)
             ->firstOrFail();
@@ -134,11 +186,26 @@ class InterpretasiSkorTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_admin_dapat_menghapus_interpretasi_skor(): void
+    {
+        $this->masukSebagai('admin');
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $skema = $this->skema($programTes);
+        $interpretasiSkor = InterpretasiSkor::where('skema_penilaian_id', $skema->id)
+            ->where('skor_minimum', 380)
+            ->firstOrFail();
+
+        $this->delete("/admin/data-induk/interpretasi-skor/{$interpretasiSkor->id}")
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('interpretasi_skor', ['id' => $interpretasiSkor->id]);
+    }
+
     public function test_admin_dapat_menyimpan_interpretasi_skor_secara_massal(): void
     {
         $this->masukSebagai('admin');
         $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
-        $skema = $this->skemaDraft($programTes);
+        $skema = $this->skema($programTes);
 
         $this->post("/admin/data-induk/interpretasi-skor/program-tes/{$programTes->id}/tambah-massal", [
             'skema_penilaian_id' => $skema->id,
@@ -161,7 +228,6 @@ class InterpretasiSkorTest extends TestCase
             ],
         ])->assertRedirect(route('admin.data-induk.interpretasi-skor.program-tes.daftar', [
             'programTes' => $programTes->id,
-            'skema' => $skema->id,
         ]));
 
         $this->assertDatabaseHas('interpretasi_skor', [
@@ -182,7 +248,7 @@ class InterpretasiSkorTest extends TestCase
     {
         $this->masukSebagai('admin');
         $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
-        $skema = $this->skemaDraft($programTes);
+        $skema = $this->skema($programTes);
         $interpretasiSkor = [];
 
         for ($index = 1; $index <= 11; $index++) {

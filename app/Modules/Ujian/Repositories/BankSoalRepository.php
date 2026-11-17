@@ -10,7 +10,9 @@ class BankSoalRepository implements BankSoalRepositoryInterface
 {
     public function semuaDenganProgramTesDanJumlah(?string $programTesId = null): Collection
     {
-        return BankSoal::with('programTes')
+        return BankSoal::with(['programTes' => fn ($query) => $query->withCount([
+            'section as section_aktif_count' => fn ($sectionQuery) => $sectionQuery->where('aktif', true),
+        ])])
             ->withCount(['soal', 'partUjian'])
             ->when($programTesId !== null, fn ($query) => $query->where('program_tes_id', $programTesId))
             ->orderBy('nama')

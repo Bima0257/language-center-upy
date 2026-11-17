@@ -19,7 +19,6 @@ class ProgramTesRepository implements ProgramTesRepositoryInterface
             'ujian',
             'aturanPenilaian',
             'interpretasiSkor',
-            'skemaPenilaian',
         ])->orderBy('nama')->get();
     }
 

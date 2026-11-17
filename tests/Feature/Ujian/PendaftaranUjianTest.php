@@ -14,7 +14,6 @@ use App\Models\PeriodeUjian;
 use App\Models\ProgramTes;
 use App\Models\Section;
 use App\Models\SesiUjian;
-use App\Models\SkemaPenilaian;
 use App\Models\SlotUjian;
 use App\Models\Soal;
 use App\Models\Ujian;
@@ -217,6 +216,76 @@ class PendaftaranUjianTest extends TestCase
         ));
     }
 
+    public function test_admin_dapat_membuka_daftar_semua_peserta_pendaftaran(): void
+    {
+        $this->masukSebagai('admin');
+        $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
+        $mahasiswa = Pengguna::where('email', 'peserta@toefl.test')->firstOrFail();
+
+        $pendaftaran = PendaftaranUjian::create([
+            'slot_ujian_id' => $slot->id,
+            'pengguna_id' => $mahasiswa->id,
+            'status' => StatusPendaftaranUjian::PENDING,
+        ]);
+
+        $page = $this->get('/admin/pendaftaran-ujian/peserta')
+            ->assertOk()
+            ->inertiaPage();
+
+        $this->assertSame('Admin/PendaftaranUjian/peserta-semua', $page['component']);
+        $this->assertTrue(collect($page['props']['pendaftaranUjian']['data'])->contains(
+            fn (array $item): bool => $item['id'] === $pendaftaran->id,
+        ));
+        $this->assertNotEmpty($page['props']['programTes']);
+        $this->assertNotEmpty($page['props']['ujian']);
+    }
+
+    public function test_daftar_semua_peserta_mendukung_filter_approval_program_tes_ujian_dan_pencarian(): void
+    {
+        $this->masukSebagai('admin');
+        $slotPending = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
+        $slotApproved = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDays(2)->setTime(8, 0));
+        $mahasiswa = Pengguna::where('email', 'peserta@toefl.test')->firstOrFail();
+        $programTesId = $slotPending->periodeUjian->ujian->program_tes_id;
+        $ujianId = $slotPending->periodeUjian->ujian_id;
+
+        $pendaftaranPending = PendaftaranUjian::create([
+            'slot_ujian_id' => $slotPending->id,
+            'pengguna_id' => $mahasiswa->id,
+            'status' => StatusPendaftaranUjian::PENDING,
+        ]);
+        $pendaftaranApproved = PendaftaranUjian::create([
+            'slot_ujian_id' => $slotApproved->id,
+            'pengguna_id' => $mahasiswa->id,
+            'status' => StatusPendaftaranUjian::APPROVED,
+        ]);
+
+        $page = $this->get('/admin/pendaftaran-ujian/peserta'
+            .'?f_status=pending'
+            .'&f_program_tes_id='.$programTesId
+            .'&f_ujian_id='.$ujianId
+            .'&q='.urlencode($mahasiswa->name)
+            .'&per_page=25')
+            ->assertOk()
+            ->inertiaPage();
+
+        $ids = collect($page['props']['pendaftaranUjian']['data'])->pluck('id');
+
+        $this->assertTrue($ids->contains($pendaftaranPending->id));
+        $this->assertFalse($ids->contains($pendaftaranApproved->id));
+        $this->assertSame('pending', $page['props']['filters']['status']);
+        $this->assertSame($programTesId, $page['props']['filters']['program_tes_id']);
+        $this->assertSame($ujianId, $page['props']['filters']['ujian_id']);
+        $this->assertSame(25, $page['props']['pendaftaranUjian']['per_page']);
+    }
+
+    public function test_peserta_tidak_dapat_membuka_daftar_semua_peserta_pendaftaran(): void
+    {
+        $this->masukSebagai('peserta');
+
+        $this->get('/admin/pendaftaran-ujian/peserta')->assertForbidden();
+    }
+
     public function test_admin_melihat_ringkasan_periode_pendaftaran_per_program_tes(): void
     {
         $this->masukSebagai('admin');
@@ -395,10 +464,10 @@ class PendaftaranUjianTest extends TestCase
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
 
         $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
-            'nim' => '2200099999',
-            'fakultas_id' => $mahasiswa->profilMahasiswa->fakultas_id,
-            'program_studi_id' => $mahasiswa->profilMahasiswa->program_studi_id,
-            'tahun_angkatan' => 2022,
+            'nomor_identitas' => '2200099999',
+            'fakultas_id' => $mahasiswa->profilPeserta->fakultas_id,
+            'program_studi_id' => $mahasiswa->profilPeserta->program_studi_id,
+            'tahun_mulai' => 2022,
             'bukti_pembayaran' => UploadedFile::fake()->image('bukti.png'),
         ])->assertRedirect();
 
@@ -407,9 +476,9 @@ class PendaftaranUjianTest extends TestCase
             'pengguna_id' => $mahasiswa->id,
             'status' => StatusPendaftaranUjian::PENDING->value,
         ]);
-        $this->assertDatabaseHas('profil_mahasiswa', [
+        $this->assertDatabaseHas('profil_peserta', [
             'pengguna_id' => $mahasiswa->id,
-            'nim' => '2200099999',
+            'nomor_identitas' => '2200099999',
         ]);
 
         $pendaftaran = PendaftaranUjian::where('slot_ujian_id', $slot->id)->firstOrFail();
@@ -429,10 +498,10 @@ class PendaftaranUjianTest extends TestCase
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
 
         $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
-            'nim' => $mahasiswa->profilMahasiswa->nim,
-            'fakultas_id' => $mahasiswa->profilMahasiswa->fakultas_id,
-            'program_studi_id' => $mahasiswa->profilMahasiswa->program_studi_id,
-            'tahun_angkatan' => $mahasiswa->profilMahasiswa->tahun_angkatan,
+            'nomor_identitas' => $mahasiswa->profilPeserta->nomor_identitas,
+            'fakultas_id' => $mahasiswa->profilPeserta->fakultas_id,
+            'program_studi_id' => $mahasiswa->profilPeserta->program_studi_id,
+            'tahun_mulai' => $mahasiswa->profilPeserta->tahun_mulai,
         ])->assertSessionHasErrors('bukti_pembayaran');
 
         $this->assertDatabaseCount('pendaftaran_ujian', 0);
@@ -444,10 +513,10 @@ class PendaftaranUjianTest extends TestCase
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
 
         $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
-            'nim' => $mahasiswa->profilMahasiswa->nim,
-            'fakultas_id' => $mahasiswa->profilMahasiswa->fakultas_id,
-            'program_studi_id' => $mahasiswa->profilMahasiswa->program_studi_id,
-            'tahun_angkatan' => $mahasiswa->profilMahasiswa->tahun_angkatan,
+            'nomor_identitas' => $mahasiswa->profilPeserta->nomor_identitas,
+            'fakultas_id' => $mahasiswa->profilPeserta->fakultas_id,
+            'program_studi_id' => $mahasiswa->profilPeserta->program_studi_id,
+            'tahun_mulai' => $mahasiswa->profilPeserta->tahun_mulai,
             'bukti_pembayaran' => UploadedFile::fake()->image('bukti.png')->size(3000),
         ])->assertSessionHasErrors('bukti_pembayaran');
 
@@ -463,10 +532,10 @@ class PendaftaranUjianTest extends TestCase
         ]);
 
         $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
-            'nim' => $mahasiswa->profilMahasiswa->nim,
-            'fakultas_id' => $mahasiswa->profilMahasiswa->fakultas_id,
-            'program_studi_id' => $mahasiswa->profilMahasiswa->program_studi_id,
-            'tahun_angkatan' => $mahasiswa->profilMahasiswa->tahun_angkatan,
+            'nomor_identitas' => $mahasiswa->profilPeserta->nomor_identitas,
+            'fakultas_id' => $mahasiswa->profilPeserta->fakultas_id,
+            'program_studi_id' => $mahasiswa->profilPeserta->program_studi_id,
+            'tahun_mulai' => $mahasiswa->profilPeserta->tahun_mulai,
             'bukti_pembayaran' => UploadedFile::fake()->image('bukti.png'),
         ])->assertRedirect()->assertSessionHas('error', 'Pendaftaran ujian sudah ditutup.');
 
@@ -478,10 +547,10 @@ class PendaftaranUjianTest extends TestCase
         $mahasiswa = $this->masukSebagai('peserta');
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
         $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
-            'nim' => $mahasiswa->profilMahasiswa->nim,
-            'fakultas_id' => $mahasiswa->profilMahasiswa->fakultas_id,
-            'program_studi_id' => $mahasiswa->profilMahasiswa->program_studi_id,
-            'tahun_angkatan' => $mahasiswa->profilMahasiswa->tahun_angkatan,
+            'nomor_identitas' => $mahasiswa->profilPeserta->nomor_identitas,
+            'fakultas_id' => $mahasiswa->profilPeserta->fakultas_id,
+            'program_studi_id' => $mahasiswa->profilPeserta->program_studi_id,
+            'tahun_mulai' => $mahasiswa->profilPeserta->tahun_mulai,
             'bukti_pembayaran' => UploadedFile::fake()->image('bukti.png'),
         ])->assertRedirect();
 
@@ -513,16 +582,67 @@ class PendaftaranUjianTest extends TestCase
         $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
 
         $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
-            'nim' => $mahasiswa->profilMahasiswa->nim,
-            'fakultas_id' => $mahasiswa->profilMahasiswa->fakultas_id,
-            'program_studi_id' => $mahasiswa->profilMahasiswa->program_studi_id,
-            'tahun_angkatan' => $mahasiswa->profilMahasiswa->tahun_angkatan,
+            'nomor_identitas' => $mahasiswa->profilPeserta->nomor_identitas,
+            'fakultas_id' => $mahasiswa->profilPeserta->fakultas_id,
+            'program_studi_id' => $mahasiswa->profilPeserta->program_studi_id,
+            'tahun_mulai' => $mahasiswa->profilPeserta->tahun_mulai,
             'bukti_pembayaran' => UploadedFile::fake()->image('bukti.png'),
         ])->assertRedirect();
 
         $this->get('/ujian/slot/'.$slot->id.'/pemeriksaan-awal')
             ->assertRedirect(route('ujian.jadwal'))
             ->assertSessionHas('error', 'Pendaftaran ujian Anda belum disetujui.');
+    }
+
+    public function test_dosen_dapat_mengajukan_pendaftaran_official(): void
+    {
+        $dosen = $this->masukSebagai('dosen');
+        $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
+
+        $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
+            'nomor_identitas' => 'NIDN-2200010002',
+            'fakultas_id' => $dosen->profilPeserta->fakultas_id,
+            'program_studi_id' => $dosen->profilPeserta->program_studi_id,
+            'bukti_pembayaran' => UploadedFile::fake()->image('bukti.png'),
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('pendaftaran_ujian', [
+            'slot_ujian_id' => $slot->id,
+            'pengguna_id' => $dosen->id,
+            'status' => StatusPendaftaranUjian::PENDING->value,
+        ]);
+    }
+
+    public function test_pendaftaran_dosen_mewajibkan_fakultas_dan_prodi(): void
+    {
+        $this->masukSebagai('dosen');
+        $slot = $this->buatSlot(ModeUjian::OFFICIAL->value, now()->addDay()->setTime(8, 0));
+
+        $this->post('/ujian/slot/'.$slot->id.'/pendaftaran', [
+            'nomor_identitas' => 'NIDN-2200010002',
+            'bukti_pembayaran' => UploadedFile::fake()->image('bukti.png'),
+        ])->assertSessionHasErrors(['fakultas_id', 'program_studi_id']);
+
+        $this->assertDatabaseCount('pendaftaran_ujian', 0);
+    }
+
+    public function test_umum_dapat_memulai_tryout(): void
+    {
+        $umum = $this->masukSebagai('umum');
+        $slot = $this->buatSlot(ModeUjian::TRYOUT->value, now()->subMinutes(5));
+        $this->lengkapiSoalUjian($slot->periodeUjian->ujian);
+
+        $this->post('/ujian/slot/'.$slot->id.'/mulai', [
+            'jenis_perangkat' => 'desktop',
+            'agen_pengguna_perangkat' => 'PendaftaranUjianTest',
+            'swafoto' => UploadedFile::fake()->image('selfie.jpg'),
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('pendaftaran_ujian', [
+            'slot_ujian_id' => $slot->id,
+            'pengguna_id' => $umum->id,
+            'status' => StatusPendaftaranUjian::APPROVED->value,
+        ]);
     }
 
     public function test_tryout_membuat_pendaftaran_approved_saat_sesi_dimulai(): void
@@ -556,7 +676,7 @@ class PendaftaranUjianTest extends TestCase
         $this->assertSame('400.0', $sesi->skor_total_maksimum);
     }
 
-    public function test_sesi_memakai_snapshot_walau_skema_aktif_berubah(): void
+    public function test_sesi_memakai_snapshot_walau_skema_diubah(): void
     {
         $mahasiswa = $this->masukSebagai('peserta');
         $slot = $this->buatSlot(ModeUjian::TRYOUT->value, now()->subMinutes(5));
@@ -578,25 +698,17 @@ class PendaftaranUjianTest extends TestCase
 
         $layanan = app(LayananAturanPenilaian::class);
         $programTes = ProgramTes::findOrFail($ujian->program_tes_id);
-        $draft = $layanan->buatVersi($programTes);
+        $skema = $layanan->temukanSkema($skemaAwalId);
         $reading = Section::where('program_tes_id', $programTes->id)
             ->where('nama', 'Reading')
             ->firstOrFail();
 
-        $layanan->simpanAturan($draft, $reading, [
+        $layanan->simpanAturan($skema, $reading, [
             'tabel_konversi' => array_fill(0, 51, 200),
             'skor_mentah_maksimum' => 50,
             'skor_skala_minimum' => 100,
             'skor_skala_maksimum' => 200,
         ]);
-        $layanan->aktifkan($draft);
-
-        $this->assertSame(
-            $draft->id,
-            SkemaPenilaian::where('program_tes_id', $programTes->id)
-                ->where('status', 'aktif')
-                ->value('id'),
-        );
 
         $soalIds = Soal::whereHas('partUjian', fn ($query) => $query->where('ujian_id', $ujian->id))
             ->pluck('id');

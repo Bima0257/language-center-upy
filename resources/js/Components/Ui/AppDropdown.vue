@@ -61,6 +61,7 @@ onBeforeUnmount(removeScrollListener);
         :shift="props.shift"
         :overflow-padding="props.overflowPadding"
         :auto-hide="props.autoHide"
+        :handle-resize="false"
     >
         <slot />
         <template #popper="{ hide }">
