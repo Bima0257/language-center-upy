@@ -88,7 +88,7 @@ class PermissionScanner
     public function categoryData(string $routeName): array
     {
         $parts = explode('.', $routeName);
-        $prefix = $parts[0] ?? '';
+        $prefix = $parts[0];
 
         if ($prefix === 'admin') {
             if (count($parts) >= 3) {

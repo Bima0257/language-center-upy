@@ -50,7 +50,11 @@ use Spatie\Permission\Traits\HasRoles;
 class Pengguna extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<PenggunaFactory> */
-    use HasFactory, HasRoles, HasUuids, Notifiable;
+    use HasFactory, HasUuids, Notifiable;
+
+    use HasRoles {
+        roles as private spatieRoles;
+    }
 
     protected $table = 'users';
 
@@ -97,6 +101,14 @@ class Pengguna extends Authenticatable implements MustVerifyEmail
                 $pengguna->status = $pengguna->aktif;
             }
         });
+    }
+
+    /**
+     * @return BelongsToMany<Role, $this>
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->spatieRoles();
     }
 
     public function profilPeserta(): HasOne

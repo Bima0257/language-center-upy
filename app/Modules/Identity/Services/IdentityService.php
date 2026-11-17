@@ -27,8 +27,6 @@ class IdentityService implements IdentityContract
 
     private const CATEGORY_SORTS = ['module', 'name', 'code', 'permissions_count', 'is_system'];
 
-    private const DEFAULT_ROLES = ['admin', 'peserta'];
-
     /** @var array<string, array<int, string>> */
     private array $roleBranchCache = [];
 
@@ -383,7 +381,7 @@ class IdentityService implements IdentityContract
         }
 
         return DB::transaction(function () use ($name, $data, $parentIds): Role {
-            $role = Role::create([
+            $role = Role::query()->create([
                 'name' => $name,
                 'guard_name' => 'web',
                 'is_system' => false,
@@ -712,6 +710,9 @@ class IdentityService implements IdentityContract
             ->get();
     }
 
+    /**
+     * @return Builder<Pengguna>
+     */
     private function buildUsersQuery(array $params, ?string $tab = null): Builder
     {
         $tab = $tab ?? (in_array($params['tab'] ?? null, ['admin', 'peserta', 'custom'], true)
@@ -787,9 +788,8 @@ class IdentityService implements IdentityContract
         while ($frontier !== []) {
             $children = DB::table('role_parents')
                 ->whereIn('parent_role_id', $frontier)
+                ->whereNotIn('role_id', $ids)
                 ->pluck('role_id')
-                ->diff($ids)
-                ->values()
                 ->all();
 
             if ($children === []) {
@@ -839,6 +839,7 @@ class IdentityService implements IdentityContract
 
     /**
      * @param  array<string, mixed>  $params
+     * @return Builder<Role>
      */
     private function buildRolesQuery(array $params, ?string $tab = null): Builder
     {
@@ -979,6 +980,7 @@ class IdentityService implements IdentityContract
 
     /**
      * @param  array<string, mixed>  $params
+     * @return Builder<PermissionCategory>
      */
     private function buildCategoriesQuery(array $params): Builder
     {

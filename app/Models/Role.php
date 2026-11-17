@@ -35,6 +35,9 @@ class Role extends SpatieRole
         ];
     }
 
+    /**
+     * @return BelongsToMany<Role, $this>
+     */
     public function parents(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -45,6 +48,9 @@ class Role extends SpatieRole
         );
     }
 
+    /**
+     * @return BelongsToMany<Role, $this>
+     */
     public function children(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -55,6 +61,9 @@ class Role extends SpatieRole
         );
     }
 
+    /**
+     * @return BelongsToMany<Permission, $this>
+     */
     public function deniedPermissions(): BelongsToMany
     {
         return $this->belongsToMany(

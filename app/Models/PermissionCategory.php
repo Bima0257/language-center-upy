@@ -34,6 +34,9 @@ class PermissionCategory extends Model
         ];
     }
 
+    /**
+     * @return HasMany<Permission, $this>
+     */
     public function permissions(): HasMany
     {
         return $this->hasMany(Permission::class, 'permission_category_id', 'id');
