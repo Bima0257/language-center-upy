@@ -388,8 +388,8 @@
     }
 
     .base-datepicker-input {
-        --dp-input-padding: 0.8125rem 2.75rem 0.8125rem 1rem;
-        --dp-input-not-clearable-padding: 1rem;
+        --dp-input-padding: 0.8125rem 2.75rem 0.8125rem 2.75rem;
+        --dp-input-not-clearable-padding: 2.75rem;
         --dp-input-icon-padding: 2.75rem;
         min-height: 3.25rem;
         border-radius: 1rem !important;
@@ -414,6 +414,10 @@
 
     .base-datepicker--error .base-datepicker-input {
         border-color: var(--color-error-red) !important;
+    }
+
+    .base-datepicker .dp--input-icon {
+        padding-inline-start: 1rem;
     }
 
     .base-datepicker-icon {

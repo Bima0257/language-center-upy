@@ -60,7 +60,7 @@ function updateConversion(rawScore, event) {
         </template>
 
         <form id="form-aturan-penilaian" class="space-y-5 px-6 py-5" @submit.prevent="emit('submit')">
-            <BaseFormGrid>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                     <label class="mb-1.5 block text-label-md font-medium text-text-heading">Skor mentah maksimum *</label>
                     <input
@@ -97,14 +97,14 @@ function updateConversion(rawScore, event) {
                     />
                     <p v-if="form.errors.skor_skala_maksimum" class="mt-1 text-xs text-error-red">{{ form.errors.skor_skala_maksimum }}</p>
                 </div>
-            </BaseFormGrid>
+            </div>
 
             <div>
                 <div class="mb-2 flex items-center justify-between gap-3">
                     <div>
                         <h3 class="text-title-md font-semibold text-text-heading">Tabel Konversi</h3>
                         <p class="text-label-md text-text-muted">
-                            Skor mentah adalah jumlah jawaban benar (absolut). Isi skor skala untuk setiap skor mentah.
+                            Raw (skor mentah) adalah jumlah jawaban benar pada section ini. Isi skor skala untuk setiap jumlah jawaban benar.
                         </p>
                     </div>
                     <span class="rounded-full bg-pastel-purple px-3 py-1 text-label-md font-medium text-text-heading">
@@ -127,6 +127,8 @@ function updateConversion(rawScore, event) {
                                 type="number"
                                 min="0"
                                 :max="form.skor_skala_maksimum"
+                                placeholder="Skor"
+                                :aria-label="`Skor skala untuk Raw ${rawScore} (jumlah jawaban benar)`"
                                 required
                                 class="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-2 py-1.5 text-label-md text-text-body focus:border-secondary focus:outline-none"
                                 @input="updateConversion(rawScore, $event)"

@@ -1,10 +1,8 @@
 <script setup>
-import { Link } from "@inertiajs/vue3";
 import TataLetakUjian from "@/Layouts/TataLetakUjian.vue";
 import TimerDisplay from "@/Layouts/Ujian/Components/TimerDisplay.vue";
 import GridSoalModal from "@/Components/Ujian/GridSoalModal.vue";
 import ExamIntroState from "@/Components/Ujian/ExamTakePreview/ExamIntroState.vue";
-import SectionIntroState from "@/Components/Ujian/ExamTakePreview/SectionIntroState.vue";
 import QuestionPartIntroState from "@/Components/Ujian/ExamTakePreview/QuestionPartIntroState.vue";
 import ReadingQuestionPane from "@/Components/Ujian/ExamTakePreview/ReadingQuestionPane.vue";
 import ListeningQuestionPane from "@/Components/Ujian/ExamTakePreview/ListeningQuestionPane.vue";
@@ -15,6 +13,8 @@ import { onMounted, onUnmounted, ref, computed, watch } from "vue";
 import axios from "axios";
 import {
     IconArrowLeft,
+    IconMaximize,
+    IconMinimize,
     IconMoon,
     IconSun,
 } from "@tabler/icons-vue";
@@ -24,7 +24,6 @@ const props = defineProps({
     overview: { type: Object, default: () => ({}) },
     blocks: { type: Array, default: () => [] },
     backUrl: { type: String, default: null },
-    manageUrl: { type: String, default: null },
     initialSoalId: { type: String, default: null },
     demo: { type: Boolean, default: false },
     skorUrl: { type: String, default: null },
@@ -49,15 +48,9 @@ function partKey(block) {
 
 const steps = computed(() => {
     const list = [{ kind: "intro" }];
-    let lastSectionCode = null;
     let lastPartKey = null;
 
     for (const block of props.blocks) {
-        if (block.section.kode !== lastSectionCode) {
-            lastSectionCode = block.section.kode;
-            list.push({ kind: "section", block });
-        }
-
         const currentPartKey = partKey(block);
 
         if (currentPartKey !== lastPartKey) {
@@ -75,11 +68,25 @@ const stepIndex = ref(0);
 const subIndex = ref(0);
 const showGridModal = ref(false);
 const previewTheme = ref("light");
+const isFullscreen = ref(false);
 let previousDarkTheme = false;
 
 function togglePreviewTheme() {
     previewTheme.value = previewTheme.value === "dark" ? "light" : "dark";
     document.documentElement.classList.toggle("dark", previewTheme.value === "dark");
+}
+
+function syncFullscreenState() {
+    isFullscreen.value = Boolean(document.fullscreenElement);
+}
+
+function toggleFullscreen() {
+    if (document.fullscreenElement) {
+        document.exitFullscreen()?.catch(() => {});
+        return;
+    }
+
+    document.documentElement.requestFullscreen()?.catch(() => {});
 }
 
 function setInitialQuestion() {
@@ -105,11 +112,17 @@ onMounted(() => {
         "dark",
         previewTheme.value === "dark",
     );
+    document.addEventListener("fullscreenchange", syncFullscreenState);
     setInitialQuestion();
 });
 
 onUnmounted(() => {
     document.documentElement.classList.toggle("dark", previousDarkTheme);
+    document.removeEventListener("fullscreenchange", syncFullscreenState);
+
+    if (document.fullscreenElement) {
+        document.exitFullscreen()?.catch(() => {});
+    }
 });
 
 const currentStep = computed(
@@ -119,7 +132,7 @@ const currentStep = computed(
 const phase = computed(() => currentStep.value.kind);
 
 const currentBlock = computed(() =>
-    ["section", "partSoal", "soal"].includes(phase.value)
+    ["partSoal", "soal"].includes(phase.value)
         ? currentStep.value.block
         : null,
 );
@@ -160,10 +173,21 @@ const partTabs = computed(() => {
             seen.add(key);
             return true;
         })
-        .map((block) => ({
-            value: partKey(block),
-            label: block.partSoal?.nama || "Part Soal",
-        }));
+        .map((block) => {
+            const sectionName = block.section?.nama || "";
+            const partName = block.partSoal?.nama || "Part Soal";
+
+            return {
+                value: partKey(block),
+                label:
+                    sectionName &&
+                    partName
+                        .toLowerCase()
+                        .startsWith(`${sectionName.toLowerCase()} `)
+                        ? partName.slice(sectionName.length).trim()
+                        : partName,
+            };
+        });
 });
 
 const activePartValue = computed(() =>
@@ -198,10 +222,6 @@ const globalNumber = computed(() =>
 
 const totalAllQuestions = computed(() =>
     props.blocks.reduce((sum, b) => sum + b.jumlahSoal, 0),
-);
-
-const currentQuestionNumber = computed(() =>
-    isQuestions.value ? subIndex.value + 1 : 0,
 );
 
 const examTitle = computed(
@@ -270,17 +290,76 @@ const ringkasanSection = computed(() => {
 
 const WINDOW_SIZE = 5;
 
-const visibleNumbers = computed(() => {
-    const total = currentBlockQuestions.value.length;
-    if (total <= WINDOW_SIZE) {
-        return Array.from({ length: total }, (_, i) => i);
+const allQuestions = computed(() => {
+    const list = [];
+
+    for (const block of props.blocks) {
+        (block.soal ?? []).forEach((soal, index) => {
+            list.push({
+                id: soal.id,
+                number: soal.nomor_global ?? block.nomorMulai + index,
+            });
+        });
     }
+
+    return list.sort((left, right) => left.number - right.number);
+});
+
+const firstQuestionNumber = computed(() => allQuestions.value[0]?.number ?? 0);
+const lastQuestionNumber = computed(
+    () => allQuestions.value[allQuestions.value.length - 1]?.number ?? 0,
+);
+
+const answeredNumbers = computed(() =>
+    allQuestions.value
+        .filter((question) => answers.value[question.id] !== undefined)
+        .map((question) => question.number),
+);
+
+const blockNumbers = computed(() =>
+    currentBlockQuestions.value.map((_, index) => currentBlock.value.nomorMulai + index),
+);
+
+const visibleNumbers = computed(() => {
+    if (currentBlockQuestions.value.length === 1) {
+        const list = allQuestions.value;
+        const index = list.findIndex((question) => question.number === globalNumber.value);
+
+        if (index === -1) return [];
+
+        const start = Math.max(
+            0,
+            Math.min(index - Math.floor(WINDOW_SIZE / 2), list.length - WINDOW_SIZE),
+        );
+
+        return list.slice(start, start + WINDOW_SIZE).map((question) => question.number);
+    }
+
+    const total = currentBlockQuestions.value.length;
+
+    if (total <= WINDOW_SIZE) {
+        return blockNumbers.value;
+    }
+
     const start = Math.max(
         0,
         Math.min(subIndex.value - Math.floor(WINDOW_SIZE / 2), total - WINDOW_SIZE),
     );
-    return Array.from({ length: WINDOW_SIZE }, (_, k) => start + k);
+
+    return blockNumbers.value.slice(start, start + WINDOW_SIZE);
 });
+
+const navigationFirstNumber = computed(() =>
+    currentBlockQuestions.value.length === 1
+        ? firstQuestionNumber.value
+        : (currentBlock.value?.nomorMulai ?? 0),
+);
+
+const navigationLastNumber = computed(() =>
+    currentBlockQuestions.value.length === 1
+        ? lastQuestionNumber.value
+        : (currentBlock.value?.nomorMulai ?? 0) + Math.max(currentBlockQuestions.value.length - 1, 0),
+);
 
 // Arah animasi strip: slide-next/prev saat maju/mundur 1 soal,
 // tanpa animasi untuk lompatan besar (mis. via Peta Soal).
@@ -414,16 +493,6 @@ function navigateToBlock(block, kind = "partSoal") {
 
 function selectSection(value) {
     const sectionCode = String(value);
-    const sectionStep = steps.value.find(
-        (step) =>
-            step.kind === "section" &&
-            step.block?.section?.kode === sectionCode,
-    );
-
-    if (sectionStep) {
-        navigateToBlock(sectionStep.block, "section");
-        return;
-    }
 
     navigateToBlock(
         props.blocks.find(
@@ -496,10 +565,6 @@ function selectAnswer(key) {
     answers.value[q.id] = key;
 }
 
-function selectQuestion(index) {
-    subIndex.value = index;
-}
-
 function canGoPrev() {
     if (!isQuestions.value) return stepIndex.value > 0;
     return subIndex.value > 0 || hasPrevQuestionsBlock();
@@ -564,7 +629,7 @@ const seconds = ref(37);
                 <div class="flex min-w-0 items-center gap-3">
                     <button
                         type="button"
-                        class="exam-back-button inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50"
+                        class="exam-back-button inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50"
                         :class="
                             previewTheme === 'dark'
                                 ? 'exam-control-dark'
@@ -605,21 +670,6 @@ const seconds = ref(37);
                             </span>
                         </div>
                     </div>
-                    <Link
-                        v-if="manageUrl"
-                        :href="manageUrl"
-                        class="exam-control-button inline-flex h-9 shrink-0 items-center justify-center rounded-xl border px-2 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 sm:h-10 sm:gap-1.5 sm:px-3 sm:text-sm"
-                        :class="
-                            previewTheme === 'dark'
-                                ? 'exam-control-dark'
-                                : 'exam-control-light'
-                        "
-                        aria-label="Kelola soal"
-                        title="Kelola soal"
-                    >
-                        <span class="hidden sm:inline">Kelola Soal</span>
-                        <span class="sm:hidden">Kelola</span>
-                    </Link>
                 </div>
 
                 <div class="flex shrink-0 items-center gap-2 sm:gap-3">
@@ -689,20 +739,43 @@ const seconds = ref(37);
                         <IconSun v-if="previewTheme === 'light'" :size="18" />
                         <IconMoon v-else :size="18" />
                     </button>
+                    <button
+                        type="button"
+                        class="exam-theme-button inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 sm:h-10 sm:w-10"
+                        :class="
+                            previewTheme === 'dark'
+                                ? 'text-text-heading hover:bg-surface-container-high'
+                                : 'text-text-heading hover:bg-surface-container-high'
+                        "
+                        :aria-label="
+                            isFullscreen
+                                ? 'Keluar dari layar penuh'
+                                : 'Tampilkan layar penuh'
+                        "
+                        :title="
+                            isFullscreen
+                                ? 'Keluar layar penuh'
+                                : 'Layar penuh'
+                        "
+                        @click="toggleFullscreen"
+                    >
+                        <IconMinimize v-if="isFullscreen" :size="18" />
+                        <IconMaximize v-else :size="18" />
+                    </button>
                 </div>
             </div>
         </template>
 
         <div v-if="!demoSelesai" class="flex h-full min-h-0 flex-col bg-canvas">
             <nav
-                v-if="blocks.length"
-                class="exam-section-nav flex min-h-[44px] shrink-0 items-center px-2 py-1 sm:px-3 lg:h-12 lg:py-1"
+                v-if="blocks.length && phase !== 'intro'"
+                class="exam-section-nav shrink-0 px-3 pt-3 sm:px-4 sm:pt-4 lg:px-5 lg:pt-4"
                 aria-label="Navigasi part ujian"
             >
                 <div
-                    class="relative mx-auto grid w-full min-w-0 grid-cols-1 items-center gap-2 lg:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)]"
+                    class="exam-section-card mx-auto grid w-full min-w-0 grid-cols-1 items-center gap-2 rounded-2xl border bg-surface-white px-3 py-2.5 shadow-soft sm:px-4 lg:grid-cols-[auto_1px_minmax(0,1fr)_auto] lg:gap-3"
                 >
-                    <div class="exam-section-tabs min-w-0 justify-self-center lg:col-start-1 lg:justify-self-end">
+                    <div class="exam-section-tabs min-w-0 justify-self-center lg:col-start-1 lg:justify-self-start">
                         <div class="exam-tabs-scroll flex max-w-full items-center overflow-x-auto rounded-full border p-0.5">
                             <button
                                 v-for="section in sectionTabs"
@@ -745,7 +818,7 @@ const seconds = ref(37);
                         </div>
                     </div>
                     <div
-                        class="flex shrink-0 items-center justify-end gap-1 text-xs text-text-muted lg:absolute lg:right-0 lg:top-1/2 lg:z-10 lg:-translate-y-1/2"
+                        class="flex shrink-0 items-center justify-center gap-1 text-xs text-text-muted lg:col-start-4 lg:justify-end"
                         aria-label="Progress ujian"
                     >
                         <span class="hidden sm:inline">Progress</span>
@@ -780,14 +853,6 @@ const seconds = ref(37);
                         :participant-name="sesiUjian.pengguna?.name || 'Peserta'"
                         @next="goToNext"
                     />
-                    <SectionIntroState
-                        v-else-if="phase === 'section'"
-                        :current-block="currentBlock"
-                        :blocks="blocks"
-                        :can-go-prev="canGoPrev()"
-                        @previous="goToPrev"
-                        @next="goToNext"
-                    />
                     <QuestionPartIntroState
                         v-else-if="phase === 'partSoal'"
                         :current-block="currentBlock"
@@ -814,13 +879,11 @@ const seconds = ref(37);
                     <ReadingQuestionPane
                         v-if="materiSoal && !isMaterialAudio"
                         :materi-soal="materiSoal"
-                        :part-soal-label="currentBlock?.partSoal?.nama || currentBlock?.section?.nama || ''"
                         :image-src="imageSrc"
                     />
                     <ListeningQuestionPane
                         v-else-if="materiSoal && isMaterialAudio"
                         :materi-soal="materiSoal"
-                        :part-soal-label="currentBlock?.partSoal?.nama || currentBlock?.section?.nama || ''"
                         :image-src="imageSrc"
                         :audio-src="audioSrc"
                     />
@@ -828,15 +891,14 @@ const seconds = ref(37);
                     <section
                         class="preview-question-panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[20px] border bg-surface-container-low"
                         :class="{
-                            'mx-auto w-full max-w-[1220px]': isStandaloneQuestion,
+                            'mx-auto w-full max-w-3xl self-start max-h-full':
+                                isStandaloneQuestion,
                         }"
                     >
                         <QuestionPreviewPane
                             :current-question="currentQuestion"
-                            :question-number="currentQuestionNumber"
                             :global-number="globalNumber"
                             :total-all-questions="totalAllQuestions"
-                            :answered-count="answeredCount"
                             :answers="answers"
                             :is-audio="isMaterialAudio"
                             :show-question-text="true"
@@ -853,6 +915,7 @@ const seconds = ref(37);
         >
             <DemoSummaryState
                 :overview="overview"
+                :participant-name="sesiUjian.pengguna?.name || 'Pratinjau'"
                 :answered-count="answeredCount"
                 :total-all-questions="totalAllQuestions"
                 :durasi-menit="durasiDemoMenit"
@@ -869,16 +932,16 @@ const seconds = ref(37);
         <template #footer>
             <QuestionNavigation
                 v-if="isQuestions && !demoSelesai"
-                :current-index="subIndex"
-                :questions="currentBlockQuestions"
-                :answers="answers"
+                :current-number="globalNumber"
                 :visible-numbers="visibleNumbers"
+                :answered-numbers="answeredNumbers"
                 :strip-anim="stripAnim"
-                :question-number-start="currentBlock.nomorMulai"
+                :first-number="navigationFirstNumber"
+                :last-number="navigationLastNumber"
                 :can-go-prev="canGoPrev()"
                 :is-last-step="isLastStep()"
                 @previous="goToPrev"
-                @select-question="selectQuestion"
+                @select-number="goToGlobal"
                 @next="goToNext"
                 @show-grid="showGridModal = true"
             />
@@ -946,6 +1009,18 @@ const seconds = ref(37);
 
 .exam-section-nav {
     background-color: var(--color-canvas);
+}
+
+.exam-section-card {
+    border-color: var(--color-outline-variant);
+}
+
+.dark .exam-section-card {
+    border-color: color-mix(
+        in srgb,
+        var(--color-text-muted) 30%,
+        transparent
+    );
 }
 
 .exam-tabs-scroll {

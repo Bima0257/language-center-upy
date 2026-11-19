@@ -35,7 +35,7 @@ class HitungSkorSection
 
         if ($jumlahSoal > $skorMentahMaksimum) {
             throw new \RuntimeException(
-                "Jumlah soal {$namaSection} ({$jumlahSoal}) melebihi skor mentah maksimum ({$skorMentahMaksimum}).",
+                "Jumlah soal {$namaSection} ({$jumlahSoal}) melebihi skor mentah (Raw) maksimum ({$skorMentahMaksimum}).",
             );
         }
 

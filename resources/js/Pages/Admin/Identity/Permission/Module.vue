@@ -5,7 +5,6 @@ import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import AppDataTable from '@/Components/Ui/AppDataTable.vue';
 import BaseBadge from '@/Components/Base/BaseBadge.vue';
 import BaseButton from '@/Components/Base/BaseButton.vue';
-import BaseCheckbox from '@/Components/Base/BaseCheckbox.vue';
 import BaseFieldLabel from '@/Components/Base/BaseFieldLabel.vue';
 import BaseInfoField from '@/Components/Base/BaseInfoField.vue';
 import BaseInput from '@/Components/Base/BaseInput.vue';
@@ -13,7 +12,7 @@ import BaseInputError from '@/Components/Base/BaseInputError.vue';
 import BaseModal from '@/Components/Base/BaseModal.vue';
 import BaseModalFooter from '@/Components/Base/BaseModalFooter.vue';
 import BaseModalHeader from '@/Components/Base/BaseModalHeader.vue';
-import { IconEye, IconPencil } from '@tabler/icons-vue';
+import { IconEye, IconPencil, IconSquare, IconSquareCheck, IconSquareMinus, IconX } from '@tabler/icons-vue';
 
 const props = defineProps({
     module: { type: Object, required: true },
@@ -41,6 +40,15 @@ const availablePermissions = computed(() => {
     return [...map.values()].sort((left, right) => left.name.localeCompare(right.name));
 });
 
+const selectedPermissionIds = computed(() => new Set(editForm.permission_ids ?? []));
+const allPermissionsSelected = computed(() =>
+    availablePermissions.value.length > 0
+    && availablePermissions.value.every(permission => selectedPermissionIds.value.has(permission.id)),
+);
+const somePermissionsSelected = computed(() =>
+    availablePermissions.value.some(permission => selectedPermissionIds.value.has(permission.id)),
+);
+
 function openDetail(category) {
     selectedCategory.value = category;
     showDetail.value = true;
@@ -65,6 +73,16 @@ function togglePermission(permissionId, checked) {
     }
 
     editForm.permission_ids = [...ids];
+}
+
+function isPermissionSelected(permissionId) {
+    return (editForm.permission_ids ?? []).includes(permissionId);
+}
+
+function toggleAllPermissions() {
+    editForm.permission_ids = allPermissionsSelected.value
+        ? []
+        : availablePermissions.value.map((permission) => permission.id);
 }
 
 function submitEdit() {
@@ -162,32 +180,60 @@ const columns = [
 
         <BaseModal :show="showDetail" max-width="3xl" @close="showDetail = false">
             <BaseModalHeader>
-                <div class="px-6 py-4 text-title-lg font-semibold text-text-heading">
-                    {{ selectedCategory?.name }}
+                <div class="flex items-center justify-between gap-3 px-6 py-4">
+                    <div class="min-w-0 text-title-lg font-semibold text-text-heading">
+                        {{ selectedCategory?.name }}
+                    </div>
+                    <button
+                        type="button"
+                        aria-label="Tutup detail permission"
+                        class="p-2 text-text-muted transition-colors hover:text-text-heading"
+                        @click="showDetail = false"
+                    >
+                        <IconX :size="20" />
+                    </button>
                 </div>
             </BaseModalHeader>
             <div class="max-h-[60vh] overflow-y-auto p-6">
-                <table class="w-full text-left">
-                    <thead class="text-label-md uppercase tracking-wider text-text-muted">
-                        <tr>
-                            <th class="px-3 py-2">Action</th>
-                            <th class="px-3 py-2">Route Permission</th>
-                            <th class="px-3 py-2">Sumber</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-outline-variant/30">
-                        <tr v-for="permission in selectedCategory?.permissions ?? []" :key="permission.id">
-                            <td class="px-3 py-2">
-                                <BaseBadge variant="secondary">{{ permission.action || 'access' }}</BaseBadge>
-                            </td>
-                            <td class="px-3 py-2"><code class="text-label-md">{{ permission.name }}</code></td>
-                            <td class="px-3 py-2 text-body-md text-text-muted">
-                                {{ permission.category_assignment_source === 'manual' ? 'Manual' : 'Otomatis' }}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="overflow-hidden rounded-xl border border-outline-variant/40">
+                    <table class="w-full text-left">
+                        <thead class="sticky top-0 z-10 bg-surface-container-low text-label-md uppercase tracking-wider text-text-muted">
+                            <tr>
+                                <th class="px-3 py-2">Aksi</th>
+                                <th class="px-3 py-2">Route Permission</th>
+                                <th class="px-3 py-2">Sumber</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/30">
+                            <tr
+                                v-for="permission in selectedCategory?.permissions ?? []"
+                                :key="permission.id"
+                                class="hover:bg-surface-container-low/50"
+                            >
+                                <td class="px-3 py-2">
+                                    <BaseBadge variant="secondary">{{ permission.action || 'access' }}</BaseBadge>
+                                </td>
+                                <td class="px-3 py-2">
+                                    <code class="break-all text-label-md">{{ permission.name }}</code>
+                                </td>
+                                <td class="px-3 py-2 text-body-md text-text-muted">
+                                    {{ permission.category_assignment_source === 'manual' ? 'Manual' : 'Otomatis' }}
+                                </td>
+                            </tr>
+                            <tr v-if="(selectedCategory?.permissions ?? []).length === 0">
+                                <td colspan="3" class="px-3 py-6 text-center text-body-md text-text-muted">
+                                    Tidak ada permission pada kategori ini.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
+            <BaseModalFooter>
+                <div class="flex justify-end px-6 py-4">
+                    <BaseButton variant="secondary" size="sm" @click="showDetail = false">Tutup</BaseButton>
+                </div>
+            </BaseModalFooter>
         </BaseModal>
 
         <BaseModal :show="showEdit" max-width="2xl" @close="showEdit = false">
@@ -206,18 +252,72 @@ const columns = [
                     <BaseInputError :message="editForm.errors.module" />
                 </div>
                 <div>
-                    <BaseFieldLabel>Permission (dari uncategorized)</BaseFieldLabel>
-                    <div class="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-outline-variant/40 p-3">
-                        <BaseCheckbox
-                            v-for="permission in availablePermissions"
-                            :key="permission.id"
-                            :model-value="(editForm.permission_ids ?? []).includes(permission.id)"
-                            :label="permission.name"
-                            @update:model-value="togglePermission(permission.id, $event)"
-                        />
-                        <p v-if="availablePermissions.length === 0" class="text-body-md text-text-muted">
-                            Tidak ada permission uncategorized.
-                        </p>
+                    <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+                        <BaseFieldLabel>Permission (dari uncategorized)</BaseFieldLabel>
+                        <span class="text-label-md text-text-muted">
+                            {{ (editForm.permission_ids ?? []).length }}/{{ availablePermissions.length }} dipilih
+                        </span>
+                    </div>
+                    <div class="max-h-72 overflow-auto rounded-xl border border-outline-variant/40">
+                        <table class="w-full text-left">
+                            <thead class="sticky top-0 z-10 bg-surface-container-low text-label-md uppercase tracking-wider text-text-muted">
+                                <tr>
+                                    <th class="px-3 py-2">Aksi</th>
+                                    <th class="px-3 py-2">Route Permission</th>
+                                    <th class="w-14 px-3 py-2 text-center">
+                                        <button
+                                            type="button"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 disabled:pointer-events-none disabled:opacity-40"
+                                            :class="somePermissionsSelected
+                                                ? 'text-primary hover:bg-primary/10'
+                                                : 'text-text-muted hover:bg-surface-container-high hover:text-text-heading'"
+                                            :disabled="availablePermissions.length === 0"
+                                            :aria-label="allPermissionsSelected ? 'Batalkan semua permission' : 'Pilih semua permission'"
+                                            :title="allPermissionsSelected ? 'Batalkan semua' : 'Pilih semua'"
+                                            @click="toggleAllPermissions"
+                                        >
+                                            <IconSquareCheck v-if="allPermissionsSelected" :size="20" />
+                                            <IconSquareMinus v-else-if="somePermissionsSelected" :size="20" />
+                                            <IconSquare v-else :size="20" />
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-outline-variant/30">
+                                <tr
+                                    v-for="permission in availablePermissions"
+                                    :key="permission.id"
+                                    class="hover:bg-surface-container-low/50"
+                                >
+                                    <td class="px-3 py-2">
+                                        <BaseBadge variant="secondary">{{ permission.action || 'access' }}</BaseBadge>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <code class="break-all text-label-md">{{ permission.name }}</code>
+                                    </td>
+                                    <td class="w-14 px-3 py-2 text-center">
+                                        <button
+                                            type="button"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
+                                            :class="isPermissionSelected(permission.id)
+                                                ? 'text-primary hover:bg-primary/10'
+                                                : 'text-text-muted hover:bg-surface-container-high hover:text-text-heading'"
+                                            :aria-pressed="isPermissionSelected(permission.id)"
+                                            :aria-label="`${isPermissionSelected(permission.id) ? 'Batalkan pilihan' : 'Pilih'} permission ${permission.name}`"
+                                            @click="togglePermission(permission.id, !isPermissionSelected(permission.id))"
+                                        >
+                                            <IconSquareCheck v-if="isPermissionSelected(permission.id)" :size="20" />
+                                            <IconSquare v-else :size="20" />
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr v-if="availablePermissions.length === 0">
+                                    <td colspan="3" class="px-3 py-6 text-center text-body-md text-text-muted">
+                                        Tidak ada permission uncategorized.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

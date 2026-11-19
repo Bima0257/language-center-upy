@@ -3,31 +3,34 @@ import { computed } from "vue";
 import { IconArrowLeft, IconArrowRight, IconMap } from "@tabler/icons-vue";
 
 const props = defineProps({
-    currentIndex: { type: Number, default: 0 },
-    questions: { type: Array, default: () => [] },
-    answers: { type: Object, default: () => ({}) },
+    currentNumber: { type: Number, default: 0 },
     visibleNumbers: { type: Array, default: () => [] },
+    answeredNumbers: { type: Array, default: () => [] },
     stripAnim: { type: String, default: "strip-none" },
-    questionNumberStart: { type: Number, default: 0 },
+    firstNumber: { type: Number, default: 0 },
+    lastNumber: { type: Number, default: 0 },
     canGoPrev: { type: Boolean, default: false },
     isLastStep: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["previous", "select-question", "next", "show-grid"]);
+const emit = defineEmits(["previous", "select-number", "next", "show-grid"]);
 
 const navigationItems = computed(() => {
-    const total = props.questions.length;
     const visible = [...props.visibleNumbers];
+
+    if (visible.length === 0) return [];
+
+    const total = props.lastNumber - props.firstNumber + 1;
 
     if (total <= 7) return visible;
 
     const items = [];
-    const hasFirst = visible.includes(0);
-    const hasLast = visible.includes(total - 1);
+    const hasFirst = visible.includes(props.firstNumber);
+    const hasLast = visible.includes(props.lastNumber);
 
-    if (!hasFirst) items.push(0, "ellipsis-start");
+    if (!hasFirst) items.push(props.firstNumber, "ellipsis-start");
     items.push(...visible);
-    if (!hasLast) items.push("ellipsis-end", total - 1);
+    if (!hasLast) items.push("ellipsis-end", props.lastNumber);
 
     return items.filter((item, index, collection) => {
         if (typeof item !== "number") return true;
@@ -52,7 +55,7 @@ function onBeforeLeaveStrip(el) {
                     aria-label="Soal sebelumnya"
                     @click="emit('previous')"
                     :disabled="!canGoPrev"
-                    class="exam-footer-next flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-[8px] px-0 text-xs font-semibold text-on-primary transition-all hover:bg-primary hover:text-on-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-auto sm:min-w-[88px] sm:px-1.5 sm:text-xs"
+                    class="exam-footer-next flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-full px-0 text-xs font-semibold text-on-primary transition-all hover:bg-primary hover:text-on-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-auto sm:min-w-[88px] sm:px-1.5 sm:text-xs"
                 >
                     <IconArrowLeft :size="13" />
                     <span class="hidden sm:inline">Prev</span>
@@ -68,19 +71,19 @@ function onBeforeLeaveStrip(el) {
                         <button
                             v-if="typeof item === 'number'"
                             type="button"
-                            :aria-label="`Buka soal ${questionNumberStart + item}`"
-                            :aria-current="item === currentIndex ? 'step' : undefined"
-                            @click="emit('select-question', item)"
+                            :aria-label="`Buka soal ${item}`"
+                            :aria-current="item === currentNumber ? 'step' : undefined"
+                            @click="emit('select-number', item)"
                             class="exam-number-button flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition-all duration-150 motion-reduce:transition-none sm:h-9 sm:w-9"
                             :class="[
-                                item === currentIndex
+                                item === currentNumber
                                     ? 'bg-primary text-on-primary border-2 border-primary shadow-sm'
-                                    : answers[questions[item]?.id] !== undefined
+                                    : answeredNumbers.includes(item)
                                         ? 'bg-secondary/10 text-secondary hover:bg-secondary/20'
                                         : 'bg-surface-container-lowest text-text-muted hover:bg-surface-container-highest'
                             ]"
                         >
-                            {{ questionNumberStart + item }}
+                            {{ item }}
                         </button>
                         <span
                             v-else
@@ -97,7 +100,7 @@ function onBeforeLeaveStrip(el) {
                     type="button"
                     aria-label="Soal berikutnya"
                     @click="emit('next')"
-                    class="exam-footer-next flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-[8px] bg-primary px-0 text-xs font-semibold text-on-primary transition-all hover:bg-primary hover:text-on-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 active:scale-95 motion-reduce:transition-none sm:h-9 sm:w-auto sm:min-w-[80px] sm:px-1.5 sm:text-xs"
+                    class="exam-footer-next flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-0 text-xs font-semibold text-on-primary transition-all hover:bg-primary hover:text-on-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 active:scale-95 motion-reduce:transition-none sm:h-9 sm:w-auto sm:min-w-[80px] sm:px-1.5 sm:text-xs"
                 >
                     <span class="hidden sm:inline">Next</span>
                     <IconArrowRight :size="13" />
@@ -107,7 +110,7 @@ function onBeforeLeaveStrip(el) {
                     type="button"
                     aria-label="Selesaikan preview ujian"
                     @click="emit('next')"
-                    class="exam-footer-next flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-[8px] bg-primary px-0 text-xs font-semibold text-on-primary transition-all hover:bg-primary hover:text-on-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 active:scale-95 motion-reduce:transition-none sm:h-9 sm:w-auto sm:min-w-[88px] sm:px-1.5 sm:text-xs"
+                    class="exam-footer-next flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-0 text-xs font-semibold text-on-primary transition-all hover:bg-primary hover:text-on-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 active:scale-95 motion-reduce:transition-none sm:h-9 sm:w-auto sm:min-w-[88px] sm:px-1.5 sm:text-xs"
                 >
                     <span class="hidden sm:inline">Selesai</span>
                     <IconArrowRight :size="13" />
@@ -118,7 +121,7 @@ function onBeforeLeaveStrip(el) {
                 aria-label="Buka Peta Soal"
                 title="Peta Soal"
                 @click="emit('show-grid')"
-                class="exam-map-button col-start-3 row-start-1 flex h-10 w-10 shrink-0 items-center justify-self-end gap-2 rounded-[10px] border text-text-heading transition-all hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 sm:w-auto sm:min-w-[108px] sm:px-3"
+                class="exam-map-button col-start-3 row-start-1 flex h-10 w-10 shrink-0 items-center justify-self-end gap-2 rounded-full border text-text-heading transition-all hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 sm:w-auto sm:min-w-[108px] sm:px-3"
             >
                 <IconMap :size="16" />
                 <span class="hidden sm:inline">Peta Soal</span>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Language Center stamp placeholder">
+    <defs>
+        <path id="stamp-top" d="M 46 120 A 74 74 0 0 1 194 120" />
+        <path id="stamp-bottom" d="M 56 146 A 64 64 0 0 0 184 146" />
+    </defs>
+    <circle cx="120" cy="120" r="112" fill="none" stroke="#0b2a6b" stroke-width="4" />
+    <circle cx="120" cy="120" r="98" fill="none" stroke="#0b2a6b" stroke-width="2" />
+    <circle cx="120" cy="120" r="56" fill="none" stroke="#0b2a6b" stroke-width="2" />
+    <text fill="#0b2a6b" font-family="Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2">
+        <textPath href="#stamp-top" startOffset="50%" text-anchor="middle">UNIVERSITAS PGRI YOGYAKARTA</textPath>
+    </text>
+    <text fill="#0b2a6b" font-family="Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="3">
+        <textPath href="#stamp-bottom" startOffset="50%" text-anchor="middle">LANGUAGE CENTER</textPath>
+    </text>
+    <path d="M 98 100 h 44 v 24 h -44 z" fill="none" stroke="#0b2a6b" stroke-width="2" />
+    <path d="M 104 100 V 88 l 8 6 8 -10 8 10 8 -6 v 12" fill="none" stroke="#0b2a6b" stroke-width="2" />
+    <path d="M 84 136 h 72" stroke="#0b2a6b" stroke-width="2" />
+    <text x="120" y="158" text-anchor="middle" fill="#0b2a6b" font-family="Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="1">PLACEHOLDER</text>
+</svg>

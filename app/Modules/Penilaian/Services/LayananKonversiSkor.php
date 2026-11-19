@@ -26,7 +26,7 @@ class LayananKonversiSkor
         if (! array_key_exists($jumlahBenar, $tabelKonversi)
             && ! array_key_exists((string) $jumlahBenar, $tabelKonversi)) {
             throw new \RuntimeException(
-                "Tabel konversi belum memiliki nilai untuk skor mentah {$jumlahBenar}.",
+                "Tabel konversi belum memiliki nilai untuk skor mentah (Raw) {$jumlahBenar}.",
             );
         }
 

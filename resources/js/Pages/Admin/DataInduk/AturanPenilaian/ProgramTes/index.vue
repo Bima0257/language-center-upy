@@ -85,6 +85,10 @@ function saveRule() {
             <p class="mt-3 text-label-md text-text-muted">
                 Perubahan aturan berlaku untuk sesi ujian baru; hasil ujian lama tetap memakai snapshot.
             </p>
+
+            <p class="mt-2 text-label-md text-text-muted">
+                Raw = jumlah jawaban benar pada section; skor skala = nilai hasil konversi.
+            </p>
         </BaseCard>
 
         <AturanPenilaianTable

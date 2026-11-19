@@ -45,7 +45,7 @@ class SimpanAturanPenilaianRequest extends FormRequest
             if ($kunciKurang !== [] || $kunciBerlebih !== []) {
                 $validator->errors()->add(
                     'tabel_konversi',
-                    'Tabel konversi harus memiliki tepat satu nilai untuk setiap skor mentah dari 0 sampai maksimum.',
+                    'Tabel konversi harus memiliki tepat satu nilai untuk setiap skor mentah (Raw) dari 0 sampai maksimum.',
                 );
             }
 

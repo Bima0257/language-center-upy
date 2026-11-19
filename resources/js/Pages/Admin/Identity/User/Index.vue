@@ -17,10 +17,8 @@ import BaseToggle from '@/Components/Base/BaseToggle.vue';
 import DropDown from '@/Components/Shared/DropDown.vue';
 import { useConfirm } from '@/Composables/useConfirm';
 import {
-    jenisPesertaIdentitasLabel,
     jenisPesertaLabel,
     jenisPesertaOptions,
-    jenisPesertaVariant,
     labelIdentitasPeserta,
 } from '@/constants/jenisPeserta';
 import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-vue';
@@ -36,19 +34,21 @@ const props = defineProps({
 const confirm = useConfirm();
 const activeTab = computed(() => props.filters?.tab || 'admin');
 
-const tabs = computed(() => [
-    { value: 'admin', label: `Admin (${props.userCounts?.admin ?? 0})` },
-    { value: 'peserta', label: `Peserta (${props.userCounts?.peserta ?? 0})` },
-    { value: 'custom', label: `Custom (${props.userCounts?.custom ?? 0})` },
-]);
+const tabs = [
+    { value: 'admin', label: 'Admin' },
+    { value: 'peserta', label: 'Peserta' },
+    { value: 'custom', label: 'Custom' },
+];
 
 const tableFilters = computed(() => [
-    {
-        key: 'f_role_names',
-        label: 'Role',
-        allOption: true,
-        options: props.roles.map(role => ({ value: role.name, label: role.name })),
-    },
+    ...(activeTab.value === 'peserta'
+        ? []
+        : [{
+            key: 'f_role_names',
+            label: 'Role',
+            allOption: true,
+            options: props.roles.map(role => ({ value: role.name, label: role.name })),
+        }]),
     {
         key: 'f_status',
         label: 'Status',
@@ -159,7 +159,9 @@ const columns = [
         header: 'Nama',
         cell: info => h('div', [
             h('p', { class: 'font-semibold text-text-heading' }, info.getValue()),
-            h('p', { class: 'text-label-md text-text-muted' }, `@${info.row.original.username || '-'}`),
+            info.row.original.username
+                ? h('p', { class: 'text-label-md text-text-muted' }, `@${info.row.original.username}`)
+                : null,
         ]),
     },
     {
@@ -178,11 +180,12 @@ const columns = [
 
             if (!isPeserta || !jenis) return '-';
 
-            const labelIdentitas = jenisPesertaIdentitasLabel[jenis] || 'Identitas';
+            const labelJenis = jenisPesertaLabel[jenis] || jenis;
+            const nomorIdentitas = user.nomor_identitas || '';
 
-            return h('div', { class: 'flex flex-wrap items-center gap-1' }, [
-                h(BaseBadge, { variant: jenisPesertaVariant[jenis] || 'neutral' }, () => jenisPesertaLabel[jenis] || jenis),
-                h('span', { class: 'text-label-md text-text-muted' }, `${labelIdentitas}: ${user.nomor_identitas || '-'}`),
+            return h('p', { class: 'text-label-md' }, [
+                h('span', { class: 'font-medium text-text-heading' }, labelJenis),
+                nomorIdentitas ? h('span', { class: 'text-text-muted' }, ` - ${nomorIdentitas}`) : null,
             ]);
         },
     },
@@ -255,19 +258,25 @@ const columns = [
         ]),
     },
 ];
+
+const visibleColumns = computed(() =>
+    activeTab.value === 'peserta'
+        ? columns.filter((column) => column.accessorKey !== 'roles')
+        : columns,
+);
 </script>
 
 <template>
     <Head title="Manajemen Pengguna" />
     <TataLetakDasbor title="Manajemen Pengguna" subtitle="Kelola akun, role, dan status pengguna">
-        <div class="space-y-4">
-            <AppTabs :tabs="tabs" :model-value="activeTab" @update:model-value="switchTab" />
+        <div>
+            <AppTabs class="relative z-10 pl-3" :tabs="tabs" :model-value="activeTab" @update:model-value="switchTab" />
 
             <AppDataTable
                 :key="activeTab"
                 :table-key="`identity-user-table-${activeTab}`"
                 :data="props.users.data"
-                :columns="columns"
+                :columns="visibleColumns"
                 title="Daftar Pengguna"
                 searchable
                 search-placeholder="Cari nama, username, atau email..."

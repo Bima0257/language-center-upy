@@ -86,7 +86,7 @@ function isCurrent(number) {
                             type="button"
                             :aria-label="`Buka soal ${soal.nomor_global}`"
                             @click="emit('navigateGlobal', soal.nomor_global)"
-                            class="w-9 h-9 rounded-md flex items-center justify-center text-[12px] font-bold transition-all duration-150 cursor-pointer"
+                            class="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold transition-all duration-150 cursor-pointer"
                             :class="[
                                 isCurrent(soal.nomor_global)
                                     ? 'bg-secondary text-on-secondary shadow-sm ring-2 ring-secondary/30'

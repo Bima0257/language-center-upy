@@ -69,11 +69,17 @@ const minDate = computed(() => parseDate(props.min));
 const maxDate = computed(() => parseDate(props.max));
 const isDatetime = computed(() => props.mode === 'datetime');
 const displayFormat = computed(() => (isDatetime.value ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy'));
-const timeConfig = computed(() => ({
-    enableTimePicker: isDatetime.value,
-    enableSeconds: false,
-    is24: true,
-}));
+const timeConfig = computed(() =>
+    isDatetime.value
+        ? { enableTimePicker: true, enableSeconds: false, is24: true }
+        : undefined,
+);
+
+const actionRow = computed(() =>
+    isDatetime.value
+        ? { selectBtnLabel: 'Pilih', cancelBtnLabel: 'Batal' }
+        : undefined,
+);
 
 onMounted(() => {
     syncTheme();
@@ -108,7 +114,7 @@ onUnmounted(() => {
             :config="{ allowPreventDefault: true }"
             :floating="{ strategy: 'fixed' }"
             :input-attrs="{ id: inputId ?? undefined, required, clearable: false }"
-            :action-row="{ selectBtnLabel: 'Pilih', cancelBtnLabel: 'Batal' }"
+            :action-row="actionRow"
             :ui="{ input: 'base-datepicker-input', menu: 'base-datepicker-menu' }"
         >
             <template #input-icon>

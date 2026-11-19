@@ -90,7 +90,6 @@ async function destroy(interp) {
 
         <InterpretasiSkorTable
             :interpretasi-skor="props.interpretasiSkor"
-            :program-tes="[props.programTes]"
             @create="goToBulkCreate"
             @edit="startEdit"
             @delete="destroy"

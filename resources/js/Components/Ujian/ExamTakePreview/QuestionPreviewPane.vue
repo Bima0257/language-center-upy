@@ -3,10 +3,8 @@ import { computed } from "vue";
 
 const props = defineProps({
     currentQuestion: { type: Object, default: null },
-    questionNumber: { type: Number, default: 0 },
     globalNumber: { type: Number, default: 0 },
     totalAllQuestions: { type: Number, default: 0 },
-    answeredCount: { type: Number, default: 0 },
     answers: { type: Object, default: () => ({}) },
     isAudio: { type: Boolean, default: false },
     showQuestionText: { type: Boolean, default: true },
@@ -32,18 +30,16 @@ const optionKeys = computed(() =>
 <template>
     <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain scroll-hide p-2.5 sm:p-3 lg:p-4">
         <div class="mx-auto w-full max-w-3xl">
-            <div class="mb-2 flex items-center gap-1.5">
+            <div class="mb-2 flex items-center justify-between gap-2">
                 <div
-                    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-on-primary"
+                    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-on-primary"
                 >
-                    {{ questionNumber || globalNumber }}
+                    {{ globalNumber }}
                 </div>
-                <span class="text-[11px] font-semibold text-text-body sm:text-xs"
-                    >Soal {{ questionNumber || globalNumber }} dari
+                <span
+                    class="whitespace-nowrap text-[11px] font-semibold text-text-body sm:text-xs"
+                    >Soal {{ globalNumber }} dari
                     {{ totalAllQuestions }}</span
-                >
-                <span class="ml-auto shrink-0 text-[11px] text-text-body sm:text-xs"
-                    >Terjawab {{ answeredCount }}/{{ totalAllQuestions }}</span
                 >
             </div>
             <h2
@@ -72,13 +68,18 @@ const optionKeys = computed(() =>
                         :class="
                             answers[currentQuestion.id] === key
                                 ? 'option-key-selected bg-primary text-on-primary'
-                                : 'text-text-muted group-hover:border-secondary group-hover:text-primary'
+                                : 'text-text-muted group-hover:border-secondary group-hover:text-text-heading'
                         "
                     >
                         {{ key }}
                     </div>
                     <span
-                        class="font-body-md text-[13px] leading-[1.35] text-text-body sm:text-sm"
+                        class="font-body-md text-[13px] leading-[1.35] sm:text-sm"
+                        :class="
+                            answers[currentQuestion.id] === key
+                                ? 'text-text-heading'
+                                : 'text-text-body'
+                        "
                     >
                         {{ optionText(key) }}
                     </span>
@@ -130,8 +131,29 @@ const optionKeys = computed(() =>
     );
 }
 
+.dark .option-key {
+    border-color: color-mix(
+        in srgb,
+        var(--color-outline-variant) 35%,
+        var(--color-text-muted)
+    );
+}
+
+.option-key:not(.option-key-selected) {
+    background-color: var(--color-surface-container-high);
+}
+
+.option-card:hover .option-key:not(.option-key-selected) {
+    background-color: var(--color-surface-container-highest);
+}
+
 .option-key-selected {
     border-color: var(--color-primary);
+}
+
+.dark .option-key-selected {
+    border-color: var(--color-primary-container);
+    background-color: var(--color-primary-container);
 }
 
 .option-selected {

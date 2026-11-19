@@ -7,7 +7,6 @@ defineProps({
     overview: { type: Object, default: () => ({}) },
     blocks: { type: Array, default: () => [] },
     backUrl: { type: String, default: null },
-    manageUrl: { type: String, default: null },
     initialSoalId: { type: String, default: null },
     demo: { type: Boolean, default: false },
     skorUrl: { type: String, default: null },
@@ -21,7 +20,6 @@ defineProps({
         :overview="overview"
         :blocks="blocks"
         :back-url="backUrl"
-        :manage-url="manageUrl"
         :initial-soal-id="initialSoalId"
         :demo="demo"
         :skor-url="skorUrl"

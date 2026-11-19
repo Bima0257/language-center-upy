@@ -1,7 +1,8 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
-import { IconTrash, IconCertificate } from '@tabler/icons-vue';
+import CertificateScore from '@/Components/Ujian/CertificateScore.vue';
+import { IconTrash, IconCertificate, IconPrinter } from '@tabler/icons-vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
 defineProps({
@@ -9,6 +10,22 @@ defineProps({
 });
 
 const confirm = useConfirm();
+
+const contohSertifikat = {
+    certificateNo: '416/PUSAT-B/EPT/X/2026',
+    issueDate: '13 October 2026',
+    testTakerName: 'MUHAMMAD NAUFAL YANUAR',
+    studentId: '23111100018',
+    listeningScore: 150,
+    readingScore: 160,
+    cefrLevel: 'B1-',
+    cefrTitle: 'Satisfactory User',
+    cefrDescription: 'Lower Intermediate English Proficiency',
+    testDate: '21 September 2026',
+    validUntil: '21 September 2028',
+    headName: 'Rudha Widagsa, ph.D',
+    headNis: '1985 0102 2013101 001',
+};
 
 function formatDate(d) {
     if (!d) return '-';
@@ -23,11 +40,25 @@ async function destroy(cert) {
 function isValid(cert) {
     return new Date(cert.berlaku_hingga) >= new Date();
 }
+
+function cetakSertifikat() {
+    window.print();
+}
 </script>
 
 <template>
     <Head title="Sertifikat" />
     <TataLetakDasbor title="Daftar Sertifikat" subtitle="Kelola sertifikat yang telah diterbitkan">
+        <template #header-actions>
+            <BaseButton
+                type="button"
+                title="Cetak layout sertifikat dengan data contoh"
+                @click="cetakSertifikat"
+            >
+                <IconPrinter :size="18" /> Cetak PDF
+            </BaseButton>
+        </template>
+
         <BaseCard :padding="false" class="overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
@@ -82,5 +113,75 @@ function isValid(cert) {
                 </table>
             </div>
         </BaseCard>
+
+        <div class="cert-print-region" aria-hidden="true">
+            <CertificateScore v-bind="contohSertifikat" />
+        </div>
     </TataLetakDasbor>
 </template>
+
+<style scoped>
+.cert-print-region {
+    display: none;
+}
+
+@media print {
+    :global(html),
+    :global(body) {
+        margin: 0 !important;
+        padding: 0 !important;
+        background-color: #ffffff !important;
+    }
+
+    :global(body *) {
+        visibility: hidden !important;
+    }
+
+    .cert-print-region,
+    .cert-print-region :deep(*) {
+        visibility: visible !important;
+    }
+
+    .cert-print-region {
+        display: block !important;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: auto;
+        margin: 0 !important;
+        padding: 0 !important;
+        page: certificate;
+        break-inside: avoid;
+        transform: translate(-50%, -50%);
+    }
+
+    :global(.min-h-screen) {
+        display: block !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    :global(.min-h-screen > aside),
+    :global(.min-h-screen > nav) {
+        display: none !important;
+    }
+
+    :global(main) {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    :global(main > header) {
+        display: none !important;
+    }
+
+    :global(.dashboard-scroll-area) {
+        display: block !important;
+        height: 0 !important;
+        overflow: hidden !important;
+    }
+}
+</style>

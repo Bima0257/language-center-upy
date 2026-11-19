@@ -10,6 +10,19 @@ defineProps({
 });
 
 const emit = defineEmits(["next"]);
+
+function namaPartRingkas(namaSection, namaPart) {
+    const section = String(namaSection || "");
+    const part = String(namaPart || "");
+
+    if (!section || !part) return part;
+
+    const awalan = `${section} `;
+
+    if (!part.toLowerCase().startsWith(awalan.toLowerCase())) return part;
+
+    return part.slice(awalan.length).trim() || part;
+}
 </script>
 
 <template>
@@ -79,18 +92,18 @@ const emit = defineEmits(["next"]);
                         <span
                             v-for="partSoal in section.partSoal"
                             :key="partSoal.id || partSoal.nama"
-                            >{{ partSoal.nama }} <span class="tabular-nums">({{ partSoal.jumlahSoal }} soal)</span></span
+                            >{{ namaPartRingkas(section.nama, partSoal.nama) }} <span class="tabular-nums">({{ partSoal.jumlahSoal }} soal)</span></span
                         >
                     </div>
                 </div>
             </div>
 
-            <div class="border-t border-outline-variant/40 pt-3">
+            <div class="flex items-center justify-end gap-2 border-t border-outline-variant/40 pt-3">
                 <button
                     @click="emit('next')"
-                    class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary shadow-md transition-all duration-150 hover:bg-primary/90 active:scale-[0.98]"
+                    class="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-on-primary shadow-md transition-all duration-150 hover:bg-primary/90 active:scale-[0.98]"
                 >
-                    Mulai <IconArrowRight :size="16" />
+                    Mulai <IconArrowRight :size="14" />
                 </button>
             </div>
         </div>

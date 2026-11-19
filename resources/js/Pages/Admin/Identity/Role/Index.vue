@@ -18,11 +18,10 @@ const props = defineProps({
 const confirm = useConfirm();
 const activeTab = computed(() => props.filters?.tab || 'default');
 
-const tabs = computed(() => [
-    { value: 'default', label: `Default (${props.roleCounts?.default ?? 0})` },
-    { value: 'system', label: `System (${props.roleCounts?.system ?? 0})` },
-    { value: 'custom', label: `Custom (${props.roleCounts?.custom ?? 0})` },
-]);
+const tabs = [
+    { value: 'default', label: 'Default' },
+    { value: 'custom', label: 'Custom' },
+];
 
 function switchTab(tab) {
     router.get(route('admin.identity.roles.index'), { tab, per_page: props.filters?.per_page || 10 }, {
@@ -44,17 +43,10 @@ const columns = [
         header: 'Role',
         cell: info => h('div', { class: 'flex items-center gap-2' }, [
             h('span', { class: 'font-semibold text-text-heading' }, info.getValue()),
-            info.row.original.is_default ? h(BaseBadge, { variant: 'primary' }, () => 'Default') : null,
             info.row.original.is_system && !info.row.original.is_default
                 ? h(BaseBadge, { variant: 'neutral' }, () => 'System')
                 : null,
         ]),
-    },
-    {
-        accessorKey: 'parents',
-        header: 'Parent',
-        enableSorting: false,
-        cell: info => (info.getValue()?.length ? info.getValue().join(', ') : '-'),
     },
     {
         accessorKey: 'users_count',
@@ -105,8 +97,8 @@ const columns = [
 <template>
     <Head title="Manajemen Role" />
     <TataLetakDasbor title="Manajemen Role" subtitle="Kelola role default, system, dan custom">
-        <div class="space-y-4">
-            <AppTabs :tabs="tabs" :model-value="activeTab" @update:model-value="switchTab" />
+        <div>
+            <AppTabs class="relative z-10 pl-3" :tabs="tabs" :model-value="activeTab" @update:model-value="switchTab" />
 
             <AppDataTable
                 :key="activeTab"

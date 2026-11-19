@@ -11,6 +11,19 @@ const props = defineProps({
 
 const emit = defineEmits(["previous", "next"]);
 
+function namaPartRingkas(namaSection, namaPart) {
+    const section = String(namaSection || "");
+    const part = String(namaPart || "");
+
+    if (!section || !part) return part;
+
+    const awalan = `${section} `;
+
+    if (!part.toLowerCase().startsWith(awalan.toLowerCase())) return part;
+
+    return part.slice(awalan.length).trim() || part;
+}
+
 const ringkasan = computed(() => {
     const blocks = props.partBlocks.length
         ? props.partBlocks
@@ -48,7 +61,7 @@ const ringkasan = computed(() => {
                     >{{ currentBlock.section.nama }}</span
                 >
                 <h1 class="text-title-lg font-bold">
-                    {{ ringkasan.nama }}
+                    {{ namaPartRingkas(currentBlock.section.nama, ringkasan.nama) }}
                 </h1>
             </div>
             <div class="shrink-0 text-right">
@@ -69,20 +82,19 @@ const ringkasan = computed(() => {
                 :content="ringkasan.petunjuk"
                 class="mb-3 text-sm leading-snug [&_.rich-text-content]:leading-snug [&_.rich-text-content_p]:mb-2 [&_.rich-text-content_h1]:mb-2 [&_.rich-text-content_h2]:mb-1.5 [&_.rich-text-content_h3]:mb-1.5 [&_.rich-text-content_ul]:mb-2 [&_.rich-text-content_ol]:mb-2"
             />
-            <div class="grid grid-cols-2 gap-2 border-t border-outline-variant/40 pt-3">
+            <div class="flex items-center justify-end gap-2 border-t border-outline-variant/40 pt-3">
                 <button
                     v-if="canGoPrev"
                     @click="emit('previous')"
-                    class="flex items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface-white px-4 py-2.5 text-sm font-medium text-text-heading transition-all hover:bg-surface-container-low"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-white px-3.5 py-2 text-xs font-semibold text-text-heading transition-all hover:bg-surface-container-low"
                 >
-                    <IconArrowLeft :size="16" /> Kembali
+                    <IconArrowLeft :size="14" /> Kembali
                 </button>
                 <button
                     @click="emit('next')"
-                    class="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary shadow-md transition-all duration-150 hover:bg-primary/90 active:scale-[0.98] col-span-full"
-                    :class="{ '!col-span-1': canGoPrev }"
+                    class="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-on-primary shadow-md transition-all duration-150 hover:bg-primary/90 active:scale-[0.98]"
                 >
-                    Mulai Mengerjakan <IconArrowRight :size="16" />
+                    Mulai Mengerjakan <IconArrowRight :size="14" />
                 </button>
             </div>
         </div>

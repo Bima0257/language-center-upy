@@ -6,19 +6,13 @@ import BaseButton from '@/Components/Base/BaseButton.vue';
 import BaseTambahData from '@/Components/Base/BaseTambahData.vue';
 import AppDataTable from '@/Components/Ui/AppDataTable.vue';
 import RichTextViewer from '@/Components/Shared/RichTextViewer.vue';
-import { formatProgramTes } from '@/constants/programTes';
 
 const props = defineProps({
     interpretasiSkor: { type: Array, default: () => [] },
-    programTes: { type: Array, default: () => [] },
     tableKey: { type: String, default: 'interpretasi-skor-table' },
 });
 
 const emit = defineEmits(['create', 'edit', 'delete']);
-
-function examTypeName(id) {
-    return formatProgramTes(props.programTes.find((type) => type.id === id));
-}
 
 function scoreRange(row) {
     return `${row.skor_minimum} - ${row.skor_maksimum}`;
@@ -33,10 +27,7 @@ const columns = [
         accessorKey: 'skor_minimum',
         header: 'Rentang Skor',
         meta: { cellClass: 'font-medium text-text-heading' },
-        cell: info => h('div', [
-            h('p', { class: 'font-medium text-text-heading' }, scoreRange(info.row.original)),
-            h('p', { class: 'text-text-muted text-label-md' }, examTypeName(info.row.original.program_tes_id)),
-        ]),
+        cell: info => h('p', { class: 'font-medium text-text-heading' }, scoreRange(info.row.original)),
     },
     { accessorKey: 'tingkat_cefr', header: 'CEFR' },
     {
