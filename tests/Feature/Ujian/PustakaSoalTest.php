@@ -155,6 +155,7 @@ class PustakaSoalTest extends TestCase
             'bank_soal_konteks_id' => $bankSoal->id,
             'nama' => 'Reading Terkunci',
             'deskripsi' => $section->deskripsi,
+            'durasi_menit' => $section->durasi_menit,
             'aktif' => $section->aktif,
         ])->assertSessionHasErrors('bank_soal_konteks_id');
 
@@ -173,6 +174,7 @@ class PustakaSoalTest extends TestCase
             'bank_soal_konteks_id' => $bankSoal->id,
             'program_tes_id' => $bankSoal->program_tes_id,
             'nama' => 'Section Terkunci Baru',
+            'durasi_menit' => 30,
             'aktif' => true,
         ])->assertSessionHasErrors('bank_soal_konteks_id');
 
