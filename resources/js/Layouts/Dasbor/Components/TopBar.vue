@@ -60,12 +60,12 @@ onUnmounted(() => {
 
 <template>
     <header
-        class="relative z-10 flex justify-between items-center w-full px-8 py-3 bg-surface-container-low dark:bg-surface-container-lowest shadow-[0_8px_24px_-8px_rgba(0,0,0,0.3)]"
+        class="relative z-10 flex justify-between items-center w-full px-8 py-3 bg-surface-white dark:bg-surface-container-lowest border-b border-outline-variant/50 dark:border-outline-variant/70 shadow-standard dark:shadow-none"
     >
         <div class="flex items-center gap-4">
             <button
                 @click="$emit('toggle-sidebar')"
-                class="w-10 h-10 flex items-center justify-center text-text-body hover:bg-surface-container-low dark:hover:bg-surface-container rounded-full transition-colors"
+                class="w-10 h-10 flex items-center justify-center text-text-body hover:bg-surface-container-low dark:hover:bg-surface-container rounded-full transition-colors font-semibold"
                 title="Ciutkan / perluas sidebar"
             >
                 <IconMenu2 :size="22" stroke="1.5" />
@@ -85,12 +85,12 @@ onUnmounted(() => {
         <div class="flex items-center gap-6">
             <div class="flex items-center gap-4">
                 <button
-                    class="w-10 h-10 flex items-center justify-center text-text-body hover:bg-surface-container-low dark:hover:bg-surface-container rounded-full transition-colors"
+                    class="w-10 h-10 flex items-center justify-center text-text-body hover:bg-surface-container-low dark:hover:bg-surface-container rounded-full transition-colors font-semibold"
                 >
                     <IconMail :size="22" stroke="1.5" />
                 </button>
                 <button
-                    class="w-10 h-10 flex items-center justify-center text-text-body hover:bg-surface-container-low dark:hover:bg-surface-container rounded-full transition-colors relative"
+                    class="w-10 h-10 flex items-center justify-center text-text-body hover:bg-surface-container-low dark:hover:bg-surface-container rounded-full transition-colors relative font-semibold"
                 >
                     <IconBell :size="22" stroke="1.5" />
                     <span
@@ -98,7 +98,7 @@ onUnmounted(() => {
                     ></span>
                 </button>
                 <button @click="toggleTheme"
-                        class="w-10 h-10 flex items-center justify-center text-text-body hover:bg-surface-container-low dark:hover:bg-surface-container rounded-full transition-colors"
+                        class="w-10 h-10 flex items-center justify-center text-text-body hover:bg-surface-container-low dark:hover:bg-surface-container rounded-full transition-colors font-semibold"
                         :title="isDark ? 'Mode Terang' : 'Mode Gelap'">
                     <IconSun v-if="isDark" :size="20" class="transition-transform hover:rotate-90" />
                     <IconMoon v-else :size="20" class="transition-transform hover:rotate-12" />
@@ -106,7 +106,7 @@ onUnmounted(() => {
                 <div class="relative" data-account-menu>
                     <button
                         @click="toggleAccount"
-                        class="rounded-full transition-all"
+                        class="rounded-full transition-all font-semibold"
                         :class="accountOpen ? 'ring-2 ring-secondary/40' : ''"
                         title="Menu akun"
                     >
@@ -145,7 +145,7 @@ onUnmounted(() => {
                                     :href="route('logout')"
                                     method="post"
                                     as="button"
-                                    class="flex w-full items-center gap-3 px-4 py-2.5 text-body-md text-error-red hover:bg-error-red/5 transition-colors"
+                                    class="flex w-full items-center gap-3 px-4 py-2.5 text-body-md text-error-red hover:bg-error-red/5 transition-colors font-semibold"
                                 >
                                     <IconLogout :size="18" /> Keluar
                                 </Link>

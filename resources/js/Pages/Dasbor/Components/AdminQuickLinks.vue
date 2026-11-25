@@ -61,17 +61,17 @@ defineProps({
             >
             <Link
                 :href="proctorDashboardHref"
-                class="bg-secondary text-on-secondary px-5 py-2.5 rounded-full text-label-md font-medium hover:bg-secondary-container transition-all"
+                class="bg-accent text-on-accent px-5 py-2.5 rounded-full text-label-md font-semibold hover:bg-accent/90 transition-all"
                 >Dasbor Pengawas</Link
             >
             <Link
                 :href="registrationHref"
-                class="border border-outline-variant text-primary px-5 py-2.5 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all"
+                class="border border-outline-variant text-primary px-5 py-2.5 rounded-full text-label-md font-semibold hover:bg-surface-container-low transition-all"
                 >Pendaftaran</Link
             >
             <Link
                 :href="sessionReportHref"
-                class="border border-outline-variant text-primary px-5 py-2.5 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all"
+                class="border border-outline-variant text-primary px-5 py-2.5 rounded-full text-label-md font-semibold hover:bg-surface-container-low transition-all"
                 >Laporan</Link
             >
         </div>

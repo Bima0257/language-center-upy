@@ -1,5 +1,6 @@
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useModalStack } from '@/Composables/useModalStack';
 
 let bodyScrollLockCount = 0;
 let bodyOverflowBeforeModal = '';
@@ -61,20 +62,20 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
+const { registerModal, topModal } = useModalStack();
+
 const dialog = ref();
+const modalPanel = ref(null);
 const showSlot = ref(props.show);
 const isClosing = ref(false);
-const closeTimer = ref(null);
+const lockedSize = ref(null);
 let bodyScrollLocked = false;
 let previouslyFocusedElement = null;
+let unregisterModal = null;
 
 const openDialog = () => {
     isClosing.value = false;
-
-    if (closeTimer.value) {
-        clearTimeout(closeTimer.value);
-        closeTimer.value = null;
-    }
+    lockedSize.value = null;
 
     if (!bodyScrollLocked) {
         previouslyFocusedElement = document.activeElement;
@@ -91,6 +92,10 @@ const openDialog = () => {
             dialog.value.showModal();
         }
 
+        if (!unregisterModal) {
+            unregisterModal = registerModal(dialog.value);
+        }
+
         const firstFocusableElement = dialog.value.querySelector(
             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
         );
@@ -100,27 +105,64 @@ const openDialog = () => {
 };
 
 const closeDialog = () => {
+    if (!dialog.value?.open) {
+        if (bodyScrollLocked) {
+            unlockBodyScroll();
+            bodyScrollLocked = false;
+        }
+
+        if (unregisterModal) {
+            unregisterModal();
+            unregisterModal = null;
+        }
+
+        showSlot.value = false;
+        isClosing.value = false;
+        lockedSize.value = null;
+        previouslyFocusedElement = null;
+        return;
+    }
+
+    if (modalPanel.value) {
+        const width = modalPanel.value.offsetWidth;
+        const height = modalPanel.value.offsetHeight;
+
+        if (width > 0 && height > 0) {
+            lockedSize.value = { width, height };
+        }
+    }
+
     isClosing.value = true;
 
     if (bodyScrollLocked) {
         unlockBodyScroll();
         bodyScrollLocked = false;
     }
+};
 
-    if (closeTimer.value) clearTimeout(closeTimer.value);
-
-    closeTimer.value = setTimeout(() => {
-        if (dialog.value?.open) dialog.value.close();
-        showSlot.value = false;
+const finishClose = () => {
+    if (props.show) {
         isClosing.value = false;
-        closeTimer.value = null;
+        lockedSize.value = null;
+        return;
+    }
 
-        if (previouslyFocusedElement?.isConnected) {
-            previouslyFocusedElement.focus();
-        }
+    if (dialog.value?.open) dialog.value.close();
 
-        previouslyFocusedElement = null;
-    }, 200);
+    if (unregisterModal) {
+        unregisterModal();
+        unregisterModal = null;
+    }
+
+    showSlot.value = false;
+    isClosing.value = false;
+    lockedSize.value = null;
+
+    if (!topModal.value && previouslyFocusedElement?.isConnected) {
+        previouslyFocusedElement.focus();
+    }
+
+    previouslyFocusedElement = null;
 };
 
 const handleCancel = (event) => {
@@ -139,8 +181,14 @@ onMounted(() => {
     if (props.show) openDialog();
 });
 
+onBeforeUnmount(() => {
+    if (unregisterModal) {
+        unregisterModal();
+        unregisterModal = null;
+    }
+});
+
 onUnmounted(() => {
-    if (closeTimer.value) clearTimeout(closeTimer.value);
     if (dialog.value?.open) dialog.value.close();
 
     if (bodyScrollLocked) {
@@ -194,7 +242,7 @@ const modalWidthClass = computed(() => [
                     class="fixed inset-0 z-0 transform transition-all"
                 >
                     <div
-                        class="absolute inset-0 bg-scrim/40 backdrop-blur-sm"
+                        class="absolute inset-0 bg-scrim/40 backdrop-blur-xs"
                     />
                 </div>
             </Transition>
@@ -204,39 +252,41 @@ const modalWidthClass = computed(() => [
                 enter-from-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 enter-to-class="opacity-100 translate-y-0 sm:scale-100"
                 leave-active-class="ease-in duration-200"
-                leave-from-class="opacity-100 translate-y-0 sm:scale-100"
-                leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 translate-y-4 sm:translate-y-0"
+                @after-leave="finishClose"
             >
                 <div
                     v-show="show"
-                    class="modal-scroll-container relative z-10 mb-0 flex max-h-[calc(100dvh-3rem)] min-h-0 flex-col overflow-hidden overscroll-contain rounded-2xl bg-surface-white shadow-soft transition-all transform dark:bg-surface-container/80 dark:backdrop-blur-sm sm:mx-auto"
+                    ref="modalPanel"
+                    class="modal-scroll-container relative z-10 mb-0 flex max-h-[calc(100dvh-3rem)] min-h-0 flex-col overflow-hidden overscroll-contain rounded-2xl bg-surface-white shadow-soft transition-all transform dark:bg-surface-container/80 dark:backdrop-blur-xs sm:mx-auto"
                     :class="[
                         modalWidthClass,
                         scrollable
                             ? 'h-[calc(100dvh-3rem)]'
                             : 'h-fit',
+                        isClosing ? 'pointer-events-none' : '',
                     ]"
+                    :inert="isClosing"
+                    :style="isClosing && lockedSize
+                        ? {
+                            width: `${lockedSize.width}px`,
+                            height: `${lockedSize.height}px`,
+                        }
+                        : undefined"
                 >
                     <div
                         v-if="showSlot && $slots.header"
                         class="sticky top-0 z-20 w-full shrink-0"
-                        :class="{ invisible: isClosing }"
                     >
                         <slot name="header" />
                     </div>
-                    <div
-                        class="min-h-0 overscroll-contain"
-                        :class="[
-                            'modal-scrollbar flex-1 overflow-y-auto',
-                            { invisible: isClosing },
-                        ]"
-                    >
+                    <div class="modal-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
                         <slot v-if="showSlot" />
                     </div>
                     <div
                         v-if="showSlot && $slots.footer"
                         class="sticky bottom-0 z-20 w-full shrink-0"
-                        :class="{ invisible: isClosing }"
                     >
                         <slot name="footer" />
                     </div>

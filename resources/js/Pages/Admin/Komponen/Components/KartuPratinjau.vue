@@ -25,7 +25,7 @@ defineProps({
             <slot />
         </div>
 
-        <code class="mt-5 block truncate rounded-lg bg-surface-container-low px-3 py-2 text-[11px] text-text-muted">
+        <code class="mt-5 block truncate rounded-lg bg-surface-container-low px-3 py-2 text-xs text-text-muted">
             {{ path }}
         </code>
     </BaseCard>

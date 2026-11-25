@@ -2,7 +2,6 @@
 
 namespace App\Modules\Penjadwalan\Repositories;
 
-use App\Enums\ModeUjian;
 use App\Enums\StatusPendaftaranUjian;
 use App\Models\SlotUjian;
 use App\Modules\Penjadwalan\Repositories\Contracts\SlotUjianRepositoryInterface;
@@ -13,12 +12,20 @@ class SlotUjianRepository implements SlotUjianRepositoryInterface
 {
     public function findOrFail(string $id): SlotUjian
     {
-        return SlotUjian::with('periodeUjian.periodePendaftaran', 'periodeUjian.ujian.programTes')->findOrFail($id);
+        return SlotUjian::with([
+            'periodeUjian.periodePendaftaran',
+            'periodeUjian.ujian.programTes',
+            'periodeUjian.ujian.programStudi:id,nama',
+        ])->findOrFail($id);
     }
 
     public function temukanUntukUpdate(string $id): SlotUjian
     {
-        return SlotUjian::with('periodeUjian.periodePendaftaran', 'periodeUjian.ujian.programTes')
+        return SlotUjian::with([
+            'periodeUjian.periodePendaftaran',
+            'periodeUjian.ujian.programTes',
+            'periodeUjian.ujian.programStudi:id,nama',
+        ])
             ->lockForUpdate()
             ->findOrFail($id);
     }
@@ -82,26 +89,5 @@ class SlotUjianRepository implements SlotUjianRepositoryInterface
             ->where('waktu_mulai', '<', $waktuSelesai)
             ->where('waktu_selesai', '>', $waktuMulai)
             ->exists();
-    }
-
-    /**
-     * @return Collection<int, SlotUjian>
-     */
-    public function slotTersedia(): Collection
-    {
-        $today = now()->toDateString();
-
-        return SlotUjian::with('periodeUjian.ujian')
-            ->withCount([
-                'pendaftaranUjian as pendaftaran_disetujui_count' => fn ($query) => $query->where(
-                    'status',
-                    StatusPendaftaranUjian::APPROVED,
-                ),
-            ])
-            ->where('aktif', true)
-            ->whereDate('tanggal', $today)
-            ->whereHas('periodeUjian.ujian', fn ($q) => $q->where('mode', ModeUjian::TRYOUT))
-            ->get()
-            ->filter(fn (SlotUjian $slot) => $slot->tersedia());
     }
 }

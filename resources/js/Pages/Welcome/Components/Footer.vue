@@ -1,21 +1,5 @@
 <script setup>
 import { IconWorld, IconBrandGithub } from '@tabler/icons-vue';
-import { ref, onMounted, onUnmounted } from 'vue';
-
-const isDark = ref(false);
-
-function syncTheme() {
-    isDark.value = document.documentElement.classList.contains('dark');
-}
-
-onMounted(() => {
-    syncTheme();
-    document.addEventListener('theme-changed', syncTheme);
-});
-
-onUnmounted(() => {
-    document.removeEventListener('theme-changed', syncTheme);
-});
 </script>
 
 <template>
@@ -23,7 +7,7 @@ onUnmounted(() => {
         <div class="w-full py-12 px-4 md:px-app-margin max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-8">
             <div class="max-w-xs">
                 <div class="flex items-center gap-2 mb-4">
-                    <img :src="isDark ? '/assets/image/logo-white.png' : '/assets/image/logo-dark.png'" alt="UPY Language Test" class="h-7 w-auto object-contain" />
+                    <img src="/assets/image/brand/logo-upy.png" alt="UPY Language Test" class="h-7 w-auto object-contain" />
                     <span class="text-title-lg font-bold text-text-heading">UPY Language Test</span>
                 </div>
                 <p class="text-text-body text-body-md mb-6">

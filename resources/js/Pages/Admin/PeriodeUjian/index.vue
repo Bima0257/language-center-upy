@@ -212,12 +212,6 @@ function openEditPeriod(period) {
 
 function closePeriodModal() {
     showPeriodModal.value = false
-    creatingPeriod.value = false
-    editingPeriod.value = null
-    createForm.reset()
-    createForm.clearErrors()
-    editForm.reset()
-    editForm.clearErrors()
 }
 
 function submitPeriod() {

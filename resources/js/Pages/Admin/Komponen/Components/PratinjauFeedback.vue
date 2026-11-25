@@ -50,7 +50,7 @@ const emit = defineEmits(["update:modal-open"]);
                                 </div>
                                 <button
                                     type="button"
-                                    class="text-text-muted transition-colors hover:text-primary"
+                                    class="text-text-muted transition-colors hover:text-primary font-semibold"
                                     aria-label="Tutup modal"
                                     @click="emit('update:modal-open', false)"
                                 >

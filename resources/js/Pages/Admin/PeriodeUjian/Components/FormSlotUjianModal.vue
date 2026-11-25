@@ -26,7 +26,7 @@ const emit = defineEmits(['close', 'submit']);
                 <div class="px-8 py-4">
                     <div class="flex items-center justify-between">
                          <h2 id="slot-ujian-modal-title" class="text-headline-md font-bold text-text-heading">{{ props.creating ? 'Tambah Sesi' : 'Ubah Sesi' }}</h2>
-                         <button type="button" aria-label="Tutup sesi ujian" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
+                         <button type="button" aria-label="Tutup sesi ujian" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors font-semibold">
                             <IconX :size="20" />
                         </button>
                     </div>
@@ -39,7 +39,6 @@ const emit = defineEmits(['close', 'submit']);
                     <label class="text-label-md font-medium text-text-heading block mb-2">Tanggal Sesi</label>
                     <BaseDatePicker
                         v-model="props.form.tanggal"
-                        mode="date"
                         placeholder="Pilih tanggal sesi"
                         required
                         :min="props.slotDateMin"

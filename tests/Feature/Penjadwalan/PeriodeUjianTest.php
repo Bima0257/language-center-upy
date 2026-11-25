@@ -15,11 +15,30 @@ class PeriodeUjianTest extends TestCase
 {
     use RefreshDatabase;
 
+    private Ujian $ujianResmi;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed();
+
+        $this->ujianResmi = Ujian::create([
+            'program_tes_id' => ProgramTes::where('nama', 'EPT')->firstOrFail()->id,
+            'judul' => 'Ujian Resmi Penjadwalan',
+            'mode' => 'official',
+            'lingkup' => 'umum',
+            'durasi_menit' => 60,
+            'aktif' => true,
+        ]);
+
+        PeriodeUjian::create([
+            'ujian_id' => $this->ujianResmi->id,
+            'judul' => 'Periode Resmi Awal',
+            'tanggal_mulai' => now()->addDays(40)->toDateString(),
+            'tanggal_selesai' => now()->addDays(42)->toDateString(),
+            'aktif' => true,
+        ]);
     }
 
     private function masukSebagai(string $peran): Pengguna
@@ -36,7 +55,7 @@ class PeriodeUjianTest extends TestCase
 
     private function ujian(): Ujian
     {
-        return Ujian::first();
+        return $this->ujianResmi;
     }
 
     private function atributPeriode(array $overrides = []): array
@@ -154,7 +173,7 @@ class PeriodeUjianTest extends TestCase
         $ujian = Ujian::create([
             'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Aktif Tanpa Periode',
-            'mode' => 'tryout',
+            'mode' => 'official',
             'durasi_menit' => 60,
             'aktif' => true,
         ]);
@@ -191,7 +210,7 @@ class PeriodeUjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $periode = PeriodeUjian::firstOrFail();
+        $periode = PeriodeUjian::where('ujian_id', $this->ujian()->id)->firstOrFail();
         $ujian = $periode->ujian;
 
         $page = $this->get('/admin/periode-ujian?program_tes_id='.$ujian->program_tes_id
@@ -253,7 +272,7 @@ class PeriodeUjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $existing = PeriodeUjian::first();
+        $existing = PeriodeUjian::where('ujian_id', $this->ujian()->id)->firstOrFail();
 
         $this->post("/admin/ujian/{$this->ujian()->id}/periode-ujian", $this->atributPeriode([
             'tanggal_mulai' => $existing->tanggal_mulai->format('Y-m-d'),
@@ -300,6 +319,7 @@ class PeriodeUjianTest extends TestCase
         $this->masukSebagai('admin');
 
         $periodeUjian = PeriodeUjian::first();
+        $jumlahSlotAwal = SlotUjian::where('periode_ujian_id', $periodeUjian->id)->count();
 
         $this->post("/admin/periode-ujian/{$periodeUjian->id}/slot", [
             'tanggal' => now()->addMonths(3)->format('Y-m-d'),
@@ -307,7 +327,10 @@ class PeriodeUjianTest extends TestCase
             'waktu_selesai' => '11:00',
         ])->assertSessionHasErrors('tanggal');
 
-        $this->assertDatabaseCount('slot_ujian', 3);
+        $this->assertSame(
+            $jumlahSlotAwal,
+            SlotUjian::where('periode_ujian_id', $periodeUjian->id)->count(),
+        );
     }
 
     public function test_slot_tumpang_tindih_ditolak(): void
@@ -316,6 +339,7 @@ class PeriodeUjianTest extends TestCase
 
         $periodeUjian = PeriodeUjian::first();
         $existing = SlotUjian::where('periode_ujian_id', $periodeUjian->id)->first();
+        $jumlahSlotAwal = SlotUjian::where('periode_ujian_id', $periodeUjian->id)->count();
 
         $this->post("/admin/periode-ujian/{$periodeUjian->id}/slot", [
             'tanggal' => $existing->tanggal->format('Y-m-d'),
@@ -324,7 +348,10 @@ class PeriodeUjianTest extends TestCase
             'kapasitas_peserta' => 30,
         ])->assertRedirect();
 
-        $this->assertDatabaseCount('slot_ujian', 3);
+        $this->assertSame(
+            $jumlahSlotAwal,
+            SlotUjian::where('periode_ujian_id', $periodeUjian->id)->count(),
+        );
     }
 
     public function test_admin_tidak_dapat_menghapus_periode_dengan_slot(): void

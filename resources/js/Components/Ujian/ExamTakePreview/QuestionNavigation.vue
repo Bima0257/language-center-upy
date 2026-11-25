@@ -55,7 +55,7 @@ function onBeforeLeaveStrip(el) {
                     aria-label="Soal sebelumnya"
                     @click="emit('previous')"
                     :disabled="!canGoPrev"
-                    class="exam-footer-next flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-full px-0 text-xs font-semibold text-on-primary transition-all hover:bg-primary hover:text-on-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-auto sm:min-w-[88px] sm:px-1.5 sm:text-xs"
+                    class="exam-footer-next flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-full bg-accent px-0 text-xs font-semibold text-on-accent transition-all hover:bg-accent/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-auto sm:min-w-[88px] sm:px-1.5 sm:text-xs"
                 >
                     <IconArrowLeft :size="13" />
                     <span class="hidden sm:inline">Prev</span>
@@ -77,7 +77,7 @@ function onBeforeLeaveStrip(el) {
                             class="exam-number-button flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition-all duration-150 motion-reduce:transition-none sm:h-9 sm:w-9"
                             :class="[
                                 item === currentNumber
-                                    ? 'bg-primary text-on-primary border-2 border-primary shadow-sm'
+                                    ? 'bg-primary text-on-primary border-2 border-primary shadow-xs'
                                     : answeredNumbers.includes(item)
                                         ? 'bg-secondary/10 text-secondary hover:bg-secondary/20'
                                         : 'bg-surface-container-lowest text-text-muted hover:bg-surface-container-highest'
@@ -100,7 +100,7 @@ function onBeforeLeaveStrip(el) {
                     type="button"
                     aria-label="Soal berikutnya"
                     @click="emit('next')"
-                    class="exam-footer-next flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-0 text-xs font-semibold text-on-primary transition-all hover:bg-primary hover:text-on-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 active:scale-95 motion-reduce:transition-none sm:h-9 sm:w-auto sm:min-w-[80px] sm:px-1.5 sm:text-xs"
+                    class="exam-footer-next flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-full bg-accent px-0 text-xs font-semibold text-on-accent transition-all hover:bg-accent/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 active:scale-95 motion-reduce:transition-none sm:h-9 sm:w-auto sm:min-w-[80px] sm:px-1.5 sm:text-xs"
                 >
                     <span class="hidden sm:inline">Next</span>
                     <IconArrowRight :size="13" />
@@ -110,7 +110,7 @@ function onBeforeLeaveStrip(el) {
                     type="button"
                     aria-label="Selesaikan preview ujian"
                     @click="emit('next')"
-                    class="exam-footer-next flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-full bg-primary px-0 text-xs font-semibold text-on-primary transition-all hover:bg-primary hover:text-on-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 active:scale-95 motion-reduce:transition-none sm:h-9 sm:w-auto sm:min-w-[88px] sm:px-1.5 sm:text-xs"
+                    class="exam-footer-next flex h-10 w-10 shrink-0 items-center justify-center gap-1 rounded-full bg-accent px-0 text-xs font-semibold text-on-accent transition-all hover:bg-accent/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 active:scale-95 motion-reduce:transition-none sm:h-9 sm:w-auto sm:min-w-[88px] sm:px-1.5 sm:text-xs"
                 >
                     <span class="hidden sm:inline">Selesai</span>
                     <IconArrowRight :size="13" />
@@ -121,7 +121,7 @@ function onBeforeLeaveStrip(el) {
                 aria-label="Buka Peta Soal"
                 title="Peta Soal"
                 @click="emit('show-grid')"
-                class="exam-map-button col-start-3 row-start-1 flex h-10 w-10 shrink-0 items-center justify-self-end gap-2 rounded-full border text-text-heading transition-all hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 sm:w-auto sm:min-w-[108px] sm:px-3"
+                class="exam-map-button col-start-3 row-start-1 flex h-10 w-10 shrink-0 items-center justify-self-end gap-2 rounded-full border text-text-heading transition-all hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 sm:w-auto sm:min-w-[108px] sm:px-3 font-semibold"
             >
                 <IconMap :size="16" />
                 <span class="hidden sm:inline">Peta Soal</span>
@@ -159,10 +159,6 @@ function onBeforeLeaveStrip(el) {
 
 .exam-footer-action {
     background-color: var(--color-surface-container-low);
-}
-
-.exam-footer-next {
-    background-color: var(--color-primary);
 }
 
 .exam-map-button {

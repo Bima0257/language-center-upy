@@ -8,9 +8,12 @@ defineProps({
     answers: { type: Object, default: () => ({}) },
     visibleNumbers: { type: Array, default: () => [] },
     stripAnim: { type: String, default: 'strip-none' },
+    isLastSection: { type: Boolean, default: false },
+    allAnswered: { type: Boolean, default: false },
+    isFinishing: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['navigate', 'submit', 'show-grid']);
+const emit = defineEmits(['navigate', 'submit', 'finish-section', 'show-grid']);
 
 function onBeforeLeaveStrip(el) {
     el.style.left = `${el.offsetLeft}px`;
@@ -25,7 +28,7 @@ function onBeforeLeaveStrip(el) {
         <button
             @click="emit('navigate', currentQuestionIndex - 1)"
             :disabled="currentQuestionIndex === 0"
-            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-medium border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold border border-outline-variant bg-surface-white text-primary hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
             <IconArrowLeft :size="14" /> Prev
         </button>
@@ -40,10 +43,10 @@ function onBeforeLeaveStrip(el) {
                 v-for="i in visibleNumbers"
                 :key="currentQuestions[i].id"
                 @click="emit('navigate', i)"
-                class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-[12px] font-bold transition-all duration-150 cursor-pointer"
+                class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-xs font-bold transition-all duration-150 cursor-pointer"
                 :class="[
                     i === currentQuestionIndex
-                        ? 'bg-secondary text-on-secondary ring-2 ring-secondary/30 scale-105 shadow-sm'
+                        ? 'bg-secondary text-on-secondary ring-2 ring-secondary/30 scale-105 shadow-xs'
                         : answers[currentQuestions[i].id] !== undefined
                             ? 'bg-secondary/10 text-secondary border border-secondary/40 hover:bg-secondary/20'
                             : 'bg-surface-white text-text-muted border border-outline-variant/60 hover:bg-surface-container-highest'
@@ -56,14 +59,23 @@ function onBeforeLeaveStrip(el) {
         <button
             v-if="currentQuestionIndex < jumlahSoal - 1"
             @click="emit('navigate', currentQuestionIndex + 1)"
-            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary transition-all active:scale-95 duration-150"
+            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-accent text-on-accent hover:bg-accent/90 transition-all active:scale-95 duration-150"
         >
             Next <IconArrowRight :size="14" />
         </button>
         <button
+            v-else-if="!isLastSection"
+            @click="emit('finish-section')"
+            :disabled="!allAnswered || isFinishing"
+            :title="allAnswered ? 'Selesaikan section ini' : 'Semua soal pada section ini harus terjawab'"
+            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-accent text-on-accent hover:bg-accent/90 transition-all active:scale-95 duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+            Selesaikan Section
+        </button>
+        <button
             v-else
             @click="emit('submit')"
-            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-secondary text-on-secondary hover:bg-secondary/90 transition-all active:scale-95 duration-150"
+            class="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-label-md font-semibold bg-accent text-on-accent hover:bg-accent/90 transition-all active:scale-95 duration-150"
         >
             Kumpulkan
         </button>

@@ -27,7 +27,7 @@ const emit = defineEmits(['close', 'submit']);
                         <button
                             type="button"
                             aria-label="Tutup tambah soal"
-                            class="shrink-0 p-2 text-text-muted transition-colors hover:text-primary"
+                            class="shrink-0 p-2 text-text-muted transition-colors hover:text-primary font-semibold"
                             @click="emit('close')"
                         >
                             <IconX :size="20" />

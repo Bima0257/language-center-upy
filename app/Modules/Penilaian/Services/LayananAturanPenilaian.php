@@ -10,6 +10,7 @@ use App\Modules\DataInduk\Repositories\Contracts\ProgramTesRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\SectionRepositoryInterface;
 use App\Modules\Penilaian\Repositories\Contracts\AturanPenilaianRepositoryInterface;
 use App\Modules\Penilaian\Repositories\Contracts\SkemaPenilaianRepositoryInterface;
+use App\Modules\Ujian\Services\LayananUjian;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 
@@ -23,6 +24,7 @@ class LayananAturanPenilaian
         private InterpretasiSkorRepositoryInterface $interpretasiRepo,
         private LayananKonversiSkor $layananKonversi,
         private LayananInterpretasiSkor $layananInterpretasi,
+        private LayananUjian $layananUjian,
     ) {}
 
     /**
@@ -85,9 +87,40 @@ class LayananAturanPenilaian
             'skema' => $skema,
             'aturanPenilaian' => $aturanPenilaian,
             'interpretasiSkor' => $this->interpretasiRepo->semuaUntukSkema($skema->id),
+            'memilikiUjianAktif' => $this->layananUjian->adaUjianAktifUntukProgramTes($programTes->id),
             'total' => [
                 'minimum' => $totalMinimum,
                 'maksimum' => $totalMaksimum,
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function dataUbah(SkemaPenilaian $skema, Section $section): array
+    {
+        if ($section->program_tes_id !== $skema->program_tes_id) {
+            throw (new ModelNotFoundException)->setModel(Section::class, [$section->id]);
+        }
+
+        $skema->loadMissing('programTes');
+        $aturan = $this->aturanRepo->findForSection($skema->id, $section->id);
+
+        return [
+            'programTes' => $skema->programTes,
+            'skema' => $skema,
+            'memilikiUjianAktif' => $this->layananUjian->adaUjianAktifUntukProgramTes($skema->program_tes_id),
+            'section' => [
+                'id' => $section->id,
+                'kode_section' => $section->kode,
+                'nama_section' => $section->nama,
+            ],
+            'aturan' => $aturan === null ? null : [
+                'tabel_konversi' => $aturan->tabel_konversi,
+                'skor_mentah_maksimum' => $aturan->skor_mentah_maksimum,
+                'skor_skala_minimum' => $aturan->skor_skala_minimum,
+                'skor_skala_maksimum' => $aturan->skor_skala_maksimum,
             ],
         ];
     }
@@ -103,6 +136,7 @@ class LayananAturanPenilaian
             'programTes' => $programTes,
             'skema' => $skema,
             'interpretasiSkor' => $this->interpretasiRepo->semuaUntukSkema($skema->id),
+            'memilikiUjianAktif' => $this->layananUjian->adaUjianAktifUntukProgramTes($programTes->id),
         ];
     }
 
@@ -113,6 +147,10 @@ class LayananAturanPenilaian
     ): void {
         if ($section->program_tes_id !== $skema->program_tes_id) {
             throw (new ModelNotFoundException)->setModel(Section::class, [$section->id]);
+        }
+
+        if ($this->layananUjian->adaUjianAktifUntukProgramTes($skema->program_tes_id)) {
+            throw new \RuntimeException('Aturan penilaian tidak dapat diubah karena program tes dipakai ujian aktif.');
         }
 
         DB::transaction(function () use ($skema, $section, $data): void {

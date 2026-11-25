@@ -2,18 +2,27 @@
 
 namespace App\Modules\Keamanan\Actions;
 
+use App\Enums\AlasanSelesaiPart;
 use App\Enums\StatusSesi;
+use App\Modules\PelaksanaanUjian\Repositories\Contracts\SesiPartUjianRepositoryInterface;
 use App\Modules\PelaksanaanUjian\Repositories\Contracts\SesiUjianRepositoryInterface;
 
 class HentikanSesi
 {
     public function __construct(
         private SesiUjianRepositoryInterface $sesiRepo,
+        private SesiPartUjianRepositoryInterface $sesiPartRepo,
     ) {}
 
     public function execute(string $sesiId, string $alasan): void
     {
         $sesi = $this->sesiRepo->findOrFail($sesiId);
+
+        $this->sesiPartRepo->selesaikanSemuaTerbuka(
+            $sesiId,
+            AlasanSelesaiPart::DIBATALKAN,
+            now(),
+        );
 
         $this->sesiRepo->update($sesiId, [
             'status' => StatusSesi::TERMINATED,

@@ -23,7 +23,7 @@ const emit = defineEmits(['close', 'submit']);
                 <div class="px-8 py-4">
                     <div class="flex items-center justify-between">
                          <h2 id="program-tes-modal-title" class="text-headline-md font-bold text-text-heading">{{ props.creating ? 'Tambah Program Tes' : 'Ubah Program Tes' }}</h2>
-                         <button type="button" aria-label="Tutup form program tes" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
+                         <button type="button" aria-label="Tutup form program tes" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors font-semibold">
                             <IconX :size="20" />
                         </button>
                     </div>

@@ -225,7 +225,7 @@ const sizeClasses = {
                             v-if="clearable && selected && !disabled"
                             type="button"
                             @click.stop="handleUpdate(null)"
-                            class="text-text-muted hover:text-error-red transition-colors"
+                            class="text-text-muted hover:text-error-red transition-colors font-semibold"
                             title="Hapus pilihan"
                         >
                             <IconX :size="14" />

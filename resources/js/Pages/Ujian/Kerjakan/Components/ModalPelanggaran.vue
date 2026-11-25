@@ -32,12 +32,12 @@ defineEmits(['close', 'back']);
                             <button
                                 type="button"
                                 @click="$emit('back')"
-                                class="mt-4 px-5 py-2.5 rounded-full text-label-md font-semibold bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary transition-all shadow-md active:scale-95 duration-150"
+                                class="mt-4 px-5 py-2.5 rounded-full text-label-md font-semibold bg-accent text-on-accent hover:bg-accent/90 transition-all shadow-md active:scale-95 duration-150"
                             >
                                 Kembali ke Ujian
                             </button>
                         </div>
-                        <button type="button" aria-label="Tutup peringatan" @click="$emit('close')" class="text-text-muted hover:text-text-heading transition-colors shrink-0">
+                        <button type="button" aria-label="Tutup peringatan" @click="$emit('close')" class="text-text-muted hover:text-text-heading transition-colors shrink-0 font-semibold">
                             <IconX :size="20" />
                         </button>
                     </div>

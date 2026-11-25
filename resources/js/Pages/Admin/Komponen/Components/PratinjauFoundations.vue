@@ -59,7 +59,7 @@ defineProps({
                 <BaseAvatar name="Ayu Pratama" :size="56" />
                 <BaseAvatar name="UPY" variant="neutral" :size="48" />
                 <BaseAvatar
-                    src="/assets/image/logo-dark.png"
+                    src="/assets/image/brand/logo-upy.png"
                     name="UPY Language Center"
                     :size="64"
                     class="border-2 border-outline-variant"
@@ -78,7 +78,7 @@ defineProps({
                 :icon="IconFileDescription"
                 title="Belum ada materi"
                 description="Tambahkan materi pertama untuk mulai mengisi daftar."
-                class="!p-6"
+                class="p-6!"
             >
                 <BaseButton size="sm" class="mt-4">Tambah Materi</BaseButton>
             </EmptyState>

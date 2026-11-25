@@ -36,7 +36,7 @@ function identitasPeserta(pengguna) {
                 AKTIF
             </span>
         </div>
-        <p class="text-body-md text-text-body truncate mb-3">{{ sesiUjian.slot_ujian?.periode_ujian?.ujian?.judul }}</p>
+        <p class="text-body-md text-text-body truncate mb-3">{{ sesiUjian.ujian?.judul || sesiUjian.slot_ujian?.periode_ujian?.ujian?.judul }}</p>
         <div class="flex items-center gap-3 text-label-md text-text-muted">
             <span>⏱ {{ formatDuration(sesiUjian.dimulai_pada) }}</span>
             <span class="w-px h-3 bg-outline-variant"></span>

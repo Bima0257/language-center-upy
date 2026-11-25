@@ -90,6 +90,11 @@ class PenggunaRepository implements PenggunaRepositoryInterface
         return Pengguna::with('profilPeserta')->findOrFail($id);
     }
 
+    public function temukanUntukUpdate(string $id): Pengguna
+    {
+        return Pengguna::with('profilPeserta')->lockForUpdate()->findOrFail($id);
+    }
+
     public function penggunaMenungguVerifikasi(): Collection
     {
         return Pengguna::role('peserta')
@@ -97,6 +102,11 @@ class PenggunaRepository implements PenggunaRepositoryInterface
             ->with(['profilPeserta.fakultas', 'profilPeserta.programStudi'])
             ->select(['id', 'name', 'email', 'foto', 'created_at'])
             ->get();
+    }
+
+    public function memilikiProfilDenganProgramStudi(string $programStudiId): bool
+    {
+        return ProfilPeserta::where('program_studi_id', $programStudiId)->exists();
     }
 
     public function temukanDenganEmail(string $email): ?Pengguna

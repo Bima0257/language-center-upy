@@ -46,9 +46,6 @@ function saveEdit() {
 
 function closeModal() {
     showModal.value = false;
-    editingProgramStudi.value = null;
-    editForm.reset();
-    editForm.fakultas_id = props.fakultas.id;
 }
 
 async function destroy(programStudi) {

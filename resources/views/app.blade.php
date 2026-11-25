@@ -9,7 +9,8 @@
             $authComponents = ['Auth/Login/index', 'Auth/Register/index', 'Auth/ConfirmPassword/index', 'Auth/ForgotPassword/index', 'Auth/ResetPassword/index', 'Auth/VerifyEmail/index'];
             $isLanding = in_array($page['component'], $landingComponents);
             $isAuth = in_array($page['component'], $authComponents);
-            $usesTurnstile = in_array($page['component'], ['Auth/Login/index', 'Auth/Register/index']);
+            $usesTurnstile = in_array($page['component'], ['Auth/Login/index', 'Auth/Register/index'])
+                && (bool) config('services.turnstile.site_key');
         @endphp
         @if($isLanding && !$isAuth)
         <script>
@@ -37,7 +38,7 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=urbanist:400,500,600,700,800&display=swap" rel="stylesheet" />
         <link href="https://fonts.bunny.net/css?family=lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
 
         @if($usesTurnstile)

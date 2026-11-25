@@ -32,7 +32,7 @@ const columns = [
                 href: props.detailUrl(info.row.original.id),
                 variant: 'secondary',
                 size: 'sm',
-                class: '!p-2',
+                class: 'p-2!',
                 title: 'Kelola aturan penilaian',
                 'aria-label': 'Kelola aturan penilaian',
             },

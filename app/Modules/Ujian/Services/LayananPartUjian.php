@@ -21,6 +21,8 @@ class LayananPartUjian
 
     public function buat(Ujian $ujian, array $data): PartUjian
     {
+        $this->pastikanUjianTidakAktif($ujian);
+
         return $this->partRepo->create([...$data, 'ujian_id' => $ujian->id]);
     }
 
@@ -36,6 +38,7 @@ class LayananPartUjian
     public function perbarui(Ujian $ujian, PartUjian $part, array $data): PartUjian
     {
         $this->pastikanMilikUjian($ujian, $part);
+        $this->pastikanUjianTidakAktif($ujian);
 
         return $this->partRepo->update($part, $data);
     }
@@ -43,6 +46,7 @@ class LayananPartUjian
     public function hapus(Ujian $ujian, PartUjian $part): void
     {
         $this->pastikanMilikUjian($ujian, $part);
+        $this->pastikanUjianTidakAktif($ujian);
 
         $this->partRepo->delete($part);
     }
@@ -50,6 +54,7 @@ class LayananPartUjian
     public function simpanSusunan(Ujian $ujian, PartUjian $part, array $urutanPartSoal, array $urutanSoal): void
     {
         $this->pastikanMilikUjian($ujian, $part);
+        $this->pastikanUjianTidakAktif($ujian);
 
         DB::transaction(function () use ($part, $urutanPartSoal, $urutanSoal) {
             if (! empty($urutanPartSoal)) {
@@ -82,6 +87,7 @@ class LayananPartUjian
     public function susunUlangSoal(Ujian $ujian, PartUjian $part, array $urutan): void
     {
         $this->pastikanMilikUjian($ujian, $part);
+        $this->pastikanUjianTidakAktif($ujian);
 
         $this->pastikanNomorUnik($urutan, 'urutan');
         $this->pastikanSoalDalamPart($part, $urutan, 'urutan');
@@ -98,6 +104,7 @@ class LayananPartUjian
     public function susunUlangPartSoal(Ujian $ujian, PartUjian $part, array $urutan): void
     {
         $this->pastikanMilikUjian($ujian, $part);
+        $this->pastikanUjianTidakAktif($ujian);
 
         $partSoalIds = $this->partSoalRepo->idDenganBankDanSection($part->bank_soal_id, $part->section_id);
 
@@ -237,6 +244,13 @@ class LayananPartUjian
     {
         if ($part->ujian_id !== $ujian->id) {
             throw (new ModelNotFoundException)->setModel(PartUjian::class, [$part->id]);
+        }
+    }
+
+    private function pastikanUjianTidakAktif(Ujian $ujian): void
+    {
+        if ($ujian->aktif) {
+            throw new \RuntimeException('Ujian aktif tidak dapat diubah. Nonaktifkan ujian terlebih dahulu.');
         }
     }
 }

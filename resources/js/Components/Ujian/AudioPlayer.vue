@@ -77,7 +77,7 @@ function formatTime(seconds) {
 
         <template v-else>
             <button @click="togglePlay"
-                     class="rounded-full bg-pastel-blue flex items-center justify-center text-secondary hover:bg-secondary hover:text-on-secondary transition-colors shrink-0"
+                     class="rounded-full bg-pastel-blue flex items-center justify-center text-secondary hover:bg-secondary hover:text-on-secondary transition-colors shrink-0 font-semibold"
                      :class="compact ? 'h-8 w-8' : 'h-10 w-10'">
                  <IconPlayerPlayFilled v-if="!isPlaying" :size="compact ? 16 : 18" />
                  <IconPlayerPauseFilled v-else :size="compact ? 16 : 18" />
@@ -92,7 +92,7 @@ function formatTime(seconds) {
                  class="relative flex-1 h-[6px] bg-track-neutral rounded-full cursor-pointer group">
                 <div class="absolute top-0 left-0 h-full bg-secondary rounded-full"
                      :style="{ width: progress + '%' }"></div>
-                <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-surface-white border-2 border-secondary rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-surface-white border-2 border-secondary rounded-full opacity-0 group-hover:opacity-100 group-active:opacity-100 pointer-coarse:opacity-100 transition-opacity"
                      :style="{ left: progress + '%' }"></div>
             </div>
 
@@ -101,7 +101,7 @@ function formatTime(seconds) {
                  :class="compact ? 'text-xs' : 'text-label-md'"
              >{{ formatTime(duration) }}</span>
 
-             <button class="text-text-muted hover:text-text-heading transition-colors shrink-0" title="Volume">
+             <button class="text-text-muted hover:text-text-heading transition-colors shrink-0 font-semibold" title="Volume">
                  <IconVolume :size="compact ? 18 : 20" />
             </button>
         </template>
@@ -135,20 +135,20 @@ function formatTime(seconds) {
              class="relative w-full h-[6px] bg-track-neutral rounded-full cursor-pointer group">
             <div class="absolute top-0 left-0 h-full bg-secondary rounded-full"
                  :style="{ width: progress + '%' }"></div>
-            <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-surface-white border-2 border-secondary rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-surface-white border-2 border-secondary rounded-full opacity-0 group-hover:opacity-100 group-active:opacity-100 pointer-coarse:opacity-100 transition-opacity"
                  :style="{ left: progress + '%' }"></div>
         </div>
 
         <div class="flex justify-between items-center mt-2">
             <div class="flex items-center gap-4">
                 <button @click="togglePlay"
-                        class="w-10 h-10 rounded-full bg-pastel-blue flex items-center justify-center text-secondary hover:bg-secondary hover:text-on-secondary transition-colors shrink-0">
+                        class="w-10 h-10 rounded-full bg-pastel-blue flex items-center justify-center text-secondary hover:bg-secondary hover:text-on-secondary transition-colors shrink-0 font-semibold">
                     <IconPlayerPlayFilled v-if="!isPlaying" :size="18" />
                     <IconPlayerPauseFilled v-else :size="18" />
                 </button>
                 <span v-if="title" class="font-title-lg text-title-lg text-text-heading">{{ title }}</span>
             </div>
-            <button class="text-text-muted hover:text-text-heading transition-colors" title="Volume">
+            <button class="text-text-muted hover:text-text-heading transition-colors font-semibold" title="Volume">
                 <IconVolume :size="20" />
             </button>
         </div>

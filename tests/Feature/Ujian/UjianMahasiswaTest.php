@@ -17,7 +17,7 @@ use App\Models\SesiUjian;
 use App\Models\SlotUjian;
 use App\Models\Soal;
 use App\Models\Ujian;
-use App\Modules\Penjadwalan\Repositories\Contracts\SlotUjianRepositoryInterface;
+use App\Modules\Ujian\Repositories\Contracts\UjianRepositoryInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -60,59 +60,29 @@ class UjianMahasiswaTest extends TestCase
             'program_tes_id' => $programTes->id,
             'judul' => $judul,
             'mode' => $mode,
-            'durasi_menit' => 60,
+            'durasi_menit' => 120,
             'aktif' => true,
         ]);
     }
 
-    public function test_slot_tersedia_hanya_memuat_tryout(): void
+    public function test_tersedia_hanya_memuat_ujian_tryout_aktif(): void
     {
+        Ujian::where('mode', ModeUjian::TRYOUT->value)->update(['aktif' => false]);
+
         $tryout = $this->buatUjian('Tryout Premium', ModeUjian::TRYOUT->value);
         $official = $this->buatUjian('Ujian Resmi', ModeUjian::OFFICIAL->value);
-
-        $periodeTryout = PeriodeUjian::create([
-            'ujian_id' => $tryout->id,
-            'judul' => 'Gelombang Tryout',
-            'tanggal_mulai' => now()->subDay(),
-            'tanggal_selesai' => now()->addDay(),
-            'aktif' => true,
-        ]);
-
-        $periodeResmi = PeriodeUjian::create([
-            'ujian_id' => $official->id,
-            'judul' => 'Gelombang Resmi',
-            'tanggal_mulai' => now()->subDay(),
-            'tanggal_selesai' => now()->addDay(),
-            'aktif' => true,
-        ]);
-
-        SlotUjian::create([
-            'periode_ujian_id' => $periodeTryout->id,
-            'tanggal' => now()->toDateString(),
-            'waktu_mulai' => now()->subMinutes(5)->format('H:i:s'),
-            'waktu_selesai' => now()->addHours(2)->format('H:i:s'),
-            'toleransi_keterlambatan_menit' => 15,
-            'kapasitas_peserta' => 30,
-            'aktif' => true,
-        ]);
-
-        SlotUjian::create([
-            'periode_ujian_id' => $periodeResmi->id,
-            'tanggal' => now()->toDateString(),
-            'waktu_mulai' => now()->subMinutes(5)->format('H:i:s'),
-            'waktu_selesai' => now()->addHours(2)->format('H:i:s'),
-            'toleransi_keterlambatan_menit' => 15,
-            'kapasitas_peserta' => 30,
-            'aktif' => true,
-        ]);
+        $tryoutNonaktif = $this->buatUjian('Tryout Nonaktif', ModeUjian::TRYOUT->value);
+        $tryoutNonaktif->update(['aktif' => false]);
 
         $this->masukSebagaiMahasiswa();
         $this->get('/ujian/tersedia')->assertOk();
 
-        $daftarSlotUjian = app(SlotUjianRepositoryInterface::class)->slotTersedia();
+        $daftarUjian = app(UjianRepositoryInterface::class)->semuaTryoutTersedia();
 
-        $this->assertCount(1, $daftarSlotUjian);
-        $this->assertEquals($tryout->id, $daftarSlotUjian->first()->periodeUjian->ujian_id);
+        $this->assertCount(1, $daftarUjian);
+        $this->assertSame($tryout->id, $daftarUjian->first()->id);
+        $this->assertNotContains($official->id, $daftarUjian->pluck('id')->all());
+        $this->assertNotContains($tryoutNonaktif->id, $daftarUjian->pluck('id')->all());
     }
 
     public function test_jadwal_hanya_memuat_ujian_resmi(): void
@@ -139,9 +109,9 @@ class UjianMahasiswaTest extends TestCase
         $this->masukSebagaiMahasiswa();
         $this->get('/ujian/jadwal')->assertOk();
 
-        $daftarPeriodeUjian = PeriodeUjian::where('aktif', true)
+        $daftarPeriodeUjian = PeriodeUjian::where('ujian_id', $official->id)
+            ->where('aktif', true)
             ->where('tanggal_selesai', '>=', now()->toDateString())
-            ->whereHas('ujian', fn ($q) => $q->where('mode', ModeUjian::OFFICIAL))
             ->get();
 
         $this->assertCount(1, $daftarPeriodeUjian);
@@ -194,7 +164,7 @@ class UjianMahasiswaTest extends TestCase
             'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Resmi untuk Take Test',
             'mode' => ModeUjian::OFFICIAL->value,
-            'durasi_menit' => 60,
+            'durasi_menit' => 120,
             'aktif' => true,
         ]);
 
@@ -355,7 +325,7 @@ class UjianMahasiswaTest extends TestCase
             'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Resmi untuk Device Test',
             'mode' => ModeUjian::OFFICIAL->value,
-            'durasi_menit' => 60,
+            'durasi_menit' => 120,
             'aktif' => true,
         ]);
 
@@ -465,7 +435,7 @@ class UjianMahasiswaTest extends TestCase
             'program_tes_id' => $programTes->id,
             'judul' => 'Ujian Resmi untuk Selfie Test',
             'mode' => ModeUjian::OFFICIAL->value,
-            'durasi_menit' => 60,
+            'durasi_menit' => 120,
             'aktif' => true,
         ]);
 

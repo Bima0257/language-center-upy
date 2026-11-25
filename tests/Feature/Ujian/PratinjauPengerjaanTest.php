@@ -64,7 +64,7 @@ class PratinjauPengerjaanTest extends TestCase
     {
         $this->masukSebagaiAdmin();
 
-        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
+        $bankSoal = BankSoal::where('nama', 'Bank Soal Ujian Resmi')->firstOrFail();
 
         $page = $this->get(
             '/preview/exam-take?bank_soal_id='.$bankSoal->id.'&program_tes_id='.$bankSoal->program_tes_id,
@@ -84,7 +84,7 @@ class PratinjauPengerjaanTest extends TestCase
     {
         $this->masukSebagaiAdmin();
 
-        $ujian = Ujian::where('judul', 'EPT Try Out 1')->firstOrFail();
+        $ujian = Ujian::where('judul', 'Ujian Tryout EPT')->firstOrFail();
         $partUjian = PartUjian::where('ujian_id', $ujian->id)->orderBy('urutan')->firstOrFail();
         $barisSoal = SoalPartUjian::where('part_ujian_id', $partUjian->id)->orderBy('urutan')->get();
         $soalPertama = $barisSoal->firstOrFail();
@@ -144,7 +144,7 @@ class PratinjauPengerjaanTest extends TestCase
 
     public function test_tamu_diarahkan_ke_login_saat_membuka_preview_ujian(): void
     {
-        $ujian = Ujian::where('judul', 'EPT Try Out 1')->firstOrFail();
+        $ujian = Ujian::where('judul', 'Ujian Tryout EPT')->firstOrFail();
 
         $this->get(route('admin.ujian.pratinjau', $ujian))->assertRedirect('/login');
     }
@@ -153,7 +153,7 @@ class PratinjauPengerjaanTest extends TestCase
     {
         $this->masukSebagaiMahasiswa();
 
-        $ujian = Ujian::where('judul', 'EPT Try Out 1')->firstOrFail();
+        $ujian = Ujian::where('judul', 'Ujian Tryout EPT')->firstOrFail();
 
         $this->get(route('admin.ujian.pratinjau', $ujian))->assertForbidden();
     }
@@ -162,7 +162,7 @@ class PratinjauPengerjaanTest extends TestCase
     {
         $this->masukSebagaiAdmin();
 
-        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
+        $bankSoal = BankSoal::where('nama', 'Bank Soal Ujian Resmi')->firstOrFail();
         $soal = Soal::where('bank_soal_id', $bankSoal->id)
             ->orderBy('urutan')
             ->skip(1)
@@ -191,7 +191,7 @@ class PratinjauPengerjaanTest extends TestCase
     {
         $this->masukSebagaiMahasiswa();
 
-        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
+        $bankSoal = BankSoal::where('nama', 'Bank Soal Ujian Resmi')->firstOrFail();
 
         $this->get('/preview/exam-take?bank_soal_id='.$bankSoal->id)
             ->assertForbidden();

@@ -99,7 +99,6 @@ function openPermissionModal(category) {
 
 function closePermissionModal() {
     showPermissionModal.value = false;
-    activeCategoryId.value = null;
 }
 
 const permissionColumns = [
@@ -143,7 +142,7 @@ const permissionColumns = [
             {
                 variant: 'secondary',
                 size: 'sm',
-                class: '!p-2',
+                class: 'p-2!',
                 title: 'Atur permission',
                 'aria-label': 'Atur permission',
                 onClick: () => openPermissionModal(info.row.original),
@@ -234,7 +233,7 @@ const permissionColumns = [
                     <button
                         type="button"
                         aria-label="Tutup modal permission"
-                        class="p-2 text-text-muted transition-colors hover:text-text-heading"
+                        class="p-2 text-text-muted transition-colors hover:text-text-heading font-semibold"
                         @click="closePermissionModal"
                     >
                         <IconX :size="20" />

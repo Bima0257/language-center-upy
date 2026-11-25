@@ -21,12 +21,16 @@ class OrientasiController extends Controller
 
     public function unggahIdentitas(UnggahIdentitasRequest $request): RedirectResponse
     {
-        $this->layananOrientasi->unggahIdentitas(
-            auth()->user(),
-            $request->validated(),
-            $request->file('foto_identitas'),
-            $request->file('foto'),
-        );
+        try {
+            $this->layananOrientasi->unggahIdentitas(
+                auth()->user(),
+                $request->validated(),
+                $request->file('foto_identitas'),
+                $request->file('foto'),
+            );
+        } catch (\RuntimeException $exception) {
+            return back()->withErrors(['program_studi_id' => $exception->getMessage()]);
+        }
 
         return redirect()->route('onboarding.verify-identity')->with('success', 'Identitas akademik berhasil disimpan.');
     }

@@ -4,37 +4,62 @@ import axios from 'axios';
 export function useSimpanOtomatis({ sesiUjianId, debounceMs = 500 } = {}) {
     const lastSaved = ref(null);
     const isSaving = ref(false);
-    let pendingTimer = null;
+    const pending = new Map();
+    const inFlight = new Set();
+    let debounceTimer = null;
 
-    function save(soalId, answerText = null) {
-        if (pendingTimer) clearTimeout(pendingTimer);
-
-        pendingTimer = setTimeout(() => {
-            isSaving.value = true;
-            axios.post(`/ujian/sesi/${sesiUjianId}/simpan-jawaban`, {
-                soal_id: soalId,
-                teks_jawaban: answerText,
-            }).then(() => {
-                lastSaved.value = new Date().toLocaleTimeString('id-ID');
-                isSaving.value = false;
-            }).catch(() => {
-                isSaving.value = false;
-            });
-        }, debounceMs);
-    }
-
-    function saveImmediate(soalId, answerText = null) {
-        if (pendingTimer) clearTimeout(pendingTimer);
-        isSaving.value = true;
-        axios.post(`/ujian/sesi/${sesiUjianId}/simpan-jawaban`, {
+    function kirim(soalId, answerText) {
+        const request = axios.post(`/ujian/sesi/${sesiUjianId}/jawaban`, {
             soal_id: soalId,
             teks_jawaban: answerText,
         }).then(() => {
             lastSaved.value = new Date().toLocaleTimeString('id-ID');
-            isSaving.value = false;
-        }).catch(() => {
-            isSaving.value = false;
-        });
+        }).catch(() => {});
+
+        inFlight.add(request);
+        request.finally(() => inFlight.delete(request));
+    }
+
+    function save(soalId, answerText = null) {
+        pending.set(soalId, answerText);
+
+        if (debounceTimer) clearTimeout(debounceTimer);
+
+        debounceTimer = setTimeout(() => {
+            debounceTimer = null;
+            flush();
+        }, debounceMs);
+    }
+
+    async function flush() {
+        if (debounceTimer) {
+            clearTimeout(debounceTimer);
+            debounceTimer = null;
+        }
+
+        while (pending.size > 0 || inFlight.size > 0) {
+            if (pending.size > 0) {
+                const entries = [...pending.entries()];
+                pending.clear();
+                isSaving.value = true;
+
+                for (const [soalId, answerText] of entries) {
+                    kirim(soalId, answerText);
+                }
+            }
+
+            if (inFlight.size > 0) {
+                await Promise.all([...inFlight]);
+            }
+        }
+
+        isSaving.value = false;
+    }
+
+    function saveImmediate(soalId, answerText = null) {
+        save(soalId, answerText);
+
+        return flush();
     }
 
     return {
@@ -42,5 +67,6 @@ export function useSimpanOtomatis({ sesiUjianId, debounceMs = 500 } = {}) {
         isSaving,
         save,
         saveImmediate,
+        flush,
     };
 }

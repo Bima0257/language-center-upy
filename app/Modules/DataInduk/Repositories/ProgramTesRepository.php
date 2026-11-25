@@ -17,6 +17,7 @@ class ProgramTesRepository implements ProgramTesRepositoryInterface
             'bankSoal',
             'section',
             'ujian',
+            'ujian as ujian_aktif_count' => fn ($query) => $query->where('aktif', true),
             'aturanPenilaian',
             'interpretasiSkor',
         ])->orderBy('nama')->get();

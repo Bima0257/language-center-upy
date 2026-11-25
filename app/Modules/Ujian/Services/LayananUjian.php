@@ -2,6 +2,7 @@
 
 namespace App\Modules\Ujian\Services;
 
+use App\Enums\LingkupUjian;
 use App\Models\BankSoal;
 use App\Models\PartSoal;
 use App\Models\PartUjian;
@@ -86,9 +87,11 @@ class LayananUjian
     {
         $bank = $this->pastikanDataPembuatanUjian($data);
         $data = $this->bersihkanDeskripsi($data);
+        $programStudiIds = $this->programStudiIdsDariData($data);
 
-        return DB::transaction(function () use ($data, $bank) {
+        return DB::transaction(function () use ($data, $bank, $programStudiIds) {
             $ujian = $this->ujianRepo->create($data);
+            $this->ujianRepo->sinkronkanProgramStudi($ujian, $programStudiIds);
             $bankId = $data['bank_soal_id'];
 
             $urutan = 1;
@@ -121,6 +124,8 @@ class LayananUjian
 
                 $this->lampirkanSoal($ujian, $part, $section);
             }
+
+            $this->pastikanDurasiSectionValid($ujian);
 
             return $ujian;
         });
@@ -199,6 +204,25 @@ class LayananUjian
     }
 
     /**
+     * @param  array<string>  $sectionIds
+     * @return array<string>
+     */
+    public function idSectionDalamUjianAktif(array $sectionIds): array
+    {
+        return $this->partRepo->idSectionDalamUjianAktif($sectionIds);
+    }
+
+    public function adaUjianAktifUntukProgramTes(string $programTesId): bool
+    {
+        return $this->ujianRepo->adaAktifUntukProgramTes($programTesId);
+    }
+
+    public function adaUjianAktifUntukSection(string $sectionId): bool
+    {
+        return $this->idSectionDalamUjianAktif([$sectionId]) !== [];
+    }
+
+    /**
      * @param  Collection<int, PartSoal>  $partSoal
      */
     public function sinkronkanPartSoalGlobal(Collection $partSoal): void
@@ -220,6 +244,7 @@ class LayananUjian
         $data = $this->bersihkanDeskripsi($data);
         $targetProgramTesId = $data['program_tes_id'];
         $programTes = $this->programTesRepo->find($targetProgramTesId);
+        $programStudiIds = $this->programStudiIdsDariData($data);
 
         if ($programTes === null) {
             throw ValidationException::withMessages([
@@ -227,27 +252,47 @@ class LayananUjian
             ]);
         }
 
-        if ($targetProgramTesId !== $ujian->program_tes_id) {
-            if (! $programTes->aktif) {
-                throw ValidationException::withMessages([
-                    'program_tes_id' => 'Program tes tujuan harus aktif.',
-                ]);
+        return DB::transaction(function () use ($ujian, $data, $targetProgramTesId, $programTes, $programStudiIds): Ujian {
+            $ujian = $this->ujianRepo->temukanUntukUpdate($ujian->id);
+
+            if ($targetProgramTesId !== $ujian->program_tes_id) {
+                if ($ujian->aktif) {
+                    throw ValidationException::withMessages([
+                        'program_tes_id' => 'Program tes tidak dapat diubah saat ujian aktif. Nonaktifkan ujian terlebih dahulu.',
+                    ]);
+                }
+
+                if (! $programTes->aktif) {
+                    throw ValidationException::withMessages([
+                        'program_tes_id' => 'Program tes tujuan harus aktif.',
+                    ]);
+                }
+
+                if ($ujian->partUjian()->exists() || $ujian->periodeUjian()->exists()) {
+                    throw ValidationException::withMessages([
+                        'program_tes_id' => 'Program tes tidak dapat diubah setelah ujian memiliki part atau periode ujian.',
+                    ]);
+                }
             }
 
-            if ($ujian->partUjian()->exists() || $ujian->periodeUjian()->exists()) {
-                throw ValidationException::withMessages([
-                    'program_tes_id' => 'Program tes tidak dapat diubah setelah ujian memiliki part atau periode ujian.',
-                ]);
-            }
-        }
+            $this->pastikanPerubahanTerkunciDiizinkan($ujian, $data, $programStudiIds);
 
-        return $this->ujianRepo->update($ujian, $data);
+            $ujian = $this->ujianRepo->update($ujian, $data);
+            $this->ujianRepo->sinkronkanProgramStudi($ujian, $programStudiIds);
+            $this->pastikanDurasiSectionValid($ujian);
+
+            return $ujian;
+        });
     }
 
     public function hapus(Ujian $ujian): void
     {
         if ($this->ujianRepo->memilikiPeriodeUjian($ujian)) {
             throw new \RuntimeException('Ujian tidak bisa dihapus karena sudah memiliki jadwal.');
+        }
+
+        if ($this->ujianRepo->memilikiSesi($ujian)) {
+            throw new \RuntimeException('Ujian tidak bisa dihapus karena sudah memiliki sesi.');
         }
 
         $this->ujianRepo->delete($ujian);
@@ -263,11 +308,46 @@ class LayananUjian
 
         return [
             'ujian' => $ujian,
+            'ringkasanWaktu' => $this->ringkasanWaktu($ujian),
             'opsiSection' => $this->sectionRepo->semuaAktifBerurutan($ujian->program_tes_id)->map(fn (Section $section) => ['value' => $section->id, 'label' => $section->nama, 'kode' => $section->kode])->toArray(),
             'partSoal' => $this->partSoalRepo->semuaAktifBerurutan(),
             'bankSoal' => $this->bankSoalRepo->semuaAktifBerurutan(),
             'soalPerPart' => $this->partRepo->soalDikelompokkanDenganPart($partIds),
             'partSoalPerPart' => $this->partRepo->partSoalDikelompokkanDenganPart($partIds),
+        ];
+    }
+
+    /**
+     * @return array{totalDurasiMenit: int, totalDurasiSectionMenit: int, adaSectionTanpaDurasi: bool, sectionTanpaDurasi: array<int, string>, durasiValid: bool}
+     */
+    public function ringkasanWaktu(Ujian $ujian): array
+    {
+        $partUjian = $ujian->relationLoaded('partUjian')
+            ? $ujian->partUjian
+            : $this->partRepo->semuaUntukUjian($ujian);
+
+        $totalDurasiSection = 0;
+        $sectionTanpaDurasi = [];
+
+        foreach ($partUjian as $part) {
+            $section = $part->section;
+
+            if ((int) $section->durasi_menit < 1) {
+                $sectionTanpaDurasi[] = $section->nama;
+
+                continue;
+            }
+
+            $totalDurasiSection += (int) $section->durasi_menit;
+        }
+
+        return [
+            'totalDurasiMenit' => (int) $ujian->durasi_menit,
+            'totalDurasiSectionMenit' => $totalDurasiSection,
+            'adaSectionTanpaDurasi' => $sectionTanpaDurasi !== [],
+            'sectionTanpaDurasi' => $sectionTanpaDurasi,
+            'durasiValid' => $sectionTanpaDurasi === []
+                && $totalDurasiSection <= (int) $ujian->durasi_menit,
         ];
     }
 
@@ -334,6 +414,7 @@ class LayananUjian
                         'kode' => $part->section->kode,
                         'nama' => $part->section->nama,
                         'deskripsi' => $part->section->deskripsi,
+                        'durasi_menit' => $part->section->durasi_menit,
                     ],
                     'partSoal' => [
                         'id' => $partSoal?->id,
@@ -371,6 +452,7 @@ class LayananUjian
                         'kode' => $items->first()['section']['kode'],
                         'nama' => $items->first()['section']['nama'],
                         'materi' => $items->first()['materi'],
+                        'durasi_menit' => $items->first()['section']['durasi_menit'],
                         'jumlahSoal' => $items->sum('jumlahSoal'),
                         'partSoal' => $items
                             ->groupBy(fn (array $block): string => (string) ($block['partSoal']['id'] ?? $block['partSoal']['nama']))
@@ -469,6 +551,59 @@ class LayananUjian
 
     /**
      * @param  array<string, mixed>  $data
+     * @return array<int, string>
+     */
+    private function programStudiIdsDariData(array &$data): array
+    {
+        $ids = $data['program_studi_ids'] ?? [];
+        unset($data['program_studi_ids']);
+
+        if (($data['lingkup'] ?? LingkupUjian::UMUM->value) === LingkupUjian::UMUM->value) {
+            return [];
+        }
+
+        $programStudiIds = collect(is_array($ids) ? $ids : [])
+            ->filter(fn ($id): bool => is_string($id) && $id !== '')
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($programStudiIds === []) {
+            throw ValidationException::withMessages([
+                'program_studi_ids' => 'Pilih minimal satu program studi untuk lingkup prodi.',
+            ]);
+        }
+
+        return $programStudiIds;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<int, string>  $programStudiIds
+     */
+    private function pastikanPerubahanTerkunciDiizinkan(Ujian $ujian, array $data, array $programStudiIds): void
+    {
+        $modeBaru = (string) ($data['mode'] ?? $ujian->mode->value);
+        $lingkupBaru = (string) ($data['lingkup'] ?? $ujian->lingkup->value);
+        $prodiLama = $ujian->programStudi->pluck('id')->sort()->values()->all();
+        $prodiBaru = collect($programStudiIds)->sort()->values()->all();
+
+        $modeBerubah = $modeBaru !== $ujian->mode->value;
+        $lingkupBerubah = $lingkupBaru !== $ujian->lingkup->value || $prodiLama !== $prodiBaru;
+
+        if (! $modeBerubah && ! $lingkupBerubah) {
+            return;
+        }
+
+        if ($this->ujianRepo->memilikiPeriodeUjian($ujian) || $this->ujianRepo->memilikiSesi($ujian)) {
+            throw ValidationException::withMessages([
+                $modeBerubah ? 'mode' : 'lingkup' => 'Mode atau lingkup ujian tidak dapat diubah setelah ujian memiliki jadwal atau sesi.',
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
     private function bersihkanDeskripsi(array $data): array
@@ -490,6 +625,24 @@ class LayananUjian
         $data['deskripsi'] = $teks === '' ? null : $bersih;
 
         return $data;
+    }
+
+    private function pastikanDurasiSectionValid(Ujian $ujian): void
+    {
+        $ujian->loadMissing('partUjian.section');
+        $ringkasan = $this->ringkasanWaktu($ujian);
+
+        if ($ringkasan['adaSectionTanpaDurasi']) {
+            throw ValidationException::withMessages([
+                'durasi_menit' => 'Section berikut belum memiliki durasi: '.implode(', ', $ringkasan['sectionTanpaDurasi']).'.',
+            ]);
+        }
+
+        if ($ringkasan['totalDurasiSectionMenit'] > $ringkasan['totalDurasiMenit']) {
+            throw ValidationException::withMessages([
+                'durasi_menit' => "Durasi total ujian ({$ringkasan['totalDurasiMenit']} menit) lebih kecil dari total durasi section ({$ringkasan['totalDurasiSectionMenit']} menit).",
+            ]);
+        }
     }
 
     private function pastikanDataPembuatanUjian(array $data): BankSoal

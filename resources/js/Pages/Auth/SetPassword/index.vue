@@ -46,9 +46,9 @@ const submit = () => {
                         required
                         autocomplete="new-password"
                         placeholder="Min. 8 karakter, huruf besar & kecil, angka, simbol"
-                        class="w-full pl-11 pr-12 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md transition-all placeholder:text-text-muted focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]"
+                        class="w-full pl-11 pr-12 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md transition-all placeholder:text-text-muted focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                     />
-                    <button type="button" @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors">
+                    <button type="button" @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors font-semibold">
                         <IconEye v-if="!showPassword" :size="20" />
                         <IconEyeOff v-else :size="20" />
                     </button>
@@ -68,9 +68,9 @@ const submit = () => {
                         required
                         autocomplete="new-password"
                         placeholder="Ulangi password"
-                        class="w-full pl-11 pr-12 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md transition-all placeholder:text-text-muted focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]"
+                        class="w-full pl-11 pr-12 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md transition-all placeholder:text-text-muted focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                     />
-                    <button type="button" @click="showConfirm = !showConfirm" class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors">
+                    <button type="button" @click="showConfirm = !showConfirm" class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors font-semibold">
                         <IconEye v-if="!showConfirm" :size="20" />
                         <IconEyeOff v-else :size="20" />
                     </button>

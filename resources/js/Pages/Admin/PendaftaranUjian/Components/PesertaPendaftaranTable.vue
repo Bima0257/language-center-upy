@@ -67,10 +67,6 @@ function openReview(pendaftaran, action) {
 
 function closeReview() {
     showReviewModal.value = false;
-    reviewing.value = null;
-    reviewAction.value = '';
-    reviewForm.reset();
-    reviewForm.clearErrors();
 }
 
 function submitReview() {
@@ -286,7 +282,7 @@ const columns = computed(() => {
                 <BaseFormGrid>
                     <div class="sm:col-span-2">
                         <label class="block text-label-md font-medium text-text-heading">Catatan admin</label>
-                        <textarea v-model="reviewForm.catatan_admin" rows="4" class="mt-1.5 w-full rounded-xl border border-outline-variant px-4 py-3 text-body-md text-text-heading" placeholder="Opsional"></textarea>
+                        <textarea v-model="reviewForm.catatan_admin" rows="4" class="mt-1.5 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-body-md text-text-body focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20" placeholder="Opsional"></textarea>
                         <p v-if="reviewForm.errors.catatan_admin" class="mt-1 text-xs text-error-red">{{ reviewForm.errors.catatan_admin }}</p>
                     </div>
                 </BaseFormGrid>

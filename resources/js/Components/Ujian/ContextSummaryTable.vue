@@ -25,7 +25,7 @@ const tableColumns = computed(() => [
             {
                 variant: 'secondary',
                 size: 'sm',
-                class: '!p-2',
+                class: 'p-2!',
                 title: `Lihat ${props.title.toLowerCase()}`,
                 'aria-label': `Lihat ${props.title.toLowerCase()}`,
                 onClick: () => emit('select', info.row.original),

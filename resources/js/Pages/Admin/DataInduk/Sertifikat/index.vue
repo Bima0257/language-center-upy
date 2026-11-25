@@ -83,7 +83,8 @@ function cetakSertifikat() {
                                 <p class="font-medium text-text-heading">{{ cert.sesi_ujian?.pengguna?.name || '-' }}</p>
                                 <p class="text-text-muted text-label-md">{{ cert.sesi_ujian?.pengguna?.email || '' }}</p>
                             </td>
-                            <td class="px-5 py-4 text-body-md text-text-body">{{ cert.sesi_ujian?.slot_ujian?.periode_ujian?.ujian?.judul || '-' }}</td>
+                            <td class="px-5 py-4 text-body-md text-text-body">{{ cert.sesi_ujian?.ujian?.judul || cert.sesi_ujian?.slot_ujian?.periode_ujian?.ujian?.judul || '-' }}</td>
+
                             <td class="px-5 py-4 text-body-md text-text-body">{{ formatDate(cert.diterbitkan_pada) }}</td>
                             <td class="px-5 py-4 text-body-md text-text-body">{{ formatDate(cert.berlaku_hingga) }}</td>
                             <td class="px-5 py-4">

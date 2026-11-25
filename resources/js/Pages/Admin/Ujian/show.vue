@@ -7,6 +7,7 @@ import QuestionArrangement from './Components/QuestionArrangement.vue';
 
 const props = defineProps({
     ujian: { type: Object, required: true },
+    ringkasanWaktu: { type: Object, default: () => ({}) },
     partSoal: { type: Array, default: () => [] },
     partSoalPerPart: { type: Object, default: () => ({}) },
     soalPerPart: { type: Object, default: () => ({}) },
@@ -17,6 +18,24 @@ const activePartId = ref('all');
 const localOrders = ref({});
 const itemsBySection = ref({});
 const dirtySections = ref({});
+
+const lingkupLabel = computed(() => {
+    if (props.ujian.lingkup === 'umum') return 'Semua Peserta';
+
+    const namaProgramStudi = (props.ujian.program_studi || []).map((programStudi) => programStudi.nama).join(', ');
+
+    return namaProgramStudi !== '' ? `Prodi: ${namaProgramStudi}` : 'Prodi Tertentu';
+});
+
+const pesanWaktu = computed(() => {
+    if (!props.ringkasanWaktu || props.ringkasanWaktu.durasiValid) return null;
+
+    if (props.ringkasanWaktu.adaSectionTanpaDurasi) {
+        return `Section berikut belum memiliki durasi: ${(props.ringkasanWaktu.sectionTanpaDurasi || []).join(', ')}.`;
+    }
+
+    return `Total durasi section (${props.ringkasanWaktu.totalDurasiSectionMenit} menit) melebihi durasi total ujian (${props.ujian.durasi_menit} menit).`;
+});
 
 const sectionTabs = computed(() => (props.ujian.part_ujian || []).map((partUjian) => ({
     value: String(partUjian.id),
@@ -238,6 +257,20 @@ watch(partTabs, (tabs) => {
         </template>
 
         <div>
+            <p class="mb-4 text-label-md text-text-muted">
+                {{ ujian.mode === 'tryout' ? 'Try Out' : 'Ujian Resmi' }} · {{ lingkupLabel }}
+            </p>
+
+            <div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-label-md text-text-muted">
+                <span>Durasi total ujian: <strong class="text-text-heading">{{ ujian.durasi_menit }} menit</strong></span>
+                <span>Total durasi section: <strong class="text-text-heading">{{ ringkasanWaktu.totalDurasiSectionMenit ?? '-' }} menit</strong></span>
+            </div>
+
+            <div v-if="pesanWaktu" class="mb-4 rounded-2xl border border-warning/40 bg-warning-container px-4 py-3">
+                <p class="text-label-md font-semibold text-on-warning-container">Konfigurasi waktu belum valid</p>
+                <p class="mt-1 text-body-md text-on-warning-container">{{ pesanWaktu }}</p>
+            </div>
+
             <div class="relative">
                 <div class="mb-4">
                     <h2 class="text-title-lg font-semibold text-text-heading">Soal Ujian</h2>
@@ -263,7 +296,7 @@ watch(partTabs, (tabs) => {
             </div>
 
             <div v-if="activeSection" class="min-w-0">
-                <BaseCard :padding="false" class="!border-t-0 overflow-hidden">
+                <BaseCard :padding="false" class="border-t-0! overflow-hidden">
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3">
                         <div class="inline-flex min-w-0 max-w-full items-center gap-1">
                             <BaseTabs
@@ -284,6 +317,7 @@ watch(partTabs, (tabs) => {
                         :part-id="activePartId"
                         :items-by-section="itemsBySection"
                         :dirty-sections="dirtySections"
+                        :locked="Boolean(ujian.aktif)"
                         embedded
                         @sort="onSectionSort"
                         @save-arrangement="saveArrangement"

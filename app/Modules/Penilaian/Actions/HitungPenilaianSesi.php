@@ -24,7 +24,7 @@ class HitungPenilaianSesi
      */
     public function execute(SesiUjian $sesi, array $snapshot): HasilPenilaianSesi
     {
-        $sesi->loadMissing('jawaban', 'slotUjian.periodeUjian.ujian');
+        $sesi->loadMissing('jawaban', 'ujian', 'slotUjian.periodeUjian.ujian');
 
         if (! isset($snapshot['skema_penilaian_id'])) {
             $snapshot['skema_penilaian_id'] = $sesi->skema_penilaian_id;

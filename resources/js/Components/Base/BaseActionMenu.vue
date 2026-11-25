@@ -158,7 +158,7 @@ onBeforeUnmount(closeTeleportedMenu);
                     >
                         <button
                             type="button"
-                            class="flex w-full items-center gap-2 py-2.5 text-label-md transition-colors focus:outline-none"
+                            class="flex w-full items-center gap-2 py-2.5 text-label-md transition-colors focus:outline-none font-semibold"
                             :class="[
                                 itemClasses(item, active),
                                 props.iconOnly ? 'justify-center px-2.5' : 'px-3.5 text-left',

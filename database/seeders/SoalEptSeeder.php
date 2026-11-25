@@ -16,17 +16,30 @@ class SoalEptSeeder extends Seeder
     public function run(): void
     {
         $ept = ProgramTes::where('nama', 'EPT')->firstOrFail();
-        $bank = BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
-
-        if (Soal::where('bank_soal_id', $bank->id)->exists()) {
-            $this->command->info('SoalEptSeeder dilewati — soal EPT sudah ada.');
-
-            return;
-        }
-
         $listening = Section::where('program_tes_id', $ept->id)->where('nama', 'Listening')->firstOrFail();
         $reading = Section::where('program_tes_id', $ept->id)->where('nama', 'Reading')->firstOrFail();
+        $data = require database_path('seeders/data/ept_questions.php');
 
+        foreach (['Bank Soal Ujian Resmi', 'Bank Soal Ujian Tryout'] as $namaBank) {
+            $bank = BankSoal::where('nama', $namaBank)->firstOrFail();
+
+            if (Soal::where('bank_soal_id', $bank->id)->exists()) {
+                $this->command->info("SoalEptSeeder dilewati — soal {$namaBank} sudah ada.");
+
+                continue;
+            }
+
+            $this->seedBank($bank, $listening, $reading, $data);
+        }
+
+        $this->command->info('Soal EPT berhasil dibuat: 2 bank × 50 Listening dan 50 Reading.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function seedBank(BankSoal $bank, Section $listening, Section $reading, array $data): void
+    {
         $partSoal = PartSoal::where('bank_soal_id', $bank->id)->get();
 
         $part = function (string $sectionId, string $nama) use ($partSoal): string {
@@ -41,7 +54,6 @@ class SoalEptSeeder extends Seeder
             return $hasil->id;
         };
 
-        $data = require database_path('seeders/data/ept_questions.php');
         $waktu = now();
         $audioLokasi = 'assets/audio/demo.mp3';
         $audioUkuran = is_file(storage_path('app/public/'.$audioLokasi))
@@ -160,7 +172,5 @@ class SoalEptSeeder extends Seeder
         DB::table('materi_soal')->insert($materiRows);
         DB::table('media_materi_soal')->insert($mediaRows);
         DB::table('soal')->insert($soalRows);
-
-        $this->command->info('Soal EPT berhasil dibuat: 50 Listening dan 50 Reading.');
     }
 }

@@ -328,7 +328,7 @@ const indexUrl = computed(() => {
                             variant="secondary"
                             size="md"
                             :href="route('pustaka-soal.daftar', indexUrl)"
-                            class="!w-28 !rounded-lg"
+                            class="w-28! rounded-lg!"
                         >
                             Batal
                         </BaseButton>
@@ -336,7 +336,7 @@ const indexUrl = computed(() => {
                             type="submit"
                             size="md"
                             :disabled="form.processing || !canSubmit"
-                            class="!w-32 !rounded-lg !bg-secondary !text-on-secondary"
+                            class="w-32! rounded-lg!"
                         >
                             {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
                         </BaseButton>

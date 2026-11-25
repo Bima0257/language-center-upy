@@ -11,6 +11,7 @@ const props = defineProps({
     programTes: { type: Object, required: true },
     skema: { type: Object, required: true },
     interpretasiSkor: { type: Array, default: () => [] },
+    memilikiUjianAktif: { type: Boolean, default: false },
 });
 
 const confirm = useConfirm();
@@ -29,12 +30,15 @@ const editForm = useForm({
 });
 
 function goToBulkCreate() {
+    if (props.memilikiUjianAktif) return;
+
     router.visit(route('admin.data-induk.interpretasi-skor.program-tes.tambah-massal', {
         programTes: props.programTes.id,
     }));
 }
 
 function startEdit(interp) {
+    if (props.memilikiUjianAktif) return;
     editingInterpretasi.value = interp;
     editForm.reset();
     editForm.clearErrors();
@@ -60,14 +64,11 @@ function saveEdit() {
 
 function closeModal() {
     showModal.value = false;
-    editingInterpretasi.value = null;
-    editForm.reset();
-    editForm.clearErrors();
-    editForm.skema_penilaian_id = props.skema.id;
-    editForm.program_tes_id = props.programTes.id;
 }
 
 async function destroy(interp) {
+    if (props.memilikiUjianAktif) return;
+
     if (!await confirm.confirm(`Hapus interpretasi ${interp.tingkat_cefr} (${interp.skor_minimum}-${interp.skor_maksimum})?`)) return;
     router.delete(route('admin.data-induk.interpretasi-skor.hapus', interp.id), { preserveScroll: true });
 }
@@ -86,10 +87,14 @@ async function destroy(interp) {
             <p class="mt-3 text-label-md text-text-muted">
                 {{ props.interpretasiSkor.length }} rentang interpretasi. Perubahan berlaku untuk sesi ujian baru; hasil ujian lama tetap memakai snapshot.
             </p>
+            <p v-if="props.memilikiUjianAktif" class="mt-2 text-label-md text-text-muted">
+                Program tes dipakai ujian aktif — interpretasi skor dikunci.
+            </p>
         </BaseCard>
 
         <InterpretasiSkorTable
             :interpretasi-skor="props.interpretasiSkor"
+            :locked="props.memilikiUjianAktif"
             @create="goToBulkCreate"
             @edit="startEdit"
             @delete="destroy"

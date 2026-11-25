@@ -10,6 +10,7 @@ use App\Http\Requests\PendaftaranUjian\PerbaruiPeriodePendaftaranUjianRequest;
 use App\Http\Requests\PendaftaranUjian\SimpanPeriodePendaftaranUjianRequest;
 use App\Http\Requests\PendaftaranUjian\TinjauPendaftaranUjianRequest;
 use App\Models\PendaftaranUjian;
+use App\Models\Pengguna;
 use App\Models\PeriodePendaftaranUjian;
 use App\Models\SlotUjian;
 use App\Modules\PendaftaranUjian\Services\LayananPendaftaranUjian;
@@ -32,11 +33,6 @@ class PendaftaranUjianController extends Controller
         ));
     }
 
-    public function tambah(): Response
-    {
-        return Inertia::render('Admin/PendaftaranUjian/create', $this->layananPeriodePendaftaran->dataForm());
-    }
-
     public function simpan(SimpanPeriodePendaftaranUjianRequest $request): RedirectResponse
     {
         try {
@@ -47,22 +43,6 @@ class PendaftaranUjianController extends Controller
 
         return to_route('admin.pendaftaran-ujian.daftar')
             ->with('success', 'Periode pendaftaran berhasil dibuat.');
-    }
-
-    public function detail(PeriodePendaftaranUjian $periodePendaftaranUjian): Response
-    {
-        return Inertia::render('Admin/PendaftaranUjian/show', $this->layananPeriodePendaftaran->dataDetail(
-            $periodePendaftaranUjian,
-        ));
-    }
-
-    public function ubah(PeriodePendaftaranUjian $periodePendaftaranUjian): Response
-    {
-        return Inertia::render('Admin/PendaftaranUjian/edit', [
-            'periodePendaftaranUjian' => $this->layananPeriodePendaftaran->dataDetail(
-                $periodePendaftaranUjian,
-            )['periodePendaftaranUjian'],
-        ]);
     }
 
     public function perbarui(
@@ -93,21 +73,38 @@ class PendaftaranUjianController extends Controller
             ->with('success', 'Periode pendaftaran dihapus.');
     }
 
-    public function peserta(
-        FilterPendaftaranUjianRequest $request,
-        PeriodePendaftaranUjian $periodePendaftaranUjian,
-    ): Response {
-        return Inertia::render('Admin/PendaftaranUjian/peserta', $this->layananPendaftaran->dataPeserta(
-            $periodePendaftaranUjian,
-            $request->validated(),
-        ));
-    }
-
     public function pesertaSemua(FilterPendaftaranUjianRequest $request): Response
     {
-        return Inertia::render('Admin/PendaftaranUjian/peserta-semua', $this->layananPendaftaran->dataPesertaSemua(
-            $request->validated(),
-        ));
+        $data = $this->layananPendaftaran->dataPesertaSemua($request->validated());
+
+        return Inertia::render(
+            isset($data['ujianTerpilih'])
+                ? 'Admin/PendaftaranUjian/peserta-ujian'
+                : 'Admin/PendaftaranUjian/peserta-semua',
+            $data,
+        );
+    }
+
+    public function pendaftaran(): Response
+    {
+        /** @var Pengguna $pengguna */
+        $pengguna = auth()->user();
+
+        return Inertia::render(
+            'Ujian/Pendaftaran/index',
+            $this->layananPendaftaran->dataPendaftaran($pengguna),
+        );
+    }
+
+    public function resmi(): Response
+    {
+        /** @var Pengguna $pengguna */
+        $pengguna = auth()->user();
+
+        return Inertia::render(
+            'Ujian/Resmi/index',
+            $this->layananPendaftaran->dataUjianResmi($pengguna),
+        );
     }
 
     public function ajukan(AjukanPendaftaranUjianRequest $request, SlotUjian $slotUjian): RedirectResponse

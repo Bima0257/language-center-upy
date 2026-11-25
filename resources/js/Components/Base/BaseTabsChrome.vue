@@ -80,11 +80,11 @@ function tabClasses(item) {
                         :aria-selected="isActiveTab(item)"
                         :disabled="item.disabled"
                         :tabindex="isActiveTab(item) && !item.disabled ? 0 : -1"
-                        class="relative inline-flex h-11 min-w-28 max-w-56 shrink-0 items-center justify-center truncate rounded-t-xl pl-5 pr-5 text-label-md font-medium transition-all duration-150 focus:z-20 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                        class="relative inline-flex h-11 min-w-28 max-w-56 shrink-0 items-center justify-center truncate rounded-t-xl pl-5 pr-5 text-label-md font-semibold transition-all duration-150 focus:z-20 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                         :class="[
                             tabClasses(item),
                             activeAction && isActiveTab(item) && $slots['active-action']
-                                ? '!min-w-0 rounded-tr-none pr-0'
+                                ? 'min-w-0! rounded-tr-none pr-0'
                                 : '',
                         ]"
                         @click="emit('update:modelValue', item.value)"

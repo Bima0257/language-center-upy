@@ -74,7 +74,6 @@ function openEdit(index) {
 
 function closeModal() {
     showModal.value = false;
-    editingIndex.value = null;
 }
 
 function commitRow() {

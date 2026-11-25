@@ -3,6 +3,16 @@
 use App\Modules\PendaftaranUjian\Controllers\PendaftaranUjianController;
 use Illuminate\Support\Facades\Route;
 
+Route::middleware(['auth', 'verified', 'route.permission'])
+    ->prefix('ujian')
+    ->name('ujian.')
+    ->group(function () {
+        Route::get('/pendaftaran', [PendaftaranUjianController::class, 'pendaftaran'])
+            ->name('pendaftaran.daftar');
+        Route::get('/resmi', [PendaftaranUjianController::class, 'resmi'])
+            ->name('resmi');
+    });
+
 Route::middleware(['auth', 'route.permission'])
     ->prefix('ujian')
     ->name('ujian.')
@@ -21,19 +31,12 @@ Route::middleware(['auth', 'route.permission'])
     ->group(function () {
         Route::get('/', [PendaftaranUjianController::class, 'daftar'])->name('daftar');
         Route::get('/peserta', [PendaftaranUjianController::class, 'pesertaSemua'])->name('peserta-semua');
-        Route::get('/{periodePendaftaranUjian}/peserta', [PendaftaranUjianController::class, 'peserta'])
-            ->whereUuid('periodePendaftaranUjian')
-            ->name('peserta');
-        Route::get('/{periodePendaftaranUjian}', [PendaftaranUjianController::class, 'detail'])
-            ->whereUuid('periodePendaftaranUjian')
-            ->name('detail');
     });
 
 Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/pendaftaran-ujian')
     ->name('admin.pendaftaran-ujian.')
     ->group(function () {
-        Route::get('/tambah', [PendaftaranUjianController::class, 'tambah'])->name('tambah');
         Route::post('/', [PendaftaranUjianController::class, 'simpan'])->name('simpan');
     });
 
@@ -41,9 +44,6 @@ Route::middleware(['auth', 'route.permission'])
     ->prefix('admin/pendaftaran-ujian')
     ->name('admin.pendaftaran-ujian.')
     ->group(function () {
-        Route::get('/{periodePendaftaranUjian}/ubah', [PendaftaranUjianController::class, 'ubah'])
-            ->whereUuid('periodePendaftaranUjian')
-            ->name('ubah');
         Route::put('/{periodePendaftaranUjian}', [PendaftaranUjianController::class, 'perbarui'])
             ->whereUuid('periodePendaftaranUjian')
             ->name('perbarui');

@@ -32,6 +32,67 @@ function isAnswered(soal) {
 function isCurrent(number) {
     return number === props.currentGlobalNumber;
 }
+
+function partLabel(group) {
+    const original = group.partSoal?.nama?.trim() || 'Part';
+
+    for (const prefix of [group.section?.nama, group.section?.kode]) {
+        if (!prefix) continue;
+
+        const escaped = prefix.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const stripped = original
+            .replace(new RegExp(`^${escaped}(?:\\s*[-–—:·]\\s*|\\s+)`, 'i'), '')
+            .trim();
+
+        if (stripped && stripped !== original) {
+            return stripped;
+        }
+    }
+
+    return original;
+}
+
+const sectionGroups = computed(() => {
+    const sections = [];
+    const sectionMap = new Map();
+
+    for (const group of props.groups) {
+        const sectionKey = group.section?.kode || group.section?.nama || `section-${sections.length}`;
+        const questionNumbers = group.soal
+            .map((soal) => Number(soal.nomor_global))
+            .filter((number) => Number.isFinite(number));
+
+        if (!sectionMap.has(sectionKey)) {
+            const section = {
+                key: sectionKey,
+                nama: group.section?.nama || 'Section',
+                groups: [],
+                jumlahSoal: 0,
+                answered: 0,
+                nomorMulai: questionNumbers.length ? Math.min(...questionNumbers) : group.nomorMulai,
+                nomorSelesai: questionNumbers.length
+                    ? Math.max(...questionNumbers)
+                    : group.nomorMulai + group.jumlahSoal - 1,
+            };
+
+            sectionMap.set(sectionKey, section);
+            sections.push(section);
+        }
+
+        const section = sectionMap.get(sectionKey);
+
+        section.groups.push(group);
+        section.jumlahSoal += group.soal.length;
+        section.answered += group.soal.filter(isAnswered).length;
+
+        if (questionNumbers.length) {
+            section.nomorMulai = Math.min(section.nomorMulai, ...questionNumbers);
+            section.nomorSelesai = Math.max(section.nomorSelesai, ...questionNumbers);
+        }
+    }
+
+    return sections;
+});
 </script>
 
 <template>
@@ -60,7 +121,7 @@ function isCurrent(number) {
                         type="button"
                         aria-label="Tutup peta soal"
                         @click="emit('close')"
-                        class="w-9 h-9 rounded-full flex items-center justify-center text-text-muted hover:text-text-heading hover:bg-surface-container-low transition-colors"
+                        class="w-9 h-9 rounded-full flex items-center justify-center text-text-muted hover:text-text-heading hover:bg-surface-container-low transition-colors font-semibold"
                     >
                         <IconX :size="20" />
                     </button>
@@ -69,36 +130,60 @@ function isCurrent(number) {
         </template>
 
         <template #default>
-            <div class="space-y-5 px-6 py-5">
-                <div v-for="(group, gi) in groups" :key="gi">
-                    <div class="flex items-center justify-between mb-2.5">
-                        <span class="text-label-md font-bold uppercase tracking-wider text-text-heading">
-                            {{ group.section.nama }} · {{ group.partSoal.nama }}
-                        </span>
-                        <span class="text-[11px] text-text-muted font-medium">
-                            Soal {{ group.nomorMulai }}–{{ group.nomorMulai + group.jumlahSoal - 1 }}
+            <div class="space-y-4 px-6 py-5">
+                <section
+                    v-for="section in sectionGroups"
+                    :key="section.key"
+                    class="space-y-4 rounded-2xl border border-outline-variant/40 bg-surface-container-low/60 p-4"
+                >
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-outline-variant/40 pb-2.5">
+                        <div class="min-w-0">
+                            <h4 class="truncate text-label-md font-bold uppercase tracking-wider text-text-heading">
+                                {{ section.nama }}
+                            </h4>
+                            <p class="text-xs text-text-muted">
+                                Soal {{ section.nomorMulai }}–{{ section.nomorSelesai }}
+                            </p>
+                        </div>
+                        <span class="shrink-0 rounded-full bg-surface-container-high px-2.5 py-1 text-[11px] font-semibold text-text-muted">
+                            {{ section.answered }}/{{ section.jumlahSoal }} terjawab
                         </span>
                     </div>
-                    <div class="flex flex-wrap gap-1.5">
-                        <button
-                            v-for="soal in group.soal"
-                            :key="soal.id"
-                            type="button"
-                            :aria-label="`Buka soal ${soal.nomor_global}`"
-                            @click="emit('navigateGlobal', soal.nomor_global)"
-                            class="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold transition-all duration-150 cursor-pointer"
-                            :class="[
-                                isCurrent(soal.nomor_global)
-                                    ? 'bg-secondary text-on-secondary shadow-sm ring-2 ring-secondary/30'
-                                    : isAnswered(soal)
-                                        ? 'bg-success-container text-on-success-container border border-success hover:bg-success hover:text-on-success'
-                                        : 'bg-surface-container-low text-text-body border border-outline-variant hover:bg-surface-container-highest'
-                            ]"
-                        >
-                            {{ soal.nomor_global }}
-                        </button>
+
+                    <div
+                        v-for="(group, groupIndex) in section.groups"
+                        :key="`${section.key}-${groupIndex}`"
+                        class="space-y-2"
+                    >
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="min-w-0 truncate text-label-md font-semibold text-text-body">
+                                {{ partLabel(group) }}
+                            </span>
+                            <span class="shrink-0 text-xs text-text-muted font-medium">
+                                Soal {{ group.nomorMulai }}–{{ group.nomorMulai + group.jumlahSoal - 1 }}
+                            </span>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button
+                                v-for="soal in group.soal"
+                                :key="soal.id"
+                                type="button"
+                                :aria-label="`Buka soal ${soal.nomor_global}`"
+                                @click="emit('navigateGlobal', soal.nomor_global)"
+                                class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-150 cursor-pointer"
+                                :class="[
+                                    isCurrent(soal.nomor_global)
+                                        ? 'bg-secondary text-on-secondary shadow-xs ring-2 ring-secondary/30'
+                                        : isAnswered(soal)
+                                            ? 'bg-success-container text-on-success-container border border-success hover:bg-success hover:text-on-success'
+                                            : 'bg-surface-container-low text-text-body border border-outline-variant hover:bg-surface-container-highest'
+                                ]"
+                            >
+                                {{ soal.nomor_global }}
+                            </button>
+                        </div>
                     </div>
-                </div>
+                </section>
             </div>
         </template>
 

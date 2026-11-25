@@ -67,7 +67,7 @@ const emit = defineEmits([
             <button
                 v-if="activeScope !== 'all' || searchQuery"
                 type="button"
-                class="inline-flex items-center gap-1.5 text-label-md font-medium text-secondary hover:underline"
+                class="inline-flex items-center gap-1.5 text-label-md font-semibold text-secondary hover:underline"
                 @click="emit('reset')"
             >
                 <IconX :size="15" />

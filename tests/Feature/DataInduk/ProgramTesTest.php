@@ -103,6 +103,25 @@ class ProgramTesTest extends TestCase
         ])->assertSessionHasErrors('nama');
     }
 
+    public function test_program_tes_dipakai_ujian_aktif_tidak_dapat_diperbarui(): void
+    {
+        $this->masukSebagai('admin');
+
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+
+        $this->put("/admin/data-induk/program-tes/{$programTes->id}", [
+            'nama' => 'EPT Diubah',
+            'batas_pelanggaran' => $programTes->batas_pelanggaran,
+            'deskripsi' => $programTes->deskripsi,
+            'aktif' => true,
+        ])->assertSessionHasErrors('nama');
+
+        $this->assertDatabaseHas('program_tes', [
+            'id' => $programTes->id,
+            'nama' => 'EPT',
+        ]);
+    }
+
     public function test_admin_dapat_menghapus_program_tes_belum_dipakai(): void
     {
         $this->masukSebagai('admin');
@@ -193,6 +212,7 @@ class ProgramTesTest extends TestCase
             'bank_soal_id' => $bankSoal->id,
             'judul' => 'Ujian Dengan Bank Tidak Sesuai',
             'mode' => 'tryout',
+            'lingkup' => 'umum',
             'durasi_menit' => 60,
         ])->assertSessionHasErrors('bank_soal_id');
 

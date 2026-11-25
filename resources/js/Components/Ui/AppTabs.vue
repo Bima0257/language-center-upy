@@ -49,7 +49,7 @@ function selectTab(tab) {
             role="tab"
             :aria-selected="isActive(tab)"
             :disabled="tab.disabled"
-            class="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full px-4 py-2 text-label-md font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+            class="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full px-4 py-2 text-label-md font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
             :class="isActive(tab)
                 ? 'bg-surface-white text-text-heading shadow-soft'
                 : 'text-text-muted hover:bg-surface-container-high hover:text-text-body'"

@@ -42,7 +42,7 @@ const panelId = computed(() => `materi-soal-panel-${props.group.materiSoal.id}`)
             <div class="flex flex-wrap items-center gap-2">
                 <button
                     type="button"
-                    class="flex min-w-0 items-center gap-2 rounded-xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
+                    class="flex min-w-0 items-center gap-2 rounded-xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 font-semibold"
                     :aria-expanded="isOpen"
                     :aria-controls="panelId"
                     :title="isOpen ? 'Sembunyikan soal materi' : 'Tampilkan soal materi'"
@@ -78,7 +78,7 @@ const panelId = computed(() => `materi-soal-panel-${props.group.materiSoal.id}`)
                     <button
                         type="button"
                         :disabled="bankLocked"
-                        class="p-1.5 text-text-muted transition-colors hover:text-secondary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-text-muted"
+                        class="p-1.5 text-text-muted transition-colors hover:text-secondary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-text-muted font-semibold"
                         title="Tambah soal pada materi"
                         aria-label="Tambah soal pada materi"
                         @click="$emit('add-soal', group.materiSoal)"
@@ -89,7 +89,7 @@ const panelId = computed(() => `materi-soal-panel-${props.group.materiSoal.id}`)
                         type="button"
                         :disabled="bankLocked"
                         :title="bankLocked ? 'Tidak bisa diubah karena bank soal sudah digunakan di ujian.' : 'Ubah materi soal'"
-                        class="p-1.5 text-text-muted transition-colors hover:text-secondary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-text-muted"
+                        class="p-1.5 text-text-muted transition-colors hover:text-secondary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-text-muted font-semibold"
                         @click="$emit('start-edit', group.materiSoal)"
                     >
                         <IconEdit :size="16" />
@@ -102,7 +102,7 @@ const panelId = computed(() => `materi-soal-panel-${props.group.materiSoal.id}`)
                             : group.soal.length > 0
                                 ? `Tidak bisa dihapus — materi soal dipakai ${group.soal.length} soal`
                                 : 'Hapus materi soal'"
-                        class="p-1.5 text-text-muted transition-colors hover:text-error-red disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-text-muted"
+                        class="p-1.5 text-text-muted transition-colors hover:text-error-red disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-text-muted font-semibold"
                         @click="$emit('delete-materi-soal', group.materiSoal)"
                     >
                         <IconTrash :size="16" />

@@ -31,7 +31,7 @@ const steps = [
                     </template>
                 </div>
                 <Link :href="route('logout')" method="post" as="button"
-                      class="flex items-center gap-2 text-text-muted hover:text-error-red transition-colors text-sm font-medium">
+                      class="flex items-center gap-2 text-text-muted hover:text-error-red transition-colors text-sm font-semibold">
                     <IconLogout :size="18" stroke="1.5" />
                     <span class="hidden md:inline">Keluar</span>
                 </Link>

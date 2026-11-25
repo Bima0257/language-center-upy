@@ -53,7 +53,12 @@ class InterpretasiSkorController extends Controller
         }
 
         $validated['program_tes_id'] = $skema->program_tes_id;
-        $this->layananDataInduk->buatInterpretasiSkor($validated);
+
+        try {
+            $this->layananDataInduk->buatInterpretasiSkor($validated);
+        } catch (\RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
 
         return back()->with('success', 'Interpretasi skor berhasil ditambahkan.');
     }
@@ -73,11 +78,15 @@ class InterpretasiSkorController extends Controller
             return back()->with('error', $exception->getMessage());
         }
 
-        $this->layananDataInduk->buatBanyakInterpretasiSkor(
-            $programTes,
-            $validated['interpretasi_skor'],
-            $skema->id,
-        );
+        try {
+            $this->layananDataInduk->buatBanyakInterpretasiSkor(
+                $programTes,
+                $validated['interpretasi_skor'],
+                $skema->id,
+            );
+        } catch (\RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
 
         return to_route('admin.data-induk.interpretasi-skor.program-tes.daftar', $programTes)
             ->with('success', 'Interpretasi skor berhasil ditambahkan.');
@@ -96,7 +105,11 @@ class InterpretasiSkorController extends Controller
         $data['skema_penilaian_id'] = $skema->id;
         $data['program_tes_id'] = $skema->program_tes_id;
 
-        $this->layananDataInduk->perbaruiInterpretasiSkor($interpretasiSkor, $data);
+        try {
+            $this->layananDataInduk->perbaruiInterpretasiSkor($interpretasiSkor, $data);
+        } catch (\RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
 
         return back()->with('success', 'Interpretasi skor berhasil diperbarui.');
     }
@@ -109,7 +122,11 @@ class InterpretasiSkorController extends Controller
             return back()->with('error', 'Interpretasi skor tidak terhubung ke skema penilaian.');
         }
 
-        $this->layananDataInduk->hapusInterpretasiSkor($interpretasiSkor);
+        try {
+            $this->layananDataInduk->hapusInterpretasiSkor($interpretasiSkor);
+        } catch (\RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
 
         return back()->with('success', 'Interpretasi skor berhasil dihapus.');
     }

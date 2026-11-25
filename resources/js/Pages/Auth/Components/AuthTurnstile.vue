@@ -109,7 +109,7 @@ defineExpose({ getResponse, reset });
             <span class="text-label-md text-text-muted">Verifikasi gagal dimuat.</span>
             <button
                 type="button"
-                class="text-label-md font-medium text-secondary hover:underline"
+                class="text-label-md font-semibold text-secondary hover:underline"
                 @click="retry"
             >
                 Coba lagi

@@ -29,6 +29,14 @@ class PerbaruiUjianRequest extends FormRequest
             'deskripsi' => ['nullable', 'string'],
             'mode' => ['required', 'in:tryout,official'],
             'durasi_menit' => ['required', 'integer', 'min:1', 'max:480'],
+            'lingkup' => ['required', 'in:umum,prodi'],
+            'program_studi_ids' => [
+                'exclude_unless:lingkup,prodi',
+                'array',
+                Rule::requiredIf(fn (): bool => $this->input('lingkup') === 'prodi'),
+                'min:1',
+            ],
+            'program_studi_ids.*' => ['uuid', 'exists:program_studi,id'],
             'aktif' => ['boolean'],
         ];
     }

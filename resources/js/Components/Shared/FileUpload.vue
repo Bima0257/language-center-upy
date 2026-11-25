@@ -133,7 +133,7 @@ function remove() {
                     <button
                         type="button"
                         @click.stop="remove"
-                        class="absolute -top-2 -right-2 w-6 h-6 bg-error-red text-on-error rounded-full flex items-center justify-center hover:bg-error-container hover:text-on-error-container transition-colors shadow-sm"
+                        class="absolute -top-2 -right-2 w-6 h-6 bg-error-red text-on-error rounded-full flex items-center justify-center hover:bg-error-container hover:text-on-error-container transition-colors shadow-xs font-semibold"
                         title="Hapus gambar"
                     >
                         <IconX :size="14" />
@@ -170,7 +170,7 @@ function remove() {
                 <button
                     type="button"
                     @click="remove"
-                     class="absolute -top-2 -right-2 w-6 h-6 bg-error-red text-on-error rounded-full flex items-center justify-center hover:bg-error-container hover:text-on-error-container transition-colors shadow-sm"
+                     class="absolute -top-2 -right-2 w-6 h-6 bg-error-red text-on-error rounded-full flex items-center justify-center hover:bg-error-container hover:text-on-error-container transition-colors shadow-xs font-semibold"
                     :title="mediaType === 'audio' ? 'Hapus audio' : 'Hapus gambar'"
                 >
                     <IconX :size="14" />

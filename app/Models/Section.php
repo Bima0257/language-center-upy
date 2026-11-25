@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string $nama
  * @property string|null $deskripsi
  * @property int $urutan
+ * @property int $durasi_menit
  * @property bool $aktif
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -27,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Soal> $soal
  * @property-read Collection<int, PartUjian> $partUjian
  * @property-read KebijakanMateriSoal|null $kebijakanMateriSoal
+ * @property-read bool $dipakai_ujian_aktif
  */
 class Section extends Model
 {
@@ -40,6 +42,7 @@ class Section extends Model
         'nama',
         'deskripsi',
         'urutan',
+        'durasi_menit',
         'aktif',
     ];
 
@@ -47,6 +50,7 @@ class Section extends Model
     {
         return [
             'urutan' => 'integer',
+            'durasi_menit' => 'integer',
             'aktif' => 'boolean',
         ];
     }

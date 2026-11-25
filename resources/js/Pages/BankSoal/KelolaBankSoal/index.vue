@@ -132,7 +132,6 @@ function openDetail(bank) {
 
 function closeDetail() {
     showDetailModal.value = false;
-    detailBank.value = null;
 }
 
 function openCreate() {
@@ -151,10 +150,7 @@ function openCreate() {
 function submit() {
     form.post(route('pustaka-soal.bank-soal.simpan'), {
         preserveScroll: true,
-        onSuccess: () => {
-            closeModal();
-            form.reset();
-        },
+        onSuccess: closeModal,
     });
 }
 
@@ -179,8 +175,6 @@ function saveEdit() {
 
 function closeModal() {
     showModal.value = false;
-    editingBank.value = null;
-    editForm.reset();
 }
 
 async function destroy(bank) {

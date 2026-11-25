@@ -12,7 +12,8 @@ class SertifikatRepository implements SertifikatRepositoryInterface
     {
         return Sertifikat::with([
             'sesiUjian.pengguna',
-            'sesiUjian.periodeUjian.ujian',
+            'sesiUjian.ujian',
+            'sesiUjian.slotUjian.periodeUjian.ujian',
             'sesiUjian.slotUjian',
         ])->orderBy('diterbitkan_pada', 'desc')->get();
     }

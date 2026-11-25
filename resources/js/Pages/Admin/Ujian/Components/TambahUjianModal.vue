@@ -8,6 +8,7 @@ defineProps({
     form: { type: Object, required: true },
     programTes: { type: Array, default: () => [] },
     bankSoalTersaring: { type: Array, default: () => [] },
+    programStudi: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(['close', 'submit']);
@@ -30,7 +31,7 @@ const emit = defineEmits(['close', 'submit']);
                         <button
                             type="button"
                             aria-label="Tutup form ujian"
-                            class="p-2 text-text-muted transition-colors hover:text-primary"
+                            class="p-2 text-text-muted transition-colors hover:text-primary font-semibold"
                             @click="emit('close')"
                         >
                             <IconX :size="20" />
@@ -47,6 +48,7 @@ const emit = defineEmits(['close', 'submit']);
                     :form="form"
                     :program-tes="programTes"
                     :bank-soal-tersaring="bankSoalTersaring"
+                    :program-studi="programStudi"
                     :creating="creating"
                     :show-actions="false"
                     @submit="emit('submit')"

@@ -45,7 +45,7 @@ const players = [
                     <BaseAvatar variant="neutral" :name="player.name" :size="40" />
                     <div class="flex-1 min-w-0">
                         <h6 class="text-label-md font-medium text-text-heading truncate">{{ player.name }}</h6>
-                        <p class="text-[11px] text-text-muted truncate">{{ player.role }}</p>
+                        <p class="text-xs text-text-muted truncate">{{ player.role }}</p>
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
                         <IconCoin :size="16" class="text-warning" />

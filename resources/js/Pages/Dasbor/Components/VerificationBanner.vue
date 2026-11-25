@@ -26,7 +26,7 @@ defineProps({
             </p>
             <Link
                 :href="href"
-                class="inline-block mt-3 bg-warning text-on-warning px-5 py-2 rounded-full text-label-md font-medium hover:bg-warning-container hover:text-on-warning-container transition-colors active:scale-95"
+                class="inline-block mt-3 bg-warning text-on-warning px-5 py-2 rounded-full text-label-md font-semibold hover:bg-warning-container hover:text-on-warning-container transition-colors active:scale-95"
             >
                 Verifikasi Sekarang
             </Link>

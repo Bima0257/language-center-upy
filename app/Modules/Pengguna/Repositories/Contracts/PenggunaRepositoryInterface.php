@@ -23,7 +23,11 @@ interface PenggunaRepositoryInterface
 
     public function findOrFail(string $id): Pengguna;
 
+    public function temukanUntukUpdate(string $id): Pengguna;
+
     public function penggunaMenungguVerifikasi(): Collection;
+
+    public function memilikiProfilDenganProgramStudi(string $programStudiId): bool;
 
     public function temukanDenganEmail(string $email): ?Pengguna;
 

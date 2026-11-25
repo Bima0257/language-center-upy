@@ -17,7 +17,7 @@ defineProps({
             >
                 <div>
                     <p class="font-medium text-text-heading">
-                        {{ sesi.slot_ujian?.periode_ujian?.ujian?.judul }}
+                        {{ sesi.ujian?.judul || sesi.slot_ujian?.periode_ujian?.ujian?.judul }}
                     </p>
                     <p class="text-label-md text-text-muted">
                         {{

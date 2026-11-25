@@ -45,7 +45,7 @@ const emit = defineEmits(["update:rich-text"]);
             <div class="space-y-3">
                 <BaseMediaLoader :loading="mediaLoading" media-type="image">
                     <img
-                        src="/assets/image/default-materiSoal.png"
+                        src="/assets/image/placeholder/default-passage.png"
                         alt="Contoh media"
                         class="h-36 w-full rounded-xl object-cover"
                     />

@@ -6,6 +6,7 @@ use App\Models\KebijakanMateriSoal;
 use App\Models\Pengguna;
 use App\Models\ProgramTes;
 use App\Models\Section;
+use App\Models\Ujian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -56,6 +57,7 @@ class SectionTest extends TestCase
     public function test_admin_dapat_menyimpan_urutan_section(): void
     {
         $this->masukSebagai('admin');
+        Ujian::query()->update(['aktif' => false]);
         $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
         $section = Section::where('program_tes_id', $programTes->id)
             ->orderBy('urutan')
@@ -138,6 +140,7 @@ class SectionTest extends TestCase
         $this->post('/admin/data-induk/section', [
             'program_tes_id' => $programTes->id,
             'nama' => 'Speaking',
+            'durasi_menit' => 30,
             'aktif' => true,
         ])->assertRedirect();
 
@@ -156,6 +159,7 @@ class SectionTest extends TestCase
         $this->post('/admin/data-induk/section', [
             'program_tes_id' => $programTes->id,
             'nama' => 'Speaking Audio',
+            'durasi_menit' => 30,
             'aktif' => true,
             'ketentuan_materi' => 'required',
             'aturan_media' => [
@@ -184,6 +188,7 @@ class SectionTest extends TestCase
         $this->post('/admin/data-induk/section', [
             'program_tes_id' => $programTes->id,
             'nama' => 'Policy Kontradiktif',
+            'durasi_menit' => 30,
             'aktif' => true,
             'ketentuan_materi' => 'optional',
             'aturan_media' => [
@@ -204,6 +209,7 @@ class SectionTest extends TestCase
         $this->post('/admin/data-induk/section', [
             'program_tes_id' => $programTes->id,
             'nama' => 'Policy Yang Dikosongkan',
+            'durasi_menit' => 30,
             'aktif' => true,
             'ketentuan_materi' => 'required',
             'aturan_media' => [
@@ -218,6 +224,7 @@ class SectionTest extends TestCase
         $this->put("/admin/data-induk/section/{$section->id}", [
             'nama' => $section->nama,
             'deskripsi' => null,
+            'durasi_menit' => 30,
             'aktif' => true,
             'ketentuan_materi' => null,
             'aturan_media' => [
@@ -240,6 +247,7 @@ class SectionTest extends TestCase
         $this->post('/admin/data-induk/section', [
             'program_tes_id' => $programTes->id,
             'nama' => 'Section Dengan Policy',
+            'durasi_menit' => 30,
             'aktif' => true,
             'ketentuan_materi' => 'required',
             'aturan_media' => [
@@ -270,6 +278,7 @@ class SectionTest extends TestCase
         $this->post('/admin/data-induk/section', [
             'program_tes_id' => $programTes->id,
             'nama' => 'Reading',
+            'durasi_menit' => 30,
             'aktif' => true,
         ])->assertSessionHasErrors('nama');
     }
@@ -286,6 +295,7 @@ class SectionTest extends TestCase
         $this->put("/admin/data-induk/section/{$target->id}", [
             'nama' => $target->nama,
             'urutan' => $section->first()->urutan,
+            'durasi_menit' => 30,
             'aktif' => $target->aktif,
         ])->assertSessionHasErrors('urutan');
     }
@@ -303,6 +313,7 @@ class SectionTest extends TestCase
         $this->post('/admin/data-induk/section', [
             'program_tes_id' => $programTes->id,
             'nama' => 'Reading',
+            'durasi_menit' => 30,
             'aktif' => true,
         ])->assertRedirect();
 
@@ -316,11 +327,13 @@ class SectionTest extends TestCase
     public function test_kode_section_tidak_dapat_diubah(): void
     {
         $this->masukSebagai('admin');
+        Ujian::query()->update(['aktif' => false]);
         $section = Section::where('nama', 'Reading')->firstOrFail();
         $kodeAwal = $section->kode;
 
         $this->put("/admin/data-induk/section/{$section->id}", [
             'nama' => 'Reading Updated',
+            'durasi_menit' => 30,
             'aktif' => true,
         ])->assertRedirect()->assertSessionDoesntHaveErrors();
 
@@ -339,6 +352,7 @@ class SectionTest extends TestCase
         $this->post('/admin/data-induk/section', [
             'program_tes_id' => $programTes->id,
             'nama' => 'Speaking',
+            'durasi_menit' => 30,
             'aktif' => true,
         ])->assertRedirect();
 
@@ -350,9 +364,60 @@ class SectionTest extends TestCase
         $this->post('/admin/data-induk/section', [
             'program_tes_id' => $programTes->id,
             'nama' => 'Writing',
+            'durasi_menit' => 30,
             'aktif' => true,
         ])->assertRedirect();
 
         $this->assertNotSame($kodeDihapus, Section::where('nama', 'Writing')->firstOrFail()->kode);
+    }
+
+    public function test_section_dipakai_ujian_aktif_tidak_dapat_diperbarui(): void
+    {
+        $this->masukSebagai('admin');
+        $section = Section::where('nama', 'Reading')->firstOrFail();
+
+        $this->put("/admin/data-induk/section/{$section->id}", [
+            'nama' => 'Reading Baru',
+            'durasi_menit' => 30,
+            'aktif' => true,
+        ])->assertSessionHasErrors('nama');
+
+        $this->assertDatabaseHas('section', [
+            'id' => $section->id,
+            'nama' => 'Reading',
+        ]);
+    }
+
+    public function test_urutan_section_tidak_dapat_diubah_saat_ujian_aktif(): void
+    {
+        $this->masukSebagai('admin');
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $ids = Section::where('program_tes_id', $programTes->id)
+            ->orderBy('urutan')
+            ->pluck('id')
+            ->all();
+
+        $this->post('/admin/data-induk/section/urutkan', [
+            'section' => array_reverse($ids),
+            'program_tes_id' => $programTes->id,
+        ])->assertSessionHasErrors('section');
+    }
+
+    public function test_section_dapat_diperbarui_setelah_ujian_dinonaktifkan(): void
+    {
+        $this->masukSebagai('admin');
+        Ujian::query()->update(['aktif' => false]);
+        $section = Section::where('nama', 'Reading')->firstOrFail();
+
+        $this->put("/admin/data-induk/section/{$section->id}", [
+            'nama' => 'Reading Setelah Nonaktif',
+            'durasi_menit' => 30,
+            'aktif' => true,
+        ])->assertRedirect()->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('section', [
+            'id' => $section->id,
+            'nama' => 'Reading Setelah Nonaktif',
+        ]);
     }
 }

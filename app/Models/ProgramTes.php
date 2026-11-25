@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, AturanPenilaian> $aturanPenilaian
  * @property-read Collection<int, InterpretasiSkor> $interpretasiSkor
  * @property-read Collection<int, SkemaPenilaian> $skemaPenilaian
+ * @property-read int $ujian_aktif_count
  */
 class ProgramTes extends Model
 {

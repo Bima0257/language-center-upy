@@ -27,4 +27,20 @@ class JawabanRepository implements JawabanRepositoryInterface
             ->where('soal_id', $soalId)
             ->first();
     }
+
+    /**
+     * @param  array<int, string>  $soalIds
+     */
+    public function hitungTerjawab(string $sesiId, array $soalIds): int
+    {
+        if ($soalIds === []) {
+            return 0;
+        }
+
+        return Jawaban::where('sesi_ujian_id', $sesiId)
+            ->whereIn('soal_id', $soalIds)
+            ->whereNotNull('teks_jawaban')
+            ->where('teks_jawaban', '<>', '')
+            ->count();
+    }
 }

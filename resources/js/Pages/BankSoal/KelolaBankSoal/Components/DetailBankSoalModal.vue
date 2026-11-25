@@ -29,7 +29,7 @@ const emit = defineEmits(['close']);
                 <div class="px-8 py-4">
                     <div class="flex items-center justify-between gap-4">
                         <h2 id="detail-bank-soal-title" class="text-headline-md font-bold text-text-heading">Detail Bank Soal</h2>
-                        <button type="button" aria-label="Tutup detail bank soal" class="p-2 text-text-muted transition-colors hover:text-primary" @click="emit('close')">
+                        <button type="button" aria-label="Tutup detail bank soal" class="p-2 text-text-muted transition-colors hover:text-primary font-semibold" @click="emit('close')">
                             <IconX :size="20" />
                         </button>
                     </div>

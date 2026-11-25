@@ -29,7 +29,7 @@ function namaPartRingkas(namaSection, namaPart) {
     <div
         class="w-full max-w-3xl overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-white shadow-standard dark:bg-surface-container"
     >
-        <div class="flex items-center gap-2.5 bg-primary px-5 py-3.5 text-on-primary">
+        <div class="flex items-center gap-2.5 bg-primary px-5 py-3.5 text-on-primary dark:bg-primary-container dark:text-on-primary-container">
             <IconInfoCircle :size="18" class="shrink-0" />
             <div class="min-w-0">
                 <span
@@ -85,7 +85,7 @@ function namaPartRingkas(namaSection, namaPart) {
                     <div class="flex items-center gap-2">
                         <span class="min-w-0 truncate text-sm font-bold text-text-heading">{{ section.nama }}</span>
                         <span class="ml-auto shrink-0 text-xs text-text-muted"
-                            >{{ section.jumlahSoal }} soal</span
+                            >{{ section.jumlahSoal }} soal<template v-if="section.durasi_menit"> · {{ section.durasi_menit }} menit</template></span
                         >
                     </div>
                     <div class="flex flex-wrap gap-x-3 gap-y-1 pt-1 text-xs text-text-muted">
@@ -101,7 +101,7 @@ function namaPartRingkas(namaSection, namaPart) {
             <div class="flex items-center justify-end gap-2 border-t border-outline-variant/40 pt-3">
                 <button
                     @click="emit('next')"
-                    class="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-on-primary shadow-md transition-all duration-150 hover:bg-primary/90 active:scale-[0.98]"
+                    class="inline-flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-2 text-xs font-semibold text-on-accent shadow-md transition-all duration-150 hover:bg-accent/90 active:scale-[0.98]"
                 >
                     Mulai <IconArrowRight :size="14" />
                 </button>

@@ -49,7 +49,7 @@ interface PenjadwalanRepositoryInterface
     /**
      * @return Collection<int, PeriodeUjian>
      */
-    public function semuaAktifDenganUjianDanSlot(): Collection;
+    public function semuaAktifDenganUjianDanSlot(?string $programStudiId = null): Collection;
 
     public function create(array $data): PeriodeUjian;
 

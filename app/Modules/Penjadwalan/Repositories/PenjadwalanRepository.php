@@ -2,10 +2,13 @@
 
 namespace App\Modules\Penjadwalan\Repositories;
 
+use App\Enums\LingkupUjian;
+use App\Enums\ModeUjian;
 use App\Enums\StatusPendaftaranUjian;
 use App\Models\PeriodeUjian;
 use App\Modules\Penjadwalan\Repositories\Contracts\PenjadwalanRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 
@@ -115,7 +118,9 @@ class PenjadwalanRepository implements PenjadwalanRepositoryInterface
     ): Collection {
         return PeriodeUjian::query()
             ->where('aktif', true)
-            ->whereHas('ujian', fn ($query) => $query->where('aktif', true))
+            ->whereHas('ujian', fn ($query) => $query
+                ->where('aktif', true)
+                ->where('mode', ModeUjian::OFFICIAL))
             ->when($programTesId !== null, fn ($query) => $query->whereHas(
                 'ujian',
                 fn ($ujian) => $ujian->where('program_tes_id', $programTesId),
@@ -129,15 +134,43 @@ class PenjadwalanRepository implements PenjadwalanRepositoryInterface
             ->get();
     }
 
-    public function semuaAktifDenganUjianDanSlot(): Collection
+    public function semuaAktifDenganUjianDanSlot(?string $programStudiId = null): Collection
     {
         return PeriodeUjian::query()
+            ->select(['id', 'ujian_id', 'judul', 'tanggal_mulai', 'tanggal_selesai', 'aktif'])
             ->where('aktif', true)
-            ->whereHas('ujian', fn ($query) => $query->where('aktif', true))
+            ->whereHas('ujian', function (Builder $query) use ($programStudiId): void {
+                $query->where('aktif', true)
+                    ->where('mode', ModeUjian::OFFICIAL);
+
+                if ($programStudiId !== null) {
+                    $query->where(function (Builder $scope) use ($programStudiId): void {
+                        $scope->where('lingkup', LingkupUjian::UMUM)
+                            ->orWhere(fn (Builder $inner) => $inner
+                                ->where('lingkup', LingkupUjian::PRODI)
+                                ->whereHas(
+                                    'programStudi',
+                                    fn (Builder $pivot) => $pivot->where('program_studi_id', $programStudiId),
+                                ));
+                    });
+                }
+            })
             ->with([
-                'ujian.programTes',
-                'periodePendaftaran',
+                'ujian:id,program_tes_id,judul,deskripsi,durasi_menit,mode,lingkup,aktif',
+                'ujian.programTes:id,kode,nama',
+                'ujian.programStudi:id,nama',
+                'periodePendaftaran:id,periode_ujian_id,nama,dibuka_pada,ditutup_pada,aktif,catatan',
                 'slotUjian' => fn ($query) => $query
+                    ->select([
+                        'id',
+                        'periode_ujian_id',
+                        'tanggal',
+                        'waktu_mulai',
+                        'waktu_selesai',
+                        'toleransi_keterlambatan_menit',
+                        'kapasitas_peserta',
+                        'aktif',
+                    ])
                     ->where('aktif', true)
                     ->withCount([
                         'pendaftaranUjian as pendaftaran_disetujui_count' => fn ($pendaftaranQuery) => $pendaftaranQuery->where(

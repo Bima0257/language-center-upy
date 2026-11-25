@@ -2,11 +2,13 @@
 
 namespace App\Modules\PendaftaranUjian\Repositories;
 
+use App\Enums\ModeUjian;
 use App\Enums\StatusPendaftaranUjian;
 use App\Models\PendaftaranUjian;
 use App\Modules\PendaftaranUjian\Repositories\Contracts\PendaftaranUjianRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class PendaftaranUjianRepository implements PendaftaranUjianRepositoryInterface
 {
@@ -20,6 +22,22 @@ class PendaftaranUjianRepository implements PendaftaranUjianRepositoryInterface
         return $this->queryDenganRelasi()
             ->where('pengguna_id', $penggunaId)
             ->findOrFail($id);
+    }
+
+    public function riwayatUntukPengguna(string $penggunaId): Collection
+    {
+        return PendaftaranUjian::query()
+            ->select(['id', 'slot_ujian_id', 'status', 'catatan_admin', 'created_at'])
+            ->with([
+                'slotUjian:id,periode_ujian_id,tanggal,waktu_mulai,waktu_selesai',
+                'slotUjian.periodeUjian:id,ujian_id,judul',
+                'slotUjian.periodeUjian.ujian:id,judul,program_tes_id',
+                'slotUjian.periodeUjian.ujian.programTes:id,kode,nama',
+            ])
+            ->where('pengguna_id', $penggunaId)
+            ->where('status', '!=', StatusPendaftaranUjian::CANCELLED->value)
+            ->latest('created_at')
+            ->get();
     }
 
     public function temukanUntukSlotDanPengguna(string $slotUjianId, string $penggunaId): ?PendaftaranUjian
@@ -50,6 +68,10 @@ class PendaftaranUjianRepository implements PendaftaranUjianRepositoryInterface
     public function paginate(array $filters, int $perPage = 15): LengthAwarePaginator
     {
         return $this->queryDenganRelasi()
+            ->whereHas(
+                'slotUjian.periodeUjian.ujian',
+                fn (Builder $query) => $query->where('mode', ModeUjian::OFFICIAL),
+            )
             ->when($filters['program_tes_id'] ?? null, fn ($query, $programTesId) => $query->whereHas(
                 'slotUjian.periodeUjian.ujian',
                 fn ($ujianQuery) => $ujianQuery->where('program_tes_id', $programTesId),
@@ -78,6 +100,69 @@ class PendaftaranUjianRepository implements PendaftaranUjianRepositoryInterface
             ->latest('created_at')
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    public function ringkasanStatusPerUjian(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        $status = $filters['status'] ?? null;
+        $statusValue = $status instanceof StatusPendaftaranUjian ? $status->value : $status;
+
+        return PendaftaranUjian::query()
+            ->join('slot_ujian', 'slot_ujian.id', '=', 'pendaftaran_ujian.slot_ujian_id')
+            ->join('periode_ujian', 'periode_ujian.id', '=', 'slot_ujian.periode_ujian_id')
+            ->join('ujian', 'ujian.id', '=', 'periode_ujian.ujian_id')
+            ->join('program_tes', 'program_tes.id', '=', 'ujian.program_tes_id')
+            ->select([
+                'ujian.id as id',
+                'ujian.judul as judul',
+                'ujian.mode as mode',
+                'ujian.program_tes_id as program_tes_id',
+                'program_tes.nama as program_tes_nama',
+            ])
+            ->selectRaw('COUNT(pendaftaran_ujian.id) as jumlah_pendaftaran')
+            ->selectRaw('COUNT(CASE WHEN pendaftaran_ujian.status = ? THEN 1 END) as pending_count', [StatusPendaftaranUjian::PENDING->value])
+            ->selectRaw('COUNT(CASE WHEN pendaftaran_ujian.status = ? THEN 1 END) as approved_count', [StatusPendaftaranUjian::APPROVED->value])
+            ->selectRaw('COUNT(CASE WHEN pendaftaran_ujian.status = ? THEN 1 END) as rejected_count', [StatusPendaftaranUjian::REJECTED->value])
+            ->selectRaw('COUNT(CASE WHEN pendaftaran_ujian.status = ? THEN 1 END) as cancelled_count', [StatusPendaftaranUjian::CANCELLED->value])
+            ->where('ujian.mode', ModeUjian::OFFICIAL)
+            ->when($filters['program_tes_id'] ?? null, fn ($query, $programTesId) => $query->where(
+                'ujian.program_tes_id',
+                $programTesId,
+            ))
+            ->when(filled($filters['search'] ?? null), function ($query) use ($filters): void {
+                $search = (string) ($filters['search'] ?? '');
+
+                $query->where(function ($query) use ($search): void {
+                    $query->where('ujian.judul', 'like', "%{$search}%")
+                        ->orWhere('program_tes.nama', 'like', "%{$search}%");
+                });
+            })
+            ->when(filled($statusValue), fn ($query) => $query->havingRaw(
+                'COUNT(CASE WHEN pendaftaran_ujian.status = ? THEN 1 END) > 0',
+                [$statusValue],
+            ))
+            ->groupBy([
+                'ujian.id',
+                'ujian.judul',
+                'ujian.mode',
+                'ujian.program_tes_id',
+                'program_tes.nama',
+            ])
+            ->orderBy('program_tes.nama')
+            ->orderBy('ujian.judul')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn (PendaftaranUjian $row): array => [
+                'id' => (string) $row->getAttribute('id'),
+                'judul' => (string) $row->getAttribute('judul'),
+                'mode' => (string) $row->getAttribute('mode'),
+                'programTesNama' => (string) $row->getAttribute('program_tes_nama'),
+                'jumlahPendaftaran' => (int) $row->getAttribute('jumlah_pendaftaran'),
+                'pendingCount' => (int) $row->getAttribute('pending_count'),
+                'approvedCount' => (int) $row->getAttribute('approved_count'),
+                'rejectedCount' => (int) $row->getAttribute('rejected_count'),
+                'cancelledCount' => (int) $row->getAttribute('cancelled_count'),
+            ]);
     }
 
     public function hitungDisetujui(string $slotUjianId): int

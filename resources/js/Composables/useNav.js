@@ -38,13 +38,19 @@ export function getNav(roles, permissions = []) {
                 permission: "ujian.tersedia",
             },
             {
-                label: "Ujian",
+                label: "Ujian Resmi",
                 icon: IconCalendarEvent,
-                route: "ujian.jadwal",
-                permission: "ujian.jadwal",
+                route: "ujian.resmi",
+                permission: "ujian.resmi",
             },
             {
-                label: "Riwayat Tryout",
+                label: "Pendaftaran Ujian",
+                icon: IconFileDescription,
+                route: "ujian.pendaftaran.daftar",
+                permission: "ujian.pendaftaran.daftar",
+            },
+            {
+                label: "Riwayat Ujian",
                 icon: IconHistory,
                 route: "ujian.riwayat",
                 permission: "ujian.riwayat",
@@ -339,33 +345,36 @@ export function getBreadcrumbs(title) {
     const items = [{ label: "Dasbor", route: "dasbor" }];
 
     let best = null;
-    let bestBase = "";
+    let bestScore = -1;
+
+    const consider = (item, parent = null) => {
+        if (!item?.route) return;
+
+        let score = -1;
+
+        if (isActiveRoute(item.route)) {
+            score = 100000 + item.route.length;
+        } else if (routeName) {
+            const base = baseOf(item.route);
+
+            if (routeMatches(routeName, base)) {
+                score = base.length;
+            }
+        }
+
+        if (score > bestScore) {
+            bestScore = score;
+            best = { parent, child: item };
+        }
+    };
 
     for (const item of getNav(roles, permissions)) {
         if (item.children) {
             for (const child of item.children) {
-                const childBase = baseOf(child.route);
-                if (
-                    isActiveRoute(child.route) ||
-                    (routeName && routeMatches(routeName, childBase))
-                ) {
-                    if (childBase.length > bestBase.length) {
-                        bestBase = childBase;
-                        best = { parent: item, child };
-                    }
-                }
+                consider(child, item);
             }
         } else {
-            const base = baseOf(item.route);
-            if (
-                isActiveRoute(item.route) ||
-                (routeName && routeMatches(routeName, base))
-            ) {
-                if (base.length > bestBase.length) {
-                    bestBase = base;
-                    best = { parent: null, child: item };
-                }
-            }
+            consider(item);
         }
     }
 
@@ -376,7 +385,7 @@ export function getBreadcrumbs(title) {
         items.push({ label: best.child.label, route: best.child.route });
     }
 
-    if (title) {
+    if (title && best?.child?.label !== title) {
         items.push({ label: title });
     }
 

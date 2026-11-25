@@ -46,7 +46,7 @@ const icon = computed(() => {
                 </div>
                 <p id="upload-progress-description" class="mb-6 text-body-md text-text-body">{{ label }}</p>
                 <div class="h-2.5 overflow-hidden rounded-full bg-surface-container">
-                    <div class="progress-bar-animated h-full w-1/3 rounded-full bg-primary-container"></div>
+                    <div class="progress-bar-animated h-full w-1/3 rounded-full bg-primary-container dark:bg-primary"></div>
                 </div>
                 <p class="mt-4 text-label-md text-text-muted">
                     File besar bisa memakan waktu beberapa detik. Mohon jangan tutup halaman ini.

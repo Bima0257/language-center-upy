@@ -39,7 +39,7 @@ const emit = defineEmits(['update:modelValue', 'toggle-password']);
                 :autocomplete="autocomplete"
                 :placeholder="placeholder"
                 :class="[
-                    'w-full pl-11 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md transition-all placeholder:text-text-muted focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]',
+                    'w-full pl-11 py-3 bg-surface-container-lowest border border-outline-variant rounded-2xl text-body-md transition-all placeholder:text-text-muted focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20',
                     inputTextClass,
                     passwordToggle ? 'pr-12' : 'pr-4',
                 ]"
@@ -48,7 +48,7 @@ const emit = defineEmits(['update:modelValue', 'toggle-password']);
             <button
                 v-if="passwordToggle"
                 type="button"
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
+                class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors font-semibold"
                 :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
                 @click="emit('toggle-password')"
             >

@@ -49,7 +49,7 @@ const columns = [
     {
         accessorKey: 'ujian',
         header: 'Ujian',
-        cell: info => info.row.original.slot_ujian?.periode_ujian?.ujian?.judul || '-',
+        cell: info => info.row.original.ujian?.judul || info.row.original.slot_ujian?.periode_ujian?.ujian?.judul || '-',
     },
     {
         accessorKey: 'status',

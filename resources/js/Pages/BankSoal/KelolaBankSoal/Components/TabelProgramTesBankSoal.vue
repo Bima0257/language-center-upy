@@ -27,7 +27,7 @@ const tableColumns = computed(() => [
                     href: route('pustaka-soal.bank-soal.program-tes', row.id),
                     variant: 'secondary',
                     size: 'sm',
-                    class: '!p-2',
+                    class: 'p-2!',
                     title: 'Lihat detail program tes',
                     'aria-label': 'Lihat detail program tes',
                 },

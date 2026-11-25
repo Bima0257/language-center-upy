@@ -1,4 +1,5 @@
 <script setup>
+import { watch } from 'vue';
 import RichTextEditor from '@/Components/Shared/RichTextEditor.vue';
 import { IconX } from '@tabler/icons-vue';
 
@@ -10,6 +11,17 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close', 'submit']);
+
+watch(
+    () => props.form.tingkat_cefr,
+    (value) => {
+        const uppercased = String(value ?? '').toUpperCase();
+
+        if (value !== uppercased) {
+            props.form.tingkat_cefr = uppercased;
+        }
+    },
+);
 </script>
 
 <template>
@@ -24,7 +36,7 @@ const emit = defineEmits(['close', 'submit']);
                 <div class="px-8 py-4">
                     <div class="flex items-center justify-between">
                          <h2 id="interpretasi-skor-modal-title" class="text-headline-md font-bold text-text-heading">{{ props.editing ? 'Ubah Interpretasi Skor' : 'Tambah Interpretasi' }}</h2>
-                         <button type="button" aria-label="Tutup form interpretasi skor" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
+                         <button type="button" aria-label="Tutup form interpretasi skor" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors font-semibold">
                             <IconX :size="20" />
                         </button>
                     </div>
@@ -79,10 +91,13 @@ const emit = defineEmits(['close', 'submit']);
                     <p v-if="props.form.errors.deskripsi" class="text-error-red text-xs mt-1">{{ props.form.errors.deskripsi }}</p>
                 </div>
 
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" v-model="props.form.lulus" class="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-secondary" />
-                    <span class="text-label-md text-text-body">Merupakan nilai LULUS</span>
-                </label>
+                <BaseToggle
+                    :model-value="props.form.lulus"
+                    label="Status lulus"
+                    on-label="LULUS"
+                    off-label="TIDAK LULUS"
+                    @update:model-value="props.form.lulus = $event"
+                />
             </form>
         </template>
         <template #footer>

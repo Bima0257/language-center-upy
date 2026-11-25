@@ -51,6 +51,12 @@ class ProfilController extends Controller
 
         $user = $request->user();
 
+        if ($user->sesiUjian()->exists() || $user->pendaftaranUjian()->exists()) {
+            return Redirect::back()->withErrors([
+                'password' => 'Akun tidak dapat dihapus karena memiliki riwayat ujian.',
+            ]);
+        }
+
         Auth::logout();
 
         $user->delete();

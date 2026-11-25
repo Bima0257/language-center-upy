@@ -28,7 +28,7 @@ const emit = defineEmits(['close', 'submit']);
                         </h2>
                         <button
                             type="button"
-                            class="p-2 text-text-muted transition-colors hover:text-primary"
+                            class="p-2 text-text-muted transition-colors hover:text-primary font-semibold"
                             aria-label="Tutup modal periode ujian"
                             @click="emit('close')"
                         >

@@ -30,10 +30,10 @@ onMounted(() => {
 </script>
 
 <template>
-    <nav v-bind="$attrs" class="bg-surface-white w-full px-4 md:px-app-margin py-4 shadow-sm sticky top-0 z-50">
+    <nav v-bind="$attrs" class="bg-surface-white w-full px-4 md:px-app-margin py-4 shadow-xs sticky top-0 z-50">
         <div class="flex justify-between items-center max-w-7xl mx-auto w-full">
             <div class="flex items-center gap-2">
-                <img :src="isDark ? '/assets/image/logo-white.png' : '/assets/image/logo-dark.png'" alt="UPY Language Test" class="h-10 w-auto object-contain" />
+                <img src="/assets/image/brand/logo-upy.png" alt="UPY Language Test" class="h-10 w-auto object-contain" />
                 <span class="hidden sm:inline text-headline-md font-bold text-text-heading">UPY Language Test</span>
             </div>
 
@@ -50,7 +50,7 @@ onMounted(() => {
                     <input class="bg-transparent border-none text-text-body text-body-md focus:ring-0 p-0 w-32 placeholder:text-text-muted text-sm" placeholder="Cari..." type="text" />
                 </div>
                 <button @click="toggleTheme"
-                        class="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-surface-container-low"
+                        class="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-surface-container-low font-semibold"
                         :title="isDark ? 'Mode Terang' : 'Mode Gelap'">
                     <IconSun v-if="isDark" :size="18" class="text-text-body transition-transform hover:rotate-90" />
                     <IconMoon v-else :size="18" class="text-text-body transition-transform hover:rotate-12" />
@@ -59,11 +59,11 @@ onMounted(() => {
                     <Link :href="route('login')" class="px-5 py-2 text-primary font-bold text-label-md hover:opacity-80 transition-opacity">
                         Masuk
                     </Link>
-                    <Link :href="route('register')" class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full font-bold text-label-md active:scale-95 transition-transform hover:opacity-90">
+                    <Link :href="route('register')" class="bg-accent text-on-accent px-6 py-2.5 rounded-full font-bold text-label-md active:scale-95 transition-transform hover:bg-accent/90">
                         Daftar
                     </Link>
                 </div>
-                <button class="md:hidden p-1" @click="mobileMenuOpen = !mobileMenuOpen">
+                <button class="md:hidden p-1 font-semibold" @click="mobileMenuOpen = !mobileMenuOpen">
                     <IconMenu2 v-if="!mobileMenuOpen" class="text-primary" :size="24" />
                     <IconX v-else class="text-primary" :size="24" />
                 </button>
@@ -78,7 +78,7 @@ onMounted(() => {
         <Link href="#about" class="block text-text-body text-text-body text-body-md py-2" @click="mobileMenuOpen = false">Tentang</Link>
         <hr class="border-outline-variant/30">
         <Link :href="route('login')" class="block text-primary font-bold text-label-md py-2">Masuk</Link>
-        <Link :href="route('register')" class="block bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full font-bold text-label-md text-center">
+        <Link :href="route('register')" class="block bg-accent text-on-accent px-6 py-2.5 rounded-full font-bold text-label-md text-center">
             Daftar
         </Link>
     </div>

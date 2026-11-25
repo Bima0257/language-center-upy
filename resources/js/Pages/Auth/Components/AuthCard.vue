@@ -19,7 +19,7 @@ onMounted(() => {
 
             <div>
                 <div class="flex items-center gap-3 mb-4 md:mb-8">
-                    <img src="/assets/image/logo-white.png" alt="UPY Language Test" class="h-10 w-10 object-contain rounded-xl" />
+                    <img src="/assets/image/brand/logo-upy.png" alt="UPY Language Test" class="h-10 w-10 object-contain rounded-xl" />
                     <span class="text-on-primary-container/90 text-headline-md font-bold tracking-tight">UPY Language Test</span>
                 </div>
                 <h2 class="text-on-primary-container/90 text-headline-md font-bold mb-3 leading-tight">{{ title }}</h2>
@@ -65,7 +65,7 @@ onMounted(() => {
         </div>
 
         <div class="flex-1 min-h-0 bg-surface p-6 md:p-10 flex flex-col justify-start overflow-y-auto overscroll-y-contain">
-            <div class="max-w-[520px] mx-auto w-full bg-surface-white shadow-sm rounded-2xl px-6 py-12 md:px-8 md:py-16">
+            <div class="max-w-[520px] mx-auto w-full bg-surface-white shadow-xs rounded-2xl px-6 py-12 md:px-8 md:py-16">
                 <slot />
             </div>
         </div>

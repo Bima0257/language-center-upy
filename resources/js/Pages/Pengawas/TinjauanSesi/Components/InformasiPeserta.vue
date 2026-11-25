@@ -43,7 +43,7 @@ function formatDateTime(value) {
             </div>
             <div>
                 <p class="text-text-muted text-label-md">Ujian</p>
-                <p class="text-text-heading">{{ props.sesiUjian.slot_ujian?.periode_ujian?.ujian?.judul }}</p>
+                <p class="text-text-heading">{{ props.sesiUjian.ujian?.judul || props.sesiUjian.slot_ujian?.periode_ujian?.ujian?.judul }}</p>
             </div>
             <div>
                 <p class="text-text-muted text-label-md">Status</p>

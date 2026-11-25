@@ -26,6 +26,7 @@ class UjianController extends Controller
             $request->validated()['program_tes_id'] ?? null,
         ) + [
             'bankSoal' => $this->layananUjian->bankSoalAktif(),
+            'programStudi' => $this->layananDataInduk->programStudiAktif(),
         ]);
     }
 
@@ -34,6 +35,7 @@ class UjianController extends Controller
         return Inertia::render('Admin/Ujian/create', $this->layananUjian->dataTambah() + [
             'programTes' => $this->layananDataInduk->programTesAktif(),
             'bankSoal' => $this->layananUjian->bankSoalAktif(),
+            'programStudi' => $this->layananDataInduk->programStudiAktif(),
         ]);
     }
 

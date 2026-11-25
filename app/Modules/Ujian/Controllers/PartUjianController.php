@@ -10,6 +10,7 @@ use App\Http\Requests\Ujian\SusunUlangSoalRequest;
 use App\Models\PartUjian;
 use App\Models\Ujian;
 use App\Modules\Ujian\Services\LayananPartUjian;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 
 class PartUjianController extends Controller
@@ -20,41 +21,70 @@ class PartUjianController extends Controller
 
     public function perbarui(PerbaruiPartRequest $request, Ujian $ujian, PartUjian $partUjian): RedirectResponse
     {
-        $this->layananPart->perbarui($ujian, $partUjian, $request->validated());
+        try {
+            $this->layananPart->perbarui($ujian, $partUjian, $request->validated());
+        } catch (\RuntimeException $exception) {
+            return $this->tanganiGagalUbah($exception);
+        }
 
         return back()->with('success', 'Part ujian diperbarui.');
     }
 
     public function hapus(Ujian $ujian, PartUjian $partUjian): RedirectResponse
     {
-        $this->layananPart->hapus($ujian, $partUjian);
+        try {
+            $this->layananPart->hapus($ujian, $partUjian);
+        } catch (\RuntimeException $exception) {
+            return $this->tanganiGagalUbah($exception);
+        }
 
         return back()->with('success', 'Part ujian dihapus.');
     }
 
     public function simpanSusunan(SimpanSusunanRequest $request, Ujian $ujian, PartUjian $partUjian): RedirectResponse
     {
-        $this->layananPart->simpanSusunan(
-            $ujian,
-            $partUjian,
-            $request->validated('urutan_part_soal') ?? [],
-            $request->validated('urutan_soal') ?? [],
-        );
+        try {
+            $this->layananPart->simpanSusunan(
+                $ujian,
+                $partUjian,
+                $request->validated('urutan_part_soal') ?? [],
+                $request->validated('urutan_soal') ?? [],
+            );
+        } catch (\RuntimeException $exception) {
+            return $this->tanganiGagalUbah($exception);
+        }
 
         return back()->with('success', 'Susunan part ujian disimpan.');
     }
 
     public function susunUlangSoal(SusunUlangSoalRequest $request, Ujian $ujian, PartUjian $partUjian): RedirectResponse
     {
-        $this->layananPart->susunUlangSoal($ujian, $partUjian, $request->validated('urutan'));
+        try {
+            $this->layananPart->susunUlangSoal($ujian, $partUjian, $request->validated('urutan'));
+        } catch (\RuntimeException $exception) {
+            return $this->tanganiGagalUbah($exception);
+        }
 
         return back()->with('success', 'Nomor soal diperbarui.');
     }
 
     public function susunUlangPartSoal(SusunUlangPartSoalRequest $request, Ujian $ujian, PartUjian $partUjian): RedirectResponse
     {
-        $this->layananPart->susunUlangPartSoal($ujian, $partUjian, $request->validated('urutan'));
+        try {
+            $this->layananPart->susunUlangPartSoal($ujian, $partUjian, $request->validated('urutan'));
+        } catch (\RuntimeException $exception) {
+            return $this->tanganiGagalUbah($exception);
+        }
 
         return back()->with('success', 'Urutan part soal diperbarui dan nomor soal disusun ulang.');
+    }
+
+    private function tanganiGagalUbah(\RuntimeException $exception): RedirectResponse
+    {
+        if ($exception instanceof ModelNotFoundException) {
+            throw $exception;
+        }
+
+        return back()->with('error', $exception->getMessage());
     }
 }

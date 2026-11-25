@@ -56,12 +56,9 @@ export function useConfirm() {
 
     function dismiss() {
         state.value = {
+            ...state.value,
             visible: false,
-            message: '',
-            type: 'confirm',
             resolve: null,
-            inputValue: '',
-            inputPlaceholder: '',
         }
     }
 

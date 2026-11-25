@@ -248,10 +248,6 @@ function openEditSection() {
 
 function closeSectionModal() {
     showSectionModal.value = false;
-    sectionYangDiedit.value = null;
-    creatingSection.value = false;
-    sectionForm.reset();
-    editSectionForm.reset();
 }
 
 function syncSectionSelection(pageResponse) {
@@ -353,10 +349,6 @@ function openEditPartSoal() {
 
 function closePartSoalModal() {
     showPartSoalModal.value = false;
-    partSoalYangDiedit.value = null;
-    creatingPartSoal.value = false;
-    partSoalForm.reset();
-    editPartSoalForm.reset();
 }
 
 function syncPartSoalSelection(pageResponse) {
@@ -818,7 +810,7 @@ async function deleteQuestion(id, text) {
                                 <button
                                     v-if="canManageSection"
                                     type="button"
-                                    class="mb-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
+                                    class="mb-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1 font-semibold"
                                     aria-label="Tambah section"
                                     title="Tambah section"
                                     @click="openCreateSection"
@@ -832,7 +824,7 @@ async function deleteQuestion(id, text) {
                     <button
                         v-else-if="canManageSection"
                         type="button"
-                        class="mb-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
+                        class="mb-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1 font-semibold"
                         aria-label="Tambah section"
                         title="Tambah section"
                         @click="openCreateSection"
@@ -842,7 +834,7 @@ async function deleteQuestion(id, text) {
 
                 </div>
 
-                <BaseCard :padding="false" class="!border-t-0 overflow-hidden">
+                <BaseCard :padding="false" class="border-t-0! overflow-hidden">
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3">
                         <div v-if="tabsPartSoal.length" class="inline-flex min-w-0 max-w-full items-center gap-1">
                             <BaseTabs
@@ -868,7 +860,7 @@ async function deleteQuestion(id, text) {
                             <button
                                 v-if="canManagePartSoal"
                                 type="button"
-                                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
+                                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1 font-semibold"
                                 aria-label="Tambah part soal"
                                 title="Tambah part soal"
                                 @click="openCreatePartSoal"
@@ -879,7 +871,7 @@ async function deleteQuestion(id, text) {
                         <button
                             v-else-if="canManagePartSoal"
                             type="button"
-                            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
+                            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-container-low hover:text-text-heading focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1 font-semibold"
                             aria-label="Tambah part soal"
                             title="Tambah part soal"
                             @click="openCreatePartSoal"
@@ -903,7 +895,7 @@ async function deleteQuestion(id, text) {
                                 <button
                                     v-if="search"
                                     type="button"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-text-muted transition-colors hover:text-text-heading"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-text-muted transition-colors hover:text-text-heading font-semibold"
                                     aria-label="Hapus pencarian"
                                     @click="search = ''"
                                 >
@@ -922,7 +914,7 @@ async function deleteQuestion(id, text) {
                         v-if="soal.data?.length === 0"
                         :icon="IconBook"
                         title="Tidak ada soal ditemukan."
-                        class="!rounded-none !border-0 !shadow-none"
+                        class="rounded-none! border-0! shadow-none!"
                     />
 
                     <EmptyState
@@ -930,7 +922,7 @@ async function deleteQuestion(id, text) {
                         :icon="IconSearch"
                         title="Tidak ada soal yang cocok dengan pencarian."
                         description="Coba kata kunci lain atau hapus pencarian."
-                        class="!rounded-none !border-0 !shadow-none"
+                        class="rounded-none! border-0! shadow-none!"
                     />
 
                     <KelompokSoalPustaka

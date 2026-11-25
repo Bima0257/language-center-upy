@@ -171,6 +171,11 @@ class Pengguna extends Authenticatable implements MustVerifyEmail
         return $this->hasRole('peserta');
     }
 
+    public function sudahMemakaiUjian(): bool
+    {
+        return $this->sesiUjian()->exists() || $this->pendaftaranUjian()->exists();
+    }
+
     public function batalkanSesiLain(): void
     {
         DB::table('sessions')

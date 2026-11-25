@@ -179,7 +179,11 @@ class DataIndukController extends Controller
 
     public function hapusFakultas(Fakultas $fakultas): RedirectResponse
     {
-        $this->layananDataInduk->hapusFakultas($fakultas);
+        try {
+            $this->layananDataInduk->hapusFakultas($fakultas);
+        } catch (\RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
 
         return back()->with('success', 'Fakultas berhasil dihapus.');
     }
@@ -225,7 +229,11 @@ class DataIndukController extends Controller
 
     public function hapusProgramStudi(ProgramStudi $programStudi): RedirectResponse
     {
-        $this->layananDataInduk->hapusProgramStudi($programStudi);
+        try {
+            $this->layananDataInduk->hapusProgramStudi($programStudi);
+        } catch (\RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
 
         return back()->with('success', 'Program studi berhasil dihapus.');
     }

@@ -46,7 +46,7 @@ class PustakaSoalTest extends TestCase
 
     private function bankSoalTerkunci(): BankSoal
     {
-        return BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
+        return BankSoal::where('nama', 'Bank Soal Ujian Resmi')->firstOrFail();
     }
 
     private function partMembaca(): PartSoal

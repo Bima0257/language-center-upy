@@ -6,11 +6,6 @@ import { IconCalendarEvent } from '@tabler/icons-vue';
 
 const props = defineProps({
     modelValue: { type: String, default: '' },
-    mode: {
-        type: String,
-        default: 'date',
-        validator: value => ['date', 'datetime'].includes(value),
-    },
     min: { type: String, default: '' },
     max: { type: String, default: '' },
     placeholder: { type: String, default: 'Pilih tanggal' },
@@ -49,11 +44,8 @@ function formatDate(value) {
     if (!(value instanceof Date) || Number.isNaN(value.getTime())) return '';
 
     const pad = number => String(number).padStart(2, '0');
-    const date = `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
 
-    if (props.mode === 'date') return date;
-
-    return `${date}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
+    return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
 }
 
 function syncTheme() {
@@ -67,19 +59,6 @@ const internalValue = computed({
 
 const minDate = computed(() => parseDate(props.min));
 const maxDate = computed(() => parseDate(props.max));
-const isDatetime = computed(() => props.mode === 'datetime');
-const displayFormat = computed(() => (isDatetime.value ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy'));
-const timeConfig = computed(() =>
-    isDatetime.value
-        ? { enableTimePicker: true, enableSeconds: false, is24: true }
-        : undefined,
-);
-
-const actionRow = computed(() =>
-    isDatetime.value
-        ? { selectBtnLabel: 'Pilih', cancelBtnLabel: 'Batal' }
-        : undefined,
-);
 
 onMounted(() => {
     syncTheme();
@@ -102,9 +81,9 @@ onUnmounted(() => {
         <VueDatePicker
             v-model="internalValue"
             :locale="localeId"
-            :formats="{ input: displayFormat }"
-            :time-config="timeConfig"
-            :auto-apply="!isDatetime"
+            :formats="{ input: 'dd/MM/yyyy' }"
+            :time-config="{ enableTimePicker: false }"
+            auto-apply
             :min-date="minDate"
             :max-date="maxDate"
             :placeholder="placeholder"
@@ -114,7 +93,6 @@ onUnmounted(() => {
             :config="{ allowPreventDefault: true }"
             :floating="{ strategy: 'fixed' }"
             :input-attrs="{ id: inputId ?? undefined, required, clearable: false }"
-            :action-row="actionRow"
             :ui="{ input: 'base-datepicker-input', menu: 'base-datepicker-menu' }"
         >
             <template #input-icon>

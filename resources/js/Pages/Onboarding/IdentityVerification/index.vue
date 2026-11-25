@@ -13,6 +13,7 @@ const props = defineProps({
     jenisPeserta: { type: String, default: 'mahasiswa' },
     opsiJenisPeserta: { type: Array, default: () => jenisPesertaOptions },
     bisaPilihJenis: { type: Boolean, default: true },
+    prodiTerkunci: { type: Boolean, default: false },
     fakultas: { type: Array, default: () => [] },
     programStudi: { type: Array, default: () => [] },
 });
@@ -78,7 +79,7 @@ function submit() {
                                 v-model="form.nomor_identitas"
                                 type="text"
                                 :placeholder="`Masukkan ${labelIdentitas}`"
-                                class="w-full rounded-xl border border-outline-variant px-4 py-3 text-body-md text-text-heading outline-none transition-all placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/10"
+                                class="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-body-md text-text-body outline-none transition-all placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/10"
                             />
                             <p v-if="form.errors.nomor_identitas" class="mt-1 text-xs text-error-red">{{ form.errors.nomor_identitas }}</p>
                         </div>
@@ -89,7 +90,7 @@ function submit() {
                                 v-model="form.institusi"
                                 type="text"
                                 placeholder="Nama institusi/instansi"
-                                class="w-full rounded-xl border border-outline-variant px-4 py-3 text-body-md text-text-heading outline-none transition-all placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/10"
+                                class="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-body-md text-text-body outline-none transition-all placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/10"
                             />
                             <p v-if="form.errors.institusi" class="mt-1 text-xs text-error-red">{{ form.errors.institusi }}</p>
                         </div>
@@ -103,6 +104,7 @@ function submit() {
                                     placeholder="Pilih fakultas"
                                     option-label="nama"
                                     option-value="id"
+                                    :disabled="prodiTerkunci"
                                 />
                                 <p v-if="form.errors.fakultas_id" class="mt-1 text-xs text-error-red">{{ form.errors.fakultas_id }}</p>
                             </div>
@@ -114,9 +116,13 @@ function submit() {
                                     placeholder="Pilih program studi"
                                     option-label="nama"
                                     option-value="id"
+                                    :disabled="prodiTerkunci"
                                 />
                                 <p v-if="form.errors.program_studi_id" class="mt-1 text-xs text-error-red">{{ form.errors.program_studi_id }}</p>
                             </div>
+                            <p v-if="prodiTerkunci" class="rounded-xl bg-info-container px-4 py-3 text-label-md text-on-info-container">
+                                Program studi terkunci karena Anda sudah memiliki riwayat ujian. Hubungi admin untuk perubahan.
+                            </p>
                             <div>
                                 <label class="mb-1.5 block text-label-md font-medium text-text-heading">
                                     {{ jenis === 'mahasiswa' ? 'Tahun Angkatan' : 'Tahun Mulai' }}
@@ -127,7 +133,7 @@ function submit() {
                                     placeholder="Contoh: 2025"
                                     min="2000"
                                     max="2100"
-                                    class="w-full rounded-xl border border-outline-variant px-4 py-3 text-body-md text-text-heading outline-none transition-all placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/10"
+                                    class="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-body-md text-text-body outline-none transition-all placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/10"
                                 />
                                 <p v-if="form.errors.tahun_mulai" class="mt-1 text-xs text-error-red">{{ form.errors.tahun_mulai }}</p>
                             </div>

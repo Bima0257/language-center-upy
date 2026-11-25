@@ -50,7 +50,7 @@ const hasMediaArea = computed(() =>
                         <button
                             type="button"
                             aria-label="Tutup edit materi soal"
-                            class="p-2 text-text-muted transition-colors hover:text-primary"
+                            class="p-2 text-text-muted transition-colors hover:text-primary font-semibold"
                             @click="emit('close')"
                         >
                             <IconX :size="20" />
@@ -102,7 +102,7 @@ const hasMediaArea = computed(() =>
                         </p>
                         <button
                             type="button"
-                            class="mt-2 inline-flex items-center gap-1.5 text-label-md text-error-red transition-colors hover:text-error-red/80"
+                            class="mt-2 inline-flex items-center gap-1.5 text-label-md text-error-red transition-colors hover:text-error-red/80 font-semibold"
                             @click="form.isi_teks = ''"
                         >
                             <IconTrash :size="15" />
@@ -139,7 +139,7 @@ const hasMediaArea = computed(() =>
                             <button
                                 v-if="materiSoal.url_audio"
                                 type="button"
-                                class="mt-2 inline-flex items-center gap-1.5 text-label-md text-error-red transition-colors hover:text-error-red/80"
+                                class="mt-2 inline-flex items-center gap-1.5 text-label-md text-error-red transition-colors hover:text-error-red/80 font-semibold"
                                 @click="emit('remove-media', 'audio')"
                             >
                                 <IconTrash :size="15" />
@@ -172,7 +172,7 @@ const hasMediaArea = computed(() =>
                             <button
                                 v-if="materiSoal.url_gambar"
                                 type="button"
-                                class="mt-2 inline-flex items-center gap-1.5 text-label-md text-error-red transition-colors hover:text-error-red/80"
+                                class="mt-2 inline-flex items-center gap-1.5 text-label-md text-error-red transition-colors hover:text-error-red/80 font-semibold"
                                 @click="emit('remove-media', 'image')"
                             >
                                 <IconTrash :size="15" />

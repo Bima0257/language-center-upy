@@ -18,7 +18,7 @@ defineProps({
                 variant="primary"
                 :prefer-history="preferHistory"
                 :aria-label="backLabel"
-                class="!size-10 !p-0 shrink-0"
+                class="size-10! p-0! shrink-0"
             />
             <div class="min-w-0 flex-1">
                 <h1 class="text-headline-md font-bold text-text-heading">{{ title }}</h1>

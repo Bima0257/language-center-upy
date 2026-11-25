@@ -107,85 +107,85 @@ onBeforeUnmount(() => {
     <div class="border border-outline-variant rounded-2xl overflow-hidden bg-surface-container-lowest">
         <div v-if="editor" class="flex flex-wrap items-center gap-1 px-2 py-1.5 border-b border-outline-variant/50 bg-surface-container-low">
             <button type="button" @click="editor.chain().focus().toggleBold().run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive('bold') ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Bold"><IconBold :size="16" /></button>
             <button type="button" @click="editor.chain().focus().toggleItalic().run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive('italic') ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Italic"><IconItalic :size="16" /></button>
             <button type="button" @click="editor.chain().focus().toggleUnderline().run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive('underline') ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Underline"><IconUnderline :size="16" /></button>
             <button type="button" @click="editor.chain().focus().toggleStrike().run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive('strike') ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Strikethrough"><IconStrikethrough :size="16" /></button>
 
             <span class="w-px h-5 bg-outline-variant mx-1"></span>
 
             <button type="button" @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive('heading', { level: 1 }) ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Heading 1"><IconHeading :size="16" /></button>
             <button type="button" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive('heading', { level: 2 }) ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Heading 2"><span class="text-xs font-bold">H2</span></button>
             <button type="button" @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive('heading', { level: 3 }) ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Heading 3"><span class="text-xs font-bold">H3</span></button>
 
             <span class="w-px h-5 bg-outline-variant mx-1"></span>
 
             <button type="button" @click="editor.chain().focus().toggleBulletList().run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive('bulletList') ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Bullet List"><IconList :size="16" /></button>
             <button type="button" @click="editor.chain().focus().toggleOrderedList().run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive('orderedList') ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Numbered List"><IconListNumbers :size="16" /></button>
             <button type="button" @click="editor.chain().focus().toggleBlockquote().run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive('blockquote') ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Quote"><IconQuote :size="16" /></button>
 
             <span class="w-px h-5 bg-outline-variant mx-1"></span>
 
             <button type="button" @click="editor.chain().focus().setTextAlign('left').run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive({ textAlign: 'left' }) ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Align Left"><IconAlignLeft :size="16" /></button>
             <button type="button" @click="editor.chain().focus().setTextAlign('center').run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive({ textAlign: 'center' }) ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Align Center"><IconAlignCenter :size="16" /></button>
             <button type="button" @click="editor.chain().focus().setTextAlign('right').run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive({ textAlign: 'right' }) ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Align Right"><IconAlignRight :size="16" /></button>
             <button type="button" @click="editor.chain().focus().setTextAlign('justify').run()"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive({ textAlign: 'justify' }) ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Justify"><IconAlignJustified :size="16" /></button>
 
             <span class="w-px h-5 bg-outline-variant mx-1"></span>
 
             <button type="button" @click="setLink"
-                    class="p-1.5 rounded-lg transition-colors"
+                    class="p-1.5 rounded-lg transition-colors font-semibold"
                     :class="isActive('link') ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-highest'"
                     title="Link"><IconLink :size="16" /></button>
 
             <span class="w-px h-5 bg-outline-variant mx-1"></span>
 
             <button type="button" @click="editor.chain().focus().undo().run()" :disabled="!editor.can().undo()"
-                    class="p-1.5 rounded-lg transition-colors text-text-body hover:bg-surface-container-highest disabled:opacity-30"
+                    class="p-1.5 rounded-lg transition-colors text-text-body hover:bg-surface-container-highest disabled:opacity-30 font-semibold"
                     title="Undo"><IconArrowBackUp :size="16" /></button>
             <button type="button" @click="editor.chain().focus().redo().run()" :disabled="!editor.can().redo()"
-                    class="p-1.5 rounded-lg transition-colors text-text-body hover:bg-surface-container-highest disabled:opacity-30"
+                    class="p-1.5 rounded-lg transition-colors text-text-body hover:bg-surface-container-highest disabled:opacity-30 font-semibold"
                     title="Redo"><IconArrowForwardUp :size="16" /></button>
         </div>
         <div class="px-4 py-3 rich-text-content text-text-body text-body-md" :style="{ minHeight }">

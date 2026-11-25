@@ -74,7 +74,7 @@ const modeOptions = computed(() => {
                 :aria-checked="mode === option.value"
                 class="group relative flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all"
                 :class="mode === option.value
-                    ? 'border-secondary bg-secondary/10 shadow-sm'
+                    ? 'border-secondary bg-secondary/10 shadow-xs'
                     : 'border-outline-variant/60 bg-surface-white hover:border-secondary/60 hover:bg-surface-container-low'"
             >
                 <input

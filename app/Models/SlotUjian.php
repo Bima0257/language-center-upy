@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\StatusPendaftaranUjian;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -61,40 +60,5 @@ class SlotUjian extends Model
     public function pendaftaranUjian(): HasMany
     {
         return $this->hasMany(PendaftaranUjian::class, 'slot_ujian_id', 'id');
-    }
-
-    public function tersedia(): bool
-    {
-        if (! $this->aktif || ! $this->periodeUjian->sedangAktif()) {
-            return false;
-        }
-
-        if (now()->toDateString() !== $this->tanggal->toDateString()) {
-            return false;
-        }
-
-        $sekarang = now()->format('H:i');
-        $mulai = substr((string) $this->waktu_mulai, 0, 5);
-        $batasKeterlambatan = Carbon::createFromFormat('H:i', $mulai)
-            ->addMinutes($this->toleransi_keterlambatan_menit)
-            ->format('H:i');
-
-        if ($sekarang < $mulai || $sekarang > $batasKeterlambatan) {
-            return false;
-        }
-
-        if (isset($this->attributes['pendaftaran_disetujui_count'])) {
-            $jumlahDisetujui = (int) $this->attributes['pendaftaran_disetujui_count'];
-        } elseif ($this->relationLoaded('pendaftaranUjian')) {
-            $jumlahDisetujui = $this->pendaftaranUjian
-                ->where('status', StatusPendaftaranUjian::APPROVED)
-                ->count();
-        } else {
-            $jumlahDisetujui = $this->pendaftaranUjian()
-                ->where('status', StatusPendaftaranUjian::APPROVED)
-                ->count();
-        }
-
-        return $jumlahDisetujui < $this->kapasitas_peserta;
     }
 }

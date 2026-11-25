@@ -12,4 +12,9 @@ interface JawabanRepositoryInterface
     public function ambilBerdasarkanSesi(string $sesiId): Collection;
 
     public function getByQuestion(string $sesiId, string $soalId): ?Jawaban;
+
+    /**
+     * @param  array<int, string>  $soalIds
+     */
+    public function hitungTerjawab(string $sesiId, array $soalIds): int;
 }

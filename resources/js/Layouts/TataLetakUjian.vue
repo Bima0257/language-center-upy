@@ -11,6 +11,12 @@ defineProps({
     seconds: { type: Number, default: 0 },
     isWarning: { type: Boolean, default: false },
     isDanger: { type: Boolean, default: false },
+    totalRemainingSeconds: { type: Number, default: 0 },
+    totalMinutes: { type: Number, default: 0 },
+    totalSeconds: { type: Number, default: 0 },
+    showTotalTimer: { type: Boolean, default: false },
+    totalIsWarning: { type: Boolean, default: false },
+    totalIsDanger: { type: Boolean, default: false },
     showTimer: { type: Boolean, default: true },
     softHeader: { type: Boolean, default: false },
     showThemeToggle: { type: Boolean, default: false },
@@ -42,7 +48,7 @@ defineEmits(['toggle-theme']);
                     : darkHeader
                         ? 'exam-header-dark'
                         : softHeader
-                            ? 'border-b border-outline-variant/60 bg-surface-container-low shadow-sm'
+                            ? 'border-b border-outline-variant/60 bg-surface-container-low shadow-xs'
                             : 'bg-primary-container',
             ]"
         >
@@ -58,20 +64,34 @@ defineEmits(['toggle-theme']);
                             :theme="softHeader || surfaceHeader ? 'light' : 'dark'"
                         />
                         <div
+                            v-if="showTotalTimer"
+                            class="flex flex-col items-start leading-none"
+                            :class="[
+                                softHeader || surfaceHeader ? 'text-text-heading' : 'text-on-primary-container',
+                                totalIsDanger ? 'text-error-red' : totalIsWarning ? 'text-warning' : '',
+                            ]"
+                            title="Sisa waktu total ujian"
+                        >
+                            <span class="text-xs font-semibold uppercase tracking-wider opacity-70">Total</span>
+                            <span class="font-mono text-label-md font-bold tabular-nums tracking-wide">
+                                {{ String(totalMinutes).padStart(2, '0') }}:{{ String(totalSeconds).padStart(2, '0') }}
+                            </span>
+                        </div>
+                        <div
                             class="h-6 w-px"
-                            :class="softHeader || surfaceHeader ? 'bg-outline-variant/60' : 'bg-on-primary/20'"
+                            :class="softHeader || surfaceHeader ? 'bg-outline-variant/60' : 'bg-on-primary-container/20'"
                         ></div>
                     </template>
                     <span
                         class="truncate font-body-md text-body-md font-bold"
-                        :class="softHeader || surfaceHeader ? 'text-text-heading' : 'text-on-primary'"
+                        :class="softHeader || surfaceHeader ? 'text-text-heading' : 'text-on-primary-container'"
                     >{{ title }}</span
                     >
                 </div>
                 <div class="ml-auto flex items-center gap-3">
                     <div
                         class="flex items-center gap-2 text-label-md"
-                        :class="softHeader || surfaceHeader ? 'text-text-muted' : 'text-on-primary/80'"
+                        :class="softHeader || surfaceHeader ? 'text-text-muted' : 'text-on-primary-container/80'"
                     >
                         <span
                             class="w-2 h-2 rounded-full bg-success inline-block animate-pulse"
@@ -81,10 +101,10 @@ defineEmits(['toggle-theme']);
                     <button
                         v-if="showThemeToggle"
                         type="button"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1 font-semibold"
                         :class="softHeader || surfaceHeader
                             ? 'text-text-muted hover:bg-surface-container-high hover:text-text-heading'
-                            : 'text-on-primary/80 hover:bg-on-primary/10'"
+                            : 'text-on-primary-container/80 hover:bg-on-primary-container/10'"
                         :aria-label="themeMode === 'dark' ? 'Gunakan mode terang' : 'Gunakan mode gelap'"
                         :title="themeMode === 'dark' ? 'Mode terang' : 'Mode gelap'"
                         @click="$emit('toggle-theme')"
@@ -133,6 +153,15 @@ defineEmits(['toggle-theme']);
         transparent
     );
     background-color: var(--color-primary);
+}
+
+.dark .exam-header-primary {
+    border-bottom-color: color-mix(
+        in srgb,
+        var(--color-on-primary-container) 18%,
+        transparent
+    );
+    background-color: var(--color-primary-container);
 }
 
 .exam-header-dark {

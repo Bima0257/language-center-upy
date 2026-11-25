@@ -41,10 +41,7 @@ function openCreate() {
 function submit() {
     form.post(route('admin.data-induk.fakultas.simpan'), {
         preserveScroll: true,
-        onSuccess: () => {
-            closeModal();
-            form.reset();
-        },
+        onSuccess: closeModal,
     });
 }
 
@@ -68,9 +65,6 @@ function saveEdit() {
 
 function closeModal() {
     showModal.value = false;
-    editingFaculty.value = null;
-    creating.value = false;
-    editForm.reset();
 }
 
 async function destroy(fakultas) {

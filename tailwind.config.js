@@ -5,7 +5,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Plus Jakarta Sans', ...defaultTheme.fontFamily.sans],
+                sans: ['Urbanist', ...defaultTheme.fontFamily.sans],
                 serif: ['Lora', ...defaultTheme.fontFamily.serif],
             },
             borderRadius: {
@@ -18,16 +18,18 @@ export default {
                 'app-margin': '2.5rem',
             },
             fontSize: {
-                'title-lg': ['18px', { lineHeight: '1.4', fontWeight: '600' }],
-                'body-md': ['14px', { lineHeight: '1.6', fontWeight: '400' }],
-                'label-md': ['13px', { lineHeight: '1', fontWeight: '500' }],
+                xs: ['14px', { lineHeight: '1.45' }],
+                sm: ['15px', { lineHeight: '1.5' }],
+                'title-lg': ['20px', { lineHeight: '1.4', fontWeight: '600' }],
+                'body-md': ['16px', { lineHeight: '1.6', fontWeight: '400' }],
+                'label-md': ['14px', { lineHeight: '1.1', fontWeight: '500' }],
                 'headline-lg': [
-                    '32px',
+                    '36px',
                     { lineHeight: '1.2', letterSpacing: '-0.02em', fontWeight: '700' },
                 ],
-                'headline-md': ['24px', { lineHeight: '1.3', fontWeight: '700' }],
+                'headline-md': ['28px', { lineHeight: '1.3', fontWeight: '700' }],
                 'headline-lg-mobile': [
-                    '24px',
+                    '28px',
                     { lineHeight: '1.2', fontWeight: '700' },
                 ],
             },

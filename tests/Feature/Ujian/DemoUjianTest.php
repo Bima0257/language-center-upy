@@ -69,7 +69,7 @@ class DemoUjianTest extends TestCase
     {
         $this->get(route('admin.demo-ujian.daftar'))->assertRedirect('/login');
 
-        $ujian = Ujian::where('judul', 'EPT Try Out 1')->firstOrFail();
+        $ujian = Ujian::where('judul', 'Ujian Tryout EPT')->firstOrFail();
 
         $this->get(route('admin.demo-ujian.mulai', $ujian))->assertRedirect('/login');
     }
@@ -78,7 +78,7 @@ class DemoUjianTest extends TestCase
     {
         $this->masukSebagai('peserta');
 
-        $ujian = Ujian::where('judul', 'EPT Try Out 1')->firstOrFail();
+        $ujian = Ujian::where('judul', 'Ujian Tryout EPT')->firstOrFail();
 
         $this->get(route('admin.demo-ujian.daftar'))->assertForbidden();
         $this->get(route('admin.demo-ujian.mulai', $ujian))->assertForbidden();
@@ -101,7 +101,7 @@ class DemoUjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $ujian = Ujian::where('judul', 'EPT Try Out 1')->firstOrFail();
+        $ujian = Ujian::where('judul', 'Ujian Tryout EPT')->firstOrFail();
 
         $page = $this->get(route('admin.demo-ujian.daftar'))->assertOk()->inertiaPage();
         $item = collect($page['props']['ujian'])->firstWhere('id', $ujian->id);
@@ -121,7 +121,7 @@ class DemoUjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $ujian = Ujian::where('judul', 'EPT Try Out 1')->firstOrFail();
+        $ujian = Ujian::where('judul', 'Ujian Tryout EPT')->firstOrFail();
 
         $page = $this->get(route('admin.demo-ujian.mulai', $ujian))
             ->assertOk()
@@ -141,7 +141,7 @@ class DemoUjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $ujian = Ujian::where('judul', 'EPT Try Out 1')->firstOrFail();
+        $ujian = Ujian::where('judul', 'Ujian Tryout EPT')->firstOrFail();
         $jumlahSesi = SesiUjian::count();
         $jumlahJawaban = Jawaban::count();
 
@@ -175,7 +175,7 @@ class DemoUjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $ujian = Ujian::where('judul', 'EPT Try Out 1')->firstOrFail();
+        $ujian = Ujian::where('judul', 'Ujian Tryout EPT')->firstOrFail();
 
         $data = $this->postJson(route('admin.demo-ujian.skor', $ujian), [
             'jawaban' => [],
@@ -190,7 +190,7 @@ class DemoUjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $ujian = Ujian::where('judul', 'EPT Try Out 1')->firstOrFail();
+        $ujian = Ujian::where('judul', 'Ujian Tryout EPT')->firstOrFail();
         $soal = Soal::whereHas('partUjian', fn ($query) => $query->where('ujian_id', $ujian->id))->firstOrFail();
 
         $this->postJson(route('admin.demo-ujian.skor', $ujian), [
@@ -202,7 +202,7 @@ class DemoUjianTest extends TestCase
 
     public function test_demo_skor_hanya_dapat_diakses_admin(): void
     {
-        $ujian = Ujian::where('judul', 'EPT Try Out 1')->firstOrFail();
+        $ujian = Ujian::where('judul', 'Ujian Tryout EPT')->firstOrFail();
 
         $this->postJson(route('admin.demo-ujian.skor', $ujian), ['jawaban' => []])
             ->assertRedirect('/login');
@@ -217,7 +217,7 @@ class DemoUjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $ujian = Ujian::where('judul', 'EPT Try Out 1')->firstOrFail();
+        $ujian = Ujian::where('judul', 'Ujian Tryout EPT')->firstOrFail();
         $jumlahSesi = SesiUjian::count();
         $jumlahJawaban = Jawaban::count();
 

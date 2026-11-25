@@ -30,11 +30,20 @@ class DataIndukSeeder extends Seeder
             ]);
         }
 
-        $bankEpt = BankSoal::firstOrCreate(
-            ['nama' => 'Bank Soal EPT'],
+        $bankResmi = BankSoal::firstOrCreate(
+            ['nama' => 'Bank Soal Ujian Resmi'],
             [
                 'program_tes_id' => $ept->id,
-                'deskripsi' => 'Kumpulan soal EPT untuk pelaksanaan ujian',
+                'deskripsi' => 'Kumpulan soal EPT untuk pelaksanaan ujian resmi',
+                'aktif' => true,
+            ],
+        );
+
+        $bankTryout = BankSoal::firstOrCreate(
+            ['nama' => 'Bank Soal Ujian Tryout'],
+            [
+                'program_tes_id' => $ept->id,
+                'deskripsi' => 'Kumpulan soal EPT untuk pelaksanaan try out',
                 'aktif' => true,
             ],
         );
@@ -54,6 +63,7 @@ class DataIndukSeeder extends Seeder
                 'program_tes_id' => $ept->id,
                 'nama' => 'Listening',
                 'urutan' => 1,
+                'durasi_menit' => 45,
                 'aktif' => true,
             ]);
         }
@@ -64,6 +74,7 @@ class DataIndukSeeder extends Seeder
                 'program_tes_id' => $ept->id,
                 'nama' => 'Reading',
                 'urutan' => 2,
+                'durasi_menit' => 75,
                 'aktif' => true,
             ]);
         }
@@ -101,7 +112,7 @@ class DataIndukSeeder extends Seeder
             ],
         ];
 
-        foreach ([$bankEpt, $bankLatihan] as $bankSoal) {
+        foreach ([$bankResmi, $bankTryout, $bankLatihan] as $bankSoal) {
             foreach ($definisiPart as [$sectionId, $nama, $urutan, $petunjuk]) {
                 PartSoal::firstOrCreate(
                     ['bank_soal_id' => $bankSoal->id, 'section_id' => $sectionId, 'nama' => $nama],

@@ -36,7 +36,13 @@ class PengawasanController extends Controller
         $sesi = $this->sesiRepo->temukanDenganJawaban($sesiUjian->id);
 
         return Inertia::render('Pengawas/TinjauanSesi/index', [
-            'sesiUjian' => $sesi->loadMissing(['pengguna.profilPeserta', 'catatanPelanggaran', 'slotUjian.periodeUjian.ujian', 'jawaban.soal']),
+            'sesiUjian' => $sesi->loadMissing([
+                'pengguna.profilPeserta',
+                'catatanPelanggaran',
+                'ujian',
+                'slotUjian.periodeUjian.ujian',
+                'jawaban.soal',
+            ]),
         ]);
     }
 

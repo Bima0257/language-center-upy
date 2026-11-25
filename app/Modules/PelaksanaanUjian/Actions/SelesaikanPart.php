@@ -2,31 +2,18 @@
 
 namespace App\Modules\PelaksanaanUjian\Actions;
 
-use App\Models\PartUjian;
 use App\Models\SesiUjian;
-use App\Modules\PelaksanaanUjian\Repositories\Contracts\SesiUjianRepositoryInterface;
+use App\Modules\PelaksanaanUjian\DTOs\HasilWaktuUjian;
+use App\Modules\PelaksanaanUjian\Services\LayananWaktuUjian;
 
 class SelesaikanPart
 {
     public function __construct(
-        private SesiUjianRepositoryInterface $sesiRepo,
+        private LayananWaktuUjian $layananWaktu,
     ) {}
 
-    public function execute(SesiUjian $sesi): void
+    public function execute(SesiUjian $sesi): HasilWaktuUjian
     {
-        $partUjianAktif = $sesi->partUjianAktif;
-        if (! $partUjianAktif) {
-            return;
-        }
-
-        $partBerikutnya = PartUjian::query()
-            ->where('ujian_id', $partUjianAktif->ujian_id)
-            ->where('urutan', '>', $partUjianAktif->urutan)
-            ->orderBy('urutan')
-            ->first();
-
-        $this->sesiRepo->update($sesi->id, [
-            'part_ujian_aktif_id' => $partBerikutnya?->id,
-        ]);
+        return $this->layananWaktu->proses($sesi);
     }
 }

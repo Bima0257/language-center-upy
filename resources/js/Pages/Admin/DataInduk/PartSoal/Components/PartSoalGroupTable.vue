@@ -1,9 +1,9 @@
 <script setup>
 import { IconBook, IconEdit, IconGripVertical, IconLock, IconTrash } from '@tabler/icons-vue';
 import draggable from 'vuedraggable';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
-defineProps({
+const props = defineProps({
     group: { type: Object, required: true },
     reordering: { type: Boolean, default: false },
     canManage: { type: Boolean, default: false },
@@ -12,10 +12,13 @@ defineProps({
 
 const emit = defineEmits(['reorder', 'edit', 'delete']);
 const isEditingOrder = ref(false);
+const hasLockedPart = computed(() =>
+    props.group.partSoal.some((part) => part.dipakai_ujian_aktif),
+);
 </script>
 
 <template>
-    <BaseCard :padding="false" class="overflow-hidden" :class="attached ? '!rounded-none !border-0 !shadow-none' : ''">
+    <BaseCard :padding="false" class="overflow-hidden" :class="attached ? 'rounded-none! border-0! shadow-none!' : ''">
         <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 bg-surface-container-low/60 border-b border-outline-variant/30">
             <div class="flex items-center gap-2">
                 <IconBook :size="18" class="text-secondary" />
@@ -30,7 +33,8 @@ const isEditingOrder = ref(false);
                     v-if="canManage"
                     variant="secondary"
                     size="sm"
-                    :disabled="reordering"
+                    :disabled="reordering || hasLockedPart"
+                    :title="hasLockedPart ? 'Tidak bisa diubah karena part dipakai ujian aktif' : undefined"
                     @click="isEditingOrder = !isEditingOrder"
                 >
                     <IconEdit :size="16" />
@@ -60,7 +64,7 @@ const isEditingOrder = ref(false);
                     :list="group.partSoal"
                     item-key="id"
                     handle=".drag-handle"
-                    :disabled="reordering || !isEditingOrder || !canManage"
+                    :disabled="reordering || !isEditingOrder || !canManage || hasLockedPart"
                     @end="emit('reorder', group.value, $event)"
                 >
                     <template #item="{ element }">

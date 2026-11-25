@@ -7,6 +7,7 @@ import { computed, watch } from 'vue';
 const props = defineProps({
     programTes: { type: Array, default: () => [] },
     bankSoal: { type: Array, default: () => [] },
+    programStudi: { type: Array, default: () => [] },
 });
 
 const form = useForm({
@@ -16,6 +17,8 @@ const form = useForm({
     deskripsi: '',
     mode: 'tryout',
     durasi_menit: 160,
+    lingkup: 'umum',
+    program_studi_ids: [],
 });
 
 const bankSoalTersaring = computed(() => {
@@ -43,6 +46,7 @@ function submit() {
                     :form="form"
                     :program-tes="programTes"
                     :bank-soal-tersaring="bankSoalTersaring"
+                    :program-studi="programStudi"
                     creating
                     @submit="submit"
                 />

@@ -24,7 +24,7 @@ const tabs = [
 
 <template>
     <nav
-        class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-white dark:bg-surface-container-lowest border-t border-outline-variant dark:border-t-transparent px-4 py-2 flex justify-between items-center z-50"
+        class="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-on-primary-container/10 px-2 py-2 flex justify-between items-center z-50"
     >
         <template v-for="tab in tabs" :key="tab.label">
             <Link
@@ -32,23 +32,23 @@ const tabs = [
                 :href="route(tab.route)"
                 method="post"
                 as="button"
-                class="flex flex-col items-center gap-0.5 px-2 py-1 text-text-muted hover:text-primary transition-colors"
+                class="flex flex-col items-center gap-0.5 px-1 py-1 text-sidebar-text-muted hover:text-sidebar-text-hover transition-colors font-semibold"
             >
                 <component :is="tab.icon" :size="22" stroke="1.5" />
-                <span class="text-[10px] font-medium">{{ tab.label }}</span>
+                <span class="text-xs font-medium whitespace-nowrap">{{ tab.label }}</span>
             </Link>
             <Link
                 v-else
                 :href="tab.route === 'dasbor' ? route(tab.route) : tab.route"
-                class="flex flex-col items-center gap-0.5 px-2 py-1 transition-colors"
+                class="flex flex-col items-center gap-0.5 px-1 py-1 transition-colors"
                 :class="
                     tab.active
-                        ? 'text-primary'
-                        : 'text-text-muted hover:text-primary'
+                        ? 'text-sidebar-text font-semibold'
+                        : 'text-sidebar-text-muted hover:text-sidebar-text-hover'
                 "
             >
                 <component :is="tab.icon" :size="22" stroke="1.5" />
-                <span class="text-[10px] font-medium">{{ tab.label }}</span>
+                <span class="text-xs font-medium whitespace-nowrap">{{ tab.label }}</span>
             </Link>
         </template>
     </nav>

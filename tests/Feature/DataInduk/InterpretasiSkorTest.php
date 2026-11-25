@@ -6,6 +6,7 @@ use App\Models\InterpretasiSkor;
 use App\Models\Pengguna;
 use App\Models\ProgramTes;
 use App\Models\SkemaPenilaian;
+use App\Models\Ujian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,6 +19,8 @@ class InterpretasiSkorTest extends TestCase
         parent::setUp();
 
         $this->seed();
+
+        Ujian::query()->update(['aktif' => false]);
     }
 
     private function masukSebagai(string $peran): Pengguna
@@ -270,6 +273,66 @@ class InterpretasiSkorTest extends TestCase
         $this->assertDatabaseMissing('interpretasi_skor', [
             'skema_penilaian_id' => $skema->id,
             'skor_minimum' => 510,
+        ]);
+    }
+
+    public function test_interpretasi_skor_tidak_dapat_diubah_saat_ujian_aktif(): void
+    {
+        $this->masukSebagai('admin');
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $skema = $this->skema($programTes);
+        $interpretasiSkor = InterpretasiSkor::where('skema_penilaian_id', $skema->id)
+            ->where('skor_minimum', 380)
+            ->firstOrFail();
+
+        Ujian::where('program_tes_id', $programTes->id)->update(['aktif' => true]);
+
+        $this->put("/admin/data-induk/interpretasi-skor/{$interpretasiSkor->id}", [
+            'skema_penilaian_id' => $skema->id,
+            'program_tes_id' => $programTes->id,
+            'skor_minimum' => $interpretasiSkor->skor_minimum,
+            'skor_maksimum' => $interpretasiSkor->skor_maksimum,
+            'tingkat_cefr' => $interpretasiSkor->tingkat_cefr,
+            'label_tingkat' => 'Tidak Boleh',
+            'lulus' => (bool) $interpretasiSkor->lulus,
+        ])->assertRedirect()->assertSessionHas('error');
+
+        $this->assertDatabaseMissing('interpretasi_skor', [
+            'id' => $interpretasiSkor->id,
+            'label_tingkat' => 'Tidak Boleh',
+        ]);
+
+        $this->delete("/admin/data-induk/interpretasi-skor/{$interpretasiSkor->id}")
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('interpretasi_skor', ['id' => $interpretasiSkor->id]);
+    }
+
+    public function test_interpretasi_skor_massal_ditolak_saat_ujian_aktif(): void
+    {
+        $this->masukSebagai('admin');
+        $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
+        $skema = $this->skema($programTes);
+
+        Ujian::where('program_tes_id', $programTes->id)->update(['aktif' => true]);
+
+        $this->post("/admin/data-induk/interpretasi-skor/program-tes/{$programTes->id}/tambah-massal", [
+            'skema_penilaian_id' => $skema->id,
+            'interpretasi_skor' => [
+                [
+                    'skor_minimum' => 401,
+                    'skor_maksimum' => 449,
+                    'tingkat_cefr' => 'C1',
+                    'label_tingkat' => 'Advanced',
+                    'lulus' => true,
+                ],
+            ],
+        ])->assertRedirect()->assertSessionHas('error');
+
+        $this->assertDatabaseMissing('interpretasi_skor', [
+            'skema_penilaian_id' => $skema->id,
+            'skor_minimum' => 401,
         ]);
     }
 }

@@ -583,6 +583,51 @@ const table = useTable({
 
 const rows = computed(() => table.getRowModel().rows);
 const visibleColumns = computed(() => table.getVisibleLeafColumns());
+
+function rawCellValue(row, definition) {
+    if (typeof definition.accessorFn === 'function') return definition.accessorFn(row);
+    if (definition.accessorKey) return getByPath(row, definition.accessorKey);
+
+    return undefined;
+}
+
+function isNumericValue(value) {
+    if (typeof value === 'number') return Number.isFinite(value);
+    if (typeof value !== 'string') return false;
+
+    const normalized = value.trim();
+
+    return normalized !== ''
+        && /^-?\d+(\.\d+)?$/.test(normalized)
+        && Number.isFinite(Number(normalized));
+}
+
+const numericColumnIds = computed(() => {
+    const ids = new Set();
+    const sourceRows = Array.isArray(props.data) ? props.data : [];
+
+    for (const column of visibleColumns.value) {
+        const definition = column.columnDef ?? {};
+        const meta = definition.meta ?? {};
+
+        if (isActionsColumn(column)) continue;
+        if (meta.align) continue;
+        if (meta.numeric === false) continue;
+
+        const values = sourceRows
+            .map(row => rawCellValue(row, definition))
+            .filter(value => value !== null && value !== undefined && value !== '');
+
+        if (values.length === 0) continue;
+
+        if (meta.numeric === true || values.every(isNumericValue)) {
+            ids.add(column.id);
+        }
+    }
+
+    return ids;
+});
+
 const allLeafColumns = computed(() => table.getAllLeafColumns());
 const flatHeaders = computed(() => table.getFlatHeaders());
 const pageCount = computed(() => table.getPageCount());
@@ -759,12 +804,22 @@ const scrollContainerStyle = computed(() => ({
 
 const isHorizontallyScrollable = computed(() => canScrollLeft.value || canScrollRight.value);
 
-const toolbarButtonClass = 'inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-full border border-surface-container-high bg-surface-white px-4 text-body-md text-text-body transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary';
+const toolbarButtonClass = 'inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-full border border-surface-container-high bg-surface-white px-4 text-body-md font-semibold text-text-body transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary';
 
 const searchInputClass = 'h-9 w-full rounded-full border border-surface-container-high bg-surface-container-lowest pl-9 pr-4 text-body-md text-text-body focus:border-secondary focus:outline-none';
 
+function columnAlignment(column) {
+    const meta = column?.columnDef?.meta ?? {};
+
+    if (meta.align) return meta.align;
+    if (meta.numeric === false) return 'left';
+    if (meta.numeric === true || numericColumnIds.value.has(column?.id)) return 'center';
+
+    return 'left';
+}
+
 function alignClass(column) {
-    const alignment = column?.columnDef?.meta?.align ?? 'left';
+    const alignment = columnAlignment(column);
 
     return {
         left: 'text-left',
@@ -776,7 +831,7 @@ function alignClass(column) {
 function justifyClass(column) {
     if (isActionsColumn(column)) return 'justify-center';
 
-    const alignment = column?.columnDef?.meta?.align ?? 'left';
+    const alignment = columnAlignment(column);
 
     return {
         left: 'justify-start',
@@ -842,14 +897,14 @@ function headerCellClasses(column, subHeader = false) {
         classes.push(
             'w-px min-w-25 px-3 py-3 text-center',
             props.variant === 'activity'
-                ? 'text-[11px] font-bold uppercase tracking-wider'
+                ? 'text-xs font-bold uppercase tracking-wider'
                 : 'text-label-md font-semibold uppercase tracking-wider',
         );
     } else {
         classes.push(
             alignClass(column),
             props.variant === 'activity'
-                ? 'px-4 py-3.5 text-[11px] font-bold uppercase tracking-wider'
+                ? 'px-4 py-3.5 text-xs font-bold uppercase tracking-wider'
                 : 'px-6 py-4 text-label-md font-semibold uppercase tracking-wider',
         );
     }
@@ -1715,7 +1770,7 @@ onBeforeUnmount(() => {
                             >
                                 <button
                                     type="button"
-                                    class="flex h-10 w-10 items-center justify-center rounded-xl border border-surface-container-high bg-surface-white text-text-body transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+                                    class="flex h-10 w-10 items-center justify-center rounded-xl border border-surface-container-high bg-surface-white text-text-body transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary font-semibold"
                                     aria-label="Urutkan data"
                                     aria-haspopup="menu"
                                 >
@@ -1730,7 +1785,7 @@ onBeforeUnmount(() => {
                                             type="button"
                                             role="menuitemradio"
                                             :aria-checked="column.getIsSorted() !== false"
-                                            class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-body-md transition-colors hover:bg-surface-container-low"
+                                            class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-body-md transition-colors hover:bg-surface-container-low font-semibold"
                                             :class="column.getIsSorted() ? 'font-semibold text-text-heading' : 'text-text-body'"
                                             @click="toggleMobileSort(column, hide)"
                                         >
@@ -1751,7 +1806,7 @@ onBeforeUnmount(() => {
                             <button
                                 v-if="props.mobilePrint"
                                 type="button"
-                                class="flex h-10 w-10 items-center justify-center rounded-xl border border-surface-container-high bg-surface-white text-text-body transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+                                class="flex h-10 w-10 items-center justify-center rounded-xl border border-surface-container-high bg-surface-white text-text-body transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary font-semibold"
                                 aria-label="Cetak data"
                                 @click="printTable"
                             >
@@ -1821,7 +1876,7 @@ onBeforeUnmount(() => {
 
                         <button
                             type="button"
-                            class="flex h-9 w-9 items-center justify-center rounded-xl border border-surface-container-high bg-surface-white text-text-body transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-40"
+                            class="flex h-9 w-9 items-center justify-center rounded-xl border border-surface-container-high bg-surface-white text-text-body transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-40 font-semibold"
                             :disabled="!table.getCanPreviousPage()"
                             aria-label="Halaman sebelumnya"
                             @click="table.previousPage()"
@@ -1835,7 +1890,7 @@ onBeforeUnmount(() => {
 
                         <button
                             type="button"
-                            class="flex h-9 w-9 items-center justify-center rounded-xl border border-surface-container-high bg-surface-white text-text-body transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-40"
+                            class="flex h-9 w-9 items-center justify-center rounded-xl border border-surface-container-high bg-surface-white text-text-body transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-40 font-semibold"
                             :disabled="!table.getCanNextPage()"
                             aria-label="Halaman berikutnya"
                             @click="table.nextPage()"
@@ -1962,7 +2017,7 @@ onBeforeUnmount(() => {
                                     role="menuitemcheckbox"
                                     :aria-checked="column.getIsVisible()"
                                     :disabled="!canHideColumn(column)"
-                                    class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-body-md transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50"
+                                    class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-body-md transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50 font-semibold"
                                     :class="column.getIsVisible() ? 'text-text-heading' : 'text-text-muted'"
                                     @click="toggleColumn(column)"
                                 >
@@ -2000,7 +2055,7 @@ onBeforeUnmount(() => {
                                 <span>Filter</span>
                                 <span
                                     v-if="filterBadgeCount > 0"
-                                    class="inline-flex min-w-5 items-center justify-center rounded-full bg-secondary px-1.5 text-[10px] leading-4 font-semibold text-on-secondary"
+                                    class="inline-flex min-w-5 items-center justify-center rounded-full bg-secondary px-1.5 text-xs leading-4 font-semibold text-on-secondary"
                                 >
                                     {{ filterBadgeCount }}
                                 </span>
@@ -2035,14 +2090,14 @@ onBeforeUnmount(() => {
                                 <div class="mt-4 flex justify-end gap-2">
                                     <button
                                         type="button"
-                                        class="inline-flex h-9 items-center justify-center rounded-full border border-surface-container-high bg-surface-white px-4 text-body-md text-text-body transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+                                        class="inline-flex h-9 items-center justify-center rounded-full border border-surface-container-high bg-surface-white px-4 text-body-md text-text-body transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary font-semibold"
                                         @click="resetFilters"
                                     >
                                         Reset
                                     </button>
                                     <button
                                         type="button"
-                                        class="inline-flex h-9 items-center justify-center rounded-full bg-primary px-4 text-body-md text-on-primary transition-colors hover:bg-primary-container hover:text-on-primary-container focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+                                        class="inline-flex h-9 items-center justify-center rounded-full bg-accent px-4 text-body-md text-on-accent transition-colors hover:bg-accent/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary font-semibold"
                                         @click="applyFilters"
                                     >
                                         Terapkan
@@ -2109,7 +2164,7 @@ onBeforeUnmount(() => {
                                                     :colspan="segment.columns.length"
                                                     class="sticky top-0 z-10 whitespace-nowrap border-b border-surface-container-high text-center"
                                                     :class="[headerBackgroundClass, props.variant === 'activity'
-                                                        ? 'px-4 py-3.5 text-[11px] font-bold uppercase tracking-wider'
+                                                        ? 'px-4 py-3.5 text-xs font-bold uppercase tracking-wider'
                                                         : 'px-6 py-4 text-label-md font-semibold uppercase tracking-wider']"
                                                 >
                                                     {{ segment.label }}
@@ -2127,7 +2182,7 @@ onBeforeUnmount(() => {
                                                     <button
                                                         v-if="segment.column.getCanSort() && !isActionsColumn(segment.column)"
                                                         type="button"
-                                                        class="flex w-full cursor-pointer items-center gap-1 select-none"
+                                                        class="flex w-full cursor-pointer items-center gap-1 select-none font-semibold"
                                                         :class="justifyClass(segment.column)"
                                                         @click="segment.column.getToggleSortingHandler()?.($event)"
                                                     >
@@ -2168,7 +2223,7 @@ onBeforeUnmount(() => {
                                                 <button
                                                     v-if="column.getCanSort() && !isActionsColumn(column)"
                                                     type="button"
-                                                    class="flex w-full cursor-pointer items-center gap-1 select-none"
+                                                    class="flex w-full cursor-pointer items-center gap-1 select-none font-semibold"
                                                     :class="justifyClass(column)"
                                                     @click="column.getToggleSortingHandler()?.($event)"
                                                 >
@@ -2203,7 +2258,7 @@ onBeforeUnmount(() => {
                                             <button
                                                 v-if="column.getCanSort() && !isActionsColumn(column)"
                                                 type="button"
-                                                class="flex w-full cursor-pointer items-center gap-1 select-none"
+                                                class="flex w-full cursor-pointer items-center gap-1 select-none font-semibold"
                                                 :class="justifyClass(column)"
                                                 @click="column.getToggleSortingHandler()?.($event)"
                                             >
@@ -2297,7 +2352,7 @@ onBeforeUnmount(() => {
                         <button
                             v-if="canScrollLeft"
                             type="button"
-                            class="absolute left-2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-surface-container-high bg-surface-white text-secondary shadow-soft transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+                            class="absolute left-2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-surface-container-high bg-surface-white text-secondary shadow-soft transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary font-semibold"
                             :style="{ top: `${scrollArrowTop}px` }"
                             aria-label="Geser tabel ke kiri"
                             @click="scrollHorizontally(-1)"
@@ -2308,7 +2363,7 @@ onBeforeUnmount(() => {
                         <button
                             v-if="canScrollRight"
                             type="button"
-                            class="absolute z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-surface-container-high bg-surface-white text-secondary shadow-soft transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+                            class="absolute z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-surface-container-high bg-surface-white text-secondary shadow-soft transition-colors hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary font-semibold"
                             :style="{ top: `${scrollArrowTop}px`, right: `${actionColumnWidth + 8}px` }"
                             aria-label="Geser tabel ke kanan"
                             @click="scrollHorizontally(1)"
@@ -2361,9 +2416,9 @@ onBeforeUnmount(() => {
                         <div v-if="pageCount > 1" class="flex items-center gap-1">
                             <button
                                 type="button"
-                                class="flex h-8 w-8 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                                class="flex h-8 w-8 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40 font-semibold"
                                 :class="props.variant === 'activity'
-                                    ? 'text-on-primary-container hover:bg-primary'
+                                    ? 'text-on-primary-container hover:bg-primary hover:text-on-primary'
                                     : 'text-text-body hover:bg-surface-container-high'"
                                 :disabled="!table.getCanPreviousPage()"
                                 aria-label="Halaman sebelumnya"
@@ -2383,13 +2438,13 @@ onBeforeUnmount(() => {
                                 <button
                                     v-else
                                     type="button"
-                                    class="flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-body-md transition-colors"
+                                    class="flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-body-md transition-colors font-semibold"
                                     :class="item === pageIndex + 1
                                         ? (props.variant === 'activity'
                                             ? 'bg-surface-white font-semibold text-text-heading'
                                             : 'bg-primary-container font-semibold text-on-primary-container')
                                         : (props.variant === 'activity'
-                                            ? 'text-on-primary-container hover:bg-primary'
+                                            ? 'text-on-primary-container hover:bg-primary hover:text-on-primary'
                                             : 'text-text-body hover:bg-surface-container-high')"
                                     :aria-current="item === pageIndex + 1 ? 'page' : undefined"
                                     :aria-label="`Halaman ${item}`"
@@ -2401,9 +2456,9 @@ onBeforeUnmount(() => {
 
                             <button
                                 type="button"
-                                class="flex h-8 w-8 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                                class="flex h-8 w-8 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40 font-semibold"
                                 :class="props.variant === 'activity'
-                                    ? 'text-on-primary-container hover:bg-primary'
+                                    ? 'text-on-primary-container hover:bg-primary hover:text-on-primary'
                                     : 'text-text-body hover:bg-surface-container-high'"
                                 :disabled="!table.getCanNextPage()"
                                 aria-label="Halaman berikutnya"
@@ -2430,7 +2485,7 @@ tr.app-table-anchor-highlight {
 
 @keyframes app-table-anchor-highlight {
     0% {
-        background-color: color-mix(in srgb, var(--color-secondary, #6750a4) 8%, transparent);
+        background-color: color-mix(in srgb, var(--color-secondary) 8%, transparent);
     }
 
     100% {

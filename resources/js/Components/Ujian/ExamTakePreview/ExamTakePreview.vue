@@ -629,7 +629,7 @@ const seconds = ref(37);
                 <div class="flex min-w-0 items-center gap-3">
                     <button
                         type="button"
-                        class="exam-back-button inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50"
+                        class="exam-back-button inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 font-semibold"
                         :class="
                             previewTheme === 'dark'
                                 ? 'exam-control-dark'
@@ -664,7 +664,7 @@ const seconds = ref(37);
                             </p>
                             <span
                                 v-if="demo"
-                                class="shrink-0 rounded-full bg-pastel-peach px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-text-pastel"
+                                class="shrink-0 rounded-full bg-pastel-peach px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-text-pastel"
                             >
                                 Mode Demo
                             </span>
@@ -718,7 +718,7 @@ const seconds = ref(37);
                     ></span>
                     <button
                         type="button"
-                        class="exam-theme-button inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 sm:h-10 sm:w-10"
+                        class="exam-theme-button inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 sm:h-10 sm:w-10 font-semibold"
                         :class="
                                 previewTheme === 'dark'
                                     ? 'text-text-heading hover:bg-surface-container-high'
@@ -741,7 +741,7 @@ const seconds = ref(37);
                     </button>
                     <button
                         type="button"
-                        class="exam-theme-button inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 sm:h-10 sm:w-10"
+                        class="exam-theme-button inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 sm:h-10 sm:w-10 font-semibold"
                         :class="
                             previewTheme === 'dark'
                                 ? 'text-text-heading hover:bg-surface-container-high'

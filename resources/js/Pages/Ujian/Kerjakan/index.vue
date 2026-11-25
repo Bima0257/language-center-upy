@@ -9,6 +9,7 @@ import QuestionPresentation from "@/Pages/Ujian/Kerjakan/Components/QuestionPres
 import ReadingMaterialPanel from "@/Pages/Ujian/Kerjakan/Components/ReadingMaterialPanel.vue";
 import SubmitConfirmationModal from "@/Pages/Ujian/Kerjakan/Components/SubmitConfirmationModal.vue";
 import { useMediaLoad } from "@/Composables/useMediaLoad";
+import { useToast } from "@/Composables/useToast";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { usePengaturWaktuUjian } from "@/Modules/UjianModule/Composables/usePengaturWaktuUjian.js";
 import { useKeamananUjian } from "@/Modules/UjianModule/Composables/useKeamananUjian.js";
@@ -18,7 +19,10 @@ import axios from "axios";
 const props = defineProps({
     sesiUjian: { type: Object, required: true },
     soalBank: { type: Array, default: () => [] },
+    waktu: { type: Object, default: () => ({}) },
 });
+
+const toast = useToast();
 
 const partUjianAktif = computed(() => props.sesiUjian.part_ujian_aktif);
 
@@ -40,7 +44,20 @@ for (const a of sessionAnswers) {
     answers.value[a.soal_id] = a.teks_jawaban;
 }
 
-const answeredCount = computed(() => Object.keys(answers.value).length);
+const answeredInSection = computed(() =>
+    currentQuestions.value.filter((q) => {
+        const nilai = answers.value[q.id];
+        return nilai !== undefined && nilai !== null && String(nilai).trim() !== "";
+    }).length,
+);
+
+const semuaTerjawab = computed(
+    () => jumlahSoal.value > 0 && answeredInSection.value >= jumlahSoal.value,
+);
+
+const sectionTerakhir = computed(() => Boolean(props.waktu?.section?.terakhir));
+
+const currentQuestionIndex = ref(0);
 
 // ============================================================
 // FOOTER NUMBER STRIP (per partUjian) — sliding window maks 5 nomor
@@ -95,27 +112,48 @@ const mapGroups = computed(() => {
     ];
 });
 
-const elapsedSeconds = props.sesiUjian.dimulai_pada
-    ? Math.floor(
-          (Date.now() - new Date(props.sesiUjian.dimulai_pada).getTime()) / 1000,
-      )
-    : 0;
+// ============================================================
+// TIMER SECTION + TOTAL
+// ============================================================
 
-const totalSeconds = computed(
-    () => (props.sesiUjian.slot_ujian?.periode_ujian?.ujian?.durasi_menit || 35) * 60,
-);
+const sedangProsesWaktu = ref(false);
+const sedangSubmit = ref(false);
+
+const sectionTimer = usePengaturWaktuUjian({
+    totalSeconds: Math.max(0, Number(props.waktu?.section?.sisa_detik ?? 0)),
+    elapsedSeconds: 0,
+    onExpire: () => selesaikanKarenaWaktuSection(),
+});
+
+const totalTimer = usePengaturWaktuUjian({
+    totalSeconds: Math.max(0, Number(props.waktu?.total?.sisa_detik ?? 0)),
+    elapsedSeconds: 0,
+    onExpire: () => submitExam(),
+});
 
 const {
-    remaining,
-    minutes,
-    seconds,
-    isWarning,
-    isDanger,
-    start: startTimer,
-} = usePengaturWaktuUjian({
-    totalSeconds: totalSeconds.value,
-    elapsedSeconds,
-    onExpire: () => handleTimeUp(),
+    remaining: sectionRemaining,
+    minutes: sectionMinutes,
+    seconds: sectionSeconds,
+    isWarning: sectionIsWarning,
+    isDanger: sectionIsDanger,
+    start: startSectionTimer,
+    sync: syncSectionTimer,
+} = sectionTimer;
+
+const {
+    remaining: totalRemaining,
+    minutes: totalMinutes,
+    seconds: totalSeconds,
+    isWarning: totalIsWarning,
+    isDanger: totalIsDanger,
+    start: startTotalTimer,
+    sync: syncTotalTimer,
+} = totalTimer;
+
+const { lastSaved, isSaving, save: autoSave, flush } = useSimpanOtomatis({
+    sesiUjianId: props.sesiUjian.id,
+    debounceMs: 500,
 });
 
 const {
@@ -126,14 +164,9 @@ const {
 } = useKeamananUjian({
     sesiUjianId: props.sesiUjian.id,
     heartbeatInterval: 30000,
+    onHeartbeat: (data) => tanganiHasilWaktu(data),
 });
 
-const { lastSaved, isSaving, save: autoSave } = useSimpanOtomatis({
-    sesiUjianId: props.sesiUjian.id,
-    debounceMs: 500,
-});
-
-const currentQuestionIndex = ref(0);
 const currentQuestion = computed(
     () => currentQuestions.value[currentQuestionIndex.value] || null,
 );
@@ -194,19 +227,101 @@ function selectAnswer(key) {
     autoSave(q.id, key);
 }
 
-function handleTimeUp() {
-    axios
-        .post(`/ujian/sesi/${props.sesiUjian.id}/selesaikan-part`)
-        .catch(() => {});
+function sinkronTimer(data) {
+    const sisaSection = data?.waktu?.section?.sisa_detik;
+    const sisaTotal = data?.waktu?.total?.sisa_detik;
+
+    if (sisaSection !== null && sisaSection !== undefined) {
+        syncSectionTimer(Math.max(0, Number(sisaSection)));
+        startSectionTimer();
+    }
+
+    if (sisaTotal !== null && sisaTotal !== undefined) {
+        syncTotalTimer(Math.max(0, Number(sisaTotal)));
+        startTotalTimer();
+    }
 }
 
-function submitExam() {
+function tanganiHasilWaktu(data) {
+    if (!data) return;
+
+    if (data.diserahkan) {
+        window.location.href = data.redirect || "/dasbor";
+        return;
+    }
+
+    if (!data.sesi_aktif) {
+        window.location.href = "/dasbor";
+        return;
+    }
+
+    const partAktifId = partUjianAktif.value?.id ?? props.sesiUjian.part_ujian_aktif_id;
+
+    if (
+        data.part_ujian_aktif_id &&
+        String(data.part_ujian_aktif_id) !== String(partAktifId)
+    ) {
+        window.location.reload();
+        return;
+    }
+
+    sinkronTimer(data);
+}
+
+function selesaikanKarenaWaktuSection() {
+    if (sedangProsesWaktu.value) return;
+    sedangProsesWaktu.value = true;
+
     axios
-        .post(`/ujian/sesi/${props.sesiUjian.id}/serahkan`)
-        .then(() => {
-            window.location.href = "/dasbor";
-        })
-        .catch(() => {});
+        .post(`/ujian/sesi/${props.sesiUjian.id}/selesaikan-part`)
+        .then(({ data }) => tanganiHasilWaktu(data))
+        .catch(() => {})
+        .finally(() => {
+            sedangProsesWaktu.value = false;
+        });
+}
+
+async function selesaikanSectionManual() {
+    if (!semuaTerjawab.value || sectionTerakhir.value || sedangProsesWaktu.value) {
+        return;
+    }
+
+    const partId = partUjianAktif.value?.id;
+    if (!partId) return;
+
+    sedangProsesWaktu.value = true;
+
+    try {
+        await flush();
+
+        const { data } = await axios.post(
+            `/ujian/sesi/${props.sesiUjian.id}/selesaikan-section`,
+            { part_ujian_id: partId },
+        );
+
+        tanganiHasilWaktu(data);
+    } catch (error) {
+        const pesan =
+            error?.response?.data?.errors?.section?.[0] ||
+            error?.response?.data?.message ||
+            "Gagal menyelesaikan section.";
+        toast.error(pesan);
+    } finally {
+        sedangProsesWaktu.value = false;
+    }
+}
+
+async function submitExam() {
+    if (sedangSubmit.value) return;
+    sedangSubmit.value = true;
+
+    try {
+        await flush();
+        await axios.post(`/ujian/sesi/${props.sesiUjian.id}/serahkan`);
+        window.location.href = "/dasbor";
+    } catch {
+        sedangSubmit.value = false;
+    }
 }
 
 watch(
@@ -231,7 +346,8 @@ function backToExam() {
 }
 
 onMounted(() => {
-    startTimer();
+    startSectionTimer();
+    startTotalTimer();
     activateSecurity();
 });
 
@@ -244,11 +360,17 @@ onUnmounted(() => {
     <TataLetakUjian
         :sesi-ujian="sesiUjian"
         :title="headerTitle"
-        :remaining-seconds="remaining"
-        :minutes="minutes"
-        :seconds="seconds"
-        :is-warning="isWarning"
-        :is-danger="isDanger"
+        :remaining-seconds="sectionRemaining"
+        :minutes="sectionMinutes"
+        :seconds="sectionSeconds"
+        :is-warning="sectionIsWarning"
+        :is-danger="sectionIsDanger"
+        :total-remaining-seconds="totalRemaining"
+        :total-minutes="totalMinutes"
+        :total-seconds="totalSeconds"
+        :show-total-timer="true"
+        :total-is-warning="totalIsWarning"
+        :total-is-danger="totalIsDanger"
     >
         <div class="flex h-full">
             <ReadingMaterialPanel
@@ -271,7 +393,7 @@ onUnmounted(() => {
                     :current-question="currentQuestion"
                     :current-question-index="currentQuestionIndex"
                     :jumlah-soal="jumlahSoal"
-                    :answered-count="answeredCount"
+                    :answered-count="answeredInSection"
                     :strike-count="strikeCount"
                     :is-saving="isSaving"
                     :last-saved="lastSaved"
@@ -286,8 +408,12 @@ onUnmounted(() => {
                     :answers="answers"
                     :visible-numbers="visibleNumbers"
                     :strip-anim="stripAnim"
+                    :is-last-section="sectionTerakhir"
+                    :all-answered="semuaTerjawab"
+                    :is-finishing="sedangProsesWaktu"
                     @navigate="goToQuestion"
                     @submit="showSubmitConfirm = true"
+                    @finish-section="selesaikanSectionManual"
                     @show-grid="showGridModal = true"
                 />
             </section>
@@ -296,7 +422,7 @@ onUnmounted(() => {
 
     <SubmitConfirmationModal
         :show="showSubmitConfirm"
-        :answered-count="answeredCount"
+        :answered-count="answeredInSection"
         :jumlah-soal="jumlahSoal"
         @close="showSubmitConfirm = false"
         @submit="submitExam"

@@ -67,7 +67,7 @@ function tabClasses(item) {
     }
 
     return isActiveTab(item)
-        ? "bg-surface-white font-semibold text-primary shadow-sm"
+        ? "bg-surface-white font-semibold text-primary shadow-xs"
         : "bg-transparent text-text-muted hover:bg-surface-container-low hover:text-text-body";
 }
 </script>
@@ -98,11 +98,11 @@ function tabClasses(item) {
                 :aria-disabled="item.disabled ? 'true' : undefined"
                 :disabled="item.disabled"
                 :tabindex="isFocusableTab(item, index) ? 0 : -1"
-                class="inline-flex min-h-10 w-auto shrink-0 items-center justify-center whitespace-nowrap rounded-full px-5 py-2.5 text-label-md font-medium transition-colors duration-150 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                class="inline-flex min-h-10 w-auto shrink-0 items-center justify-center whitespace-nowrap rounded-full px-5 py-2.5 text-label-md font-semibold transition-colors duration-150 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                 :class="[
                     tabClasses(item),
                     props.activeAction && isActiveTab(item) && $slots['active-action']
-                        ? '!rounded-r-none pr-2'
+                        ? 'rounded-r-none! pr-2'
                         : '',
                 ]"
                 @click="emit('update:modelValue', item.value)"

@@ -150,7 +150,7 @@ const resolvedTotalScore = computed(() => props.totalScore ?? props.listeningSco
 .certificate-frame {
     container-type: inline-size;
     width: 100%;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-family: 'Urbanist', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 .certificate {

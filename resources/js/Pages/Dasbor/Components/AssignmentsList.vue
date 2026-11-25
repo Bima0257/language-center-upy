@@ -22,7 +22,7 @@ const assignments = [
     <div>
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-headline-md font-bold text-text-heading">Tugas Saya (5)</h3>
-            <button class="text-primary hover:underline text-label-md font-medium">Lihat Semua</button>
+            <button class="text-primary hover:underline text-label-md font-semibold">Lihat Semua</button>
         </div>
         <div class="space-y-3">
             <ListItem v-for="(item, i) in assignments" :key="i"

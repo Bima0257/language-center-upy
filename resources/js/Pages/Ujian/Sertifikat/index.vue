@@ -29,7 +29,7 @@ function formatDate(date) {
                     </div>
                     <div class="flex-1 min-w-0">
                         <h3 class="font-bold text-text-heading text-title-lg">
-                            {{ cert.sesi_ujian?.slot_ujian?.periode_ujian?.ujian?.judul || 'Ujian' }}
+                            {{ cert.sesi_ujian?.ujian?.judul || cert.sesi_ujian?.slot_ujian?.periode_ujian?.ujian?.judul || 'Ujian' }}
                         </h3>
                         <p class="text-label-md text-text-muted mt-1">
                             No. {{ cert.nomor_sertifikat }}

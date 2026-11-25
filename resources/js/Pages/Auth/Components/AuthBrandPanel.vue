@@ -13,7 +13,7 @@ const stats = [
     <div class="hidden min-w-0 flex-col lg:flex lg:h-full">
         <div class="flex items-center gap-3">
             <img
-                src="/assets/image/logo-dark.png"
+                src="/assets/image/brand/logo-upy.png"
                 alt="UPY Language Test"
                 class="h-10 w-auto object-contain"
             />

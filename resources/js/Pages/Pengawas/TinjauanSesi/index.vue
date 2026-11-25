@@ -43,7 +43,7 @@ function refresh() {
     <TataLetakDasbor title="Tinjauan Sesi" subtitle="Tinjau pelanggaran dan putuskan status sesi">
         <div class="flex justify-end mb-4">
             <button @click="refresh"
-                    class="bg-surface-white border border-outline-variant text-primary px-5 py-2 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all active:scale-95">
+                    class="bg-surface-white border border-outline-variant text-primary px-5 py-2 rounded-full text-label-md font-semibold hover:bg-surface-container-low transition-all active:scale-95">
                 Refresh → Segarkan
             </button>
         </div>

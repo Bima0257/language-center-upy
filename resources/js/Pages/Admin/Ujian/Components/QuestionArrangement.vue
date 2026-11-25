@@ -12,6 +12,7 @@ const props = defineProps({
     itemsBySection: { type: Object, default: () => ({}) },
     dirtySections: { type: Object, default: () => ({}) },
     embedded: { type: Boolean, default: false },
+    locked: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['sort', 'save-arrangement', 'cancel-arrangement']);
@@ -34,6 +35,14 @@ watch(
     () => {
         isEditing.value = !!props.dirtySections[props.partUjian.id];
     },
+);
+
+watch(
+    () => props.locked,
+    (locked) => {
+        if (locked) isEditing.value = false;
+    },
+    { immediate: true },
 );
 
 function sectionOffset() {
@@ -77,7 +86,11 @@ function onSort() {
             :padding="embedded ? 'p-6' : true"
             :class="embedded ? 'rounded-none border-0 shadow-none' : ''"
         >
-            <div v-if="displayItems.length" class="mb-4 flex justify-end">
+            <p v-if="locked" class="mb-4 text-label-md text-text-muted">
+                Ujian aktif — susunan soal dikunci.
+            </p>
+
+            <div v-if="displayItems.length && !locked" class="mb-4 flex justify-end">
                 <BaseButton
                     v-if="!isEditing"
                     variant="secondary"
@@ -107,7 +120,7 @@ function onSort() {
                 item-key="key"
                 :filter="'.partSoal-header'"
                 handle=".drag-handle"
-                :disabled="!isEditing"
+                :disabled="!isEditing || locked"
                 ghost-class="opacity-40"
                 class="space-y-2"
                 @sort="onSort"

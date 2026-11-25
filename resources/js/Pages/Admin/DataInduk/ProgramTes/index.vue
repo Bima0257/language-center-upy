@@ -3,6 +3,7 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import ProgramTesTable from './Components/ProgramTesTable.vue';
 import ProgramTesFormModal from './Components/ProgramTesFormModal.vue';
+import DetailProgramTesModal from './Components/DetailProgramTesModal.vue';
 import { computed, ref } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 
@@ -28,8 +29,10 @@ const editForm = useForm({
 });
 
 const showModal = ref(false);
+const showDetailModal = ref(false);
 const creating = ref(false);
 const editingType = ref(null);
+const detailType = ref(null);
 
 const modalForm = computed(() => creating.value ? form : editForm);
 
@@ -44,11 +47,17 @@ function openCreate() {
 function submit() {
     form.post(route('admin.data-induk.program-tes.simpan'), {
         preserveScroll: true,
-        onSuccess: () => {
-            closeModal();
-            form.reset();
-        },
+        onSuccess: closeModal,
     });
+}
+
+function openDetail(type) {
+    detailType.value = type;
+    showDetailModal.value = true;
+}
+
+function closeDetail() {
+    showDetailModal.value = false;
 }
 
 function startEdit(type) {
@@ -73,9 +82,6 @@ function saveEdit() {
 
 function closeModal() {
     showModal.value = false;
-    editingType.value = null;
-    creating.value = false;
-    editForm.reset();
 }
 
 async function destroy(type) {
@@ -87,13 +93,18 @@ async function destroy(type) {
 <template>
     <Head title="Data Induk - Program Tes" />
     <TataLetakDasbor title="Data Induk Program Tes" subtitle="Kelola data program tes">
-        <ProgramTesTable :program-tes="programTes" @create="openCreate" @edit="startEdit" @delete="destroy" />
+        <ProgramTesTable :program-tes="programTes" @create="openCreate" @edit="startEdit" @delete="destroy" @detail="openDetail" />
         <ProgramTesFormModal
             :show="showModal"
             :creating="creating"
             :form="modalForm"
             @close="closeModal"
             @submit="creating ? submit() : saveEdit()"
+        />
+        <DetailProgramTesModal
+            :show="showDetailModal"
+            :program-tes="detailType"
+            @close="closeDetail"
         />
     </TataLetakDasbor>
 </template>

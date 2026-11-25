@@ -15,6 +15,7 @@ const props = defineProps({
     ujian: { type: Array, default: () => [] },
     programTes: { type: Array, default: () => [] },
     bankSoal: { type: Array, default: () => [] },
+    programStudi: { type: Array, default: () => [] },
     ringkasanProgramTes: { type: Array, default: () => [] },
     programTesTerpilih: { type: Object, default: null },
     programTesTerpilihId: { type: [String, null], default: null },
@@ -31,6 +32,8 @@ const tambahForm = useForm({
     deskripsi: '',
     mode: 'tryout',
     durasi_menit: 160,
+    lingkup: 'umum',
+    program_studi_ids: [],
 })
 const editForm = useForm({
     program_tes_id: '',
@@ -38,6 +41,8 @@ const editForm = useForm({
     deskripsi: '',
     mode: 'tryout',
     durasi_menit: 160,
+    lingkup: 'umum',
+    program_studi_ids: [],
     aktif: true,
 })
 
@@ -73,17 +78,14 @@ function openEditModal(ujian) {
     editForm.deskripsi = ujian.deskripsi || ''
     editForm.mode = ujian.mode || 'tryout'
     editForm.durasi_menit = ujian.durasi_menit || 1
+    editForm.lingkup = ujian.lingkup || 'umum'
+    editForm.program_studi_ids = (ujian.program_studi || []).map((programStudi) => programStudi.id)
     editForm.aktif = !!ujian.aktif
     showUjianModal.value = true
 }
 
 function closeUjianModal() {
     showUjianModal.value = false
-    editingUjian.value = null
-    tambahForm.reset()
-    tambahForm.clearErrors()
-    editForm.reset()
-    editForm.clearErrors()
 }
 
 function programTesUrl(programTesId) {
@@ -111,7 +113,7 @@ function submitEditUjian() {
 }
 
 async function destroy(ujian) {
-    if (ujian.periode_ujian_exists) return
+    if (ujian.periode_ujian_exists || ujian.sesi_ujian_exists) return
     if (!await confirm.confirm(`Hapus ujian "${ujian.judul}"? Tindakan ini tidak bisa dibatalkan.`)) return
     router.delete(route('admin.ujian.hapus', ujian.id), { preserveScroll: true })
 }
@@ -127,7 +129,18 @@ const columns = [
             () => (info.getValue() === 'tryout' ? 'Try Out' : 'Ujian Resmi'),
         ),
     },
-    { accessorKey: 'durasi_menit', header: 'Durasi', cell: info => `${info.getValue()} menit` },
+    {
+        accessorKey: 'lingkup',
+        header: 'Lingkup',
+        cell: info => h(
+            BaseBadge,
+            { variant: info.getValue() === 'umum' ? 'neutral' : 'pastel' },
+            () => (info.getValue() === 'umum'
+                ? 'Semua Peserta'
+                : `${(info.row.original.program_studi || []).length} Prodi`),
+        ),
+    },
+    { accessorKey: 'durasi_menit', header: 'Durasi Total', cell: info => `${info.getValue()} menit` },
     { accessorKey: 'part_ujian_count', header: 'Part Ujian', cell: info => info.getValue() ?? 0 },
     {
         accessorKey: 'aktif',
@@ -173,9 +186,13 @@ const columns = [
                     {
                         variant: 'danger',
                         iconOnly: true,
-                        disabled: row.periode_ujian_exists,
-                        title: row.periode_ujian_exists ? 'Tidak bisa dihapus - sudah terjadwal' : 'Hapus ujian',
-                        'aria-label': row.periode_ujian_exists ? 'Tidak bisa dihapus - sudah terjadwal' : 'Hapus ujian',
+                        disabled: row.periode_ujian_exists || row.sesi_ujian_exists,
+                        title: row.periode_ujian_exists || row.sesi_ujian_exists
+                            ? 'Tidak bisa dihapus - sudah terjadwal atau memiliki sesi'
+                            : 'Hapus ujian',
+                        'aria-label': row.periode_ujian_exists || row.sesi_ujian_exists
+                            ? 'Tidak bisa dihapus - sudah terjadwal atau memiliki sesi'
+                            : 'Hapus ujian',
                         onClick: () => destroy(row),
                     },
                     () => h(IconTrash, { size: 16 }),
@@ -220,6 +237,7 @@ const columns = [
                 :form="modalForm"
                 :program-tes="programTes"
                 :bank-soal-tersaring="bankSoalTersaring"
+                :program-studi="programStudi"
                 @close="closeUjianModal"
                 @submit="isCreating ? submitTambahUjian() : submitEditUjian()"
             />

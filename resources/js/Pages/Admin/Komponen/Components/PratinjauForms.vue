@@ -215,7 +215,7 @@ const errorInputValue = ref("");
                 variant="dropzone"
                 accept="image/*"
                 media-type="image"
-                preview-url="/assets/image/default-materiSoal.png"
+                preview-url="/assets/image/placeholder/default-passage.png"
                 hint="PNG atau JPG, maksimal 2 MB"
                 @update:model-value="emit('update:file-value', $event)"
             />

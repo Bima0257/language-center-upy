@@ -52,6 +52,7 @@ onBeforeUnmount(removeScrollListener);
 <template>
     <Dropdown
         ref="dropdownRef"
+        theme="app"
         :placement="props.placement"
         :disabled="props.disabled"
         :distance="props.distance"

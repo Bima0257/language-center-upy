@@ -37,11 +37,13 @@ class PratinjauController extends Controller
         'listening' => [
             'urutan' => 1,
             'nama' => 'Listening',
+            'durasi_menit' => 45,
             'deskripsi' => '<p>In the Listening test, you will be asked to demonstrate how well you understand spoken English. The entire Listening test will last approximately 45 minutes. There are four parts, and directions are given for each part. You must mark your answers on the separate answer sheet. Do not write your answers in your test book.</p>',
         ],
         'reading' => [
             'urutan' => 2,
             'nama' => 'Reading',
+            'durasi_menit' => 75,
             'deskripsi' => '<p>Dalam part Reading, Anda akan membaca beberapa bacaan akademik dan menjawab pertanyaan berdasarkan isi bacaan. Bacalah setiap bacaan dengan cermat sebelum menjawab. Sebagian soal bersifat stand alone dan tidak terkait dengan bacaan mana pun.</p>',
         ],
     ];
@@ -218,6 +220,7 @@ class PratinjauController extends Controller
                         'kode' => $sectionCode,
                         'nama' => $meta['nama'],
                         'deskripsi' => $meta['deskripsi'],
+                        'durasi_menit' => $meta['durasi_menit'],
                     ],
                     'partSoal' => [
                         'nama' => $partName,
@@ -251,6 +254,7 @@ class PratinjauController extends Controller
                     'kode' => $code,
                     'nama' => $items->first()['section']['nama'],
                     'materi' => $items->first()['materi'],
+                    'durasi_menit' => $items->first()['section']['durasi_menit'],
                     'jumlahSoal' => $items->sum('jumlahSoal'),
                     'partSoal' => $items->values()->map(fn ($b) => [
                         'nama' => $b['partSoal']['nama'],

@@ -24,7 +24,7 @@ const imageLoading = useMediaLoad(() => props.imageSrc);
                         {{ materiSoal?.judul || "Audio" }}
                     </h1>
                 </div>
-                <p class="mb-2 text-[13px] text-text-muted">
+                <p class="mb-2 text-xs text-text-muted">
                     Putar audio sebelum menjawab soal.
                 </p>
                 <div

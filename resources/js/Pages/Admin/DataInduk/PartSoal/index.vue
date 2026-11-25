@@ -164,6 +164,12 @@ watch(kelompokSection, (groups) => {
 function onReorder(sectionId, evt) {
     if (!canManagePartSoal.value || reordering.value) return;
 
+    const adaPartTerkunci = props.partSoal.some(
+        (part) => String(part.section_id) === String(sectionId) && part.dipakai_ujian_aktif,
+    );
+
+    if (adaPartTerkunci) return;
+
     const prev = (originalOrders.value[sectionId] || '').split(',').filter(Boolean);
     if (prev.length === 0 || typeof evt.oldIndex !== 'number' || typeof evt.newIndex !== 'number') return;
 
@@ -201,10 +207,7 @@ function openCreate() {
 function submit() {
     form.post(route('admin.data-induk.part-soal.simpan'), {
         preserveScroll: true,
-        onSuccess: () => {
-            closeModal();
-            form.reset();
-        },
+        onSuccess: closeModal,
     });
 }
 
@@ -232,9 +235,6 @@ function saveEdit() {
 
 function closeModal() {
     showModal.value = false;
-    partSoalYangDiedit.value = null;
-    creating.value = false;
-    editForm.reset();
 }
 
 async function destroy(partSoal) {
@@ -276,7 +276,7 @@ async function destroy(partSoal) {
                     class="relative z-10 -mb-px px-5"
                 />
 
-                <BaseCard :padding="false" class="!border-t-0 overflow-hidden">
+                <BaseCard :padding="false" class="border-t-0! overflow-hidden">
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/30 px-5 py-3.5">
                         <h2 class="text-title-lg font-semibold text-text-heading">Daftar Part Soal</h2>
                         <div class="flex items-center gap-2">

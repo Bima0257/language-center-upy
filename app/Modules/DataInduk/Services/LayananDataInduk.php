@@ -17,7 +17,9 @@ use App\Modules\DataInduk\Repositories\Contracts\ProgramTesRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\SectionRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\SertifikatRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\UrutanKodeRepositoryInterface;
+use App\Modules\Pengguna\Repositories\Contracts\PenggunaRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\BankSoalRepositoryInterface;
+use App\Modules\Ujian\Repositories\Contracts\UjianRepositoryInterface;
 use App\Modules\Ujian\Services\LayananKebijakanMateriSoal;
 use App\Modules\Ujian\Services\LayananUjian;
 use Illuminate\Database\Eloquent\Collection;
@@ -37,6 +39,8 @@ class LayananDataInduk
         private SertifikatRepositoryInterface $sertifikatRepo,
         private UrutanKodeRepositoryInterface $urutanKodeRepo,
         private BankSoalRepositoryInterface $bankSoalRepo,
+        private UjianRepositoryInterface $ujianRepo,
+        private PenggunaRepositoryInterface $penggunaRepo,
         private LayananKebijakanMateriSoal $kebijakanMateri,
         private LayananUjian $layananUjian,
     ) {}
@@ -51,10 +55,21 @@ class LayananDataInduk
 
     public function dataDaftarSectionPerProgramTes(ProgramTes $programTes): array
     {
+        $section = $this->sectionRepo->semuaBerurutan($programTes->id);
+        $sectionDalamUjianAktif = array_fill_keys(
+            $this->layananUjian->idSectionDalamUjianAktif($section->pluck('id')->all()),
+            true,
+        );
+        $section->each(fn (Section $item): mixed => $item->setAttribute(
+            'dipakai_ujian_aktif',
+            isset($sectionDalamUjianAktif[$item->id]),
+        ));
+
         return [
             'programTes' => $programTes,
-            'section' => $this->sectionRepo->semuaBerurutan($programTes->id),
+            'section' => $section,
             'kebijakanMateriSoal' => $this->kebijakanMateri->semuaUntukFrontend(),
+            'memilikiUjianAktif' => $this->layananUjian->adaUjianAktifUntukProgramTes($programTes->id),
         ];
     }
 
@@ -107,6 +122,7 @@ class LayananDataInduk
             $bankSoalKonteksId = $data['bank_soal_konteks_id'] ?? null;
             unset($data['bank_soal_konteks_id']);
             $this->pastikanBankSoalKonteks($bankSoalKonteksId, null, $section->program_tes_id);
+            $this->pastikanSectionTidakDipakaiUjianAktif($section);
 
             $dataSection = $data;
             unset($dataSection['ketentuan_materi'], $dataSection['aturan_media']);
@@ -165,6 +181,12 @@ class LayananDataInduk
      */
     public function susunUlangSection(array $ids, string $programTesId): void
     {
+        if ($this->layananUjian->adaUjianAktifUntukProgramTes($programTesId)) {
+            throw ValidationException::withMessages([
+                'section' => 'Urutan section tidak dapat diubah karena program tes dipakai ujian aktif.',
+            ]);
+        }
+
         DB::transaction(function () use ($ids, $programTesId): void {
             $ids = array_values($ids);
             $section = $this->sectionRepo->semuaBerurutan($programTesId);
@@ -223,6 +245,12 @@ class LayananDataInduk
 
     public function perbaruiProgramTes(ProgramTes $programTes, array $data): void
     {
+        if ($this->layananUjian->adaUjianAktifUntukProgramTes($programTes->id)) {
+            throw ValidationException::withMessages([
+                'nama' => 'Program tes tidak dapat diubah karena dipakai ujian aktif.',
+            ]);
+        }
+
         $this->programTesRepo->update($programTes, $this->bersihkanTeksOpsional($data));
     }
 
@@ -345,8 +373,15 @@ class LayananDataInduk
      */
     public function susunUlangPartSoal(array $ids): void
     {
+        $ids = array_values($ids);
+
+        if ($this->layananUjian->idPartSoalDalamUjianAktif($ids) !== []) {
+            throw ValidationException::withMessages([
+                'part_soal' => 'Urutan part soal tidak dapat diubah karena dipakai ujian aktif.',
+            ]);
+        }
+
         DB::transaction(function () use ($ids): void {
-            $ids = array_values($ids);
             $partSoal = $this->partSoalRepo->temukanBanyak($ids);
 
             if (count($ids) !== $partSoal->count()) {
@@ -431,6 +466,10 @@ class LayananDataInduk
 
     public function hapusFakultas(Fakultas $fakultas): void
     {
+        if ($fakultas->programStudi()->exists()) {
+            throw new \RuntimeException('Fakultas tidak dapat dihapus karena masih memiliki program studi.');
+        }
+
         $this->fakultasRepo->delete($fakultas);
     }
 
@@ -490,6 +529,14 @@ class LayananDataInduk
 
     public function hapusProgramStudi(ProgramStudi $programStudi): void
     {
+        if ($this->ujianRepo->memilikiProgramStudi($programStudi->id)) {
+            throw new \RuntimeException('Program studi tidak dapat dihapus karena digunakan pada lingkup ujian.');
+        }
+
+        if ($this->penggunaRepo->memilikiProfilDenganProgramStudi($programStudi->id)) {
+            throw new \RuntimeException('Program studi tidak dapat dihapus karena masih digunakan profil peserta.');
+        }
+
         $this->programStudiRepo->delete($programStudi);
     }
 
@@ -510,6 +557,11 @@ class LayananDataInduk
 
     public function buatInterpretasiSkor(array $data): void
     {
+        $this->pastikanProgramTesTidakDipakaiUjianAktif(
+            $data['program_tes_id'],
+            'Interpretasi skor tidak dapat ditambahkan karena program tes dipakai ujian aktif.',
+        );
+
         $this->interpretasiSkorRepo->create($this->bersihkanTeksOpsional($data));
     }
 
@@ -521,6 +573,11 @@ class LayananDataInduk
         array $data,
         string $skemaPenilaianId,
     ): void {
+        $this->pastikanProgramTesTidakDipakaiUjianAktif(
+            $programTes->id,
+            'Interpretasi skor tidak dapat ditambahkan karena program tes dipakai ujian aktif.',
+        );
+
         $interpretasiSkor = array_map(
             fn (array $row): array => $this->bersihkanTeksOpsional([
                 'skema_penilaian_id' => $skemaPenilaianId,
@@ -542,11 +599,21 @@ class LayananDataInduk
 
     public function perbaruiInterpretasiSkor(InterpretasiSkor $interpretasi, array $data): void
     {
+        $this->pastikanProgramTesTidakDipakaiUjianAktif(
+            $interpretasi->program_tes_id,
+            'Interpretasi skor tidak dapat diubah karena program tes dipakai ujian aktif.',
+        );
+
         $this->interpretasiSkorRepo->update($interpretasi, $this->bersihkanTeksOpsional($data));
     }
 
     public function hapusInterpretasiSkor(InterpretasiSkor $interpretasi): void
     {
+        $this->pastikanProgramTesTidakDipakaiUjianAktif(
+            $interpretasi->program_tes_id,
+            'Interpretasi skor tidak dapat dihapus karena program tes dipakai ujian aktif.',
+        );
+
         $this->interpretasiSkorRepo->delete($interpretasi);
     }
 
@@ -590,6 +657,22 @@ class LayananDataInduk
     public function programTesAktif(): Collection
     {
         return $this->programTesRepo->semuaAktifBerurutan();
+    }
+
+    private function pastikanSectionTidakDipakaiUjianAktif(Section $section): void
+    {
+        if ($this->layananUjian->adaUjianAktifUntukSection($section->id)) {
+            throw ValidationException::withMessages([
+                'nama' => 'Section tidak dapat diubah karena dipakai ujian aktif.',
+            ]);
+        }
+    }
+
+    private function pastikanProgramTesTidakDipakaiUjianAktif(string $programTesId, string $pesan): void
+    {
+        if ($this->layananUjian->adaUjianAktifUntukProgramTes($programTesId)) {
+            throw new \RuntimeException($pesan);
+        }
     }
 
     private function bersihkanTeksOpsional(array $data): array

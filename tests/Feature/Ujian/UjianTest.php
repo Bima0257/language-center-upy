@@ -110,15 +110,16 @@ class UjianTest extends TestCase
             'program_tes_id' => $ujian->program_tes_id,
             'judul' => 'Try Out EPT Diperbarui',
             'deskripsi' => 'Deskripsi ujian yang diperbarui.',
-            'mode' => 'tryout',
-            'durasi_menit' => 71,
+            'mode' => $ujian->mode->value,
+            'lingkup' => $ujian->lingkup->value,
+            'durasi_menit' => 120,
             'aktif' => true,
         ])->assertRedirect();
 
         $this->assertDatabaseHas('ujian', [
             'id' => $ujian->id,
             'judul' => 'Try Out EPT Diperbarui',
-            'durasi_menit' => 71,
+            'durasi_menit' => 120,
         ]);
     }
 
@@ -133,6 +134,7 @@ class UjianTest extends TestCase
             'judul' => $ujian->judul,
             'deskripsi' => '<p><em>Deskripsi baru</em></p><script>alert(1)</script>',
             'mode' => $ujian->mode->value,
+            'lingkup' => $ujian->lingkup->value,
             'durasi_menit' => $ujian->durasi_menit,
             'aktif' => true,
         ])->assertRedirect();
@@ -148,7 +150,7 @@ class UjianTest extends TestCase
         $this->masukSebagai('admin');
 
         $programTes = ProgramTes::where('nama', 'EPT')->first();
-        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->first();
+        $bankSoal = BankSoal::where('nama', 'Bank Soal Ujian Resmi')->first();
 
         $this->post('/admin/ujian', [
             'program_tes_id' => $programTes->id,
@@ -156,6 +158,7 @@ class UjianTest extends TestCase
             'judul' => 'Ujian Baru 2026',
             'deskripsi' => 'Deskripsi',
             'mode' => 'tryout',
+            'lingkup' => 'umum',
             'durasi_menit' => 120,
         ])->assertRedirect();
 
@@ -192,7 +195,7 @@ class UjianTest extends TestCase
         $this->masukSebagai('admin');
 
         $programTes = ProgramTes::where('nama', 'EPT')->firstOrFail();
-        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
+        $bankSoal = BankSoal::where('nama', 'Bank Soal Ujian Resmi')->firstOrFail();
 
         $this->post('/admin/ujian', [
             'program_tes_id' => $programTes->id,
@@ -200,6 +203,7 @@ class UjianTest extends TestCase
             'judul' => 'Ujian Deskripsi HTML',
             'deskripsi' => '<p>Deskripsi <strong>ujian</strong></p><script>alert(1)</script>',
             'mode' => 'tryout',
+            'lingkup' => 'umum',
             'durasi_menit' => 120,
         ])->assertRedirect();
 
@@ -214,7 +218,7 @@ class UjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
+        $bankSoal = BankSoal::where('nama', 'Bank Soal Ujian Resmi')->firstOrFail();
 
         $this->put(route('pustaka-soal.bank-soal.perbarui', $bankSoal->id), [
             'program_tes_id' => $bankSoal->program_tes_id,
@@ -225,7 +229,7 @@ class UjianTest extends TestCase
 
         $this->assertDatabaseHas('bank_soal', [
             'id' => $bankSoal->id,
-            'nama' => 'Bank Soal EPT',
+            'nama' => 'Bank Soal Ujian Resmi',
         ]);
     }
 
@@ -278,7 +282,7 @@ class UjianTest extends TestCase
     {
         $this->masukSebagai('admin');
 
-        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
+        $bankSoal = BankSoal::where('nama', 'Bank Soal Ujian Resmi')->firstOrFail();
 
         $this->delete(route('pustaka-soal.bank-soal.hapus', $bankSoal->id))
             ->assertSessionHas('error');
@@ -318,6 +322,7 @@ class UjianTest extends TestCase
         $this->masukSebagai('admin');
 
         $partUjian = PartUjian::where('judul', 'Reading Section')->firstOrFail();
+        $partUjian->ujian->update(['aktif' => false]);
         $barisSoal = $partUjian->soalPartUjian()->with('soal')->orderBy('urutan')->get();
         $soalIds = $barisSoal->pluck('soal_id')->all();
         $urutanSoal = [];
@@ -348,6 +353,7 @@ class UjianTest extends TestCase
         $this->masukSebagai('admin');
 
         $partUjian = PartUjian::where('judul', 'Reading Section')->firstOrFail();
+        $partUjian->ujian->update(['aktif' => false]);
         $partIds = PartSoal::where('bank_soal_id', $partUjian->bank_soal_id)
             ->where('section_id', $partUjian->section_id)
             ->orderBy('urutan')
@@ -381,6 +387,28 @@ class UjianTest extends TestCase
         );
     }
 
+    public function test_susunan_soal_ujian_aktif_ditolak(): void
+    {
+        $this->masukSebagai('admin');
+
+        $partUjian = PartUjian::where('judul', 'Reading Section')->firstOrFail();
+        $partUjian->ujian->update(['aktif' => true]);
+
+        $urutanSoal = $partUjian->soalPartUjian()
+            ->orderBy('urutan')
+            ->get()
+            ->values()
+            ->map(fn ($baris, int $indeks): array => [
+                'soal_id' => $baris->soal_id,
+                'nomor' => $indeks + 1,
+            ])
+            ->all();
+
+        $this->patch(route('admin.ujian.part.susunan', [$partUjian->ujian_id, $partUjian->id]), [
+            'urutan_soal' => $urutanSoal,
+        ])->assertRedirect()->assertSessionHas('error');
+    }
+
     public function test_bank_soal_nonaktif_tidak_dapat_dipakai_ujian_baru(): void
     {
         $this->masukSebagai('admin');
@@ -397,6 +425,7 @@ class UjianTest extends TestCase
             'bank_soal_id' => $bankSoal->id,
             'judul' => 'Ujian Dengan Bank Nonaktif',
             'mode' => 'tryout',
+            'lingkup' => 'umum',
             'durasi_menit' => 60,
         ])->assertSessionHasErrors('bank_soal_id');
 
@@ -426,6 +455,7 @@ class UjianTest extends TestCase
             'program_tes_id' => $programTesNonaktif->id,
             'judul' => $ujian->judul,
             'mode' => 'tryout',
+            'lingkup' => 'umum',
             'durasi_menit' => 60,
             'aktif' => true,
         ])->assertSessionHasErrors('program_tes_id');

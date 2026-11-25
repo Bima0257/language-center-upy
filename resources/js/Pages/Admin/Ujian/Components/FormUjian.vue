@@ -52,7 +52,7 @@ const modeOptions = [
             <label class="text-label-md font-medium text-text-heading block mb-2">{{ props.creating ? 'Judul Soal Ujian' : 'Judul Ujian' }}</label>
             <input type="text" v-model="props.form.judul" required
                    :placeholder="props.creating ? 'Tes Bahasa 2026' : null"
-                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]" />
+                   class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 dark:focus:ring-secondary/30" />
             <p v-if="props.creating && props.form.errors.judul" class="text-error-red text-xs mt-1">{{ props.form.errors.judul }}</p>
         </div>
 
@@ -77,9 +77,10 @@ const modeOptions = [
                 />
             </div>
             <div>
-                <label class="text-label-md font-medium text-text-heading block mb-2">Durasi (menit)</label>
-                <input type="number" v-model="props.form.durasi_menit" required min="1"
-                       class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary focus:shadow-[0_0_0_2px_rgba(86,71,200,0.1)]" />
+                <label class="text-label-md font-medium text-text-heading block mb-2">Durasi Total Ujian (menit)</label>
+                <input type="number" v-model="props.form.durasi_menit" required min="1" max="480"
+                       class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 dark:focus:ring-secondary/30" />
+                <p v-if="props.form.errors.durasi_menit" class="text-error-red text-xs mt-1">{{ props.form.errors.durasi_menit }}</p>
             </div>
         </BaseFormGrid>
 

@@ -131,8 +131,6 @@ function openEdit(user) {
 
 function closeForm() {
     showForm.value = false;
-    editingUser.value = null;
-    form.clearErrors();
 }
 
 function submitForm() {

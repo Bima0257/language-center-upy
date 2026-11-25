@@ -53,7 +53,7 @@ function changePage(page) {
         <template v-if="mode === 'client'">
             <button
                 type="button"
-                class="px-4 py-2 rounded-full text-label-md font-medium transition-all"
+                class="px-4 py-2 rounded-full text-label-md font-semibold transition-all"
                 :class="currentPage === 1
                     ? 'bg-surface-container-low text-outline-variant cursor-not-allowed'
                     : 'bg-surface-white border border-outline-variant text-text-body hover:bg-surface-container-low'"
@@ -64,11 +64,11 @@ function changePage(page) {
                 &laquo;
             </button>
             <template v-for="(page, index) in clientPageItems" :key="`${page ?? 'ellipsis'}-${index}`">
-                <span v-if="page === null" class="px-2 py-2 text-label-md text-text-muted">…</span>
+                <span v-if="page === null" class="px-2 py-2 text-label-md text-text-muted">â€¦</span>
                 <button
                     v-else
                     type="button"
-                    class="px-4 py-2 rounded-full text-label-md font-medium transition-all"
+                    class="px-4 py-2 rounded-full text-label-md font-semibold transition-all"
                     :class="page === currentPage
                         ? 'bg-primary-container text-on-primary-container'
                         : 'bg-surface-white border border-outline-variant text-text-body hover:bg-surface-container-low'"
@@ -81,7 +81,7 @@ function changePage(page) {
             </template>
             <button
                 type="button"
-                class="px-4 py-2 rounded-full text-label-md font-medium transition-all"
+                class="px-4 py-2 rounded-full text-label-md font-semibold transition-all"
                 :class="currentPage === lastPage
                     ? 'bg-surface-container-low text-outline-variant cursor-not-allowed'
                     : 'bg-surface-white border border-outline-variant text-text-body hover:bg-surface-container-low'"
@@ -97,7 +97,7 @@ function changePage(page) {
                 v-for="link in links"
                 :key="link.label"
                 :href="link.url || '#'"
-                class="px-4 py-2 rounded-full text-label-md font-medium transition-all"
+                class="px-4 py-2 rounded-full text-label-md font-semibold transition-all"
                 :class="
                     link.active
                         ? 'bg-primary-container text-on-primary-container'

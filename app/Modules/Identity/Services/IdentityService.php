@@ -269,6 +269,10 @@ class IdentityService implements IdentityContract
             throw new \RuntimeException('Akun superadmin tidak dapat dihapus.');
         }
 
+        if ($pengguna->sesiUjian()->exists() || $pengguna->pendaftaranUjian()->exists()) {
+            throw new \RuntimeException('Pengguna tidak dapat dihapus karena memiliki riwayat ujian.');
+        }
+
         DB::transaction(function () use ($pengguna): void {
             $pengguna->roles()->detach();
             $pengguna->programStudis()->detach();

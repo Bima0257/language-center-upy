@@ -13,7 +13,7 @@ const emit = defineEmits(['upload-again']);
             Proses verifikasi biasanya memakan waktu 1x24 jam.
         </p>
         <button
-            class="inline-flex items-center gap-2 border border-outline-variant text-primary px-6 py-3 rounded-full text-label-md font-medium hover:bg-surface-container-low transition-all"
+            class="inline-flex items-center gap-2 border border-outline-variant text-primary px-6 py-3 rounded-full text-label-md font-semibold hover:bg-surface-container-low transition-all"
             @click="emit('upload-again')"
         >
             <IconRefresh :size="18" stroke="1.5" />

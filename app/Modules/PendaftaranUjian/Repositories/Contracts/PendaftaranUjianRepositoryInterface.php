@@ -4,12 +4,20 @@ namespace App\Modules\PendaftaranUjian\Repositories\Contracts;
 
 use App\Models\PendaftaranUjian;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 interface PendaftaranUjianRepositoryInterface
 {
     public function temukan(string $id): PendaftaranUjian;
 
     public function temukanUntukPengguna(string $id, string $penggunaId): PendaftaranUjian;
+
+    /**
+     * Riwayat pendaftaran yang ditampilkan ke pengguna (tanpa status dibatalkan).
+     *
+     * @return Collection<int, PendaftaranUjian>
+     */
+    public function riwayatUntukPengguna(string $penggunaId): Collection;
 
     public function temukanUntukSlotDanPengguna(string $slotUjianId, string $penggunaId): ?PendaftaranUjian;
 
@@ -23,6 +31,11 @@ interface PendaftaranUjianRepositoryInterface
      * @param  array<string, mixed>  $filters
      */
     public function paginate(array $filters, int $perPage = 15): LengthAwarePaginator;
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function ringkasanStatusPerUjian(array $filters, int $perPage = 15): LengthAwarePaginator;
 
     public function hitungDisetujui(string $slotUjianId): int;
 

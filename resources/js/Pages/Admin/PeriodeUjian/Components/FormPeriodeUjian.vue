@@ -23,7 +23,6 @@ const emit = defineEmits(['submit']);
                 <label class="text-label-md font-medium text-text-heading block mb-2">Tanggal Mulai</label>
                 <BaseDatePicker
                     v-model="props.form.tanggal_mulai"
-                    mode="date"
                     placeholder="Pilih tanggal mulai"
                     required
                     :error="props.form.errors.tanggal_mulai"
@@ -33,7 +32,6 @@ const emit = defineEmits(['submit']);
                 <label class="text-label-md font-medium text-text-heading block mb-2">Tanggal Selesai</label>
                 <BaseDatePicker
                     v-model="props.form.tanggal_selesai"
-                    mode="date"
                     placeholder="Pilih tanggal selesai"
                     required
                     :min="props.form.tanggal_mulai"

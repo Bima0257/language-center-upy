@@ -22,10 +22,10 @@ const emit = defineEmits(['navigate', 'showGrid']);
         <div class="grid grid-cols-2 gap-2 w-full">
             <button v-for="i in total" :key="i"
                  @click="emit('navigate', i - 1)"
-                 class="h-11 w-full rounded-lg flex items-center justify-center cursor-pointer text-[13px] font-bold transition-all duration-150"
+                 class="h-11 w-full rounded-lg flex items-center justify-center cursor-pointer text-xs font-bold transition-all duration-150"
                  :class="[
                      currentIndex === i - 1
-                         ? 'bg-secondary-container text-on-secondary-container ring-2 ring-secondary/30 scale-[1.04] shadow-sm'
+                         ? 'bg-secondary-container text-on-secondary-container ring-2 ring-secondary/30 scale-[1.04] shadow-xs'
                          : answers.includes(i - 1)
                              ? 'bg-secondary/10 text-secondary border border-secondary/40 hover:bg-secondary/20'
                              : 'bg-surface-container-low text-text-muted border border-outline-variant/50 hover:bg-surface-container-highest'
@@ -37,7 +37,7 @@ const emit = defineEmits(['navigate', 'showGrid']);
         <button
             v-if="total > 0"
             @click="emit('showGrid')"
-            class="mt-1 w-full flex items-center justify-center gap-1.5 px-2 py-2 rounded-full text-[12px] font-semibold border border-outline-variant text-text-body hover:bg-surface-container-low transition-all"
+            class="mt-1 w-full flex items-center justify-center gap-1.5 px-2 py-2 rounded-full text-xs font-semibold border border-outline-variant text-text-body hover:bg-surface-container-low transition-all"
             title="Lihat Semua Soal"
         >
             <IconGridDots :size="14" />

@@ -51,7 +51,7 @@ const verificationLinkSent = computed(
             </BaseButton>
 
             <Link :href="route('logout')" method="post" as="button"
-                  class="w-full text-center text-text-body text-label-md font-medium hover:text-primary transition-colors py-2">
+                  class="w-full text-center text-text-body text-label-md font-semibold hover:text-primary transition-colors py-2">
                 Log Out
             </Link>
         </form>

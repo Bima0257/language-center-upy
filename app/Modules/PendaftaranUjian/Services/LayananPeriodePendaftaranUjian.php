@@ -2,8 +2,10 @@
 
 namespace App\Modules\PendaftaranUjian\Services;
 
+use App\Enums\ModeUjian;
 use App\Models\PeriodePendaftaranUjian;
 use App\Models\ProgramTes;
+use App\Models\Ujian;
 use App\Modules\DataInduk\Repositories\Contracts\ProgramTesRepositoryInterface;
 use App\Modules\PendaftaranUjian\Repositories\Contracts\PendaftaranUjianRepositoryInterface;
 use App\Modules\PendaftaranUjian\Repositories\Contracts\PeriodePendaftaranUjianRepositoryInterface;
@@ -34,7 +36,9 @@ class LayananPeriodePendaftaranUjian
         $perPage = (int) ($filters['per_page'] ?? 15);
 
         $programTes = $this->programTesRepo->semuaAktifBerurutan();
-        $ujianAktif = $this->ujianRepo->semuaAktifDenganProgramTes();
+        $ujianAktif = $this->ujianRepo->semuaAktifDenganProgramTes()
+            ->filter(fn (Ujian $ujian): bool => $ujian->mode === ModeUjian::OFFICIAL)
+            ->values();
         $jumlahUjianPerProgramTes = $ujianAktif->groupBy('program_tes_id')->map->count();
         $jumlahPeriodePerProgramTes = $this->periodePendaftaranRepo->jumlahPeriodePerProgramTes();
         $ringkasanProgramTes = $programTes
@@ -82,22 +86,14 @@ class LayananPeriodePendaftaranUjian
         ];
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function dataDetail(PeriodePendaftaranUjian $periodePendaftaran): array
-    {
-        $periodePendaftaran = $this->periodePendaftaranRepo->temukan($periodePendaftaran->id);
-        $periodePendaftaran->setAttribute('status_pendaftaran', $periodePendaftaran->status());
-
-        return [
-            'periodePendaftaranUjian' => $periodePendaftaran,
-            'slotUjian' => $periodePendaftaran->slotUjian,
-        ];
-    }
-
     public function buat(array $data): PeriodePendaftaranUjian
     {
+        $periodeUjian = $this->penjadwalanRepo->findOrFail($data['periode_ujian_id']);
+
+        if ($periodeUjian->ujian->mode !== ModeUjian::OFFICIAL) {
+            throw new \RuntimeException('Periode pendaftaran hanya tersedia untuk ujian resmi.');
+        }
+
         if ($this->periodePendaftaranRepo->temukanUntukPeriodeUjian($data['periode_ujian_id']) !== null) {
             throw new \RuntimeException('Periode ujian tersebut sudah memiliki periode pendaftaran.');
         }

@@ -53,7 +53,7 @@ const ringkasan = computed(() => {
         class="w-full max-w-3xl overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-white shadow-standard dark:bg-surface-container"
     >
         <div
-            class="flex items-center justify-between gap-4 bg-primary px-5 py-3.5 text-on-primary"
+            class="flex items-center justify-between gap-4 bg-primary px-5 py-3.5 text-on-primary dark:bg-primary-container dark:text-on-primary-container"
         >
             <div>
                 <span
@@ -92,7 +92,7 @@ const ringkasan = computed(() => {
                 </button>
                 <button
                     @click="emit('next')"
-                    class="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-on-primary shadow-md transition-all duration-150 hover:bg-primary/90 active:scale-[0.98]"
+                    class="inline-flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-2 text-xs font-semibold text-on-accent shadow-md transition-all duration-150 hover:bg-accent/90 active:scale-[0.98]"
                 >
                     Mulai Mengerjakan <IconArrowRight :size="14" />
                 </button>

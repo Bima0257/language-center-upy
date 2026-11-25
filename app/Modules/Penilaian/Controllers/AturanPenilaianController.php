@@ -35,6 +35,14 @@ class AturanPenilaianController extends Controller
         );
     }
 
+    public function ubah(SkemaPenilaian $skema, Section $section): Response
+    {
+        return Inertia::render(
+            'Admin/DataInduk/AturanPenilaian/ProgramTes/Ubah/index',
+            $this->layananAturan->dataUbah($skema, $section),
+        );
+    }
+
     public function perbarui(
         SimpanAturanPenilaianRequest $request,
         SkemaPenilaian $skema,
@@ -46,7 +54,8 @@ class AturanPenilaianController extends Controller
             return back()->with('error', $exception->getMessage());
         }
 
-        return back()->with('success', 'Aturan penilaian berhasil disimpan.');
+        return to_route('admin.data-induk.aturan-penilaian.program-tes.daftar', $skema->program_tes_id)
+            ->with('success', 'Aturan penilaian berhasil disimpan.');
     }
 
     public function simulasi(Request $request, SkemaPenilaian $skema): RedirectResponse

@@ -11,6 +11,7 @@ const MAX_ROWS = 10;
 const props = defineProps({
     programTes: { type: Object, required: true },
     skema: { type: Object, required: true },
+    memilikiUjianAktif: { type: Boolean, default: false },
 });
 
 const toast = useToast();
@@ -55,7 +56,7 @@ function openEdit(index) {
     draftForm.clearErrors();
     draftForm.skor_minimum = selectedInterpretasi.skor_minimum;
     draftForm.skor_maksimum = selectedInterpretasi.skor_maksimum;
-    draftForm.tingkat_cefr = selectedInterpretasi.tingkat_cefr;
+    draftForm.tingkat_cefr = (selectedInterpretasi.tingkat_cefr || '').toUpperCase();
     draftForm.label_tingkat = selectedInterpretasi.label_tingkat;
     draftForm.lulus = selectedInterpretasi.lulus;
     draftForm.deskripsi = selectedInterpretasi.deskripsi || '';
@@ -67,7 +68,7 @@ function saveDraft() {
 
     const minimumInput = String(draftForm.skor_minimum).trim();
     const maksimumInput = String(draftForm.skor_maksimum).trim();
-    const tingkatCefr = draftForm.tingkat_cefr.trim();
+    const tingkatCefr = draftForm.tingkat_cefr.trim().toUpperCase();
     const labelTingkat = draftForm.label_tingkat.trim();
     const skorMinimum = Number(minimumInput);
     const skorMaksimum = Number(maksimumInput);
@@ -120,8 +121,6 @@ function saveDraft() {
 
 function closeModal() {
     showModal.value = false;
-    editingIndex.value = null;
-    resetDraft();
 }
 
 function removeDraft(index) {
@@ -129,6 +128,8 @@ function removeDraft(index) {
 }
 
 function submit() {
+    if (props.memilikiUjianAktif) return;
+
     if (interpretasiSkor.value.length === 0) {
         toast.error('Tambahkan minimal satu interpretasi skor.');
         return;
@@ -150,6 +151,10 @@ function submit() {
         :subtitle="`Tambahkan interpretasi skor untuk ${props.programTes.nama}`"
         :back-href="route('admin.data-induk.interpretasi-skor.program-tes.daftar', { programTes: props.programTes.id })"
     >
+        <div v-if="props.memilikiUjianAktif" class="mb-4 rounded-2xl bg-surface-container px-5 py-4 text-label-md text-text-muted">
+            Program tes dipakai ujian aktif — interpretasi skor dikunci.
+        </div>
+
         <InterpretasiSkorBulkTable
             :interpretasi-skor="interpretasiSkor"
             :max-rows="MAX_ROWS"
@@ -163,7 +168,7 @@ function submit() {
         </div>
 
         <div class="flex justify-end mt-6">
-            <BaseButton size="lg" :disabled="form.processing || interpretasiSkor.length === 0" @click="submit">
+            <BaseButton size="lg" :disabled="form.processing || interpretasiSkor.length === 0 || props.memilikiUjianAktif" @click="submit">
                 {{ form.processing ? 'Menyimpan...' : 'Simpan Semua' }}
             </BaseButton>
         </div>

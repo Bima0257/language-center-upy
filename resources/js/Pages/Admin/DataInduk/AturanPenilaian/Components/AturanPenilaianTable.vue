@@ -4,11 +4,11 @@ import { IconEdit } from '@tabler/icons-vue';
 import BaseButton from '@/Components/Base/BaseButton.vue';
 import AppDataTable from '@/Components/Ui/AppDataTable.vue';
 
-defineProps({
+const props = defineProps({
     aturanPenilaian: { type: Array, default: () => [] },
+    ubahUrl: { type: Function, required: true },
+    locked: { type: Boolean, default: false },
 });
-
-const emit = defineEmits(['edit']);
 
 const columns = [
     {
@@ -17,11 +17,6 @@ const columns = [
         meta: { cellClass: 'font-medium text-text-heading' },
     },
     { accessorKey: 'kode_section', header: 'Kode' },
-    {
-        accessorKey: 'terkonfigurasi',
-        header: 'Status',
-        cell: info => (info.getValue() ? 'Terkonfigurasi' : 'Belum dikonfigurasi'),
-    },
     {
         accessorKey: 'skor_mentah_maksimum',
         header: 'Raw Maks.',
@@ -44,12 +39,13 @@ const columns = [
         cell: info => h(
             BaseButton,
             {
+                href: props.locked ? undefined : props.ubahUrl(info.row.original),
                 variant: 'secondary',
                 size: 'sm',
-                class: '!p-2',
-                title: 'Ubah aturan penilaian',
-                'aria-label': 'Ubah aturan penilaian',
-                onClick: () => emit('edit', info.row.original),
+                class: 'p-2!',
+                disabled: props.locked,
+                title: props.locked ? 'Tidak bisa diubah karena program tes dipakai ujian aktif' : 'Ubah aturan penilaian',
+                'aria-label': props.locked ? 'Tidak bisa diubah karena program tes dipakai ujian aktif' : 'Ubah aturan penilaian',
             },
             () => h(IconEdit, { size: 18 }),
         ),

@@ -2,9 +2,12 @@
 
 namespace App\Modules\PelaksanaanUjian\Repositories;
 
+use App\Enums\ModeUjian;
 use App\Enums\StatusSesi;
 use App\Models\SesiUjian;
 use App\Modules\PelaksanaanUjian\Repositories\Contracts\SesiUjianRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class SesiUjianRepository implements SesiUjianRepositoryInterface
@@ -13,17 +16,45 @@ class SesiUjianRepository implements SesiUjianRepositoryInterface
     {
         return SesiUjian::with([
             'catatanPelanggaran',
+            'ujian.programTes',
+            'ujian.partUjian.section',
             'slotUjian.periodeUjian.ujian',
             'slotUjian',
-            'partUjianAktif',
+            'partUjianAktif.section',
             'skemaPenilaian',
             'hasilPenilaian.section',
         ])->findOrFail($id);
     }
 
+    public function temukanUntukUpdate(string $id): SesiUjian
+    {
+        return SesiUjian::with([
+            'ujian.programTes',
+            'ujian.partUjian.section',
+            'slotUjian.periodeUjian.ujian',
+            'slotUjian',
+            'partUjianAktif.section',
+        ])->lockForUpdate()->findOrFail($id);
+    }
+
     public function temukanDenganJawaban(string $id): ?SesiUjian
     {
-        return SesiUjian::with(['jawaban', 'slotUjian.periodeUjian.ujian.partUjian'])->find($id);
+        return SesiUjian::with([
+            'jawaban',
+            'ujian.programTes',
+            'ujian.partUjian',
+            'slotUjian.periodeUjian.ujian.partUjian',
+        ])->find($id);
+    }
+
+    public function temukanDenganJawabanUntukUpdate(string $id): ?SesiUjian
+    {
+        return SesiUjian::with([
+            'jawaban',
+            'ujian.programTes',
+            'ujian.partUjian',
+            'slotUjian.periodeUjian.ujian.partUjian',
+        ])->lockForUpdate()->find($id);
     }
 
     public function create(array $data): SesiUjian
@@ -71,8 +102,13 @@ class SesiUjianRepository implements SesiUjianRepositoryInterface
 
     public function ambilSesiDitandai(bool $sertakanDitinjau = false): Collection
     {
-        $query = SesiUjian::with(['pengguna.profilPeserta', 'catatanPelanggaran', 'slotUjian.periodeUjian.ujian', 'slotUjian'])
-            ->where('ditandai', true);
+        $query = SesiUjian::with([
+            'pengguna.profilPeserta',
+            'catatanPelanggaran',
+            'ujian.programTes',
+            'slotUjian.periodeUjian.ujian',
+            'slotUjian',
+        ])->where('ditandai', true);
 
         if (! $sertakanDitinjau) {
             $query->whereNull('ditinjau_pada');
@@ -83,7 +119,12 @@ class SesiUjianRepository implements SesiUjianRepositoryInterface
 
     public function ambilSesiAktif(): Collection
     {
-        return SesiUjian::with(['pengguna.profilPeserta', 'slotUjian.periodeUjian.ujian', 'slotUjian'])
+        return SesiUjian::with([
+            'pengguna.profilPeserta',
+            'ujian.programTes',
+            'slotUjian.periodeUjian.ujian',
+            'slotUjian',
+        ])
             ->withCount('jawaban')
             ->where('status', StatusSesi::IN_PROGRESS)
             ->get();
@@ -91,11 +132,51 @@ class SesiUjianRepository implements SesiUjianRepositoryInterface
 
     public function terbaruUntukPengguna(string $penggunaId, int $batas = 3): Collection
     {
-        return SesiUjian::with('slotUjian.periodeUjian.ujian', 'slotUjian')
+        return SesiUjian::with('ujian', 'slotUjian.periodeUjian.ujian', 'slotUjian')
             ->where('pengguna_id', $penggunaId)
             ->orderBy('created_at', 'desc')
             ->take($batas)
             ->get();
+    }
+
+    public function paginateRiwayatUntukPengguna(
+        string $penggunaId,
+        ModeUjian $mode,
+        ?string $pencarian,
+        int $perHalaman = 10,
+    ): LengthAwarePaginator {
+        return SesiUjian::query()
+            ->with([
+                'ujian.programTes',
+                'slotUjian.periodeUjian.ujian.programTes',
+            ])
+            ->where('pengguna_id', $penggunaId)
+            ->whereIn('status', [StatusSesi::SUBMITTED, StatusSesi::TERMINATED])
+            ->when(
+                $mode === ModeUjian::OFFICIAL,
+                fn (Builder $query) => $query->whereNotNull('slot_ujian_id'),
+            )
+            ->when(
+                $mode === ModeUjian::TRYOUT,
+                fn (Builder $query) => $query
+                    ->whereNull('slot_ujian_id')
+                    ->whereNotNull('ujian_id'),
+            )
+            ->when(filled($pencarian), function (Builder $query) use ($pencarian): void {
+                $query->where(function (Builder $query) use ($pencarian): void {
+                    $query->whereHas('ujian', fn (Builder $ujianQuery) => $ujianQuery
+                        ->where('judul', 'like', "%{$pencarian}%")
+                        ->orWhereHas('programTes', fn (Builder $programQuery) => $programQuery
+                            ->where('nama', 'like', "%{$pencarian}%")))
+                        ->orWhereHas('slotUjian.periodeUjian.ujian', fn (Builder $ujianQuery) => $ujianQuery
+                            ->where('judul', 'like', "%{$pencarian}%")
+                            ->orWhereHas('programTes', fn (Builder $programQuery) => $programQuery
+                                ->where('nama', 'like', "%{$pencarian}%")));
+                });
+            })
+            ->orderByDesc('created_at')
+            ->paginate($perHalaman)
+            ->withQueryString();
     }
 
     public function hitungAktif(): int

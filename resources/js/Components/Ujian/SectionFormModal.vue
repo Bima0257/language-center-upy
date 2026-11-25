@@ -27,7 +27,7 @@ const emit = defineEmits(['close', 'submit']);
                 <div class="px-8 py-4">
                     <div class="flex items-center justify-between">
                          <h2 id="section-modal-title" class="text-headline-md font-bold text-text-heading">{{ creating ? 'Tambah Section' : 'Ubah Section' }}</h2>
-                         <button type="button" aria-label="Tutup form section" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors">
+                         <button type="button" aria-label="Tutup form section" @click="emit('close')" class="p-2 text-text-muted hover:text-primary transition-colors font-semibold">
                             <IconX :size="20" />
                         </button>
                     </div>
@@ -56,6 +56,12 @@ const emit = defineEmits(['close', 'submit']);
                         <input type="text" v-model="form.nama" required placeholder="Reading"
                                class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
                         <p v-if="form.errors.nama" class="text-error-red text-xs mt-1">{{ form.errors.nama }}</p>
+                    </div>
+                    <div>
+                        <label class="text-label-md font-medium text-text-heading block mb-1.5">Durasi Section (menit) *</label>
+                        <input type="number" v-model="form.durasi_menit" required min="1" max="600" placeholder="45"
+                               class="w-full px-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-2xl text-text-body text-body-md focus:outline-none focus:border-secondary" />
+                        <p v-if="form.errors.durasi_menit" class="text-error-red text-xs mt-1">{{ form.errors.durasi_menit }}</p>
                     </div>
                 </BaseFormGrid>
                 <div v-if="!creating && form.kode" class="rounded-2xl bg-surface-container-low px-4 py-3">

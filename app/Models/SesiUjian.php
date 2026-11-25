@@ -15,7 +15,8 @@ use Illuminate\Support\Carbon;
  * Sesi pengerjaan ujian oleh satu pengguna.
  *
  * @property string $id
- * @property string $slot_ujian_id
+ * @property string|null $slot_ujian_id
+ * @property string|null $ujian_id
  * @property string $pengguna_id
  * @property StatusSesi $status
  * @property Carbon|null $dimulai_pada
@@ -50,6 +51,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read SlotUjian|null $slotUjian
+ * @property-read Ujian|null $ujian
  * @property-read Pengguna $pengguna
  * @property-read PartUjian|null $partUjianAktif
  * @property-read SkemaPenilaian|null $skemaPenilaian
@@ -57,9 +59,10 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Jawaban> $jawaban
  * @property-read Collection<int, CatatanPelanggaran> $catatanPelanggaran
  * @property-read Collection<int, HasilPenilaian> $hasilPenilaian
+ * @property-read Collection<int, SesiPartUjian> $sesiPartUjian
  */
 #[Fillable([
-    'slot_ujian_id', 'pengguna_id', 'status', 'dimulai_pada', 'diserahkan_pada',
+    'slot_ujian_id', 'ujian_id', 'pengguna_id', 'status', 'dimulai_pada', 'diserahkan_pada',
     'dihentikan_pada', 'alasan_penghentian', 'part_ujian_aktif_id',
     'skema_penilaian_id', 'snapshot_penilaian',
     'keaktifan_terakhir_pada', 'status_tinjauan', 'catatan_tinjauan',
@@ -103,6 +106,11 @@ class SesiUjian extends Model
         return $this->belongsTo(SlotUjian::class, 'slot_ujian_id', 'id');
     }
 
+    public function ujian(): BelongsTo
+    {
+        return $this->belongsTo(Ujian::class, 'ujian_id', 'id');
+    }
+
     public function pengguna(): BelongsTo
     {
         return $this->belongsTo(Pengguna::class, 'pengguna_id', 'id');
@@ -138,9 +146,15 @@ class SesiUjian extends Model
         return $this->hasMany(CatatanPelanggaran::class, 'sesi_ujian_id', 'id');
     }
 
+    public function sesiPartUjian(): HasMany
+    {
+        return $this->hasMany(SesiPartUjian::class, 'sesi_ujian_id', 'id')->orderBy('dimulai_pada');
+    }
+
     public function batasPelanggaranMaksimum(): int
     {
-        $programTes = $this->slotUjian?->periodeUjian?->ujian?->programTes;
+        $ujian = $this->ujian ?? $this->slotUjian?->periodeUjian?->ujian;
+        $programTes = $ujian?->programTes;
 
         return $programTes !== null ? $programTes->batas_pelanggaran : 3;
     }

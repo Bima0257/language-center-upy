@@ -7,6 +7,7 @@ use App\Models\Soal;
 use App\Models\Ujian;
 use App\Modules\Ujian\Repositories\Contracts\PartUjianRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\SoalRepositoryInterface;
+use App\Modules\Ujian\Repositories\Contracts\UjianRepositoryInterface;
 use App\Modules\Ujian\Services\LayananKebijakanMateriSoal;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -15,6 +16,7 @@ class LayananPelaksanaanUjian
     public function __construct(
         private PartUjianRepositoryInterface $partRepo,
         private SoalRepositoryInterface $soalRepo,
+        private UjianRepositoryInterface $ujianRepo,
         private LayananKebijakanMateriSoal $kebijakanMateri,
     ) {}
 
@@ -23,7 +25,7 @@ class LayananPelaksanaanUjian
      */
     public function soalUntukSesi(SesiUjian $sesi): Collection
     {
-        $ujian = $sesi->slotUjian?->periodeUjian?->ujian;
+        $ujian = $sesi->ujian ?? $sesi->slotUjian?->periodeUjian?->ujian;
 
         if ($ujian === null) {
             return new Collection;
@@ -35,17 +37,58 @@ class LayananPelaksanaanUjian
     }
 
     /**
+     * @return array<int, string>
+     */
+    public function idSoalUntukSectionAktif(SesiUjian $sesi): array
+    {
+        $partAktif = $sesi->partUjianAktif;
+
+        if ($partAktif === null) {
+            return [];
+        }
+
+        $idSoal = $this->partRepo->idSoalDalamPart($partAktif->id);
+
+        if ($idSoal !== []) {
+            return $idSoal;
+        }
+
+        $ujian = $sesi->ujian ?? $sesi->slotUjian?->periodeUjian?->ujian;
+
+        if ($ujian === null) {
+            return [];
+        }
+
+        return $this->soalRepo
+            ->soalDenganSectionUntukProgramTes(
+                $partAktif->section_id,
+                $ujian->program_tes_id,
+                $partAktif->bank_soal_id,
+            )
+            ->pluck('id')
+            ->all();
+    }
+
+    /**
      * @return Collection<int, Soal>
      */
     public function soalUntukPenilaian(SesiUjian $sesi): Collection
     {
-        $ujian = $sesi->slotUjian?->periodeUjian?->ujian;
+        $ujian = $sesi->ujian ?? $sesi->slotUjian?->periodeUjian?->ujian;
 
         if ($ujian === null) {
             return new Collection;
         }
 
         return $this->kumpulkanSoalUntukUjian($ujian, false);
+    }
+
+    /**
+     * @return Collection<int, Ujian>
+     */
+    public function daftarTryoutTersedia(?string $programStudiId = null): Collection
+    {
+        return $this->ujianRepo->semuaTryoutTersedia($programStudiId);
     }
 
     /**

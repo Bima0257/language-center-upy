@@ -187,7 +187,7 @@ const columns = [
                     <button
                         type="button"
                         aria-label="Tutup detail permission"
-                        class="p-2 text-text-muted transition-colors hover:text-text-heading"
+                        class="p-2 text-text-muted transition-colors hover:text-text-heading font-semibold"
                         @click="showDetail = false"
                     >
                         <IconX :size="20" />
@@ -267,7 +267,7 @@ const columns = [
                                     <th class="w-14 px-3 py-2 text-center">
                                         <button
                                             type="button"
-                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 disabled:pointer-events-none disabled:opacity-40"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 disabled:pointer-events-none disabled:opacity-40 font-semibold"
                                             :class="somePermissionsSelected
                                                 ? 'text-primary hover:bg-primary/10'
                                                 : 'text-text-muted hover:bg-surface-container-high hover:text-text-heading'"
@@ -298,7 +298,7 @@ const columns = [
                                     <td class="w-14 px-3 py-2 text-center">
                                         <button
                                             type="button"
-                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 font-semibold"
                                             :class="isPermissionSelected(permission.id)
                                                 ? 'text-primary hover:bg-primary/10'
                                                 : 'text-text-muted hover:bg-surface-container-high hover:text-text-heading'"

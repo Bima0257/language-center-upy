@@ -2,11 +2,13 @@
 
 namespace App\Modules\Keamanan\Actions;
 
+use App\Enums\AlasanSelesaiPart;
 use App\Enums\JenisPelanggaran;
 use App\Enums\StatusSesi;
 use App\Models\CatatanPelanggaran;
 use App\Modules\Keamanan\DTOs\HasilPelanggaran;
 use App\Modules\Keamanan\Repositories\Contracts\PelanggaranRepositoryInterface;
+use App\Modules\PelaksanaanUjian\Repositories\Contracts\SesiPartUjianRepositoryInterface;
 use App\Modules\PelaksanaanUjian\Repositories\Contracts\SesiUjianRepositoryInterface;
 
 class CatatPelanggaran
@@ -14,6 +16,7 @@ class CatatPelanggaran
     public function __construct(
         private PelanggaranRepositoryInterface $pelanggaranRepo,
         private SesiUjianRepositoryInterface $sesiRepo,
+        private SesiPartUjianRepositoryInterface $sesiPartRepo,
     ) {}
 
     public function execute(string $sesiId, string $jenis): HasilPelanggaran
@@ -50,6 +53,12 @@ class CatatPelanggaran
         $batasPelanggaran = $sesi->batasPelanggaranMaksimum();
 
         if ($jumlahBaru >= $batasPelanggaran) {
+            $this->sesiPartRepo->selesaikanSemuaTerbuka(
+                $sesiId,
+                AlasanSelesaiPart::DIBATALKAN,
+                now(),
+            );
+
             $this->sesiRepo->update($sesiId, [
                 'status' => StatusSesi::TERMINATED,
                 'dihentikan_pada' => now(),

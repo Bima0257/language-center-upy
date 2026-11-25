@@ -1,6 +1,6 @@
 <script setup>
 import { h } from 'vue';
-import { IconEdit, IconTrash } from '@tabler/icons-vue';
+import { IconEdit, IconEye, IconTrash } from '@tabler/icons-vue';
 import BaseBadge from '@/Components/Base/BaseBadge.vue';
 import BaseButton from '@/Components/Base/BaseButton.vue';
 import BaseTambahData from '@/Components/Base/BaseTambahData.vue';
@@ -12,7 +12,7 @@ const props = defineProps({
     tableKey: { type: String, default: 'admin-program-tes' },
 });
 
-const emit = defineEmits(['create', 'edit', 'delete']);
+const emit = defineEmits(['create', 'edit', 'delete', 'detail']);
 
 function stripHtml(html) {
     const div = document.createElement('div');
@@ -63,6 +63,7 @@ const columns = [
         cell: info => {
             const row = info.row.original;
             const deletable = canDelete(row);
+            const editable = !(row.ujian_aktif_count > 0);
 
             return h('div', { class: 'flex items-center justify-center gap-1' }, [
                 h(
@@ -70,8 +71,20 @@ const columns = [
                     {
                         variant: 'secondary',
                         iconOnly: true,
-                        title: 'Ubah',
-                        'aria-label': 'Ubah',
+                        title: 'Lihat detail',
+                        'aria-label': 'Lihat detail',
+                        onClick: () => emit('detail', row),
+                    },
+                    () => h(IconEye, { size: 16 }),
+                ),
+                h(
+                    BaseButton,
+                    {
+                        variant: 'secondary',
+                        iconOnly: true,
+                        disabled: !editable,
+                        title: editable ? 'Ubah' : 'Tidak bisa diubah karena dipakai ujian aktif',
+                        'aria-label': editable ? 'Ubah' : 'Tidak bisa diubah karena dipakai ujian aktif',
                         onClick: () => emit('edit', row),
                     },
                     () => h(IconEdit, { size: 16 }),

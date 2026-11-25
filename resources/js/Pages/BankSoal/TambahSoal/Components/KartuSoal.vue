@@ -36,7 +36,7 @@ function errorFor(field) {
                     type="button"
                     :aria-disabled="questionCount <= 1"
                     @click="questionCount > 1 && emit('remove')"
-                    class="rounded-lg border border-error-red/20 bg-error-container/30 p-2 text-error-red transition-colors hover:bg-error-container/60"
+                    class="rounded-lg border border-error-red/20 bg-error-container/30 p-2 text-error-red transition-colors hover:bg-error-container/60 font-semibold"
                     title="Hapus soal"
                     aria-label="Hapus soal"
                 >

@@ -37,7 +37,7 @@ const optionKeys = computed(() =>
                     {{ globalNumber }}
                 </div>
                 <span
-                    class="whitespace-nowrap text-[11px] font-semibold text-text-body sm:text-xs"
+                    class="whitespace-nowrap text-xs font-semibold text-text-body sm:text-xs"
                     >Soal {{ globalNumber }} dari
                     {{ totalAllQuestions }}</span
                 >
@@ -56,7 +56,7 @@ const optionKeys = computed(() =>
                     :aria-label="`Pilih jawaban ${key}`"
                     :aria-pressed="answers[currentQuestion.id] === key"
                     @click="selectAnswer(key)"
-                    class="option-card group flex min-h-[44px] w-full cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-left transition-all duration-200 motion-reduce:transition-none sm:min-h-[48px] sm:gap-2 sm:px-3"
+                    class="option-card group flex min-h-[44px] w-full cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-left transition-all duration-200 motion-reduce:transition-none sm:min-h-[48px] sm:gap-2 sm:px-3 font-semibold"
                     :class="
                         answers[currentQuestion.id] === key
                             ? 'option-selected'
@@ -74,7 +74,7 @@ const optionKeys = computed(() =>
                         {{ key }}
                     </div>
                     <span
-                        class="font-body-md text-[13px] leading-[1.35] sm:text-sm"
+                        class="font-body-md text-xs leading-[1.35] sm:text-sm"
                         :class="
                             answers[currentQuestion.id] === key
                                 ? 'text-text-heading'

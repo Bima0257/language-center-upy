@@ -25,7 +25,7 @@ const imageLoading = useMediaLoad(() => props.imageSrc);
                 </div>
                 <div
                     v-if="materiSoal?.isi_teks"
-                    class="space-y-3 font-sans text-[13px] leading-[1.45] text-text-body sm:text-sm [&_.rich-text-content]:leading-[1.45] [&_.rich-text-content]:text-text-body [&_.rich-text-content_p]:mb-3 [&_.rich-text-content_h1]:text-lg [&_.rich-text-content_h2]:text-base [&_.rich-text-content_h3]:text-sm [&_.rich-text-content_ol]:mb-3 [&_.rich-text-content_ul]:mb-3"
+                    class="space-y-3 font-sans text-xs leading-[1.45] text-text-body sm:text-sm [&_.rich-text-content]:leading-[1.45] [&_.rich-text-content]:text-text-body [&_.rich-text-content_p]:mb-3 [&_.rich-text-content_h1]:text-lg [&_.rich-text-content_h2]:text-base [&_.rich-text-content_h3]:text-sm [&_.rich-text-content_ol]:mb-3 [&_.rich-text-content_ul]:mb-3"
                 >
                     <RichTextViewer :content="materiSoal.isi_teks" />
                 </div>

@@ -72,7 +72,7 @@ function choose(option, hide) {
     >
         <button
             type="button"
-            class="inline-flex w-full items-center justify-between gap-2 rounded-full border border-surface-container-high px-4 text-body-md text-text-body transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary disabled:cursor-not-allowed disabled:opacity-50"
+            class="inline-flex w-full items-center justify-between gap-2 rounded-full border border-surface-container-high px-4 text-body-md text-text-body transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary disabled:cursor-not-allowed disabled:opacity-50 font-semibold"
             :class="[
                 props.tall ? 'h-10' : 'h-9',
                 props.solidBackground ? 'bg-surface-container-low' : 'bg-surface-white',
@@ -93,7 +93,7 @@ function choose(option, hide) {
                     type="button"
                     role="menuitemradio"
                     :aria-checked="String(option.value) === String(props.modelValue)"
-                    class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-body-md transition-colors"
+                    class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-body-md transition-colors font-semibold"
                     :class="String(option.value) === String(props.modelValue)
                         ? 'bg-surface-container-low font-semibold text-text-heading'
                         : 'text-text-body hover:bg-surface-container-low'"

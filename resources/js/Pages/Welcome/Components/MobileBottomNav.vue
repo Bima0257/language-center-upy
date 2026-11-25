@@ -37,10 +37,10 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll));
         <div class="flex items-center justify-around h-16">
             <button v-for="item in sections" :key="item.id"
                     @click="scrollTo(item.id)"
-                    class="flex flex-col items-center gap-0.5 px-3 py-1 transition-colors"
+                    class="flex flex-col items-center gap-0.5 px-1.5 py-1 transition-colors font-semibold"
                     :class="activeSection === item.id ? 'text-primary-container' : 'text-text-muted'">
                 <component :is="item.icon" :size="22" stroke="1.5" />
-                <span class="text-[10px] font-medium">{{ item.label }}</span>
+                <span class="text-xs font-medium whitespace-nowrap">{{ item.label }}</span>
             </button>
         </div>
     </nav>

@@ -2,17 +2,18 @@
 
 namespace App\Modules\PelaksanaanUjian\Actions;
 
-use App\Enums\ModeUjian;
 use App\Enums\StatusSesi;
 use App\Models\Ujian;
 use App\Modules\Keamanan\Services\LayananKeamanan;
 use App\Modules\PelaksanaanUjian\DTOs\HasilSesiDimulai;
+use App\Modules\PelaksanaanUjian\Repositories\Contracts\SesiPartUjianRepositoryInterface;
 use App\Modules\PelaksanaanUjian\Repositories\Contracts\SesiUjianRepositoryInterface;
 use App\Modules\PelaksanaanUjian\Services\LayananPelaksanaanUjian;
 use App\Modules\PendaftaranUjian\Services\LayananPendaftaranUjian;
 use App\Modules\Pengguna\Repositories\Contracts\PenggunaRepositoryInterface;
 use App\Modules\Penilaian\Services\LayananAturanPenilaian;
 use App\Modules\Penjadwalan\Repositories\Contracts\SlotUjianRepositoryInterface;
+use App\Modules\Ujian\Repositories\Contracts\UjianRepositoryInterface;
 use App\Services\ImageCompressionService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
@@ -23,7 +24,9 @@ class MulaiSesiUjian
 {
     public function __construct(
         private SesiUjianRepositoryInterface $sesiRepo,
+        private SesiPartUjianRepositoryInterface $sesiPartRepo,
         private SlotUjianRepositoryInterface $slotRepo,
+        private UjianRepositoryInterface $ujianRepo,
         private LayananKeamanan $keamanan,
         private LayananPendaftaranUjian $layananPendaftaran,
         private PenggunaRepositoryInterface $penggunaRepo,
@@ -91,34 +94,37 @@ class MulaiSesiUjian
                 }
 
                 $pengguna = $this->penggunaRepo->findOrFail($penggunaId);
-                if ($slot->periodeUjian->ujian->mode === ModeUjian::OFFICIAL) {
-                    $this->layananPendaftaran->pastikanBolehMulai(
-                        $pengguna,
-                        $slot,
-                    );
-                } else {
-                    $this->layananPendaftaran->daftarkanTryout(
-                        $pengguna,
-                        $slot,
-                    );
-                }
+                $this->layananPendaftaran->pastikanBolehMulai(
+                    $pengguna,
+                    $slot,
+                );
 
                 $ujian = $slot->periodeUjian->ujian;
+                $ujian->loadMissing('partUjian.section');
+                $this->pastikanDurasiSectionValid($ujian);
+
                 $snapshotPenilaian = $this->layananAturan->snapshotProgram($ujian->program_tes_id);
                 $this->pastikanSoalSesuaiSkema($ujian, $snapshotPenilaian);
 
-                $partPertama = $ujian->partUjian->first();
+                $partPertama = $ujian->partUjian->sortBy('urutan')->first();
+
+                if ($partPertama === null) {
+                    throw new \RuntimeException('Ujian belum memiliki part soal.');
+                }
 
                 if ($swafoto !== null) {
                     $lokasiSwafoto = $this->imageCompression->storeCompressed($swafoto, 'selfies');
                 }
 
+                $mulaiPada = now();
+
                 $sesi = $this->sesiRepo->create([
                     'slot_ujian_id' => $slot->id,
+                    'ujian_id' => $ujian->id,
                     'pengguna_id' => $penggunaId,
                     'status' => StatusSesi::IN_PROGRESS,
-                    'dimulai_pada' => now(),
-                    'part_ujian_aktif_id' => $partPertama?->id,
+                    'dimulai_pada' => $mulaiPada,
+                    'part_ujian_aktif_id' => $partPertama->id,
                     'skema_penilaian_id' => $snapshotPenilaian['skema_penilaian_id'],
                     'snapshot_penilaian' => $snapshotPenilaian,
                     'skor_total_maksimum' => $snapshotPenilaian['skala_total_maksimum'],
@@ -128,11 +134,18 @@ class MulaiSesiUjian
                     'swafoto_diambil_pada' => $swafoto !== null ? now() : null,
                 ]);
 
+                $this->sesiPartRepo->mulai(
+                    $sesi->id,
+                    $partPertama->id,
+                    (int) $partPertama->section->durasi_menit,
+                    $mulaiPada,
+                );
+
                 $this->keamanan->catatPeristiwaSistem($sesi->id, 'exam_started');
 
                 return new HasilSesiDimulai(
                     sesiId: $sesi->id,
-                    partPertamaId: $partPertama?->id,
+                    partPertamaId: $partPertama->id,
                 );
             });
         } catch (\Throwable $exception) {
@@ -141,6 +154,100 @@ class MulaiSesiUjian
             }
 
             throw $exception;
+        }
+    }
+
+    public function mulaiTryout(string $penggunaId, string $ujianId): HasilSesiDimulai
+    {
+        return DB::transaction(function () use ($penggunaId, $ujianId): HasilSesiDimulai {
+            $pengguna = $this->penggunaRepo->temukanUntukUpdate($penggunaId);
+            $ujian = $this->ujianRepo->temukanTryout($ujianId);
+
+            if ($ujian === null || ! $ujian->aktif || ! $ujian->programTes->aktif) {
+                throw new \RuntimeException('Ujian tryout tidak tersedia atau sudah tidak aktif.');
+            }
+
+            if (! $pengguna->adalahPesertaUjian()) {
+                throw new \RuntimeException('Hanya peserta ujian yang dapat mengikuti tryout.');
+            }
+
+            if (! $ujian->terbukaUntuk($pengguna)) {
+                throw new \RuntimeException('Ujian ini tidak tersedia untuk program studi Anda.');
+            }
+
+            $activeSession = $this->sesiRepo->temukanSesiAktif($penggunaId);
+
+            if ($activeSession !== null) {
+                if ($activeSession->ujian_id === $ujian->id) {
+                    return new HasilSesiDimulai(
+                        sesiId: $activeSession->id,
+                        partPertamaId: $activeSession->part_ujian_aktif_id,
+                    );
+                }
+
+                throw new \RuntimeException('Selesaikan sesi ujian yang sedang berjalan terlebih dahulu.');
+            }
+
+            $snapshotPenilaian = $this->layananAturan->snapshotProgram($ujian->program_tes_id);
+            $this->pastikanSoalSesuaiSkema($ujian, $snapshotPenilaian);
+            $this->pastikanDurasiSectionValid($ujian);
+
+            $partPertama = $ujian->partUjian->sortBy('urutan')->first();
+
+            if ($partPertama === null) {
+                throw new \RuntimeException('Ujian belum memiliki part soal.');
+            }
+
+            $mulaiPada = now();
+
+            $sesi = $this->sesiRepo->create([
+                'slot_ujian_id' => null,
+                'ujian_id' => $ujian->id,
+                'pengguna_id' => $pengguna->id,
+                'status' => StatusSesi::IN_PROGRESS,
+                'dimulai_pada' => $mulaiPada,
+                'part_ujian_aktif_id' => $partPertama->id,
+                'skema_penilaian_id' => $snapshotPenilaian['skema_penilaian_id'],
+                'snapshot_penilaian' => $snapshotPenilaian,
+                'skor_total_maksimum' => $snapshotPenilaian['skala_total_maksimum'],
+            ]);
+
+            $this->sesiPartRepo->mulai(
+                $sesi->id,
+                $partPertama->id,
+                (int) $partPertama->section->durasi_menit,
+                $mulaiPada,
+            );
+
+            $this->keamanan->catatPeristiwaSistem($sesi->id, 'exam_started');
+
+            return new HasilSesiDimulai(
+                sesiId: $sesi->id,
+                partPertamaId: $partPertama->id,
+            );
+        });
+    }
+
+    private function pastikanDurasiSectionValid(Ujian $ujian): void
+    {
+        $ujian->loadMissing('partUjian.section');
+
+        $parts = $ujian->partUjian;
+
+        if ($parts->isEmpty()) {
+            throw new \RuntimeException('Ujian belum memiliki part soal.');
+        }
+
+        $totalDurasiSection = 0;
+
+        foreach ($parts as $part) {
+            $totalDurasiSection += (int) $part->section->durasi_menit;
+        }
+
+        if ($totalDurasiSection > (int) $ujian->durasi_menit) {
+            throw new \RuntimeException(
+                "Total durasi section ({$totalDurasiSection} menit) melebihi durasi total ujian ({$ujian->durasi_menit} menit).",
+            );
         }
     }
 

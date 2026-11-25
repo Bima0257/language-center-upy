@@ -16,7 +16,7 @@ export function usePengaturWaktuUjian({ totalSeconds = 0, elapsedSeconds = 0, on
     const isExpired = computed(() => remaining.value <= 0);
 
     function start() {
-        if (interval || isExpired.value) return;
+        if (interval) return;
         interval = setInterval(() => {
             if (remaining.value > 0) {
                 remaining.value--;

@@ -120,7 +120,7 @@ function formatSkor(value) {
     <div
         class="w-full max-w-2xl overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-white shadow-standard dark:bg-surface-container"
     >
-        <div class="flex items-center gap-2.5 bg-primary px-4 py-3 text-on-primary">
+        <div class="flex items-center gap-2.5 bg-primary px-4 py-3 text-on-primary dark:bg-primary-container dark:text-on-primary-container">
             <IconCircleCheck :size="18" class="shrink-0" />
             <div class="min-w-0">
                 <span
@@ -144,7 +144,7 @@ function formatSkor(value) {
                 class="mb-3 grid grid-cols-2 divide-x divide-outline-variant/50 border-y border-outline-variant/40 py-2"
             >
                 <div class="min-w-0 px-2">
-                    <p class="mb-0.5 text-[11px] text-text-muted">
+                    <p class="mb-0.5 text-xs text-text-muted">
                         Jawaban Terisi
                     </p>
                     <p class="text-sm font-bold text-text-heading">
@@ -152,7 +152,7 @@ function formatSkor(value) {
                     </p>
                 </div>
                 <div class="min-w-0 px-2">
-                    <p class="mb-0.5 text-[11px] text-text-muted">
+                    <p class="mb-0.5 text-xs text-text-muted">
                         Durasi Demo
                     </p>
                     <p class="text-sm font-bold text-text-heading">
@@ -176,7 +176,7 @@ function formatSkor(value) {
                         {{ row.nama }}
                     </span>
                     <span
-                        class="ml-auto shrink-0 text-right text-[11px] tabular-nums text-text-muted"
+                        class="ml-auto shrink-0 text-right text-xs tabular-nums text-text-muted"
                     >
                         {{ row.terjawab }}/{{ row.total }} dijawab<span
                             v-if="row.benar !== null"
@@ -207,7 +207,7 @@ function formatSkor(value) {
                 <p>{{ errorPenilaian }}</p>
                 <button
                     type="button"
-                    class="mt-2 inline-flex items-center gap-1.5 rounded-full border border-error-red/30 bg-surface-white px-3 py-1.5 text-[11px] font-semibold text-error-red"
+                    class="mt-2 inline-flex items-center gap-1.5 rounded-full border border-error-red/30 bg-surface-white px-3 py-1.5 text-xs font-semibold text-error-red"
                     @click="emit('retry-score')"
                 >
                     <IconRefresh :size="13" />
@@ -238,7 +238,7 @@ function formatSkor(value) {
                         {{ hasilPenilaian.label_tingkat }}
                     </span>
                     <span
-                        class="ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                        class="ml-auto rounded-full px-2 py-0.5 text-xs font-semibold"
                         :class="
                             hasilPenilaian.lulus
                                 ? 'bg-success-container text-on-success-container'
@@ -256,7 +256,7 @@ function formatSkor(value) {
                 <button
                     v-if="sertifikatDemo"
                     type="button"
-                    class="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-on-primary shadow-md transition-all duration-150 hover:bg-primary/90 active:scale-[0.98]"
+                    class="inline-flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-2 text-xs font-semibold text-on-accent shadow-md transition-all duration-150 hover:bg-accent/90 active:scale-[0.98]"
                     @click="cetakSertifikat"
                 >
                     <IconPrinter :size="14" />
@@ -264,7 +264,7 @@ function formatSkor(value) {
                 </button>
                 <button
                     type="button"
-                    class="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-on-primary shadow-md transition-all duration-150 hover:bg-primary/90 active:scale-[0.98]"
+                    class="inline-flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-2 text-xs font-semibold text-on-accent shadow-md transition-all duration-150 hover:bg-accent/90 active:scale-[0.98]"
                     @click="emit('restart')"
                 >
                     <IconRefresh :size="14" />

@@ -53,7 +53,7 @@ function saveGroup(group) {
                         v-for="group in groups"
                         :key="group"
                         @click="activeGroup = group"
-                        class="w-full text-left px-4 py-3 rounded-2xl text-label-md font-medium transition-colors"
+                        class="w-full text-left px-4 py-3 rounded-2xl text-label-md font-semibold transition-colors"
                         :class="activeGroup === group ? 'bg-primary-container text-on-primary-container' : 'text-text-body hover:bg-surface-container-low'"
                     >
                         {{ groupLabels[group] || group }}

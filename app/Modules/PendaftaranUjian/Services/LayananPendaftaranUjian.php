@@ -6,7 +6,6 @@ use App\Enums\ModeUjian;
 use App\Enums\StatusPendaftaranUjian;
 use App\Models\PendaftaranUjian;
 use App\Models\Pengguna;
-use App\Models\PeriodePendaftaranUjian;
 use App\Models\PeriodeUjian;
 use App\Models\ProgramTes;
 use App\Models\SlotUjian;
@@ -15,7 +14,6 @@ use App\Modules\DataInduk\Repositories\Contracts\FakultasRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\ProgramStudiRepositoryInterface;
 use App\Modules\DataInduk\Repositories\Contracts\ProgramTesRepositoryInterface;
 use App\Modules\PendaftaranUjian\Repositories\Contracts\PendaftaranUjianRepositoryInterface;
-use App\Modules\PendaftaranUjian\Repositories\Contracts\PeriodePendaftaranUjianRepositoryInterface;
 use App\Modules\Pengguna\Repositories\Contracts\PenggunaRepositoryInterface;
 use App\Modules\Penjadwalan\Repositories\Contracts\PenjadwalanRepositoryInterface;
 use App\Modules\Penjadwalan\Repositories\Contracts\SlotUjianRepositoryInterface;
@@ -32,7 +30,6 @@ class LayananPendaftaranUjian
 {
     public function __construct(
         private PendaftaranUjianRepositoryInterface $pendaftaranRepo,
-        private PeriodePendaftaranUjianRepositoryInterface $periodePendaftaranRepo,
         private SlotUjianRepositoryInterface $slotRepo,
         private PenggunaRepositoryInterface $penggunaRepo,
         private FakultasRepositoryInterface $fakultasRepo,
@@ -79,50 +76,38 @@ class LayananPendaftaranUjian
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
-    public function dataPeserta(PeriodePendaftaranUjian $periodePendaftaran, array $filters): array
-    {
-        $periodePendaftaran = $this->periodePendaftaranRepo->temukan($periodePendaftaran->id);
-        $filters['search'] = $filters['q'] ?? $filters['search'] ?? null;
-        $filters['status'] = $filters['f_status'] ?? $filters['status'] ?? null;
-        $filters['slot_ujian_id'] = $filters['f_slot_ujian_id'] ?? $filters['slot_ujian_id'] ?? null;
-        $filters['periode_ujian_id'] = $periodePendaftaran->periode_ujian_id;
-        $perPage = (int) ($filters['per_page'] ?? 15);
-
-        return [
-            'periodePendaftaranUjian' => $periodePendaftaran,
-            'slotUjian' => $periodePendaftaran->slotUjian,
-            'pendaftaranUjian' => $this->pendaftaranRepo->paginate($filters, $perPage),
-            'filters' => $filters,
-        ];
-    }
-
-    /**
-     * @param  array<string, mixed>  $filters
-     * @return array<string, mixed>
-     */
     public function dataPesertaSemua(array $filters): array
     {
         $filters['search'] = $filters['q'] ?? $filters['search'] ?? null;
         $filters['status'] = $filters['f_status'] ?? $filters['status'] ?? null;
         $filters['program_tes_id'] = $filters['f_program_tes_id'] ?? $filters['program_tes_id'] ?? null;
-        $filters['ujian_id'] = $filters['f_ujian_id'] ?? $filters['ujian_id'] ?? null;
+        $filters['ujian_id'] = $filters['ujian_id'] ?? null;
         $perPage = (int) ($filters['per_page'] ?? 15);
 
+        if (filled($filters['ujian_id'])) {
+            $ujian = $this->ujianRepo->temukanDenganProgramTes($filters['ujian_id']);
+
+            return [
+                'ujianTerpilih' => [
+                    'id' => $ujian->id,
+                    'judul' => $ujian->judul,
+                    'mode' => $ujian->mode->value,
+                    'program_tes' => [
+                        'nama' => $ujian->programTes->nama,
+                    ],
+                ],
+                'pendaftaranUjian' => $this->pendaftaranRepo->paginate($filters, $perPage),
+                'filters' => $filters,
+            ];
+        }
+
         return [
-            'pendaftaranUjian' => $this->pendaftaranRepo->paginate($filters, $perPage),
+            'ringkasanUjian' => $this->pendaftaranRepo->ringkasanStatusPerUjian($filters, $perPage),
             'filters' => $filters,
             'programTes' => $this->programTesRepo->semuaAktifBerurutan()
                 ->map(fn (ProgramTes $programTes): array => [
                     'value' => $programTes->id,
                     'label' => $programTes->nama,
-                ])
-                ->values()
-                ->all(),
-            'ujian' => $this->ujianRepo->semuaAktifDenganProgramTes()
-                ->map(fn (Ujian $ujian): array => [
-                    'value' => $ujian->id,
-                    'label' => $ujian->judul,
-                    'program_tes_id' => $ujian->program_tes_id,
                 ])
                 ->values()
                 ->all(),
@@ -135,12 +120,8 @@ class LayananPendaftaranUjian
      */
     public function dataJadwal(Pengguna $pengguna, array $filters): array
     {
-        $periodeUjian = $this->penjadwalanRepo->semuaAktifDenganUjianDanSlot()
-            ->filter(fn (PeriodeUjian $periode): bool => $periode->tanggal_selesai->gte(now()->toDateString())
-                && $periode->ujian->mode === ModeUjian::OFFICIAL
-                && $periode->periodePendaftaran !== null
-                && $periode->periodePendaftaran->aktif)
-            ->values();
+        $programStudiId = $pengguna->loadMissing('profilPeserta')->profilPeserta?->program_studi_id;
+        $periodeUjian = $this->periodePendaftaranPeserta($programStudiId);
         $this->tambahkanRingkasanPendaftaran($periodeUjian);
         $this->tambahkanStatusPeriodePendaftaran($periodeUjian);
 
@@ -173,6 +154,77 @@ class LayananPendaftaranUjian
     /**
      * @return array<string, mixed>
      */
+    public function dataPendaftaran(Pengguna $pengguna): array
+    {
+        $programStudiId = $pengguna->loadMissing('profilPeserta')->profilPeserta?->program_studi_id;
+        $periodeUjian = $this->periodePendaftaranPeserta($programStudiId);
+        $this->tambahkanRingkasanPendaftaran($periodeUjian);
+        $this->tambahkanStatusPeriodePendaftaran($periodeUjian);
+        $this->tambahkanStatusUntukJadwal($periodeUjian, $pengguna->id);
+
+        return [
+            'periodeUjian' => $periodeUjian,
+            'pendaftaranSaya' => $this->pendaftaranRepo->riwayatUntukPengguna($pengguna->id),
+            ...$this->dataFormPeserta($pengguna),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function dataUjianResmi(Pengguna $pengguna): array
+    {
+        $programStudiId = $pengguna->loadMissing('profilPeserta')->profilPeserta?->program_studi_id;
+
+        $periodeUjian = $this->penjadwalanRepo->semuaAktifDenganUjianDanSlot($programStudiId)
+            ->filter(fn (PeriodeUjian $periode): bool => $periode->ujian->terbukaUntukProdi($programStudiId)
+                && $periode->tanggal_selesai->gte(now()->toDateString())
+                && $periode->ujian->mode === ModeUjian::OFFICIAL)
+            ->values();
+
+        $this->tambahkanRingkasanPendaftaran($periodeUjian);
+        $this->tambahkanStatusPeriodePendaftaran($periodeUjian);
+        $this->tambahkanStatusUntukJadwal($periodeUjian, $pengguna->id);
+
+        return [
+            'periodeUjian' => $periodeUjian
+                ->filter(fn (PeriodeUjian $periode): bool => $this->periodeTampilDiUjianResmi($periode))
+                ->values(),
+        ];
+    }
+
+    private function periodeTampilDiUjianResmi(PeriodeUjian $periode): bool
+    {
+        if ($periode->periodePendaftaran?->aktif) {
+            return true;
+        }
+
+        return $periode->slotUjian->contains(
+            fn (SlotUjian $slot): bool => in_array(
+                $slot->getAttribute('pendaftaran_status'),
+                [StatusPendaftaranUjian::PENDING->value, StatusPendaftaranUjian::APPROVED->value],
+                true,
+            ),
+        );
+    }
+
+    /**
+     * @return Collection<int, PeriodeUjian>
+     */
+    private function periodePendaftaranPeserta(?string $programStudiId): Collection
+    {
+        return $this->penjadwalanRepo->semuaAktifDenganUjianDanSlot($programStudiId)
+            ->filter(fn (PeriodeUjian $periode): bool => $periode->ujian->terbukaUntukProdi($programStudiId)
+                && $periode->tanggal_selesai->gte(now()->toDateString())
+                && $periode->ujian->mode === ModeUjian::OFFICIAL
+                && $periode->periodePendaftaran !== null
+                && $periode->periodePendaftaran->aktif)
+            ->values();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     public function dataFormPeserta(Pengguna $pengguna): array
     {
         $profil = $pengguna->loadMissing('profilPeserta')->profilPeserta;
@@ -188,6 +240,7 @@ class LayananPendaftaranUjian
             ] : null,
             'fakultas' => $this->fakultasRepo->semuaAktifBerurutan(),
             'programStudi' => $this->programStudiRepo->semuaAktifBerurutan(),
+            'prodiTerkunci' => $pengguna->sudahMemakaiUjian(),
         ];
     }
 
@@ -437,6 +490,7 @@ class LayananPendaftaranUjian
         UploadedFile $buktiPembayaran,
     ): PendaftaranUjian {
         $this->pastikanPesertaUjian($pengguna);
+        $this->pastikanProdiTidakBerubahSaatTerkunci($pengguna, $data);
 
         $pendaftaranLama = $this->pendaftaranRepo->temukanUntukSlotDanPengguna($slotUjian->id, $pengguna->id);
         $lokasiLama = $pendaftaranLama?->lokasi_bukti_pembayaran;
@@ -477,6 +531,9 @@ class LayananPendaftaranUjian
                     'program_studi_id' => $data['program_studi_id'] ?? null,
                     'tahun_mulai' => $data['tahun_mulai'] ?? $profilSaatIni?->tahun_mulai,
                 ]);
+
+                $pengguna->refresh()->loadMissing('profilPeserta');
+                $this->pastikanLingkupUjian($pengguna, $slotTerkunci->periodeUjian->ujian);
 
                 $dataPendaftaran = [
                     'slot_ujian_id' => $slotTerkunci->id,
@@ -602,52 +659,16 @@ class LayananPendaftaranUjian
     public function pastikanBolehMulai(Pengguna $pengguna, SlotUjian $slotUjian): void
     {
         if ($slotUjian->periodeUjian->ujian->mode !== ModeUjian::OFFICIAL) {
-            return;
+            throw new \RuntimeException('Pemeriksaan awal hanya tersedia untuk ujian resmi.');
         }
+
+        $this->pastikanLingkupUjian($pengguna, $slotUjian->periodeUjian->ujian);
 
         $pendaftaran = $this->pendaftaranRepo->temukanUntukSlotDanPengguna($slotUjian->id, $pengguna->id);
 
         if ($pendaftaran?->status !== StatusPendaftaranUjian::APPROVED) {
             throw new \RuntimeException('Pendaftaran ujian Anda belum disetujui.');
         }
-    }
-
-    public function daftarkanTryout(Pengguna $pengguna, SlotUjian $slotUjian): PendaftaranUjian
-    {
-        $this->pastikanPesertaUjian($pengguna);
-        $this->pastikanProfilLengkap($pengguna);
-
-        $pendaftaran = $this->pendaftaranRepo->temukanUntukSlotDanPengguna($slotUjian->id, $pengguna->id);
-
-        if ($pendaftaran?->status === StatusPendaftaranUjian::APPROVED) {
-            return $pendaftaran;
-        }
-
-        if ($pendaftaran !== null && $this->pendaftaranRepo->memilikiAktifDalamPeriode(
-            $pengguna->id,
-            $slotUjian->periode_ujian_id,
-            $pendaftaran->id,
-        )) {
-            throw new \RuntimeException('Anda sudah memiliki pendaftaran aktif pada periode ujian ini.');
-        }
-
-        if ($this->pendaftaranRepo->hitungDisetujui($slotUjian->id) >= $slotUjian->kapasitas_peserta) {
-            throw new \RuntimeException('Kuota slot ujian sudah penuh.');
-        }
-
-        $data = [
-            'slot_ujian_id' => $slotUjian->id,
-            'pengguna_id' => $pengguna->id,
-            'status' => StatusPendaftaranUjian::APPROVED,
-            'diproses_oleh_id' => null,
-            'diproses_pada' => now(),
-        ];
-
-        if ($pendaftaran !== null) {
-            return $this->pendaftaranRepo->perbarui($pendaftaran, $data);
-        }
-
-        return $this->pendaftaranRepo->buat($data);
     }
 
     private function pastikanPesertaUjian(Pengguna $pengguna): void
@@ -657,10 +678,37 @@ class LayananPendaftaranUjian
         }
     }
 
-    private function pastikanProfilLengkap(Pengguna $pengguna): void
+    private function pastikanLingkupUjian(Pengguna $pengguna, Ujian $ujian): void
     {
-        if (! $pengguna->profilTerverifikasi()) {
-            throw new \RuntimeException('Lengkapi identitas peserta sebelum mendaftar atau mengikuti ujian.');
+        if (! $ujian->terbukaUntuk($pengguna)) {
+            throw new \RuntimeException('Ujian ini tidak tersedia untuk program studi Anda.');
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function pastikanProdiTidakBerubahSaatTerkunci(Pengguna $pengguna, array $data): void
+    {
+        if (! $pengguna->sudahMemakaiUjian()) {
+            return;
+        }
+
+        $profil = $pengguna->loadMissing('profilPeserta')->profilPeserta;
+
+        if ($profil === null) {
+            return;
+        }
+
+        $prodiBaru = array_key_exists('program_studi_id', $data)
+            ? $data['program_studi_id']
+            : $profil->program_studi_id;
+        $fakultasBaru = array_key_exists('fakultas_id', $data)
+            ? $data['fakultas_id']
+            : $profil->fakultas_id;
+
+        if ($prodiBaru !== $profil->program_studi_id || $fakultasBaru !== $profil->fakultas_id) {
+            throw new \RuntimeException('Program studi tidak dapat diubah setelah Anda mengikuti ujian. Hubungi admin.');
         }
     }
 

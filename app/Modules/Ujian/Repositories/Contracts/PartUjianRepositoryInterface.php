@@ -18,6 +18,10 @@ interface PartUjianRepositoryInterface
      */
     public function semuaUntukUjian(Ujian $ujian): Collection;
 
+    public function partPertama(string $ujianId): ?PartUjian;
+
+    public function partBerikutnya(string $ujianId, int $urutan): ?PartUjian;
+
     public function update(PartUjian $part, array $data): PartUjian;
 
     public function delete(PartUjian $part): void;
@@ -31,6 +35,12 @@ interface PartUjianRepositoryInterface
      * @return array<string>
      */
     public function idPartSoalDalamUjianAktif(array $partSoalIds): array;
+
+    /**
+     * @param  array<string>  $sectionIds
+     * @return array<string>
+     */
+    public function idSectionDalamUjianAktif(array $sectionIds): array;
 
     /**
      * @param  array<string>  $partSoalIds

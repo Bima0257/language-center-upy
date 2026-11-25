@@ -51,7 +51,7 @@ const emit = defineEmits(['close', 'submit']);
                     <button
                         type="button"
                         @click="emit('submit')"
-                        class="flex-1 px-5 py-3 rounded-full text-label-md font-semibold bg-secondary text-on-secondary hover:bg-secondary/90 transition-all shadow-md active:scale-95 duration-150"
+                        class="flex-1 px-5 py-3 rounded-full text-label-md font-semibold bg-accent text-on-accent hover:bg-accent/90 transition-all shadow-md active:scale-95 duration-150"
                     >
                         Kumpulkan
                     </button>

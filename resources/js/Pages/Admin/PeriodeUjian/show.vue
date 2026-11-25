@@ -67,7 +67,6 @@ function submit() {
     const target = creating.value ? form : editForm;
     const onSuccess = () => {
         showModal.value = false;
-        target.reset();
     };
 
     if (creating.value) {
@@ -79,10 +78,6 @@ function submit() {
 
 function closeModal() {
     showModal.value = false;
-    editingSlot.value = null;
-    creating.value = false;
-    form.reset();
-    editForm.reset();
 }
 
 async function destroy(slotUjian) {

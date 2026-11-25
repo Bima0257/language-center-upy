@@ -24,9 +24,27 @@ class PartUjianRepository implements PartUjianRepositoryInterface
      */
     public function semuaUntukUjian(Ujian $ujian): Collection
     {
-        return PartUjian::where('ujian_id', $ujian->id)
+        return PartUjian::with('section')
+            ->where('ujian_id', $ujian->id)
             ->orderBy('urutan')
             ->get();
+    }
+
+    public function partPertama(string $ujianId): ?PartUjian
+    {
+        return PartUjian::with('section')
+            ->where('ujian_id', $ujianId)
+            ->orderBy('urutan')
+            ->first();
+    }
+
+    public function partBerikutnya(string $ujianId, int $urutan): ?PartUjian
+    {
+        return PartUjian::with('section')
+            ->where('ujian_id', $ujianId)
+            ->where('urutan', '>', $urutan)
+            ->orderBy('urutan')
+            ->first();
     }
 
     public function update(PartUjian $part, array $data): PartUjian
@@ -72,6 +90,23 @@ class PartUjianRepository implements PartUjianRepositoryInterface
             ->whereHas('partUjian.ujian', fn ($query) => $query->where('aktif', true))
             ->distinct()
             ->pluck('part_soal_id')
+            ->all();
+    }
+
+    /**
+     * @param  array<string>  $sectionIds
+     * @return array<string>
+     */
+    public function idSectionDalamUjianAktif(array $sectionIds): array
+    {
+        if ($sectionIds === []) {
+            return [];
+        }
+
+        return PartUjian::whereIn('section_id', $sectionIds)
+            ->whereHas('ujian', fn ($query) => $query->where('aktif', true))
+            ->distinct()
+            ->pluck('section_id')
             ->all();
     }
 

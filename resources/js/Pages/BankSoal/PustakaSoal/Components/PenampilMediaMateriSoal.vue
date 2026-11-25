@@ -57,7 +57,7 @@ const imageLoading = useMediaLoad(() => props.materiSoal.url_gambar);
             <button
                 v-if="materiSoal.isi_teks.length > 180"
                 @click="$emit('toggle-expand')"
-                class="mt-1 text-secondary text-label-md font-medium hover:underline"
+                class="mt-1 text-secondary text-label-md font-semibold hover:underline"
             >
                 {{ expanded ? "Sembunyikan ▲" : "Lihat Selengkapnya ▼" }}
             </button>

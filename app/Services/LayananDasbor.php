@@ -5,14 +5,12 @@ namespace App\Services;
 use App\Models\Pengguna;
 use App\Modules\PelaksanaanUjian\Repositories\Contracts\SesiUjianRepositoryInterface;
 use App\Modules\Pengguna\Repositories\Contracts\PenggunaRepositoryInterface;
-use App\Modules\Penjadwalan\Repositories\Contracts\SlotUjianRepositoryInterface;
 use App\Modules\Ujian\Repositories\Contracts\UjianRepositoryInterface;
 
 class LayananDasbor
 {
     public function __construct(
         private SesiUjianRepositoryInterface $sesiRepo,
-        private SlotUjianRepositoryInterface $slotRepo,
         private UjianRepositoryInterface $ujianRepo,
         private PenggunaRepositoryInterface $penggunaRepo,
     ) {}
@@ -22,8 +20,9 @@ class LayananDasbor
         $data = [];
 
         if ($pengguna->hasRole('peserta')) {
+            $programStudiId = $pengguna->loadMissing('profilPeserta')->profilPeserta?->program_studi_id;
             $data['sesiTerbaru'] = $this->sesiRepo->terbaruUntukPengguna($pengguna->id);
-            $data['jumlahUjianTersedia'] = $this->slotRepo->slotTersedia()->count();
+            $data['jumlahUjianTersedia'] = $this->ujianRepo->semuaTryoutTersedia($programStudiId)->count();
         }
 
         if ($pengguna->hasAnyRole(['admin', 'superadmin'])) {

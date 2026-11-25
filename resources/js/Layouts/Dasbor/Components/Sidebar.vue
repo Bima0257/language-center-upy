@@ -46,7 +46,7 @@ function isGroupActive(children) {
 function itemActiveClass(active) {
     return [
         "relative flex items-center rounded-lg transition-all duration-200",
-        props.collapsed ? "justify-center px-2 py-3" : "gap-3 pl-4 pr-4 py-3",
+        props.collapsed ? "justify-center px-2 py-3" : "gap-3 pl-4 pr-4 py-2.5",
         active
             ? "text-sidebar-text font-bold bg-on-primary-container/15"
             : "text-sidebar-text-muted hover:text-sidebar-text-hover hover:bg-on-primary-container/10",
@@ -57,7 +57,7 @@ function itemActiveClass(active) {
 function groupActiveClass(active) {
     return [
         "relative flex items-center rounded-lg transition-all duration-200",
-        props.collapsed ? "justify-center px-2 py-3" : "gap-3 pl-4 pr-4 py-3",
+        props.collapsed ? "justify-center px-2 py-3" : "gap-3 pl-4 pr-4 py-2.5",
         active
             ? "text-sidebar-text"
             : "text-sidebar-text-muted hover:text-sidebar-text-hover hover:bg-on-primary-container/10",
@@ -66,7 +66,7 @@ function groupActiveClass(active) {
 
 function barClass(active, leftClass = "left-0") {
     return [
-        "absolute top-1/2 -translate-y-1/2 w-[3px] h-[70%] rounded-r-md bg-sidebar-text transition-all duration-200",
+        "absolute top-1/2 -translate-y-1/2 w-[3px] h-[70%] rounded-r-md bg-accent transition-all duration-200",
         leftClass,
         active ? "opacity-100 scale-y-100" : "opacity-0 scale-y-50",
     ];
@@ -103,23 +103,26 @@ watch(
 <template>
     <aside
         class="hidden md:flex flex-col px-3 pb-8 bg-sidebar shrink-0 h-full transition-all duration-300 shadow-[6px_0_20px_-8px_rgba(0,0,0,0.25)]"
-        :class="collapsed ? 'w-[80px]' : 'w-[260px]'"
+        :class="collapsed ? 'w-[80px]' : 'w-[280px]'"
     >
         <div
             class="mb-10 flex items-center relative border-b border-on-primary-container/10 dark:border-surface-container-highest transition-all duration-200"
             :class="collapsed ? 'justify-center px-2.5 py-4' : 'gap-3 px-4 py-3'"
         >
             <img
-                :src="'/assets/image/logo-white.png'"
-                alt="Logo"
+                src="/assets/image/brand/logo-upy.png"
+                alt="UPY Language Center"
+                title="UPY Language Center"
                 class="shrink-0 object-contain rounded-lg"
                 :class="collapsed ? 'w-8 h-8' : 'w-10 h-10'"
             />
             <h1
                 v-show="!collapsed"
-                class="text-headline-md font-bold text-sidebar-text whitespace-nowrap"
+                class="min-w-0 leading-tight text-sidebar-text"
+                title="UPY Language Center"
             >
-                UPY
+                <span class="block truncate text-title-lg font-bold">UPY</span>
+                <span class="block truncate text-label-md font-medium leading-snug text-sidebar-text-muted">Language Center</span>
             </h1>
         </div>
 
@@ -128,7 +131,7 @@ watch(
                 <div v-if="item.children">
                     <button
                         @click="toggleGroup(item)"
-                        class="w-full"
+                        class="w-full font-semibold"
                         :class="groupActiveClass(isGroupActive(item.children))"
                     >
                         <component
@@ -138,7 +141,7 @@ watch(
                         />
                         <span
                             v-show="!collapsed"
-                            class="flex-1 text-left text-label-md font-medium whitespace-nowrap"
+                            class="flex-1 text-left text-body-md leading-tight font-semibold whitespace-nowrap"
                             >{{ item.label }}</span
                         >
                         <IconChevronDown
@@ -166,7 +169,7 @@ watch(
                                 :class="[
                                     collapsed
                                         ? 'justify-center px-2 py-3'
-                                        : 'gap-3 pr-4 py-3',
+                                        : 'gap-3 pr-4 py-2.5',
                                     aktif(child.route)
                                          ? 'text-sidebar-text font-bold'
                                          : 'text-sidebar-text-muted hover:text-sidebar-text-hover',
@@ -180,8 +183,8 @@ watch(
                                     :class="[
                                         collapsed ? 'left-0' : 'left-[20px]',
                                         aktif(child.route)
-                                             ? 'bg-on-primary-container/15 dark:bg-surface-container'
-                                             : 'group-hover:bg-on-primary-container/10 dark:group-hover:bg-surface-container-high',
+                                            ? 'bg-on-primary-container/15 dark:bg-surface-container'
+                                            : 'group-hover:bg-on-primary-container/10 dark:group-hover:bg-surface-container-high',
                                     ]"
                                 ></span>
                                 <span
@@ -202,7 +205,7 @@ watch(
                                 />
                                 <span
                                     v-show="!collapsed"
-                                    class="text-label-md whitespace-nowrap relative"
+                                    class="text-body-md leading-tight font-medium whitespace-nowrap relative"
                                     >{{ child.label }}</span
                                 >
                             </Link>
@@ -222,7 +225,7 @@ watch(
                     />
                     <span
                         v-show="!collapsed"
-                        class="text-label-md font-medium whitespace-nowrap"
+                        class="text-body-md leading-tight font-semibold whitespace-nowrap"
                         >{{ item.label }}</span
                     >
                 </Link>

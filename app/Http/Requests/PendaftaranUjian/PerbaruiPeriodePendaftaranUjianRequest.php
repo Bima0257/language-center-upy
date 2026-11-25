@@ -21,7 +21,7 @@ class PerbaruiPeriodePendaftaranUjianRequest extends FormRequest
             'dibuka_pada' => ['required', 'date'],
             'ditutup_pada' => ['required', 'date', 'after:dibuka_pada'],
             'aktif' => ['required', 'boolean'],
-            'catatan' => ['nullable', 'string', 'max:5000'],
+            'catatan' => ['nullable', 'string', 'max:16000'],
         ];
     }
 }

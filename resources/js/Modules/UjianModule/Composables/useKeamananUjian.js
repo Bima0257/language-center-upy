@@ -1,7 +1,7 @@
 import { ref, onUnmounted } from 'vue';
 import axios from 'axios';
 
-export function useKeamananUjian({ sesiUjianId, heartbeatInterval = 30000 }) {
+export function useKeamananUjian({ sesiUjianId, heartbeatInterval = 30000, onHeartbeat = null }) {
     const violations = ref([]);
     const isFullscreen = ref(false);
     const strikeCount = ref(0);
@@ -62,7 +62,9 @@ export function useKeamananUjian({ sesiUjianId, heartbeatInterval = 30000 }) {
 
     function startHeartbeat() {
         heartbeatTimer = setInterval(() => {
-            axios.post(`/ujian/sesi/${sesiUjianId}/keaktifan`).catch(() => {});
+            axios.post(`/ujian/sesi/${sesiUjianId}/keaktifan`)
+                .then((res) => onHeartbeat?.(res.data))
+                .catch(() => {});
         }, heartbeatInterval);
     }
 

@@ -98,8 +98,6 @@ function saveDraft() {
 
 function closeModal() {
     showModal.value = false;
-    editingIndex.value = null;
-    resetDraft();
 }
 
 function removeDraft(index) {

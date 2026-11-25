@@ -12,6 +12,7 @@ class LaporanRepository implements LaporanRepositoryInterface
     {
         return SesiUjian::with([
             'pengguna.profilPeserta',
+            'ujian',
             'slotUjian.periodeUjian.ujian',
         ])
             ->orderBy('created_at', 'desc')
@@ -21,7 +22,12 @@ class LaporanRepository implements LaporanRepositoryInterface
     public function temukanUntukEkspor(string $id): ?SesiUjian
     {
         return SesiUjian::with([
-            'pengguna.profilPeserta', 'catatanPelanggaran', 'slotUjian.periodeUjian.ujian', 'slotUjian', 'jawaban.soal',
+            'pengguna.profilPeserta',
+            'catatanPelanggaran',
+            'ujian',
+            'slotUjian.periodeUjian.ujian',
+            'slotUjian',
+            'jawaban.soal',
         ])->find($id);
     }
 }

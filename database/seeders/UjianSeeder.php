@@ -2,11 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Enums\StatusPendaftaranUjian;
 use App\Models\BankSoal;
 use App\Models\CatatanPelanggaran;
 use App\Models\Fakultas;
 use App\Models\HasilPenilaian;
 use App\Models\PartUjian;
+use App\Models\PendaftaranUjian;
 use App\Models\Pengguna;
 use App\Models\PeriodePendaftaranUjian;
 use App\Models\PeriodeUjian;
@@ -14,6 +16,7 @@ use App\Models\ProfilPeserta;
 use App\Models\ProgramStudi;
 use App\Models\ProgramTes;
 use App\Models\Section;
+use App\Models\SesiPartUjian;
 use App\Models\SesiUjian;
 use App\Models\SkemaPenilaian;
 use App\Models\SlotUjian;
@@ -28,46 +31,37 @@ class UjianSeeder extends Seeder
 {
     public function run(): void
     {
-        if (Ujian::where('judul', 'EPT Try Out 1')->exists()) {
-            $this->command->info('UjianSeeder dilewati — data EPT sudah ada.');
+        if (Ujian::whereIn('judul', ['Ujian Resmi EPT', 'Ujian Tryout EPT'])->exists()) {
+            $this->command->info('UjianSeeder dilewati — data ujian demo sudah ada.');
 
             return;
         }
 
         $ept = ProgramTes::where('nama', 'EPT')->firstOrFail();
-        $bankSoal = BankSoal::where('nama', 'Bank Soal EPT')->firstOrFail();
+        $bankResmi = BankSoal::where('nama', 'Bank Soal Ujian Resmi')->firstOrFail();
+        $bankTryout = BankSoal::where('nama', 'Bank Soal Ujian Tryout')->firstOrFail();
         $sectionMenyimak = Section::where('program_tes_id', $ept->id)->where('nama', 'Listening')->firstOrFail();
         $sectionMembaca = Section::where('program_tes_id', $ept->id)->where('nama', 'Reading')->firstOrFail();
 
-        $ujian = Ujian::create([
-            'program_tes_id' => $ept->id,
-            'judul' => 'EPT Try Out 1',
-            'deskripsi' => 'Simulasi EPT dengan 50 soal Listening dan 50 soal Reading.',
-            'mode' => 'tryout',
-            'durasi_menit' => 120,
-            'aktif' => true,
-        ]);
+        [$ujianResmi, $partMenyimakResmi] = $this->buatUjian(
+            'Ujian Resmi EPT',
+            'official',
+            'Ujian resmi EPT dengan 50 soal Listening dan 50 soal Reading.',
+            $ept->id,
+            $bankResmi,
+            $sectionMenyimak,
+            $sectionMembaca,
+        );
 
-        $partMenyimak = PartUjian::create([
-            'ujian_id' => $ujian->id,
-            'bank_soal_id' => $bankSoal->id,
-            'section_id' => $sectionMenyimak->id,
-            'judul' => 'Listening Section',
-            'urutan' => 1,
-            'jumlah_soal' => 50,
-        ]);
-
-        $partMembaca = PartUjian::create([
-            'ujian_id' => $ujian->id,
-            'bank_soal_id' => $bankSoal->id,
-            'section_id' => $sectionMembaca->id,
-            'judul' => 'Reading Section',
-            'urutan' => 2,
-            'jumlah_soal' => 50,
-        ]);
-
-        $this->lampirkanSoal($partMenyimak, $sectionMenyimak->id, $bankSoal->id);
-        $this->lampirkanSoal($partMembaca, $sectionMembaca->id, $bankSoal->id);
+        $this->buatUjian(
+            'Ujian Tryout EPT',
+            'tryout',
+            'Simulasi EPT dengan 50 soal Listening dan 50 soal Reading.',
+            $ept->id,
+            $bankTryout,
+            $sectionMenyimak,
+            $sectionMembaca,
+        );
 
         $mahasiswaDemo = Pengguna::firstOrCreate(
             ['email' => 'demo-peserta@toefl.test'],
@@ -83,6 +77,7 @@ class UjianSeeder extends Seeder
         $fkip = Fakultas::where('kode', 'FKIP')->first();
         $pbi = ProgramStudi::where('kode', 'PBI')->first();
         $admin = Pengguna::where('email', 'admin@toefl.test')->first();
+        $peserta = Pengguna::where('email', 'peserta@toefl.test')->first();
 
         if ($fkip && $pbi && $admin) {
             ProfilPeserta::firstOrCreate(
@@ -108,7 +103,7 @@ class UjianSeeder extends Seeder
             : null;
 
         $periodeUjian = PeriodeUjian::create([
-            'ujian_id' => $ujian->id,
+            'ujian_id' => $ujianResmi->id,
             'judul' => 'Gelombang Demo EPT',
             'tanggal_mulai' => now()->subDay(),
             'tanggal_selesai' => now()->addDay(),
@@ -117,7 +112,7 @@ class UjianSeeder extends Seeder
 
         PeriodePendaftaranUjian::create([
             'periode_ujian_id' => $periodeUjian->id,
-            'nama' => 'Pendaftaran Try Out EPT',
+            'nama' => 'Pendaftaran Ujian Resmi EPT',
             'dibuka_pada' => now()->subDay()->startOfDay(),
             'ditutup_pada' => now()->addDay()->endOfDay(),
             'aktif' => true,
@@ -134,12 +129,60 @@ class UjianSeeder extends Seeder
             'aktif' => true,
         ]);
 
+        $slotPengerjaanPeserta = SlotUjian::create([
+            'periode_ujian_id' => $periodeUjian->id,
+            'tanggal' => now()->toDateString(),
+            'waktu_mulai' => now()->subMinutes(5)->format('H:i'),
+            'waktu_selesai' => now()->addHours(2)->format('H:i'),
+            'toleransi_keterlambatan_menit' => 120,
+            'kapasitas_peserta' => 30,
+            'aktif' => true,
+        ]);
+
+        if ($admin !== null && $peserta !== null) {
+            PendaftaranUjian::create([
+                'slot_ujian_id' => $slotPengerjaanPeserta->id,
+                'pengguna_id' => $peserta->id,
+                'status' => StatusPendaftaranUjian::APPROVED,
+                'diproses_oleh_id' => $admin->id,
+                'diproses_pada' => now(),
+                'catatan_admin' => 'Data demo: pendaftaran disetujui untuk uji pengerjaan ujian resmi.',
+            ]);
+        }
+
+        $periodePendaftaranPeserta = PeriodeUjian::create([
+            'ujian_id' => $ujianResmi->id,
+            'judul' => 'Gelombang Pendaftaran Peserta',
+            'tanggal_mulai' => now()->toDateString(),
+            'tanggal_selesai' => now()->addDays(2)->toDateString(),
+            'aktif' => true,
+        ]);
+
+        PeriodePendaftaranUjian::create([
+            'periode_ujian_id' => $periodePendaftaranPeserta->id,
+            'nama' => 'Pendaftaran Gelombang Peserta',
+            'dibuka_pada' => now()->subDay(),
+            'ditutup_pada' => now()->addDays(2)->endOfDay(),
+            'aktif' => true,
+            'catatan' => 'Data demo untuk pendaftaran ujian resmi oleh peserta.',
+        ]);
+
+        SlotUjian::create([
+            'periode_ujian_id' => $periodePendaftaranPeserta->id,
+            'tanggal' => now()->addDay()->toDateString(),
+            'waktu_mulai' => '08:00',
+            'waktu_selesai' => '10:00',
+            'toleransi_keterlambatan_menit' => 15,
+            'kapasitas_peserta' => 30,
+            'aktif' => true,
+        ]);
+
         $sesiAktif = SesiUjian::create([
             'slot_ujian_id' => $slotUjian->id,
             'pengguna_id' => $mahasiswaDemo->id,
             'status' => 'in_progress',
             'dimulai_pada' => now()->subMinutes(25),
-            'part_ujian_aktif_id' => $partMenyimak->id,
+            'part_ujian_aktif_id' => $partMenyimakResmi->id,
             'skema_penilaian_id' => $skemaPenilaian?->id,
             'snapshot_penilaian' => $snapshotPenilaian,
             'skor_total_maksimum' => 400.0,
@@ -154,8 +197,15 @@ class UjianSeeder extends Seeder
             'jumlah_pelanggaran' => 1,
         ]);
 
+        SesiPartUjian::create([
+            'sesi_ujian_id' => $sesiAktif->id,
+            'part_ujian_id' => $partMenyimakResmi->id,
+            'durasi_menit' => $partMenyimakResmi->section->durasi_menit,
+            'dimulai_pada' => $sesiAktif->dimulai_pada,
+        ]);
+
         $periodeDitandai = PeriodeUjian::create([
-            'ujian_id' => $ujian->id,
+            'ujian_id' => $ujianResmi->id,
             'judul' => 'Gelombang Flagged EPT',
             'tanggal_mulai' => now()->subDays(2),
             'tanggal_selesai' => now(),
@@ -209,7 +259,7 @@ class UjianSeeder extends Seeder
         ]);
 
         $periodeDiserahkan = PeriodeUjian::create([
-            'ujian_id' => $ujian->id,
+            'ujian_id' => $ujianResmi->id,
             'judul' => 'Gelombang Submitted EPT',
             'tanggal_mulai' => now()->subDays(3),
             'tanggal_selesai' => now()->subDays(2),
@@ -264,6 +314,52 @@ class UjianSeeder extends Seeder
                 'skor_skala' => 174.0,
             ]);
         }
+    }
+
+    /**
+     * @return array{0: Ujian, 1: PartUjian, 2: PartUjian}
+     */
+    private function buatUjian(
+        string $judul,
+        string $mode,
+        string $deskripsi,
+        string $programTesId,
+        BankSoal $bankSoal,
+        Section $sectionMenyimak,
+        Section $sectionMembaca,
+    ): array {
+        $ujian = Ujian::create([
+            'program_tes_id' => $programTesId,
+            'judul' => $judul,
+            'deskripsi' => $deskripsi,
+            'mode' => $mode,
+            'lingkup' => 'umum',
+            'durasi_menit' => 120,
+            'aktif' => true,
+        ]);
+
+        $partMenyimak = PartUjian::create([
+            'ujian_id' => $ujian->id,
+            'bank_soal_id' => $bankSoal->id,
+            'section_id' => $sectionMenyimak->id,
+            'judul' => 'Listening Section',
+            'urutan' => 1,
+            'jumlah_soal' => 50,
+        ]);
+
+        $partMembaca = PartUjian::create([
+            'ujian_id' => $ujian->id,
+            'bank_soal_id' => $bankSoal->id,
+            'section_id' => $sectionMembaca->id,
+            'judul' => 'Reading Section',
+            'urutan' => 2,
+            'jumlah_soal' => 50,
+        ]);
+
+        $this->lampirkanSoal($partMenyimak, $sectionMenyimak->id, $bankSoal->id);
+        $this->lampirkanSoal($partMembaca, $sectionMembaca->id, $bankSoal->id);
+
+        return [$ujian, $partMenyimak, $partMembaca];
     }
 
     private function lampirkanSoal(PartUjian $part, string $sectionId, string $bankSoalId): void

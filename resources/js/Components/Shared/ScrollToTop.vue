@@ -53,10 +53,10 @@ onUnmounted(() => {
     <Transition name="fade">
         <button v-if="visible" @click="scrollToTop"
                 :class="inline && isDesktop
-                     ? 'absolute bottom-6 right-20 w-11 h-11 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:bg-primary hover:text-on-primary transition-colors z-40'
+                     ? 'absolute bottom-6 right-20 w-11 h-11 bg-accent text-on-accent rounded-full shadow-lg flex items-center justify-center hover:bg-accent/90 transition-colors z-40'
                     : container
-                         ? 'absolute bottom-24 right-6 w-11 h-11 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:bg-primary hover:text-on-primary transition-colors z-40'
-                         : 'fixed bottom-24 right-6 md:right-10 w-11 h-11 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:bg-primary hover:text-on-primary transition-colors z-40'">
+                         ? 'absolute bottom-24 right-6 w-11 h-11 bg-accent text-on-accent rounded-full shadow-lg flex items-center justify-center hover:bg-accent/90 transition-colors z-40'
+                         : 'fixed bottom-24 right-6 md:right-10 w-11 h-11 bg-accent text-on-accent rounded-full shadow-lg flex items-center justify-center hover:bg-accent/90 transition-colors z-40'">
             <IconArrowUp :size="22" stroke="2" />
         </button>
     </Transition>

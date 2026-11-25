@@ -39,6 +39,7 @@ class PerbaruiSectionRequest extends FormRequest
                     ->where(fn ($query) => $query->where('program_tes_id', $section->program_tes_id))
                     ->ignore($section->id),
             ],
+            'durasi_menit' => ['required', 'integer', 'min:1', 'max:600'],
             'aktif' => ['boolean'],
             'ketentuan_materi' => ['nullable', Rule::enum(KetentuanMedia::class)],
             'aturan_media' => ['nullable', 'array:text,audio,image'],

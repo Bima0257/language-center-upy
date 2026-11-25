@@ -6,6 +6,7 @@ import BaseButton from '@/Components/Base/BaseButton.vue';
 import BaseTambahData from '@/Components/Base/BaseTambahData.vue';
 import AppDataTable from '@/Components/Ui/AppDataTable.vue';
 import FormPeriodePendaftaranModal from '@/Pages/Admin/PendaftaranUjian/Components/FormPeriodePendaftaranModal.vue';
+import DetailPeriodePendaftaranModal from '@/Pages/Admin/PendaftaranUjian/Components/DetailPeriodePendaftaranModal.vue';
 import ProgramTesSummaryTable from '@/Pages/Admin/PendaftaranUjian/Components/ProgramTesSummaryTable.vue';
 import { useConfirm } from '@/Composables/useConfirm';
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-vue';
@@ -23,6 +24,8 @@ const confirm = useConfirm();
 const showModal = ref(false);
 const creating = ref(false);
 const editingPeriod = ref(null);
+const showDetailModal = ref(false);
+const detailPeriod = ref(null);
 const programTesFilter = computed(() => props.programTesTerpilihId || '');
 
 const form = useForm({
@@ -141,11 +144,11 @@ const columns = [
                 h(
                     BaseButton,
                     {
-                        href: route('admin.pendaftaran-ujian.detail', row.id),
                         variant: 'secondary',
                         iconOnly: true,
                         title: 'Lihat detail',
                         'aria-label': 'Lihat detail',
+                        onClick: () => openDetail(row),
                     },
                     () => h(IconEye, { size: 16 }),
                 ),
@@ -194,6 +197,25 @@ function openCreate() {
     showModal.value = true;
 }
 
+function openDetail(period) {
+    detailPeriod.value = period;
+    showDetailModal.value = true;
+}
+
+function closeDetail() {
+    showDetailModal.value = false;
+}
+
+function editFromDetail() {
+    const period = detailPeriod.value;
+
+    closeDetail();
+
+    if (period) {
+        openEdit(period);
+    }
+}
+
 function openEdit(period) {
     creating.value = false;
     editingPeriod.value = period;
@@ -225,12 +247,6 @@ function submit() {
 
 function closeModal() {
     showModal.value = false;
-    creating.value = false;
-    editingPeriod.value = null;
-    form.clearErrors();
-    editForm.clearErrors();
-    form.reset();
-    editForm.reset();
 }
 
 async function destroy(period) {
@@ -268,6 +284,7 @@ async function destroy(period) {
                 server-side
                 :server-total-rows="periodePendaftaranUjian.total ?? 0"
                 :reload-only="['periodePendaftaranUjian', 'filters']"
+                :row-click="openDetail"
                 searchable
                 search-placeholder="Cari periode atau ujian..."
                 title="Daftar Periode Pendaftaran"
@@ -284,6 +301,13 @@ async function destroy(period) {
                 :periode-ujian="periodeUjian"
                 @close="closeModal"
                 @submit="submit"
+            />
+
+            <DetailPeriodePendaftaranModal
+                :show="showDetailModal"
+                :periode="detailPeriod"
+                @close="closeDetail"
+                @edit="editFromDetail"
             />
         </template>
     </TataLetakDasbor>

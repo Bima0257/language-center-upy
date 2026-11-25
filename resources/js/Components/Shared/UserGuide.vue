@@ -35,7 +35,7 @@ const show = ref(false);
                         type="button"
                         aria-label="Tutup panduan"
                         @click="show = false"
-                        class="p-1.5 text-text-muted hover:text-primary transition-colors"
+                        class="p-1.5 text-text-muted hover:text-primary transition-colors font-semibold"
                     >
                         <IconX :size="20" />
                     </button>

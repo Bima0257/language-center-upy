@@ -1,11 +1,9 @@
 <script setup>
-import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, router } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import BaseButton from '@/Components/Base/BaseButton.vue';
 import BaseCard from '@/Components/Base/BaseCard.vue';
 import AturanPenilaianTable from '../Components/AturanPenilaianTable.vue';
-import AturanPenilaianFormModal from '../Components/AturanPenilaianFormModal.vue';
 
 const props = defineProps({
     programTes: { type: Object, required: true },
@@ -13,47 +11,17 @@ const props = defineProps({
     aturanPenilaian: { type: Array, default: () => [] },
     interpretasiSkor: { type: Array, default: () => [] },
     total: { type: Object, default: () => ({ minimum: 0, maksimum: 0 }) },
-});
-
-const showModal = ref(false);
-const editingRule = ref(null);
-const form = useForm({
-    tabel_konversi: {},
-    skor_mentah_maksimum: 50,
-    skor_skala_minimum: 100,
-    skor_skala_maksimum: 200,
+    memilikiUjianAktif: { type: Boolean, default: false },
 });
 
 function bukaInterpretasi() {
     router.get(route('admin.data-induk.interpretasi-skor.program-tes.daftar', props.programTes.id));
 }
 
-function startEdit(rule) {
-    editingRule.value = rule;
-    form.clearErrors();
-    form.tabel_konversi = { ...(rule.tabel_konversi || {}) };
-    form.skor_mentah_maksimum = rule.skor_mentah_maksimum || 50;
-    form.skor_skala_minimum = rule.skor_skala_minimum ?? 100;
-    form.skor_skala_maksimum = rule.skor_skala_maksimum || 200;
-    showModal.value = true;
-}
-
-function closeModal() {
-    showModal.value = false;
-    editingRule.value = null;
-    form.reset();
-    form.clearErrors();
-}
-
-function saveRule() {
-    if (!editingRule.value) return;
-
-    form.put(route(
-        'admin.data-induk.aturan-penilaian.skema.section.perbarui',
-        [props.skema.id, editingRule.value.section_id],
-    ), {
-        preserveScroll: true,
-        onSuccess: closeModal,
+function ubahUrl(rule) {
+    return route('admin.data-induk.aturan-penilaian.skema.section.ubah', {
+        skema: props.skema.id,
+        section: rule.section_id,
     });
 }
 </script>
@@ -86,6 +54,10 @@ function saveRule() {
                 Perubahan aturan berlaku untuk sesi ujian baru; hasil ujian lama tetap memakai snapshot.
             </p>
 
+            <p v-if="props.memilikiUjianAktif" class="mt-2 text-label-md text-text-muted">
+                Program tes dipakai ujian aktif — aturan penilaian dikunci.
+            </p>
+
             <p class="mt-2 text-label-md text-text-muted">
                 Raw = jumlah jawaban benar pada section; skor skala = nilai hasil konversi.
             </p>
@@ -93,15 +65,8 @@ function saveRule() {
 
         <AturanPenilaianTable
             :aturan-penilaian="props.aturanPenilaian"
-            @edit="startEdit"
-        />
-
-        <AturanPenilaianFormModal
-            :show="showModal"
-            :form="form"
-            :rule="editingRule"
-            @close="closeModal"
-            @submit="saveRule"
+            :ubah-url="ubahUrl"
+            :locked="props.memilikiUjianAktif"
         />
     </TataLetakDasbor>
 </template>

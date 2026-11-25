@@ -2,9 +2,11 @@
 
 namespace App\Modules\PelaksanaanUjian\Actions;
 
+use App\Enums\AlasanSelesaiPart;
 use App\Enums\StatusSesi;
 use App\Models\SesiUjian;
 use App\Modules\PelaksanaanUjian\DTOs\HasilPenyerahan;
+use App\Modules\PelaksanaanUjian\Repositories\Contracts\SesiPartUjianRepositoryInterface;
 use App\Modules\PelaksanaanUjian\Repositories\Contracts\SesiUjianRepositoryInterface;
 use App\Modules\Penilaian\Actions\HitungPenilaianSesi;
 use App\Modules\Penilaian\DTOs\HasilPenilaianSesi;
@@ -18,20 +20,25 @@ class SerahkanUjian
 {
     public function __construct(
         private SesiUjianRepositoryInterface $sesiRepo,
+        private SesiPartUjianRepositoryInterface $sesiPartRepo,
         private HitungPenilaianSesi $hitungPenilaian,
         private HasilPenilaianRepositoryInterface $hasilPenilaianRepo,
         private LayananAturanPenilaian $layananAturan,
     ) {}
 
-    public function execute(string $sesiId): HasilPenyerahan
-    {
-        $sesi = $this->sesiRepo->temukanDenganJawaban($sesiId);
+    public function execute(
+        string $sesiId,
+        AlasanSelesaiPart $alasan = AlasanSelesaiPart::DISERAHKAN,
+    ): HasilPenyerahan {
+        [$sesi, $hasil, $skorMembaca, $skorMenyimak] = DB::transaction(function () use ($sesiId, $alasan): array {
+            $sesi = $this->sesiRepo->temukanDenganJawabanUntukUpdate($sesiId);
 
-        if (! $sesi || $sesi->status === StatusSesi::SUBMITTED) {
-            throw new \RuntimeException('Ujian sudah disubmit sebelumnya.');
-        }
+            if (! $sesi || $sesi->status === StatusSesi::SUBMITTED) {
+                throw new \RuntimeException('Ujian sudah disubmit sebelumnya.');
+            }
 
-        [$hasil, $skorMembaca, $skorMenyimak] = DB::transaction(function () use ($sesi, $sesiId): array {
+            $this->sesiPartRepo->selesaikanSemuaTerbuka($sesiId, $alasan, now());
+
             $snapshot = $this->snapshotUntukSesi($sesi);
             $hasil = $this->hitungPenilaian->execute($sesi, $snapshot);
 
@@ -64,7 +71,7 @@ class SerahkanUjian
 
             $this->sesiRepo->update($sesiId, $updates);
 
-            return [$hasil, $skorMembaca, $skorMenyimak];
+            return [$sesi, $hasil, $skorMembaca, $skorMenyimak];
         });
 
         activity()
@@ -103,7 +110,8 @@ class SerahkanUjian
             return $snapshot;
         }
 
-        $programTesId = $sesi->slotUjian?->periodeUjian?->ujian?->program_tes_id;
+        $ujian = $sesi->ujian ?? $sesi->slotUjian?->periodeUjian?->ujian;
+        $programTesId = $ujian?->program_tes_id;
 
         if ($programTesId === null) {
             throw new \RuntimeException('Program tes untuk penilaian tidak ditemukan.');

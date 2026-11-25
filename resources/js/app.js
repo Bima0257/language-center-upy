@@ -45,7 +45,14 @@ createInertiaApp({
         return app
             .use(plugin)
             .use(ZiggyVue)
-            .use(FloatingVue)
+            .use(FloatingVue, {
+                themes: {
+                    app: {
+                        $extend: 'dropdown',
+                        $resetCss: true,
+                    },
+                },
+            })
             .mount(el);
     },
     progress: {

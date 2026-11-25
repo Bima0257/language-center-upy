@@ -30,7 +30,7 @@ const emit = defineEmits(['delete']);
         </div>
         <div class="flex items-center gap-1 shrink-0">
             <Link :href="route('admin.periode-ujian.detail', props.periodeUjian.id)"
-                  class="flex items-center gap-1 px-3 py-2 rounded-full text-label-md font-medium text-secondary hover:bg-surface-container-low transition-colors">
+                  class="flex items-center gap-1 px-3 py-2 rounded-full text-label-md font-semibold text-secondary hover:bg-surface-container-low transition-colors">
                 Kelola Sesi <IconArrowRight :size="16" />
             </Link>
             <BaseButton

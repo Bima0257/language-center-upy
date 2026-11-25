@@ -86,7 +86,7 @@ function selectAnswer(key) {
                         v-for="key in optionKeys"
                         :key="key"
                         @click="selectAnswer(key)"
-                        class="option-card w-full flex items-start gap-3 px-4 py-3 border rounded-xl text-left transition-all duration-200 group cursor-pointer"
+                        class="option-card w-full flex items-start gap-3 px-4 py-3 border rounded-xl text-left transition-all duration-200 group cursor-pointer font-semibold"
                         :class="
                             answers[currentQuestion.id] === key
                                 ? 'option-selected'
@@ -94,7 +94,7 @@ function selectAnswer(key) {
                         "
                     >
                         <div
-                            class="w-7 h-7 rounded-full border flex-shrink-0 flex items-center justify-center font-semibold text-[13px] transition-colors"
+                            class="w-7 h-7 rounded-full border shrink-0 flex items-center justify-center font-semibold text-xs transition-colors"
                             :class="
                                 answers[currentQuestion.id] === key
                                     ? 'bg-secondary-container border-secondary text-on-secondary-container'
@@ -105,7 +105,7 @@ function selectAnswer(key) {
                         </div>
                         <span
                             v-if="optionText(key)"
-                            class="font-body-md text-[15px] text-text-body leading-relaxed"
+                            class="font-body-md text-body-md text-text-body leading-relaxed"
                         >
                             {{ optionText(key) }}
                         </span>
@@ -116,7 +116,7 @@ function selectAnswer(key) {
                         v-for="key in optionKeys"
                         :key="key"
                         @click="selectAnswer(key)"
-                        class="option-card w-full flex items-center gap-3 px-4 py-3 border rounded-xl transition-all duration-200 group cursor-pointer"
+                        class="option-card w-full flex items-center gap-3 px-4 py-3 border rounded-xl transition-all duration-200 group cursor-pointer font-semibold"
                         :class="
                             answers[currentQuestion.id] === key
                                 ? 'option-selected'
@@ -124,7 +124,7 @@ function selectAnswer(key) {
                         "
                     >
                         <div
-                            class="w-7 h-7 rounded-full border flex-shrink-0 flex items-center justify-center font-semibold text-[13px] transition-colors"
+                            class="w-7 h-7 rounded-full border shrink-0 flex items-center justify-center font-semibold text-xs transition-colors"
                             :class="
                                 answers[currentQuestion.id] === key
                                     ? 'bg-secondary-container border-secondary text-on-secondary-container'

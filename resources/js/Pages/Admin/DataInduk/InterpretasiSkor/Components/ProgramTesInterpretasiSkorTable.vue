@@ -33,7 +33,7 @@ const columns = [
                 href: props.detailUrl(info.row.original.id),
                 variant: 'secondary',
                 size: 'sm',
-                class: '!p-2',
+                class: 'p-2!',
                 title: 'Lihat interpretasi skor',
                 'aria-label': 'Lihat interpretasi skor',
             },

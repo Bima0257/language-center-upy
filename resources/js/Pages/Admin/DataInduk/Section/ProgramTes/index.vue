@@ -3,6 +3,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import TataLetakDasbor from '@/Layouts/TataLetakDasbor.vue';
 import SectionFormModal from '@/Components/Ujian/SectionFormModal.vue';
 import SectionTable from '../Components/SectionTable.vue';
+import DetailSectionModal from '../Components/DetailSectionModal.vue';
 import { computed, ref, watch } from 'vue';
 import { useConfirm } from '@/Composables/useConfirm';
 import { useToast } from '@/Composables/useToast';
@@ -11,6 +12,7 @@ const props = defineProps({
     programTes: { type: Object, required: true },
     section: { type: Array, default: () => [] },
     kebijakanMateriSoal: { type: Array, default: () => [] },
+    memilikiUjianAktif: { type: Boolean, default: false },
 });
 
 const confirm = useConfirm();
@@ -22,6 +24,7 @@ const form = useForm({
     kode: '',
     nama: '',
     deskripsi: '',
+    durasi_menit: '',
     aktif: true,
     ketentuan_materi: '',
     aturan_media: { text: '', audio: '', image: '' },
@@ -32,14 +35,17 @@ const editForm = useForm({
     kode: '',
     nama: '',
     deskripsi: '',
+    durasi_menit: '',
     aktif: true,
     ketentuan_materi: '',
     aturan_media: { text: '', audio: '', image: '' },
 });
 
 const showModal = ref(false);
+const showDetailModal = ref(false);
 const creating = ref(false);
 const editingSection = ref(null);
+const detailSection = ref(null);
 const reordering = ref(false);
 const originalOrder = ref('');
 
@@ -62,12 +68,14 @@ function policyForSection(sectionId) {
     ) || null;
 }
 
+const detailPolicy = computed(() => detailSection.value ? policyForSection(detailSection.value.id) : null);
+
 watch(() => props.section, (list) => {
     originalOrder.value = list.map((section) => section.id).join(',');
 }, { immediate: true });
 
 function onReorder(evt) {
-    if (!canManageSection.value || reordering.value) return;
+    if (!canManageSection.value || reordering.value || props.memilikiUjianAktif) return;
 
     const previousIds = originalOrder.value.split(',').filter(Boolean);
     if (previousIds.length === 0 || typeof evt.oldIndex !== 'number' || typeof evt.newIndex !== 'number') return;
@@ -106,16 +114,21 @@ function openCreate() {
 function submit() {
     form.post(route('admin.data-induk.section.simpan'), {
         preserveScroll: true,
-        onSuccess: () => {
-            closeModal();
-            form.reset();
-            form.program_tes_id = props.programTes.id;
-        },
+        onSuccess: closeModal,
     });
 }
 
+function openDetail(section) {
+    detailSection.value = section;
+    showDetailModal.value = true;
+}
+
+function closeDetail() {
+    showDetailModal.value = false;
+}
+
 function startEdit(section) {
-    if (!canManageSection.value) return;
+    if (!canManageSection.value || section.dipakai_ujian_aktif) return;
 
     creating.value = false;
     editingSection.value = section;
@@ -125,6 +138,7 @@ function startEdit(section) {
     editForm.program_tes_id = props.programTes.id;
     editForm.nama = section.nama;
     editForm.deskripsi = section.deskripsi || '';
+    editForm.durasi_menit = section.durasi_menit ?? 30;
     editForm.aktif = !!section.aktif;
     const policy = policyForSection(section.id);
     editForm.ketentuan_materi = policy?.ketentuan_materi || '';
@@ -147,14 +161,10 @@ function saveEdit() {
 
 function closeModal() {
     showModal.value = false;
-    editingSection.value = null;
-    creating.value = false;
-    editForm.reset();
-    editForm.program_tes_id = props.programTes.id;
 }
 
 async function destroy(section) {
-    if (!canManageSection.value) return;
+    if (!canManageSection.value || section.dipakai_ujian_aktif) return;
 
     if (!await confirm.confirm(`Hapus section "${section.nama}"?`)) return;
     router.delete(route('admin.data-induk.section.hapus', section.id), { preserveScroll: true });
@@ -173,10 +183,12 @@ async function destroy(section) {
             :reordering="reordering"
             :can-manage="canManageSection"
             :can-create="canCreateSection"
+            :can-reorder="!props.memilikiUjianAktif"
             @create="openCreate"
             @reorder="onReorder"
             @edit="startEdit"
             @delete="destroy"
+            @detail="openDetail"
         />
 
         <SectionFormModal
@@ -187,6 +199,13 @@ async function destroy(section) {
             lock-program-tes
             @close="closeModal"
             @submit="creating ? submit() : saveEdit()"
+        />
+
+        <DetailSectionModal
+            :show="showDetailModal"
+            :section="detailSection"
+            :policy="detailPolicy"
+            @close="closeDetail"
         />
     </TataLetakDasbor>
 </template>

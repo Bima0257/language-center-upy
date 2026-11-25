@@ -38,6 +38,7 @@ class LayananOrientasi
                 ])
                 ->all(),
             'bisaPilihJenis' => $profil === null,
+            'prodiTerkunci' => $pengguna->sudahMemakaiUjian(),
             'sudahUnggah' => $pengguna->profilTerverifikasi(),
             'profil' => $profil ? [
                 'jenis_peserta' => $profil->jenis_peserta->value,
@@ -56,6 +57,8 @@ class LayananOrientasi
         ?UploadedFile $fotoIdentitas,
         ?UploadedFile $foto,
     ): void {
+        $this->pastikanProdiTidakBerubahSaatTerkunci($pengguna, $data);
+
         $profil = $pengguna->profilPeserta;
         $jenisPeserta = $profil !== null
             ? $profil->jenis_peserta
@@ -90,6 +93,33 @@ class LayananOrientasi
             }
 
             $this->penggunaRepo->update($pengguna, ['foto' => $this->imageCompression->storeCompressed($foto, 'photos')]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function pastikanProdiTidakBerubahSaatTerkunci(Pengguna $pengguna, array $data): void
+    {
+        if (! $pengguna->sudahMemakaiUjian()) {
+            return;
+        }
+
+        $profil = $pengguna->loadMissing('profilPeserta')->profilPeserta;
+
+        if ($profil === null) {
+            return;
+        }
+
+        $prodiBaru = array_key_exists('program_studi_id', $data)
+            ? $data['program_studi_id']
+            : $profil->program_studi_id;
+        $fakultasBaru = array_key_exists('fakultas_id', $data)
+            ? $data['fakultas_id']
+            : $profil->fakultas_id;
+
+        if ($prodiBaru !== $profil->program_studi_id || $fakultasBaru !== $profil->fakultas_id) {
+            throw new \RuntimeException('Program studi tidak dapat diubah setelah Anda mengikuti ujian. Hubungi admin.');
         }
     }
 }

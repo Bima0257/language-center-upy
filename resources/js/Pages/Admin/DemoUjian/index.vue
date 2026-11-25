@@ -57,12 +57,12 @@ const columns = [
     {
         accessorKey: "part_ujian_count",
         header: "Part",
-        cell: (info) => `${info.getValue() ?? 0} part`,
+        cell: (info) => info.getValue() ?? 0,
     },
     {
         accessorKey: "total_soal",
         header: "Total Soal",
-        cell: (info) => `${totalSoal(info.row.original)} soal`,
+        cell: (info) => totalSoal(info.row.original),
     },
     {
         accessorKey: "aktif",

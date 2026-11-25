@@ -2,6 +2,7 @@
 
 namespace App\Modules\Penjadwalan\Services;
 
+use App\Enums\ModeUjian;
 use App\Models\PeriodeUjian;
 use App\Models\ProgramTes;
 use App\Models\SlotUjian;
@@ -39,7 +40,9 @@ class LayananPenjadwalan
         ];
 
         $programTes = $this->programTesRepo->semuaAktifBerurutan();
-        $ujianAktif = $this->ujianRepo->semuaAktifDenganProgramTes();
+        $ujianAktif = $this->ujianRepo->semuaAktifDenganProgramTes()
+            ->filter(fn (Ujian $ujian): bool => $ujian->mode === ModeUjian::OFFICIAL)
+            ->values();
         $jumlahUjianPerProgramTes = $ujianAktif->groupBy('program_tes_id')->map->count();
         $jumlahPeriodePerProgramTes = $this->penjadwalanRepo->jumlahPeriodePerProgramTes();
         $ringkasanProgramTes = $programTes
@@ -99,6 +102,12 @@ class LayananPenjadwalan
 
     public function buat(array $data): PeriodeUjian
     {
+        $ujian = $this->ujianRepo->temukanDenganProgramTes($data['ujian_id']);
+
+        if ($ujian->mode !== ModeUjian::OFFICIAL) {
+            throw new \RuntimeException('Penjadwalan hanya tersedia untuk ujian resmi.');
+        }
+
         $this->pastikanTidakAdaTanggalTumpangTindih($data);
 
         return $this->penjadwalanRepo->create($data);
@@ -150,16 +159,6 @@ class LayananPenjadwalan
         }
 
         $this->slotRepo->delete($slotUjian);
-    }
-
-    public function slotTersedia(): Collection
-    {
-        return $this->slotRepo->slotTersedia();
-    }
-
-    public function hitungSlotTersediaSekarang(): int
-    {
-        return $this->slotRepo->slotTersedia()->count();
     }
 
     private function pastikanTidakAdaTanggalTumpangTindih(array $data, ?string $kecualiId = null): void

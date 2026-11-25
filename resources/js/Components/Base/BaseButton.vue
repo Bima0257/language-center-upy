@@ -13,7 +13,7 @@ const props = defineProps({
 });
 
 const variantClasses = {
-    primary: "bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container",
+    primary: "bg-accent text-on-accent hover:bg-accent/90",
     secondary:
         "border border-outline-variant bg-surface-white text-text-body hover:bg-surface-container-low",
     danger: "bg-error-red text-on-error hover:bg-error-container hover:text-on-error-container",
@@ -23,11 +23,11 @@ const variantClasses = {
 };
 
 const sizeClasses = {
-    xl: "py-3.5 text-title-lg font-semibold",
-    lg: "px-8 py-3.5 text-label-md font-medium",
-    md: "px-6 py-3 text-label-md font-medium",
-    sm: "px-4 py-2 text-label-md",
-    xs: "px-5 py-2.5 text-label-md font-medium",
+    xl: "py-3.5 text-title-lg font-bold",
+    lg: "px-8 py-3.5 text-label-md font-semibold",
+    md: "px-6 py-3 text-label-md font-semibold",
+    sm: "px-4 py-2 text-label-md font-semibold",
+    xs: "px-5 py-2.5 text-label-md font-semibold",
 };
 
 const classes = computed(() =>

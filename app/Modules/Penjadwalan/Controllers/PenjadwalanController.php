@@ -2,6 +2,7 @@
 
 namespace App\Modules\Penjadwalan\Controllers;
 
+use App\Enums\ModeUjian;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Penjadwalan\FilterPeriodeUjianRequest;
 use App\Http\Requests\Penjadwalan\PerbaruiPeriodeUjianRequest;
@@ -32,8 +33,13 @@ class PenjadwalanController extends Controller
         );
     }
 
-    public function tambah(Ujian $ujian): Response
+    public function tambah(Ujian $ujian): Response|RedirectResponse
     {
+        if ($ujian->mode !== ModeUjian::OFFICIAL) {
+            return to_route('admin.ujian.detail', $ujian)
+                ->with('error', 'Penjadwalan hanya tersedia untuk ujian resmi.');
+        }
+
         return Inertia::render('Admin/PeriodeUjian/create', [
             'ujian' => $ujian,
         ]);
